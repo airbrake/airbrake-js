@@ -18,6 +18,11 @@ var Hoptoad = {
 		request.style.display = 'none';
 		request.src = url;
 
+		// When request has been sent, delete iframe
+		request.onload = function () {
+			document.body.removeChild(request);
+		};
+
 		document.body.appendChild(request);
 	},
 
