@@ -64,7 +64,7 @@ var Hoptoad = {
 			esc = Hoptoad.escapeText,
 
 			xml = Hoptoad.NOTICE_XML,
-			url = esc(((error.url || '') + location.hash) || ''),
+			url = esc((error.url || '') + location.hash),
 			component = esc(error.component || ''),
 
 			backtrace = Hoptoad.generateBacktrace(error);
