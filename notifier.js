@@ -5,95 +5,104 @@ var Hoptoad = {
 	BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
 	backtrace_filters: [/notifier\.js/],
 
-	notify: function(error) {
-		var xml = escape(Hoptoad.generateXML(error));
-		var host = Hoptoad.host || 'airbrake.io';
-		var url = '//' + host + '/notifier_api/v2/notices?data=' + xml;
-		var request = document.createElement('iframe');
+	notify: function (error) {
+		"use strict";
 
-		request.style.width = '1px';
-		request.style.height = '1px';
+		var host, url, xml,
+			request = document.createElement('iframe');
+
+		host = Hoptoad.host || 'airbrake.io';
+		xml = escape(Hoptoad.generateXML(error));
+		url = '//' + host + '/notifier_api/v2/notices?data=' + xml;
+
 		request.style.display = 'none';
 		request.src = url;
 
-		document.getElementsByTagName('head')[0].appendChild(request);
+		document.body.appendChild(request);
 	},
 
-	setEnvironment: function(value) {
+	setEnvironment: function (value) {
+		"use strict";
+
 		var find = /<environment-name>.*<\/environment-name>/,
 			replace = '<environment-name>' + value + '</environment-name>';
 
-		Hoptoad.NOTICE_XML  = Hoptoad.NOTICE_XML.replace(find, replace)
+		Hoptoad.NOTICE_XML = Hoptoad.NOTICE_XML.replace(find, replace);
 	},
 
-	setHost: function(value) {
+	setHost: function (value) {
+		"use strict";
+
 		Hoptoad.host = value;
 	},
 
-	setKey: function(value) {
+	setKey: function (value) {
+		"use strict";
+
 		var find = /<api-key>.*<\/api-key>/,
 			replace = '<api-key>' + value + '</api-key>';
 
 		Hoptoad.NOTICE_XML = Hoptoad.NOTICE_XML.replace(find, replace);
 	},
 
-	setErrorDefaults: function(value) {
+	setErrorDefaults: function (value) {
+		"use strict";
+
 		Hoptoad.errorDefaults = value;
 	},
 
-	generateXML: function(errorWithoutDefaults) {
-		var error = Hoptoad.mergeDefault(Hoptoad.errorDefaults, errorWithoutDefaults);
+	generateXML: function (errorWithoutDefaults) {
+		"use strict";
 
-		var xml = Hoptoad.NOTICE_XML;
-		var baseUrl = error.url || '';
-		var hash = location.hash || '';
-		var url = Hoptoad.escapeText((baseUrl + hash) || '');
-		var component = Hoptoad.escapeText(error.component || '');
-		var action = Hoptoad.escapeText(error.action || '');
-		var errorType = Hoptoad.escapeText(error.type || 'Error');
-		var message = Hoptoad.escapeText(error.message || 'Unknown error.');
-		var backtrace = Hoptoad.generateBacktrace(error);
+		var cgi_data, data = '', i, methods, type,
+			error = Hoptoad.mergeDefault(Hoptoad.errorDefaults, errorWithoutDefaults),
+			esc = Hoptoad.escapeText,
 
+			xml = Hoptoad.NOTICE_XML,
+			url = esc(((error.url || '') + location.hash) || ''),
+			component = esc(error.component || ''),
 
-		if (Hoptoad.trim(url) == '' && Hoptoad.trim(component) == '') {
+			backtrace = Hoptoad.generateBacktrace(error);
+
+		if (Hoptoad.trim(url) === '' && Hoptoad.trim(component) === '') {
 			xml = xml.replace(/<request>.*<\/request>/, '');
 		} else {
-			var data = '';
+			cgi_data = error['cgi-data'] || {};
+			cgi_data.HTTP_USER_AGENT = navigator.userAgent;
+			data += '<cgi-data>' + Hoptoad.generateVariables(cgi_data) + '</cgi-data>';
 
-			var cgi_data = error['cgi-data'] || {};
-			cgi_data["HTTP_USER_AGENT"] = navigator.userAgent;
-			data += '<cgi-data>';
-			data += Hoptoad.generateVariables(cgi_data);
-			data += '</cgi-data>';
+			methods = ['params', 'session'];
 
-			var methods = ['params', 'session'];
-
-			for (var i = 0; i < 2; i++) {
-				var type = methods[i];
+			for (i = 0; i < 2; i++) {
+				type = methods[i];
 
 				if (error[type]) {
-					data += '<' + type + '>';
-					data += Hoptoad.generateVariables(error[type]);
-					data += '</' + type + '>';
+					data += '<' + type + '>' +
+						Hoptoad.generateVariables(error[type]) +
+						'</' + type + '>';
 				}
 			}
 
 			xml = xml.replace('</request>', data + '</request>')
 				.replace('REQUEST_URL', url)
-				.replace('REQUEST_ACTION', action)
+				.replace('REQUEST_ACTION', esc(error.action || ''))
 				.replace('REQUEST_COMPONENT', component);
 		}
 
 		return xml.replace('PROJECT_ROOT', Hoptoad.ROOT)
-			.replace('EXCEPTION_CLASS', errorType)
-			.replace('EXCEPTION_MESSAGE', message)
+			.replace('EXCEPTION_CLASS', esc(error.type || 'Error'))
+			.replace('EXCEPTION_MESSAGE', esc(error.message || 'Unknown error.'))
 			.replace('BACKTRACE_LINES', backtrace.join(''));
 	},
 
-	generateBacktrace: function(error) {
+	generateBacktrace: function (error) {
+		"use strict";
+
+		var backtrace, file, i, line, matches, stacktrace;
+
 		error = error || {};
 
-		if (typeof error.stack != 'string') {
+		if (typeof error.stack !== 'string') {
 			try {
 				(0)();
 			} catch(e) {
@@ -101,17 +110,17 @@ var Hoptoad = {
 			}
 		}
 
-		var backtrace  = [];
-		var stacktrace = Hoptoad.getStackTrace(error);
+		backtrace = [];
+		stacktrace = Hoptoad.getStackTrace(error);
 
-		for (var i = 0, l = stacktrace.length; i < l; i++) {
-			var line    = stacktrace[i];
-			var matches = line.match(Hoptoad.BACKTRACE_MATCHER);
+		for (i = 0; i < stacktrace.length; i++) {
+			line = stacktrace[i];
+			matches = line.match(Hoptoad.BACKTRACE_MATCHER);
 
 			if (matches && Hoptoad.validBacktraceLine(line)) {
-				var file = matches[2].replace(Hoptoad.ROOT, '[PROJECT_ROOT]');
+				file = matches[2].replace(Hoptoad.ROOT, '[PROJECT_ROOT]');
 
-				if (i == 0 && matches[2].match(document.location.href)) {
+				if (i === 0 && matches[2].match(document.location.href)) {
 					backtrace.push('<line method="" file="internal: " number=""/>');
 				}
 
@@ -124,15 +133,17 @@ var Hoptoad = {
 		return backtrace;
 	},
 
-	getStackTrace: function(error) {
-		var stacktrace = printStackTrace({ e : error, guess : false });
+	getStackTrace: function (error) {
+		"use strict";
 
-		for (var i = 0, l = stacktrace.length; i < l; i++) {
+		var i, stacktrace = printStackTrace({e: error, guess: false});
+
+		for (i = 0; i < stacktrace.length; i++) {
 			if (stacktrace[i].match(/\:\d+$/)) {
 				continue;
 			}
 
-			if (stacktrace[i].indexOf('@') == -1) {
+			if (stacktrace[i].indexOf('@') === -1) {
 				stacktrace[i] += '@unsupported.js';
 			}
 
@@ -142,7 +153,9 @@ var Hoptoad = {
 		return stacktrace;
 	},
 
-	validBacktraceLine: function(line) {
+	validBacktraceLine: function (line) {
+		"use strict";
+
 		for (var i = 0; i < Hoptoad.backtrace_filters.length; i++) {
 			if (line.match(Hoptoad.backtrace_filters[i])) {
 				return false;
@@ -152,20 +165,25 @@ var Hoptoad = {
 		return true;
 	},
 
-	generateVariables: function(parameters) {
-		var key;
-		var result = '';
+	generateVariables: function (parameters) {
+		"use strict";
+
+		var key, result = '';
 
 		for (key in parameters) {
-			result += '<var key="' + Hoptoad.escapeText(key) + '">'
-				+ Hoptoad.escapeText(parameters[key])
-				+ '</var>';
+			if (parameters.hasOwnProperty(key)) {
+				result += '<var key="' + Hoptoad.escapeText(key) + '">' +
+					Hoptoad.escapeText(parameters[key]) +
+					'</var>';
+			}
 		}
 
 		return result;
 	},
 
-	escapeText: function(text) {
+	escapeText: function (text) {
+		"use strict";
+
 		return text.replace(/&/g, '&#38;')
 			.replace(/</g, '&#60;')
 			.replace(/>/g, '&#62;')
@@ -173,16 +191,21 @@ var Hoptoad = {
 			.replace(/"/g, '&#34;');
 	},
 
-	trim: function(text) {
+	trim: function (text) {
+		"use strict";
+
 		return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
 	},
 
-	mergeDefault: function(defaults, hash) {
-		var cloned = {};
-		var key;
+	mergeDefault: function (defaults, hash) {
+		"use strict";
+
+		var cloned = {}, key;
 
 		for (key in hash) {
-			cloned[key] = hash[key];
+			if (hash.hasOwnProperty(key)) {
+				cloned[key] = hash[key];
+			}
 		}
 
 		for (key in defaults) {
@@ -256,8 +279,10 @@ if(b)return b.open("GET",a,!1),b.setRequestHeader("User-Agent","XMLHTTP/1.0"),b.
 
 
 
-window.onerror = function(message, file, line) {
-	setTimeout(function() {
+window.onerror = function (message, file, line) {
+	"use strict";
+
+	setTimeout(function () {
 		Hoptoad.notify({
 			message: message,
 			stack: '()@' + file + ':' + line
