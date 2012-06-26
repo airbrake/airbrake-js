@@ -103,26 +103,24 @@ var Hoptoad = {
 	generateBacktrace: function (error) {
 		"use strict";
 
-		var backtrace, file, i, line, matches, stacktrace;
+		var backtrace = [], file, i, matches, stacktrace;
 
 		error = error || {};
 
 		if (typeof error.stack !== 'string') {
 			try {
 				(0)();
-			} catch(e) {
+			} catch (e) {
 				error.stack = e.stack;
 			}
 		}
 
-		backtrace = [];
 		stacktrace = Hoptoad.getStackTrace(error);
 
 		for (i = 0; i < stacktrace.length; i++) {
-			line = stacktrace[i];
-			matches = line.match(Hoptoad.BACKTRACE_MATCHER);
+			matches = stacktrace[i].match(Hoptoad.BACKTRACE_MATCHER);
 
-			if (matches && Hoptoad.validBacktraceLine(line)) {
+			if (matches && Hoptoad.validBacktraceLine(stacktrace[i])) {
 				file = matches[2].replace(Hoptoad.ROOT, '[PROJECT_ROOT]');
 
 				if (i === 0 && matches[2].match(document.location.href)) {
@@ -174,7 +172,6 @@ var Hoptoad = {
 		"use strict";
 
 		var key, result = '';
-
 		for (key in parameters) {
 			if (parameters.hasOwnProperty(key)) {
 				result += '<var key="' + Hoptoad.escapeText(key) + '">' +
