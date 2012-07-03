@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Build example" default="all" basedir=".">
+    <property file="build.properties" />
+
+    <target name="all" depends="clean, minify">
+        <echo message="Build complete." />
+    </target>
+
+    <target name="clean">
+        <delete dir="${dist.dir}" />
+    </target>
+
+    <target name="js" description="Concatenate JavaScript source files">
+        <concat destfile="${dist.file}" force="yes" encoding="UTF-8">
+            <filelist dir="${src.dir}" files="${src.files}" />
+        </concat>
+    </target>
+
+    <target name="minify" depends="js" description="Minimize JavaScript files">
+        <apply executable="java" failonerror="true">
+            <fileset dir="${dist.dir}" includes="*.js" />
+            <mapper type="glob" from="*.js" to="${dist.dir}/*.min.js" />
+            <arg line="-jar" />
+            <arg path="${yuicompressor}" />
+            <arg line="${yuicompressor.options}" />
+            <srcfile />
+            <arg line="-o" />
+            <targetfile />
+        </apply>
+    </target>
+</project>
