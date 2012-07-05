@@ -7,7 +7,7 @@
             '<api-key>{key}</api-key>' +
             '<notifier>' +
                 '<name>airbrake_js</name>' +
-                '<version>0.1.0</version>' +
+                '<version>0.2.0</version>' +
                 '<url>http://airbrake.io</url>' +
             '</notifier>' +
             '<error>' +
@@ -76,7 +76,7 @@
         },
 
         options: {
-            host: 'airbrake.io',
+            host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false
         },
@@ -108,7 +108,7 @@
     }
     Notifier.prototype = {
         constructor: Notifier,
-        VERSION: '0.1.0',
+        VERSION: '0.2.0',
         ROOT: window.location.protocol + '//' + window.location.host,
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
@@ -118,7 +118,7 @@
 
         notify: function(error) {
             var xml = escape(this.generateXML(error)),
-                url = '//' + this.options.host + '/notifier_api/v2/notices?data=' + xml,
+                url = '//' + this.options.host + '?data=' + xml,
                 request = document.createElement('iframe');
 
             // console.log(unescape(xml));return;
