@@ -1,0 +1,6 @@
+Airbrake JS Notifer
+====================
+
+To Build
+--------
+Required Eclipse, run build.xml ant file to build. This cleans, minifies and compresses using the YUIcompressor.  This outputs to dist. Notifer.js and notifer.min.js
