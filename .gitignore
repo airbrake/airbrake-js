@@ -1,0 +1,3 @@
+# Ignore Eclipse IDE specific data
+.settings
+.project
