@@ -26,7 +26,6 @@
                 '<environment-name>{environment}</environment-name>' +
             '</server-environment>' +
         '</notice>',
-        whiskers = module.exports,
         Config,
         Util;
 
@@ -45,10 +44,6 @@
                     result = {};
 
                 while (obj = objects.shift()) {
-                    if (typeof obj !== 'object') {
-                        continue;
-                    }
-
                     for (key in obj) {
                         processProperty(key, result, obj);
                     }
@@ -67,7 +62,11 @@
             return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
         },
 
-        renderXML: whiskers.compile(NOTICE_XML)
+        substitute: function(text, data, emptyForUndefinedData) {
+            return text.replace(/{([\w_.-]+)}/g, function(match, key) {
+                return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
+            });
+        }
     };
 
     // Share Config to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
@@ -78,7 +77,8 @@
 
         options: {
             host: 'airbrake.io',
-            errorDefaults: {}
+            errorDefaults: {},
+            guessFuntionName: false
         },
 
         setEnvironment: function (value) {
@@ -95,12 +95,16 @@
 
         setErrorDefaults: function (value) {
             this.options['errorDefaults'] = value;
+        },
+
+        setGuessFuntionName: function (value) {
+            this.options['guessFuntionName'] = value;
         }
     };
 
     function Notifier() {
         this.options = Util.merge({}, Config.options);
-        this.xmlData = Util.merge({}, Config.xmlData);
+        this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
     }
     Notifier.prototype = {
         constructor: Notifier,
@@ -108,6 +112,9 @@
         ROOT: window.location.protocol + '//' + window.location.host,
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
+        DEF_XML_DATA: {
+            request: ''
+        },
 
         notify: function(error) {
             var xml = escape(this.generateXML(error)),
@@ -121,7 +128,10 @@
 
             // When request has been sent, delete iframe
             request.onload = function () {
-                document.body.removeChild(request);
+                // To avoid infinite progress indicator
+                setTimeout(function() {
+                    document.body.removeChild(request);
+                }, 0);
             };
 
             document.body.appendChild(request);
@@ -136,12 +146,9 @@
                 error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
                 component = Util.trim(Util.escape(error.component || ''));
 
-            xmlData.request = '';
-            xmlData.request_url = Util.escape((error.url || '') + location.hash);
+            xmlData.request_url = Util.trim(Util.escape((error.url || '') + location.hash));
 
-            if (!Util.trim(xmlData.request_url) && !component) {
-                xmlData.request = '';
-            } else {
+            if (xmlData.request_url || component) {
                 cgi_data = error['cgi-data'] || {};
                 cgi_data.HTTP_USER_AGENT = navigator.userAgent;
                 xmlData.request += '<cgi-data>' + this.generateVariables(cgi_data) + '</cgi-data>';
@@ -166,7 +173,7 @@
             xmlData.exception_message = Util.escape(error.message || 'Unknown error.');
             xmlData.backtrace_lines = this.generateBacktrace(error).join('');
 
-            return Util.renderXML(xmlData);
+            return Util.substitute(NOTICE_XML, xmlData, true);
         },
 
         generateBacktrace: function(error) {
@@ -208,7 +215,10 @@
 
         getStackTrace: function(error) {
             var i,
-                stacktrace = printStackTrace({e: error, guess: false});
+                stacktrace = printStackTrace({
+                    e: error,
+                    guess: this.options.guessFuntionName
+                });
 
             for (i = 0; i < stacktrace.length; i++) {
                 if (stacktrace[i].match(/\:\d+$/)) {
