@@ -78,7 +78,7 @@
         options: {
             host: 'airbrake.io',
             errorDefaults: {},
-            guessFuntionName: false
+            guessFunctionName: false
         },
 
         setEnvironment: function (value) {
@@ -97,8 +97,8 @@
             this.options['errorDefaults'] = value;
         },
 
-        setGuessFuntionName: function (value) {
-            this.options['guessFuntionName'] = value;
+        setGuessFunctionName: function (value) {
+            this.options['guessFunctionName'] = value;
         }
     };
 
@@ -217,7 +217,7 @@
             var i,
                 stacktrace = printStackTrace({
                     e: error,
-                    guess: this.options.guessFuntionName
+                    guess: this.options.guessFunctionName
                 });
 
             for (i = 0; i < stacktrace.length; i++) {
