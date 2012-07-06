@@ -1,3 +1,4 @@
 # Ignore Eclipse IDE specific data
 .settings
 .project
+.DS_Store
