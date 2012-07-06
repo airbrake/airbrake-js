@@ -118,7 +118,7 @@
 
         notify: function(error) {
             var xml = escape(this.generateXML(error)),
-                url = '//' + this.options.host + '?data=' + xml,
+                url = '//' + this.options.host + '/notifier_api/v2/notices?data=' + xml,
                 request = document.createElement('iframe');
 
             // console.log(unescape(xml));return;
