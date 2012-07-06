@@ -425,7 +425,7 @@ printStackTrace.implementation.prototype = {
             '<api-key>{key}</api-key>' +
             '<notifier>' +
                 '<name>airbrake_js</name>' +
-                '<version>0.2.0</version>' +
+                '<version>0.1.0</version>' +
                 '<url>http://airbrake.io</url>' +
             '</notifier>' +
             '<error>' +
@@ -494,9 +494,9 @@ printStackTrace.implementation.prototype = {
         },
 
         options: {
-            host: 'api.airbrake.io',
+            host: 'airbrake.io',
             errorDefaults: {},
-            guessFunctionName: false
+            guessFuntionName: false
         },
 
         setEnvironment: function (value) {
@@ -515,8 +515,8 @@ printStackTrace.implementation.prototype = {
             this.options['errorDefaults'] = value;
         },
 
-        setGuessFunctionName: function (value) {
-            this.options['guessFunctionName'] = value;
+        setGuessFuntionName: function (value) {
+            this.options['guessFuntionName'] = value;
         }
     };
 
@@ -526,7 +526,7 @@ printStackTrace.implementation.prototype = {
     }
     Notifier.prototype = {
         constructor: Notifier,
-        VERSION: '0.2.0',
+        VERSION: '0.1.0',
         ROOT: window.location.protocol + '//' + window.location.host,
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
@@ -536,7 +536,7 @@ printStackTrace.implementation.prototype = {
 
         notify: function(error) {
             var xml = escape(this.generateXML(error)),
-                url = '//' + this.options.host + '?data=' + xml,
+                url = '//' + this.options.host + '/notifier_api/v2/notices?data=' + xml,
                 request = document.createElement('iframe');
 
             // console.log(unescape(xml));return;
@@ -546,7 +546,6 @@ printStackTrace.implementation.prototype = {
 
             // When request has been sent, delete iframe
             request.onload = function () {
-                // To avoid infinite progress indicator
                 setTimeout(function() {
                     document.body.removeChild(request);
                 }, 0);
@@ -635,7 +634,7 @@ printStackTrace.implementation.prototype = {
             var i,
                 stacktrace = printStackTrace({
                     e: error,
-                    guess: this.options.guessFunctionName
+                    guess: this.options.guessFuntionName
                 });
 
             for (i = 0; i < stacktrace.length; i++) {
