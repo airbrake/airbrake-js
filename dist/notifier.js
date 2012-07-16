@@ -445,6 +445,7 @@ printStackTrace.implementation.prototype = {
             '</server-environment>' +
         '</notice>',
         Config,
+        Global,
         Util;
 
     Util = {
@@ -484,39 +485,109 @@ printStackTrace.implementation.prototype = {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
+        },
+
+        processjQueryEventHandlerWrapping: function() {
+            if (Config.options.trackJQ === true) {
+                Config.jQuery_fn_on_original = Config.jQuery_fn_on_original || jQuery.fn.on;
+
+                jQuery.fn.on = function() {
+                    var args = Array.prototype.slice.call(arguments),
+                        fnArgIdx = 4;
+
+                    // Search index of function argument
+                    while((--fnArgIdx > -1) && (typeof args[fnArgIdx] !== 'function'));
+
+                    // If the function is not found, then subscribe original event handler function
+                    if (fnArgIdx === -1) {
+                        return Config.jQuery_fn_on_original.apply(this, arguments);
+                    }
+
+                    // If the function is found, then subscribe wrapped event handler function
+                    args[fnArgIdx] = (function(fnOriginHandler) {
+                        return function() {
+                            try {
+                                fnOriginHandler.apply(this, arguments);
+                            } catch (e) {
+                                Global.captureException(e);
+                            }
+                        };
+                    })(args[fnArgIdx]);
+
+                    return Config.jQuery_fn_on_original.apply(this, args);
+                };
+            } else {
+                (typeof Config.jQuery_fn_on_original === 'function') && (jQuery.fn.on = Config.jQuery_fn_on_original);
+            }
+        },
+
+        isjQueryPresent: function() {
+            // Currently only 1.7.x version supported
+            return (typeof jQuery === 'function') && ('fn' in jQuery) && ('jquery' in jQuery.fn)
+                    && (jQuery.fn.jquery.indexOf('1.7') === 0)
         }
     };
 
-    // Share Config to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
-    Config = window.Airbrake = window.Hoptoad = {
+    /*
+     * The object to store settings. Allocated from the Global (windows scope) so that users can change settings
+     * only through the methods, rather than through a direct change of the object fileds. So that we can to handle
+     * change settings event (in setter method).
+     */
+    Config = {
         xmlData: {
             environment: 'environment'
         },
 
         options: {
+            trackJQ: false, // jQuery.fn.jquery
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false
-        },
+        }
+    };
 
+    // Share to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
+    Global = window.Airbrake = window.Hoptoad = {
         setEnvironment: function (value) {
-            this.xmlData['environment'] = value;
+            Config.xmlData['environment'] = value;
         },
 
         setKey: function (value) {
-            this.xmlData['key'] = value;
+            Config.xmlData['key'] = value;
         },
 
         setHost: function (value) {
-            this.options['host'] = value;
+            Config.options['host'] = value;
         },
 
         setErrorDefaults: function (value) {
-            this.options['errorDefaults'] = value;
+            Config.options['errorDefaults'] = value;
         },
 
         setGuessFunctionName: function (value) {
-            this.options['guessFunctionName'] = value;
+            Config.options['guessFunctionName'] = value;
+        },
+
+        setTrackJQ: function(value) {
+            if (!Util.isjQueryPresent()) {
+                throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
+            }
+
+            value = !!value;
+
+            if (Config.options.trackJQ === value) {
+                return;
+            }
+
+            Config.options.trackJQ = value;
+
+            Util.processjQueryEventHandlerWrapping();
+        },
+
+        captureException: function(e) {
+            new Notifier().notify({
+                message: e.message
+            });
         }
     };
 
