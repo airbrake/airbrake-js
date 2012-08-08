@@ -30,6 +30,11 @@ After this, setup the notifier. You need an Airbrake API key, sign up for a plan
 	  Airbrake.setHost('api.airbrake.io');
 	  Airbrake.setEnvironment('dev');
 	  Airbrake.setGuessFunctionName(true);
+	  Airbrake.setErrorDefaults({
+     	 	url: document.URL,
+     		 component: "hello",
+    	  	action: "world",
+      		});
 	</script>
 
 That's it! The header of your HTML document should look like this. 
