@@ -3,7 +3,7 @@ NOTE: This is a work in progress. This document isn't ready for production deplo
 Airbrake
 ========
 
-This is the javascripit source code for notifying [Airbrake](http://airbrake.io) when your javascripit has an exception. 
+This is the javascript source code for notifying [Airbrake](http://airbrake.io) when your javascript has an exception. 
 
 When an uncaught exception occurs, Airbrake Javascript notifier will POST the relevant data
 to the Airbrake server specified in your environment.
@@ -19,7 +19,7 @@ Install compiled and minified from Airbrake CDN.
 
 ### Basic Setup. 
 
-Include the Javascripit notifier in your header. 
+Include the Javascript notifier in your header. 
 
     <script src="http://cdn.airbrake.io/notifier.min.js"></script>
 
