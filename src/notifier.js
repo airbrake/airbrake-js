@@ -173,7 +173,8 @@
 
         captureException: function (e) {
             new Notifier().notify({
-                message: e.message
+                message: e.message,
+                stack: e.stack
             });
         }
     };
@@ -215,6 +216,12 @@
                 document.body.appendChild(request);
             }
             
+            /*
+             * Cross-domain AJAX POST request. 
+             * 
+             * It requires a server setup as described in Cross-Origin Resource Sharing spec:
+             * http://www.w3.org/TR/cors/
+             */
             function _sendPOSTRequest (url, data) {
                 var request = new XMLHttpRequest();
                 
