@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>usageExample</title>
+        
+        <script type="text/javascript" src="../dist/notifier.js"></script>
+        
+        <script>
+            window.Airbrake.setRequestType('GET');
+            window.Airbrake.setKey('111');
+            
+            var _funcRec = function (level) {
+                if (level === 0) {
+                    (0)();
+                } else {
+                    _funcRec(level - 1);
+                }
+            };
+            
+            _funcRec(1000);
+        </script>
+    </head>
+
+    <body>
+       
+    </body>
+</html>

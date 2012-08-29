@@ -419,7 +419,7 @@ printStackTrace.implementation.prototype = {
 // Airbrake JavaScript Notifier
 (function() {
     "use strict";
-
+    
     var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
         '<notice version="2.0">' +
             '<api-key>{key}</api-key>' +
@@ -450,7 +450,7 @@ printStackTrace.implementation.prototype = {
 
     Util = {
         merge: (function() {
-            function processProperty(key, dest, src) {
+            function processProperty (key, dest, src) {
                 if (src.hasOwnProperty(key)) {
                     dest[key] = src[key];
                 }
@@ -472,7 +472,7 @@ printStackTrace.implementation.prototype = {
             };
         })(),
 
-        escape: function(text) {
+        escape: function (text) {
             return text.replace(/&/g, '&#38;').replace(/</g, '&#60;').replace(/>/g, '&#62;')
                     .replace(/'/g, '&#39;').replace(/"/g, '&#34;');
         },
@@ -481,7 +481,7 @@ printStackTrace.implementation.prototype = {
             return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
         },
 
-        substitute: function(text, data, emptyForUndefinedData) {
+        substitute: function (text, data, emptyForUndefinedData) {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
@@ -504,7 +504,7 @@ printStackTrace.implementation.prototype = {
                     }
 
                     // If the function is found, then subscribe wrapped event handler function
-                    args[fnArgIdx] = (function(fnOriginHandler) {
+                    args[fnArgIdx] = (function (fnOriginHandler) {
                         return function() {
                             try {
                                 fnOriginHandler.apply(this, arguments);
@@ -542,7 +542,8 @@ printStackTrace.implementation.prototype = {
             trackJQ: false, // jQuery.fn.jquery
             host: 'api.airbrake.io',
             errorDefaults: {},
-            guessFunctionName: false
+            guessFunctionName: false,
+            requestType: 'POST'
         }
     };
 
@@ -567,8 +568,12 @@ printStackTrace.implementation.prototype = {
         setGuessFunctionName: function (value) {
             Config.options['guessFunctionName'] = value;
         },
+        
+        setRequestType: function (value) {
+            Config.options['requestType'] = value;
+        },
 
-        setTrackJQ: function(value) {
+        setTrackJQ: function (value) {
             if (!Util.isjQueryPresent()) {
                 throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
             }
@@ -584,9 +589,10 @@ printStackTrace.implementation.prototype = {
             Util.processjQueryEventHandlerWrapping();
         },
 
-        captureException: function(e) {
+        captureException: function (e) {
             new Notifier().notify({
-                message: e.message
+                message: e.message,
+                stack: e.stack
             });
         }
     };
@@ -595,6 +601,7 @@ printStackTrace.implementation.prototype = {
         this.options = Util.merge({}, Config.options);
         this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
     }
+    
     Notifier.prototype = {
         constructor: Notifier,
         VERSION: '0.2.0',
@@ -605,28 +612,58 @@ printStackTrace.implementation.prototype = {
             request: ''
         },
 
-        notify: function(error) {
-            var xml = escape(this.generateXML(error)),
-                url = '//' + this.options.host + '/notifier_api/v2/notices?data=' + xml,
-                request = document.createElement('iframe');
-
-            // console.log(unescape(xml));return;
-
-            request.style.display = 'none';
-            request.src = url;
-
-            // When request has been sent, delete iframe
-            request.onload = function () {
-                // To avoid infinite progress indicator
-                setTimeout(function() {
-                    document.body.removeChild(request);
-                }, 0);
+        notify: (function () {
+            /*
+             * Emit GET request via <iframe> element.
+             * Data is transmited as a part of query string.
+             */
+            function _sendGETRequest (url, data) {
+                var request = document.createElement('iframe');
+                
+                request.style.display = 'none';
+                request.src = url + '?data=' + data;
+                
+                // When request has been sent, delete iframe
+                request.onload = function () {
+                    // To avoid infinite progress indicator
+                    setTimeout(function() {
+                        document.body.removeChild(request);
+                    }, 0);
+                };
+    
+                document.body.appendChild(request);
+            }
+            
+            /*
+             * Cross-domain AJAX POST request. 
+             * 
+             * It requires a server setup as described in Cross-Origin Resource Sharing spec:
+             * http://www.w3.org/TR/cors/
+             */
+            function _sendPOSTRequest (url, data) {
+                var request = new XMLHttpRequest();
+                
+                request.open('POST', url, true);
+                
+                request.send(data);
+            }
+            
+            return function (error) {
+                var xml = escape(this.generateXML(error)),
+                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
+                
+                switch (Config.options['requestType']) {
+                    case 'POST':
+                        _sendPOSTRequest(url, xml);
+                        break;
+                    
+                    default:
+                        _sendGETRequest(url, xml);
+                }
             };
+        } ()),
 
-            document.body.appendChild(request);
-        },
-
-        generateXML: function(errorWithoutDefaults) {
+        generateXML: function (errorWithoutDefaults) {
             var xmlData = this.xmlData,
                 cgi_data,
                 i,
@@ -665,7 +702,7 @@ printStackTrace.implementation.prototype = {
             return Util.substitute(NOTICE_XML, xmlData, true);
         },
 
-        generateBacktrace: function(error) {
+        generateBacktrace: function (error) {
             var backtrace = [],
                 file,
                 i,
@@ -702,7 +739,7 @@ printStackTrace.implementation.prototype = {
             return backtrace;
         },
 
-        getStackTrace: function(error) {
+        getStackTrace: function (error) {
             var i,
                 stacktrace = printStackTrace({
                     e: error,
@@ -724,7 +761,7 @@ printStackTrace.implementation.prototype = {
             return stacktrace;
         },
 
-        validBacktraceLine: function(line) {
+        validBacktraceLine: function (line) {
             for (var i = 0; i < this.backtrace_filters.length; i++) {
                 if (line.match(this.backtrace_filters[i])) {
                     return false;
