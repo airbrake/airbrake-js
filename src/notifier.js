@@ -1,7 +1,7 @@
 // Airbrake JavaScript Notifier
 (function() {
     "use strict";
-
+    
     var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
         '<notice version="2.0">' +
             '<api-key>{key}</api-key>' +
@@ -32,7 +32,7 @@
 
     Util = {
         merge: (function() {
-            function processProperty(key, dest, src) {
+            function processProperty (key, dest, src) {
                 if (src.hasOwnProperty(key)) {
                     dest[key] = src[key];
                 }
@@ -54,7 +54,7 @@
             };
         })(),
 
-        escape: function(text) {
+        escape: function (text) {
             return text.replace(/&/g, '&#38;').replace(/</g, '&#60;').replace(/>/g, '&#62;')
                     .replace(/'/g, '&#39;').replace(/"/g, '&#34;');
         },
@@ -63,7 +63,7 @@
             return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
         },
 
-        substitute: function(text, data, emptyForUndefinedData) {
+        substitute: function (text, data, emptyForUndefinedData) {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
@@ -86,7 +86,7 @@
                     }
 
                     // If the function is found, then subscribe wrapped event handler function
-                    args[fnArgIdx] = (function(fnOriginHandler) {
+                    args[fnArgIdx] = (function (fnOriginHandler) {
                         return function() {
                             try {
                                 fnOriginHandler.apply(this, arguments);
@@ -150,7 +150,7 @@
             Config.options['guessFunctionName'] = value;
         },
 
-        setTrackJQ: function(value) {
+        setTrackJQ: function (value) {
             if (!Util.isjQueryPresent()) {
                 throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
             }
@@ -166,7 +166,7 @@
             Util.processjQueryEventHandlerWrapping();
         },
 
-        captureException: function(e) {
+        captureException: function (e) {
             new Notifier().notify({
                 message: e.message
             });
@@ -177,6 +177,7 @@
         this.options = Util.merge({}, Config.options);
         this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
     }
+    
     Notifier.prototype = {
         constructor: Notifier,
         VERSION: '0.2.0',
@@ -187,28 +188,49 @@
             request: ''
         },
 
-        notify: function(error) {
-            var xml = escape(this.generateXML(error)),
-                url = '//' + this.options.host + '/notifier_api/v2/notices?data=' + xml,
-                request = document.createElement('iframe');
-
-            // console.log(unescape(xml));return;
-
-            request.style.display = 'none';
-            request.src = url;
-
-            // When request has been sent, delete iframe
-            request.onload = function () {
-                // To avoid infinite progress indicator
-                setTimeout(function() {
-                    document.body.removeChild(request);
-                }, 0);
+        notify: (function () {
+            /*
+             * Emit GET request via <iframe> element.
+             * Data is transmited as a part of query string.
+             */
+            function _sendGETRequest (url, data) {
+                var request = document.createElement('iframe');
+                
+                request.style.display = 'none';
+                request.src = url + '?data=' + data;
+                
+                // When request has been sent, delete iframe
+                request.onload = function () {
+                    // To avoid infinite progress indicator
+                    setTimeout(function() {
+                        document.body.removeChild(request);
+                    }, 0);
+                };
+    
+                document.body.appendChild(request);
+            }
+            
+            function _sendPOSTRequest (url, data) {
+                var request = new XMLHttpRequest();
+                
+                request.open('POST', url, true);
+                
+                request.onload = function (e) {
+                    
+                };
+                
+                request.send(data);
+            }
+            
+            return function (error) {
+                var xml = escape(this.generateXML(error)),
+                    url = '//' + this.options.host + '/notifier_api/v2/notices';
+                
+                _sendGETRequest(url, xml);
             };
+        } ()),
 
-            document.body.appendChild(request);
-        },
-
-        generateXML: function(errorWithoutDefaults) {
+        generateXML: function (errorWithoutDefaults) {
             var xmlData = this.xmlData,
                 cgi_data,
                 i,
@@ -247,7 +269,7 @@
             return Util.substitute(NOTICE_XML, xmlData, true);
         },
 
-        generateBacktrace: function(error) {
+        generateBacktrace: function (error) {
             var backtrace = [],
                 file,
                 i,
@@ -284,7 +306,7 @@
             return backtrace;
         },
 
-        getStackTrace: function(error) {
+        getStackTrace: function (error) {
             var i,
                 stacktrace = printStackTrace({
                     e: error,
@@ -306,7 +328,7 @@
             return stacktrace;
         },
 
-        validBacktraceLine: function(line) {
+        validBacktraceLine: function (line) {
             for (var i = 0; i < this.backtrace_filters.length; i++) {
                 if (line.match(this.backtrace_filters[i])) {
                     return false;
