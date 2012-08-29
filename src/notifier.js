@@ -124,7 +124,8 @@
             trackJQ: false, // jQuery.fn.jquery
             host: 'api.airbrake.io',
             errorDefaults: {},
-            guessFunctionName: false
+            guessFunctionName: false,
+            requestType: 'POST'
         }
     };
 
@@ -148,6 +149,10 @@
 
         setGuessFunctionName: function (value) {
             Config.options['guessFunctionName'] = value;
+        },
+        
+        setRequestType: function (value) {
+            Config.options['requestType'] = value;
         },
 
         setTrackJQ: function (value) {
@@ -215,18 +220,21 @@
                 
                 request.open('POST', url, true);
                 
-                request.onload = function (e) {
-                    
-                };
-                
                 request.send(data);
             }
             
             return function (error) {
                 var xml = escape(this.generateXML(error)),
-                    url = '//' + this.options.host + '/notifier_api/v2/notices';
+                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
                 
-                _sendGETRequest(url, xml);
+                switch (Config.options['requestType']) {
+                    case 'POST':
+                        _sendPOSTRequest(url, xml);
+                        break;
+                    
+                    default:
+                        _sendGETRequest(url, xml);
+                }
             };
         } ()),
 
