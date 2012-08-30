@@ -444,6 +444,9 @@ printStackTrace.implementation.prototype = {
                 '<environment-name>{environment}</environment-name>' +
             '</server-environment>' +
         '</notice>',
+        REQUEST_VARIABLE_GROUP = '<{group_name}>{inner_content}</{group_name}>',
+        REQUEST_VARIABLE = '<var key="{key}">{value}</var>',
+        BACKTRACE_LINE = '<line method="{method}" file="{file}" number="{number}" />',
         Config,
         Global,
         Util,
@@ -486,6 +489,17 @@ printStackTrace.implementation.prototype = {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
+        },
+        
+        substituteArr: function (text, dataArr, emptyForUndefinedData) {
+            var _i = 0, _l = 0, 
+                returnStr = '';
+            
+            for (_i = 0, _l = dataArr.length; _i < _l; _i += 1) {
+                returnStr += this.substitute(text, dataArr[_i], emptyForUndefinedData);
+            }
+            
+            return returnStr;
         },
 
         processjQueryEventHandlerWrapping: function () {
@@ -612,7 +626,8 @@ printStackTrace.implementation.prototype = {
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false,
-            requestType: 'POST'
+            requestType: 'POST',
+            outputFormat: 'XML'
         }
     };
     
@@ -638,6 +653,9 @@ printStackTrace.implementation.prototype = {
             namespace: 'options'
         }, {
             variable: 'requestType',
+            namespace: 'options'
+        }, {
+            variable: 'outputFormat',
             namespace: 'options'
         }, {
             methodName: 'setTrackJQ',
@@ -684,7 +702,7 @@ printStackTrace.implementation.prototype = {
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
         DEF_XML_DATA: {
-            request: ''
+            request: {}
         },
 
         notify: (function () {
@@ -724,58 +742,126 @@ printStackTrace.implementation.prototype = {
             }
             
             return function (error) {
-                var xml = escape(this.generateXML(error)),
+                var outputData = '',
                     url = 'http://' + this.options.host + '/notifier_api/v2/notices';
+                    
+                switch (this.options['outputFormat']) {
+                    case 'XML':
+                        outputData = escape(this.generateXML(this.generateJSON(error)));
+                        
+                        break;
+                    case 'JSON':
+                        outputData = escape(JSON.stringify(this.generateJSON(error)));
+                        
+                        break;
+                    default:
+                }
                 
-                switch (Config.options['requestType']) {
+                switch (this.options['requestType']) {
                     case 'POST':
-                        _sendPOSTRequest(url, xml);
+                        _sendPOSTRequest(url, outputData);
+                        break;
+                    
+                    case 'GET':
+                        _sendGETRequest(url, outputData);
                         break;
                     
                     default:
-                        _sendGETRequest(url, xml);
                 }
             };
         } ()),
-
-        generateXML: function (errorWithoutDefaults) {
-            var xmlData = this.xmlData,
-                cgi_data,
-                i,
-                methods,
-                type,
-                error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
-                component = Util.trim(Util.escape(error.component || ''));
-
-            xmlData.request_url = Util.trim(Util.escape((error.url || '') + location.hash));
-
-            if (xmlData.request_url || component) {
-                cgi_data = error['cgi-data'] || {};
-                cgi_data.HTTP_USER_AGENT = navigator.userAgent;
-                xmlData.request += '<cgi-data>' + this.generateVariables(cgi_data) + '</cgi-data>';
-
-                methods = ['params', 'session'];
-
-                for (i = 0; i < methods.length; i++) {
-                    type = methods[i];
-
-                    if (error[type]) {
-                        xmlData.request += '<' + type + '>' + this.generateVariables(error[type]) + '</' + type + '>';
+        
+        generateJSON: (function () {
+            function _generateVariables (inputObj) {
+                var key = '', returnArr = [];
+                
+                for (key in inputObj) {
+                    if (inputObj.hasOwnProperty(key)) {
+                        returnArr.push({
+                            key: key,
+                            value: inputObj[key]
+                        });
                     }
                 }
-
-                xmlData.request_url = Util.escape((error.url || '') + location.hash);
-                xmlData.request_action = Util.escape(error.action || '');
-                xmlData.request_component = component;
+                
+                return returnArr;
             }
+            
+            function _composeRequestObj (methods, errorObj) {
+                var _i = 0,
+                    returnObj = {},
+                    type = '';
+                
+                for (_i = 0; _i < methods.length; _i += 1) {
+                    type = methods[_i];
+                    if (typeof errorObj[type] !== 'undefined') {
+                        returnObj[type] = _generateVariables(errorObj[type]);
+                    }
+                }
+                
+                return returnObj;             
+            }
+            
+            return function (errorWithoutDefaults) {
+                var outputData = this.xmlData,
+                    error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
+                    
+                    component = error.component || '',
+                    request_url = (error.url || '' + location.hash),
+                    
+                    methods = ['cgi-data', 'params', 'session'],
+                    _outputData = null;
+                
+                _outputData = {
+                    request_url: request_url,
+                    request_action: (error.action || ''),
+                    request_component: component,
+                    request: (function () {
+                        if (request_url || component) {
+                            error['cgi-data'] = error['cgi-data'] || {};
+                            error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
+                            return Util.merge(outputData.request, _composeRequestObj(methods, error));
+                        } else {
+                            return {}
+                        }
+                    } ()),
+                    
+                    project_root: this.ROOT,
+                    exception_class: (error.type || 'Error'),
+                    exception_message: (error.message || 'Unknown error.'),
+                    backtrace_lines: this.generateBacktrace(error)
+                }
+                
+                outputData = Util.merge(outputData, _outputData);
+                
+                return outputData;
+            };
+        } ()),
 
-            xmlData.project_root = this.ROOT;
-            xmlData.exception_class = Util.escape(error.type || 'Error');
-            xmlData.exception_message = Util.escape(error.message || 'Unknown error.');
-            xmlData.backtrace_lines = this.generateBacktrace(error).join('');
-
-            return Util.substitute(NOTICE_XML, xmlData, true);
-        },
+        generateXML: (function () {
+            function _generateRequestVariableGroups (requestObj) {
+                var _group = '',
+                    returnStr = '';
+                
+                for (_group in requestObj) {
+                    if (requestObj.hasOwnProperty(_group)) {
+                        returnStr += Util.substitute(REQUEST_VARIABLE_GROUP, {
+                            group_name: _group,
+                            inner_content: Util.substituteArr(REQUEST_VARIABLE, requestObj[_group], true)
+                        }, true);
+                    }
+                }
+                
+                return returnStr;
+            }
+            
+            return function (JSONdataObj) {
+                JSONdataObj.request = _generateRequestVariableGroups(JSONdataObj.request);
+                JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE, JSONdataObj.backtrace_lines, true);
+                
+                return Util.substitute(NOTICE_XML, JSONdataObj, true);
+            };
+        } ()),
 
         generateBacktrace: function (error) {
             var backtrace = [],
@@ -803,11 +889,23 @@ printStackTrace.implementation.prototype = {
                     file = matches[2].replace(this.ROOT, '[PROJECT_ROOT]');
 
                     if (i === 0 && matches[2].match(document.location.href)) {
-                        backtrace.push('<line method="" file="internal: " number=""/>');
+                        // backtrace.push('<line method="" file="internal: " number=""/>');
+                        
+                        backtrace.push({
+                            method: '',
+                            file: 'internal: ',
+                            number: ''
+                        });
                     }
 
-                    backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
-                            '" number="' + matches[3] + '" />');
+                    // backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
+                    //        '" number="' + matches[3] + '" />');
+                    
+                    backtrace.push({
+                        method: matches[1],
+                        file: file,
+                        number: matches[3]
+                    });
                 }
             }
 
