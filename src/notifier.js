@@ -330,7 +330,7 @@
                         _sendPOSTRequest(url, outputData);
                         break;
                     
-                    case 'Get':
+                    case 'GET':
                         _sendGETRequest(url, outputData);
                         break;
                     
