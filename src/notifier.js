@@ -28,7 +28,8 @@
         '</notice>',
         Config,
         Global,
-        Util;
+        Util,
+        _publicAPI;
 
     Util = {
         merge: (function() {
@@ -69,11 +70,11 @@
             });
         },
 
-        processjQueryEventHandlerWrapping: function() {
+        processjQueryEventHandlerWrapping: function () {
             if (Config.options.trackJQ === true) {
                 Config.jQuery_fn_on_original = Config.jQuery_fn_on_original || jQuery.fn.on;
 
-                jQuery.fn.on = function() {
+                jQuery.fn.on = function () {
                     var args = Array.prototype.slice.call(arguments),
                         fnArgIdx = 4;
 
@@ -103,11 +104,79 @@
             }
         },
 
-        isjQueryPresent: function() {
+        isjQueryPresent: function () {
             // Currently only 1.7.x version supported
             return (typeof jQuery === 'function') && ('fn' in jQuery) && ('jquery' in jQuery.fn)
                     && (jQuery.fn.jquery.indexOf('1.7') === 0)
-        }
+        },
+        
+        /*
+         * Make first letter in a string capital. e.g. 'guessFunctionName' -> 'GuessFunctionName'
+         * Is used to generate getter and setter method names.
+         */
+        capitalizeFirstLetter: function (str) {
+            return str[0].toUpperCase() + str.slice(1);  
+        },
+        
+        /*
+         * Generate public API from an array of specifically formated objects, e.g.
+         * 
+         * - this will generate 'setEnvironment' and 'getEnvironment' API methods for configObj.xmlData.environment variable:
+         * {
+         *     variable: 'environment',
+         *     namespace: 'xmlData'
+         * }
+         * 
+         * - this will define 'method' function as 'captureException' API method 
+         * {
+         *     methodName: 'captureException',
+         *     method: (function (...) {...});
+         * }
+         * 
+         */
+        generatePublicAPI: (function () {
+            function _generateSetter (variable, namespace, configObj) {
+                return function (value) {
+                    configObj[namespace][variable] = value;
+                };
+            }
+            
+            function _generateGetter (variable, namespace, configObj) {
+                return function (value) {
+                    return configObj[namespace][variable];
+                };
+            }
+            
+            /*
+             * publicAPI: array of specifically formated objects
+             * configObj: inner configuration object 
+             */
+            return function (publicAPI, configObj) {
+                var _i = 0, _m = null, _capitalized = '',
+                    returnObj = {};
+                
+                for (_i = 0; _i < publicAPI.length; _i += 1) {
+                    _m = publicAPI[_i];
+                    
+                    switch (true) {
+                        case (typeof _m.variable !== 'undefined') && (typeof _m.methodName === 'undefined'):
+                            _capitalized = Util.capitalizeFirstLetter(_m.variable)
+                            returnObj['set' + _capitalized] = _generateSetter(_m.variable, _m.namespace, configObj);
+                            returnObj['get' + _capitalized] = _generateGetter(_m.variable, _m.namespace, configObj);
+                            
+                            break;
+                        case (typeof _m.methodName !== 'undefined') && (typeof _m.method !== 'undefined'):
+                            returnObj[_m.methodName] = _m.method
+                            
+                            break;
+                        
+                        default:                       
+                    }
+                }
+                
+                return returnObj;
+            };
+        } ())
     };
 
     /*
@@ -128,56 +197,62 @@
             requestType: 'POST'
         }
     };
+    
+    /*
+     * The public API definition object. If no 'methodName' and 'method' values specified,
+     * getter and setter for 'variable' will be defined.
+     */
+    _publicAPI = [
+        {
+            variable: 'environment',
+            namespace: 'xmlData'
+        }, {
+            variable: 'key',
+            namespace: 'xmlData'
+        }, {
+            variable: 'host',
+            namespace: 'options'
+        }, {
+            variable: 'errorDefaults',
+            namespace: 'options'
+        }, {
+            variable: 'guessFunctionName',
+            namespace: 'options'
+        }, {
+            variable: 'requestType',
+            namespace: 'options'
+        }, {
+            methodName: 'setTrackJQ',
+            variable: 'trackJQ',
+            namespace: 'options',
+            method: (function (value) {
+                if (!Util.isjQueryPresent()) {
+                    throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
+                }
+    
+                value = !!value;
+    
+                if (Config.options.trackJQ === value) {
+                    return;
+                }
+    
+                Config.options.trackJQ = value;
+    
+                Util.processjQueryEventHandlerWrapping();
+            })
+        }, {
+            methodName: 'captureException',
+            method: (function (e) {
+                new Notifier().notify({
+                    message: e.message,
+                    stack: e.stack
+                });
+            })
+        }
+    ];
 
     // Share to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
-    Global = window.Airbrake = window.Hoptoad = {
-        setEnvironment: function (value) {
-            Config.xmlData['environment'] = value;
-        },
-
-        setKey: function (value) {
-            Config.xmlData['key'] = value;
-        },
-
-        setHost: function (value) {
-            Config.options['host'] = value;
-        },
-
-        setErrorDefaults: function (value) {
-            Config.options['errorDefaults'] = value;
-        },
-
-        setGuessFunctionName: function (value) {
-            Config.options['guessFunctionName'] = value;
-        },
-        
-        setRequestType: function (value) {
-            Config.options['requestType'] = value;
-        },
-
-        setTrackJQ: function (value) {
-            if (!Util.isjQueryPresent()) {
-                throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
-            }
-
-            value = !!value;
-
-            if (Config.options.trackJQ === value) {
-                return;
-            }
-
-            Config.options.trackJQ = value;
-
-            Util.processjQueryEventHandlerWrapping();
-        },
-
-        captureException: function (e) {
-            new Notifier().notify({
-                message: e.message,
-                stack: e.stack
-            });
-        }
-    };
+    Global = window.Airbrake = window.Hoptoad = Util.generatePublicAPI(_publicAPI, Config);
 
     function Notifier() {
         this.options = Util.merge({}, Config.options);
