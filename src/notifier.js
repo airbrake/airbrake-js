@@ -391,11 +391,13 @@
                 outputData.exception_class = error.type || 'Error';
                 outputData.exception_message = error.message || 'Unknown error.';
                 
+                outputData.backtrace_lines = this.generateBacktrace(error).join('');
+                
                 return JSON.stringify(outputData);
             };
         } ()),
 
-        generateXML: function (errorWithoutDefaults) {
+        generateXML: function (JSONdataObj) {
             var xmlData = this.xmlData,
                 cgi_data,
                 i,
@@ -460,11 +462,23 @@
                     file = matches[2].replace(this.ROOT, '[PROJECT_ROOT]');
 
                     if (i === 0 && matches[2].match(document.location.href)) {
-                        backtrace.push('<line method="" file="internal: " number=""/>');
+                        // backtrace.push('<line method="" file="internal: " number=""/>');
+                        
+                        backtrace.push({
+                            method: '',
+                            file: 'internal: ',
+                            number: ''
+                        });
                     }
 
-                    backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
-                            '" number="' + matches[3] + '" />');
+                    // backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
+                    //        '" number="' + matches[3] + '" />');
+                    
+                    backtrace.push({
+                        method: matches[1],
+                        file: file,
+                        number: matches[3]
+                    });
                 }
             }
 
