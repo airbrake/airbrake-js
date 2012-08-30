@@ -26,6 +26,9 @@
                 '<environment-name>{environment}</environment-name>' +
             '</server-environment>' +
         '</notice>',
+        REQUEST_VARIABLE_GROUP = '<{group_name}>{inner_content}</{group_name}>',
+        REQUEST_VARIABLE = '<var key="{key}">{value}</var>',
+        BACKTRACE_LINE = '<line method="{method}" file="{file}" number="{number}" />',
         Config,
         Global,
         Util,
@@ -68,6 +71,17 @@
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
+        },
+        
+        substituteArr: function (text, dataArr, emptyForUndefinedData) {
+            var _i = 0, _l = 0, 
+                returnStr = '';
+            
+            for (_i = 0, _l = dataArr.length; _i < _l; _i += 1) {
+                returnStr += this.substitute(text, dataArr[_i], emptyForUndefinedData);
+            }
+            
+            return returnStr;
         },
 
         processjQueryEventHandlerWrapping: function () {
@@ -270,7 +284,7 @@
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
         DEF_XML_DATA: {
-            request: ''
+            request: {}
         },
 
         notify: (function () {
@@ -315,11 +329,11 @@
                     
                 switch (this.options['outputFormat']) {
                     case 'XML':
-                        outputData = escape(this.generateXML(error));
+                        outputData = escape(this.generateXML(this.generateJSON(error)));
                         
                         break;
                     case 'JSON':
-                        outputData = escape(this.generateJSON(error));
+                        outputData = escape(JSON.stringify(this.generateJSON(error)));
                         
                         break;
                     default:
@@ -373,68 +387,63 @@
             return function (errorWithoutDefaults) {
                 var outputData = this.xmlData,
                     error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
+                    
                     component = error.component || '',
-                    methods = ['cgi-data', 'params', 'session'];
+                    request_url = (error.url || '' + location.hash),
+                    
+                    methods = ['cgi-data', 'params', 'session'],
+                    _outputData = null;
                 
-                outputData.request_url = error.url || '' + location.hash;
-                outputData.request_action = error.action || '';
-                outputData.request_component = component;
-                outputData.request = {};
-                
-                if (outputData.request_url || component) {
-                    error['cgi-data'] = error['cgi-data'] || {};
-                    error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
-                    outputData.request = Util.merge(outputData.request, _composeRequestObj(methods, error));
+                _outputData = {
+                    request_url: request_url,
+                    request_action: (error.action || ''),
+                    request_component: component,
+                    request: (function () {
+                        if (request_url || component) {
+                            error['cgi-data'] = error['cgi-data'] || {};
+                            error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
+                            return Util.merge(outputData.request, _composeRequestObj(methods, error));
+                        } else {
+                            return {}
+                        }
+                    } ()),
+                    
+                    project_root: this.ROOT,
+                    exception_class: (error.type || 'Error'),
+                    exception_message: (error.message || 'Unknown error.'),
+                    backtrace_lines: this.generateBacktrace(error)
                 }
                 
-                outputData.project_root = this.ROOT;
-                outputData.exception_class = error.type || 'Error';
-                outputData.exception_message = error.message || 'Unknown error.';
+                outputData = Util.merge(outputData, _outputData);
                 
-                outputData.backtrace_lines = this.generateBacktrace(error).join('');
-                
-                return JSON.stringify(outputData);
+                return outputData;
             };
         } ()),
 
-        generateXML: function (JSONdataObj) {
-            var xmlData = this.xmlData,
-                cgi_data,
-                i,
-                methods,
-                type,
-                error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
-                component = Util.trim(Util.escape(error.component || ''));
-
-            xmlData.request_url = Util.trim(Util.escape((error.url || '') + location.hash));
-
-            if (xmlData.request_url || component) {
-                cgi_data = error['cgi-data'] || {};
-                cgi_data.HTTP_USER_AGENT = navigator.userAgent;
-                xmlData.request += '<cgi-data>' + this.generateVariables(cgi_data) + '</cgi-data>';
-
-                methods = ['params', 'session'];
-
-                for (i = 0; i < methods.length; i++) {
-                    type = methods[i];
-
-                    if (error[type]) {
-                        xmlData.request += '<' + type + '>' + this.generateVariables(error[type]) + '</' + type + '>';
+        generateXML: (function () {
+            function _generateRequestVariableGroups (requestObj) {
+                var _group = '',
+                    returnStr = '';
+                
+                for (_group in requestObj) {
+                    if (requestObj.hasOwnProperty(_group)) {
+                        returnStr += Util.substitute(REQUEST_VARIABLE_GROUP, {
+                            group_name: _group,
+                            inner_content: Util.substituteArr(REQUEST_VARIABLE, requestObj[_group], true)
+                        }, true);
                     }
                 }
-
-                xmlData.request_url = Util.escape((error.url || '') + location.hash);
-                xmlData.request_action = Util.escape(error.action || '');
-                xmlData.request_component = component;
+                
+                return returnStr;
             }
-
-            xmlData.project_root = this.ROOT;
-            xmlData.exception_class = Util.escape(error.type || 'Error');
-            xmlData.exception_message = Util.escape(error.message || 'Unknown error.');
-            xmlData.backtrace_lines = this.generateBacktrace(error).join('');
-
-            return Util.substitute(NOTICE_XML, xmlData, true);
-        },
+            
+            return function (JSONdataObj) {
+                JSONdataObj.request = _generateRequestVariableGroups(JSONdataObj.request);
+                JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE, JSONdataObj.backtrace_lines, true);
+                
+                return Util.substitute(NOTICE_XML, JSONdataObj, true);
+            };
+        } ()),
 
         generateBacktrace: function (error) {
             var backtrace = [],
