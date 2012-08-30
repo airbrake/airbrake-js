@@ -194,7 +194,8 @@
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false,
-            requestType: 'POST'
+            requestType: 'POST',
+            outputFormat: 'XML'
         }
     };
     
@@ -220,6 +221,9 @@
             namespace: 'options'
         }, {
             variable: 'requestType',
+            namespace: 'options'
+        }, {
+            variable: 'outputFormat',
             namespace: 'options'
         }, {
             methodName: 'setTrackJQ',
@@ -306,17 +310,88 @@
             }
             
             return function (error) {
-                var xml = escape(this.generateXML(error)),
+                var outputData = '',
                     url = 'http://' + this.options.host + '/notifier_api/v2/notices';
+                    
+                switch (this.options['outputFormat']) {
+                    case 'XML':
+                        outputData = escape(this.generateXML(error));
+                        
+                        break;
+                    case 'JSON':
+                        outputData = escape(this.generateJSON(error));
+                        
+                        break;
+                    default:
+                }
                 
-                switch (Config.options['requestType']) {
+                switch (this.options['requestType']) {
                     case 'POST':
-                        _sendPOSTRequest(url, xml);
+                        _sendPOSTRequest(url, outputData);
+                        break;
+                    
+                    case 'Get':
+                        _sendGETRequest(url, outputData);
                         break;
                     
                     default:
-                        _sendGETRequest(url, xml);
                 }
+            };
+        } ()),
+        
+        generateJSON: (function () {
+            function _generateVariables (inputObj) {
+                var key = '', returnArr = [];
+                
+                for (key in inputObj) {
+                    if (inputObj.hasOwnProperty(key)) {
+                        returnArr.push({
+                            key: key,
+                            value: inputObj[key]
+                        });
+                    }
+                }
+                
+                return returnArr;
+            }
+            
+            function _composeRequestObj (methods, errorObj) {
+                var _i = 0,
+                    returnObj = {},
+                    type = '';
+                
+                for (_i = 0; _i < methods.length; _i += 1) {
+                    type = methods[_i];
+                    if (typeof errorObj[type] !== 'undefined') {
+                        returnObj[type] = _generateVariables(errorObj[type]);
+                    }
+                }
+                
+                return returnObj;             
+            }
+            
+            return function (errorWithoutDefaults) {
+                var outputData = this.xmlData,
+                    error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
+                    component = error.component || '',
+                    methods = ['cgi-data', 'params', 'session'];
+                
+                outputData.request_url = error.url || '' + location.hash;
+                outputData.request_action = error.action || '';
+                outputData.request_component = component;
+                outputData.request = {};
+                
+                if (outputData.request_url || component) {
+                    error['cgi-data'] = error['cgi-data'] || {};
+                    error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
+                    outputData.request = Util.merge(outputData.request, _composeRequestObj(methods, error));
+                }
+                
+                outputData.project_root = this.ROOT;
+                outputData.exception_class = error.type || 'Error';
+                outputData.exception_message = error.message || 'Unknown error.';
+                
+                return JSON.stringify(outputData);
             };
         } ()),
 
