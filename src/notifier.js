@@ -56,11 +56,6 @@
                 "project-root": "{project_root}",
                 "environment-name": "{environment}"
             }
-        },
-        BACKTRACE_LINE_JSON = {
-            "method": "{method}",
-            "file": "{file}",
-            "number": "{number}"
         };
 
     Util = {
@@ -358,11 +353,11 @@
                     
                 switch (this.options['outputFormat']) {
                     case 'XML':
-                        outputData = escape(this.generateXML(this.generateJSON(error)));
+                        outputData = escape(this.generateXML(this.generateDataJSON(error)));
                         
                         break;
                     case 'JSON':
-                        outputData = escape(JSON.stringify(this.generateJSON(error)));
+                        outputData = escape(JSON.stringify(this.generateJSON(this.generateDataJSON(error))));
                         
                         break;
                     default:
@@ -382,7 +377,7 @@
             };
         } ()),
         
-        generateJSON: (function () {
+        generateDataJSON: (function () {
             function _generateVariables (inputObj) {
                 var key = '', returnArr = [];
                 
@@ -473,7 +468,16 @@
                 return Util.substitute(NOTICE_XML, JSONdataObj, true);
             };
         } ()),
-
+        
+        generateJSON: function (JSONdataObj) {
+            var outputJSON = JSON.parse(Util.substitute(JSON.stringify(NOTICE_JSON), JSONdataObj, true));
+            
+            outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
+            outputJSON.error.backtrace = JSONdataObj.backtrace_lines;
+            
+            return outputJSON;
+        },
+        
         generateBacktrace: function (error) {
             var backtrace = [],
                 file,
