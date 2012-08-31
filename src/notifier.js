@@ -26,13 +26,42 @@
                 '<environment-name>{environment}</environment-name>' +
             '</server-environment>' +
         '</notice>',
-        REQUEST_VARIABLE_GROUP = '<{group_name}>{inner_content}</{group_name}>',
-        REQUEST_VARIABLE = '<var key="{key}">{value}</var>',
-        BACKTRACE_LINE = '<line method="{method}" file="{file}" number="{number}" />',
+        REQUEST_VARIABLE_GROUP_XML = '<{group_name}>{inner_content}</{group_name}>',
+        REQUEST_VARIABLE_XML = '<var key="{key}">{value}</var>',
+        BACKTRACE_LINE_XML = '<line method="{method}" file="{file}" number="{number}" />',
         Config,
         Global,
         Util,
-        _publicAPI;
+        _publicAPI,
+        
+        NOTICE_JSON = {
+            "version": "2.0",
+            "api-key": "{key}",
+            "notifier": {
+                "name": "airbrake_js",
+                "version": "0.2.0",
+                "url": "http://airbrake.io"
+            },
+            "error": {
+                "class": "{exception_class}",
+                "message": "{exception_message}",
+                "backtrace": []
+            },
+            "request": {
+                "url": "{request_url}",
+                "component": "{request_component}",
+                "action": "{request_action}"
+            },
+            "server-environment": {
+                "project-root": "{project_root}",
+                "environment-name": "{environment}"
+            }
+        },
+        BACKTRACE_LINE_JSON = {
+            "method": "{method}",
+            "file": "{file}",
+            "number": "{number}"
+        };
 
     Util = {
         merge: (function() {
@@ -427,9 +456,9 @@
                 
                 for (_group in requestObj) {
                     if (requestObj.hasOwnProperty(_group)) {
-                        returnStr += Util.substitute(REQUEST_VARIABLE_GROUP, {
+                        returnStr += Util.substitute(REQUEST_VARIABLE_GROUP_XML, {
                             group_name: _group,
-                            inner_content: Util.substituteArr(REQUEST_VARIABLE, requestObj[_group], true)
+                            inner_content: Util.substituteArr(REQUEST_VARIABLE_XML, requestObj[_group], true)
                         }, true);
                     }
                 }
@@ -439,7 +468,7 @@
             
             return function (JSONdataObj) {
                 JSONdataObj.request = _generateRequestVariableGroups(JSONdataObj.request);
-                JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE, JSONdataObj.backtrace_lines, true);
+                JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE_XML, JSONdataObj.backtrace_lines, true);
                 
                 return Util.substitute(NOTICE_XML, JSONdataObj, true);
             };
