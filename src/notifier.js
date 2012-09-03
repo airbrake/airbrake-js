@@ -289,8 +289,8 @@
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false,
-            requestType: 'POST',
-            outputFormat: 'XML'
+            requestType: 'POST', // Can be 'POST' or 'GET'
+            outputFormat: 'XML' // Can be 'XML' or 'JSON'
         }
     };
     
@@ -406,6 +406,10 @@
             
             return function (error) {
                 var outputData = '',
+                    /*
+                     * Should be changed to url = '//' + ...
+                     * to use the protocol of current page (http or https) 
+                     */
                     url = 'http://' + this.options.host + '/notifier_api/v2/notices';
                     
                 switch (this.options['outputFormat']) {
@@ -434,7 +438,18 @@
             };
         } ()),
         
+        /*
+         * Generate inner JSON representation of exception data that can be rendered as XML or JSON. 
+         */
         generateDataJSON: (function () {
+            /*
+             * Generate variables array for inputObj object.
+             * 
+             * e.g.
+             * 
+             * _generateVariables({a: 'a'}) -> [{key: 'a', value: 'a'}]
+             * 
+             */
             function _generateVariables (inputObj) {
                 var key = '', returnArr = [];
                 
@@ -450,6 +465,9 @@
                 return returnArr;
             }
             
+            /*
+             * Generate Request part of notification.  
+             */
             function _composeRequestObj (methods, errorObj) {
                 var _i = 0,
                     returnObj = {},
@@ -466,7 +484,12 @@
             }
             
             return function (errorWithoutDefaults) {
-                var outputData = this.xmlData,
+                    /*
+                     * A constructor line:
+                     * 
+                     * this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
+                     */
+                var outputData = this.xmlData, 
                     error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
                     
                     component = error.component || '',
@@ -500,7 +523,11 @@
                 return outputData;
             };
         } ()),
-
+        
+        /*
+         * Generate XML notification from inner JSON representation.
+         * NOTICE_XML is used as pattern.
+         */
         generateXML: (function () {
             function _generateRequestVariableGroups (requestObj) {
                 var _group = '',
@@ -526,7 +553,13 @@
             };
         } ()),
         
+        /*
+         * Generate JSON notification from inner JSON representation.
+         * NOTICE_JSON is used as pattern.
+         */
         generateJSON: function (JSONdataObj) {
+            // Pattern string is JSON.stringify(NOTICE_JSON)
+            // The rendered string is parsed back as JSON.
             var outputJSON = JSON.parse(Util.substitute(JSON.stringify(NOTICE_JSON), JSONdataObj, true));
             
             outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
