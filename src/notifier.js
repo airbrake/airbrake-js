@@ -647,19 +647,6 @@
             }
 
             return true;
-        },
-
-        generateVariables: function (parameters) {
-            var key,
-                result = '';
-
-            for (key in parameters) {
-                if (parameters.hasOwnProperty(key)) {
-                    result += '<var key="' + Util.escape(key) + '">' + Util.escape(parameters[key]) + '</var>';
-                }
-            }
-
-            return result;
         }
     };
 
