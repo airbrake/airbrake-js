@@ -31,3 +31,51 @@ describe("Public interface.", function () {
         _createMathodSpec(_methods[_i]);
     }
 });
+
+describe("JSON data format tests.", function () {
+    var _dataObj = null;
+    
+    window.Airbrake.setOutputFormat('JSON');
+    
+    beforeEach(function() {
+        spyOn(window.XMLHttpRequest.prototype, 'open').andCallFake(function() {
+            
+        });
+        
+        spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
+            
+        });
+        
+        try {
+            (0)();
+        } catch (e) {
+            window.Airbrake.captureException(e);
+            
+            _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
+        }
+    });
+    
+    it('Should contain \'api-key\' ', function() {
+        expect(_dataObj['api-key']).toBe(window.Airbrake.getKey());
+    });
+    
+    it('Should contain \'error\' ', function() {
+        expect(typeof _dataObj.error).not.toBe('undefined');
+    });
+    
+    it('Should contain \'notifier\' ', function() {
+        expect(typeof _dataObj.notifier).not.toBe('undefined');
+    });
+    
+    it('Should contain \'request\' ', function() {
+        expect(typeof _dataObj.request).not.toBe('undefined');
+    });
+    
+    it('Should contain \'server-environment\' ', function() {
+        expect(typeof _dataObj['server-environment']).not.toBe('undefined');
+    });
+    
+    it('Should contain \'version\' ', function() {
+        expect(typeof _dataObj['version']).not.toBe('undefined');
+    });
+});
