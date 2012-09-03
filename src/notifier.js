@@ -418,7 +418,7 @@
                         
                         break;
                     case 'JSON':
-                        outputData = escape(JSON.stringify(this.generateJSON(this.generateDataJSON(error))));
+                        outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
                         
                         break;
                     default:
