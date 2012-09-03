@@ -59,6 +59,28 @@
         };
 
     Util = {
+        /*
+         * Merge a number of objects into one.
+         * 
+         * Usage example: 
+         *  var obj1 = {
+         *          a: 'a'
+         *      },
+         *      obj2 = {
+         *          b: 'b'     
+         *      },
+         *      obj3 = {
+         *          c: 'c'     
+         *      },
+         *      mergedObj = Util.merge(obj1, obj2, obj3);  
+         *
+         * mergedObj is: {
+         *     a: 'a',
+         *     b: 'b',
+         *     c: 'c'
+         * }
+         * 
+         */
         merge: (function() {
             function processProperty (key, dest, src) {
                 if (src.hasOwnProperty(key)) {
@@ -81,22 +103,40 @@
                 return result;
             };
         })(),
-
+        
+        /*
+         * Replace &, <, >, ', " characters with correspondent HTML entities.
+         */
         escape: function (text) {
             return text.replace(/&/g, '&#38;').replace(/</g, '&#60;').replace(/>/g, '&#62;')
                     .replace(/'/g, '&#39;').replace(/"/g, '&#34;');
         },
-
+        
+        /*
+         * Remove leading and trailing space characters. 
+         */
         trim: function (text) {
             return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
         },
-
+        
+        /*
+         * Fill 'text' pattern with 'data' values.
+         * 
+         * e.g. Utils.substitute('<{tag}></{tag}>', {tag: 'div'}, true) will return '<div></div>'
+         * 
+         * emptyForUndefinedData - a flag, if true, all matched {<name>} without data.<name> value specified will be 
+         * replaced with empty string.
+         */
         substitute: function (text, data, emptyForUndefinedData) {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
         },
         
+        /*
+         * Perform pattern rendering for an array of data objects. 
+         * Returns a concatenation of rendered strings of all objects in array. 
+         */
         substituteArr: function (text, dataArr, emptyForUndefinedData) {
             var _i = 0, _l = 0, 
                 returnStr = '';
@@ -107,7 +147,21 @@
             
             return returnStr;
         },
-
+        
+        /*
+         * Add hook for jQuery.fn.on function, to manualy call window.Airbrake.captureException() method
+         * for every exception occurred.
+         * 
+         * Let function 'f' be binded as an event handler:
+         * 
+         * $(window).on 'click', f
+         * 
+         * If an exception is occurred inside f's body, it will be catched here 
+         * and forwarded to captureException method.
+         * 
+         * processjQueryEventHandlerWrapping is called every time window.Airbrake.setTrackJQ method is used,
+         * if it switches previously setted value. 
+         */
         processjQueryEventHandlerWrapping: function () {
             if (Config.options.trackJQ === true) {
                 Config.jQuery_fn_on_original = Config.jQuery_fn_on_original || jQuery.fn.on;
@@ -134,10 +188,13 @@
                             }
                         };
                     })(args[fnArgIdx]);
-
+                    
+                    // Call original jQuery.fn.on, with the same list of arguments, but 
+                    // a function replaced with a proxy.
                     return Config.jQuery_fn_on_original.apply(this, args);
                 };
             } else {
+                // Recover original jQuery.fn.on if Config.options.trackJQ is set to false
                 (typeof Config.jQuery_fn_on_original === 'function') && (jQuery.fn.on = Config.jQuery_fn_on_original);
             }
         },
