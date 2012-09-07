@@ -88,7 +88,7 @@ Changelog
 ### v0.1.2-JSON
 
 - New configuration parameter: `outputFormat`. Supported formats are XML and JSON.
-- Numerous improvements in logic of XML notification generator: `Util.substituteArr` was implemented; views were separated from logic (REQUEST_VARIABLE_GROUP_XML, REQUEST_VARIABLE_XML, BACKTRACE_LINE_XML).
+- Numerous improvements in logic of XML notification generator: `Util.substituteArr` was implemented; views were separated from logic (`REQUEST_VARIABLE_GROUP_XML`, `REQUEST_VARIABLE_XML`, `BACKTRACE_LINE_XML`).
 - Stacktrace.js updated to avoid issues in Opera 11+.
 - New tests, more comments, unused code removed.
 
