@@ -80,7 +80,23 @@ We handle the Error (exception) manually with "Airbrake.captureException (err);"
 Development
 -----------
 
-Run Ant to compile the source. We don't have a testing framework in place, but we welcome full requests. 
+Run Ant to compile the source. We don't have a testing framework in place, but we welcome full requests.
+
+Changelog
+---------
+
+### v0.1.2-JSON
+
+- New configuration parameter: `outputFormat`. Supported formats are XML and JSON.
+- Numerous improvements in logic of XML notification generator: `Util.substituteArr` was implemented; views were separated from logic (REQUEST_VARIABLE_GROUP_XML, REQUEST_VARIABLE_XML, BACKTRACE_LINE_XML).
+- Stacktrace.js updated to avoid issues in Opera 11+.
+- New tests, more comments, unused code removed.
+
+### v0.1.1
+
+- Public API improvement: getters and setters are generated automatically from inner JSON. e.g. `key` value can be set with `Airbrake.setKey(<key value>);` and the current value is available as `Airbrake.getKey();`. 
+- New configuration parameter: `requestType`. Set it to 'GET' (`Airbrake.setRequestType('GET');`) to send <iframe> notification request; 'POST' is for XMLHttpRequest POST.
+- Basic Jasmine test are available in `tests/` directory. 
 
 Credits
 -------
