@@ -21,7 +21,11 @@ Install compiled and minified from Airbrake CDN.
 
 Include the Javascript notifier in your header. 
 
-    <script src="http://cdn.airbrake.io/notifier.min.js"></script>
+    <script src="http://jscdn.airbrake.io/notifier.min.js"></script>
+
+For SSL use this URL. 
+
+    <script src="http://ssljscdn.airbrake.io/notifier.min.js"></script>
 
 After this, setup the notifier. You need an Airbrake API key, sign up for a plan on [Airbrake](http://help.airbrake.io) 
 
