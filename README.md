@@ -25,7 +25,7 @@ Include the Javascript notifier in your header.
 
 For SSL use this URL. 
 
-    <script src="http://ssljscdn.airbrake.io/notifier.min.js"></script>
+    <script src="https://ssljscdn.airbrake.io/notifier.min.js"></script>
 
 After this, setup the notifier. You need an Airbrake API key, sign up for a plan on [Airbrake](http://help.airbrake.io) 
 
