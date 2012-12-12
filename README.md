@@ -79,7 +79,7 @@ We handle the Error (exception) manually with "Airbrake.captureException (err);"
 
 -- Work in Progress --  
 
-		Airbrake.trackJQ(true)
+		Airbrake.setTrackJQ(true)
 
 Development
 -----------
