@@ -19,39 +19,34 @@ Install compiled and minified from Airbrake CDN.
 
 ### Basic Setup. 
 
-Include the Javascript notifier in your header. 
-
-    <script src="http://jscdn.airbrake.io/notifier.min.js"></script>
-
-For SSL use this URL. 
-
-    <script src="https://ssljscdn.airbrake.io/notifier.min.js"></script>
-
-After this, setup the notifier. You need an Airbrake API key, sign up for a plan on [Airbrake](http://help.airbrake.io) 
+Include the following Javascript snippet in your header.
 
     <script type="text/javascript">
-          Airbrake.setKey('<your-api-key>');
-	  Airbrake.setHost('api.airbrake.io');
-	  Airbrake.setEnvironment('dev');
-	  Airbrake.setGuessFunctionName(true);
-	  Airbrake.setErrorDefaults({
-     	 	url: document.URL,
-     		 component: "hello",
-    	  	action: "world",
-      		});
-	</script>
+      (function(callback) {
+        var ab = document.createElement('script');
+        ab.type = 'text/javascript'; ab.async = true;
+        ab.onload = ab.onreadystatechange = callback;
+        ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier-wed4.js";
+        var p = document.getElementsByTagName('script')[0];
+        p.parentNode.insertBefore(ab, p);
+      }(function () {
+        Airbrake.setOutputFormat('JSON');
+        Airbrake.setRequestType('POST');
+        Airbrake.setGuessFunctionName(false);
+        Airbrake.setHost('collect.airbrake.io');
+        // the rest of the config should be unique to your app
+        Airbrake.setKey('<your-api-key>');
+        Airbrake.setProjectId('<your-project-id>');
+        Airbrake.setEnvironment('dev');
+        Airbrake.setErrorDefaults({
+          url: document.URL,
+          component: "hello",
+          action: "world",
+        });
+      }));
+    </script>
 
-That's it! The header of your HTML document should look like this. 
-
-    <script src="http://cdn.airbrake.io/notifier.min.js"></script>
-	<script type="text/javascript">
-	  Airbrake.setKey('<your-api-key>');
-	  Airbrake.setHost('api.airbrake.io');
-	  Airbrake.setEnvironment('dev');
-	  Airbrake.setGuessFunctionName(true);
-	</script>
-
-The generator creates a file under `config/initializers/airbrake.rb` configuring Airbrake with your API key. This file should be checked into your version control system so that it is deployed to your staging and production environments.
+This should asynchronously load the airbrake notifier after your page has finished loading.
 
 Options. 
 ------------------------------------------------
