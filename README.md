@@ -26,22 +26,29 @@ Include the following Javascript snippet in your header.
         var ab = document.createElement('script');
         ab.type = 'text/javascript'; ab.async = true;
         ab.onload = ab.onreadystatechange = callback;
-        ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier-wed4.js";
+        // this should match your copy of the compiled notifier.js or notifier.min.js
+        ab.src = 'https://raw.github.com/nathantsoi/airbrake-js/master/dist/notifier.js';
         var p = document.getElementsByTagName('script')[0];
         p.parentNode.insertBefore(ab, p);
       }(function () {
-        Airbrake.setOutputFormat('JSON');
-        Airbrake.setRequestType('POST');
+        Airbrake.setRequestType('GET');
         Airbrake.setGuessFunctionName(false);
-        Airbrake.setHost('collect.airbrake.io');
-        // the rest of the config should be unique to your app
-        Airbrake.setKey('<your-api-key>');
-        Airbrake.setProjectId('<your-project-id>');
+        // the default is api.airbrake.io
+        //Airbrake.setHost('api.airbrake.io');
+        // insert your api key
+        Airbrake.setKey('xxxxxxxxxxxxxxxxxxxxxxx');
+        // set the environment
         Airbrake.setEnvironment('dev');
+        // add any defaults
         Airbrake.setErrorDefaults({
+          // you probably want to leave this line, so the error url gets set to the page url
           url: document.URL,
-          component: "hello",
-          action: "world",
+          // controller
+          component: "cookies",
+          // action
+          action: "eat",
+          // add some extras, e.g.
+          user: "steve",
         });
       }));
     </script>
