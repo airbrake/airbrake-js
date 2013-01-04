@@ -27,7 +27,7 @@ Include the following Javascript snippet in your header.
         ab.type = 'text/javascript'; ab.async = true;
         ab.onload = ab.onreadystatechange = callback;
         // this should match your copy of the compiled notifier.js or notifier.min.js
-        ab.src = 'https://raw.github.com/nathantsoi/airbrake-js/master/dist/notifier.js';
+         ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier.min.js";
         var p = document.getElementsByTagName('script')[0];
         p.parentNode.insertBefore(ab, p);
       }(function () {
