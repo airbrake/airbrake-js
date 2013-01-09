@@ -28,34 +28,39 @@
         '</notice>',
         REQUEST_VARIABLE_GROUP_XML = '<{group_name}>{inner_content}</{group_name}>',
         REQUEST_VARIABLE_XML = '<var key="{key}">{value}</var>',
-        BACKTRACE_LINE_XML = '<line method="{method}" file="{file}" number="{number}" />',
+        BACKTRACE_LINE_XML = '<line method="{function}" file="{file}" number="{line}" />',
         Config,
         Global,
         Util,
         _publicAPI,
         
         NOTICE_JSON = {
-            "version": "2.0",
-            "api-key": "{key}",
             "notifier": {
                 "name": "airbrake_js",
                 "version": "0.2.0",
                 "url": "http://airbrake.io"
             },
             "error": {
-                "class": "{exception_class}",
+                "type": "{exception_class}",
                 "message": "{exception_message}",
                 "backtrace": []
             },
-            "request": {
-                "url": "{request_url}",
-                "component": "{request_component}",
-                "action": "{request_action}"
+            "context": {
+				"language": "JavaScript",
+				"environment": "{environment}",
+				
+                "version": "1.1.1",
+				"url": "{request_url}",
+                "rootDirectory": "{project_root}",
+                "action": "{request_action}",
+
+				"userId": {},
+				"userName": {},
+				"userEmail": {},
             },
-            "server-environment": {
-                "project-root": "{project_root}",
-                "environment-name": "{environment}"
-            }
+            "environment": {},
+			"session": "{request}",
+			"params": {},
         };
 
     Util = {
@@ -309,6 +314,9 @@
             variable: 'host',
             namespace: 'options'
         }, {
+		    variable: 'projectId',
+            namespace: 'options'
+		},{
             variable: 'errorDefaults',
             namespace: 'options'
         }, {
@@ -406,21 +414,33 @@
             
             return function (error) {
                 var outputData = '',
-                    /*
-                     * Should be changed to url = '//' + ...
-                     * to use the protocol of current page (http or https) 
-                     */
-                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
-                    
+					url = '';
+				    //
+                
+                   /*
+                    * Should be changed to url = '//' + ...
+                    * to use the protocol of current page (http or https). Only sends 'secure' if page is secure.  
+					* XML uses V2 API. http://collect.airbrake.io/notifier_api/v2/notices
+			       */
+               
+			
                 switch (this.options['outputFormat']) {
                     case 'XML':
-                        outputData = escape(this.generateXML(this.generateDataJSON(error)));
-                        
+                      
+	                   outputData = escape(this.generateXML(this.generateDataJSON(error)));
+						url = window.location.protocol + '://' + this.options.host + '/notifier_api/v2/notices';
                         break;
-                    case 'JSON':
-                        outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
-                        
+
+                    case 'JSON': 
+ 					/*
+					*   JSON uses API V3. Needs project in URL. 
+					*   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
+					* url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' this.options.key;
+					*/
+ 						outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));  
+   						url = url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.xmlData.key;
                         break;
+
                     default:
                 }
                 
@@ -597,9 +617,10 @@
                         // backtrace.push('<line method="" file="internal: " number=""/>');
                         
                         backtrace.push({
-                            method: '',
+						// Updated to fit in with V3 new terms for Backtrace data.
+                            function_: '',
                             file: 'internal: ',
-                            number: ''
+                            line: ''
                         });
                     }
 
