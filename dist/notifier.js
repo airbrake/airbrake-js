@@ -381,39 +381,34 @@ printStackTrace.implementation.prototype = {
         '</notice>',
         REQUEST_VARIABLE_GROUP_XML = '<{group_name}>{inner_content}</{group_name}>',
         REQUEST_VARIABLE_XML = '<var key="{key}">{value}</var>',
-        BACKTRACE_LINE_XML = '<line method="{function}" file="{file}" number="{line}" />',
+        BACKTRACE_LINE_XML = '<line method="{method}" file="{file}" number="{number}" />',
         Config,
         Global,
         Util,
         _publicAPI,
         
         NOTICE_JSON = {
+            "version": "2.0",
+            "api-key": "{key}",
             "notifier": {
                 "name": "airbrake_js",
                 "version": "0.2.0",
                 "url": "http://airbrake.io"
             },
             "error": {
-                "type": "{exception_class}",
+                "class": "{exception_class}",
                 "message": "{exception_message}",
                 "backtrace": []
             },
-            "context": {
-				"language": "JavaScript",
-				"environment": "{environment}",
-				
-                "version": "1.1.1",
-				"url": "{request_url}",
-                "rootDirectory": "{project_root}",
-                "action": "{request_action}",
-
-				"userId": {},
-				"userName": {},
-				"userEmail": {},
+            "request": {
+                "url": "{request_url}",
+                "component": "{request_component}",
+                "action": "{request_action}"
             },
-            "environment": {},
-			"session": "{request}",
-			"params": {},
+            "server-environment": {
+                "project-root": "{project_root}",
+                "environment-name": "{environment}"
+            }
         };
 
     Util = {
@@ -666,9 +661,6 @@ printStackTrace.implementation.prototype = {
         }, {
             variable: 'host',
             namespace: 'options'
-        },{
-            variable: 'projectId',
-            namespace: 'options'
         }, {
             variable: 'errorDefaults',
             namespace: 'options'
@@ -767,24 +759,18 @@ printStackTrace.implementation.prototype = {
             
             return function (error) {
                 var outputData = '',
-                   
+                    /*
+                     * Should be changed to url = '//' + ...
+                     * to use the protocol of current page (http or https) 
+                     */
+                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
                     
                 switch (this.options['outputFormat']) {
                     case 'XML':
-						/*
-	                     * Should be changed to url = '//' + ...
-	                     * to use the protocol of current page (http or https). Only sends 'secure' if page is secure.  
-						 * XML uses V2 API. http://collect.airbrake.io/notifier_api/v2/notices
-	                     */
- 						url = window.location.protocol + '://' + this.options.host + '/notifier_api/v2/notices';
-                        outputData = escape(this.generateXML(this.generateDataJSON(error)));                   
+                        outputData = escape(this.generateXML(this.generateDataJSON(error)));
+                        
                         break;
                     case 'JSON':
-						/*
-						*   JSON uses API V3. Needs project in URL. 
-						*   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
-						*/
-						url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' this.options.key;
                         outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
                         
                         break;
@@ -962,11 +948,11 @@ printStackTrace.implementation.prototype = {
 
                     if (i === 0 && matches[2].match(document.location.href)) {
                         // backtrace.push('<line method="" file="internal: " number=""/>');
-                        // NOTE. RE-NAME to V3 API. 
+                        
                         backtrace.push({
-                            function: '',
+                            method: '',
                             file: 'internal: ',
-                            line: ''
+                            number: ''
                         });
                     }
 
@@ -974,9 +960,9 @@ printStackTrace.implementation.prototype = {
                     //        '" number="' + matches[3] + '" />');
                     
                     backtrace.push({
-                        function: matches[1],
+                        method: matches[1],
                         file: file,
-                        line: matches[3]
+                        number: matches[3]
                     });
                 }
             }
