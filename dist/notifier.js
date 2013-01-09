@@ -661,6 +661,9 @@ printStackTrace.implementation.prototype = {
         }, {
             variable: 'host',
             namespace: 'options'
+        },{
+            variable: 'projectId',
+            namespace: 'options'
         }, {
             variable: 'errorDefaults',
             namespace: 'options'
@@ -759,18 +762,24 @@ printStackTrace.implementation.prototype = {
             
             return function (error) {
                 var outputData = '',
-                    /*
-                     * Should be changed to url = '//' + ...
-                     * to use the protocol of current page (http or https) 
-                     */
-                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
+                   
                     
                 switch (this.options['outputFormat']) {
                     case 'XML':
-                        outputData = escape(this.generateXML(this.generateDataJSON(error)));
-                        
+						/*
+	                     * Should be changed to url = '//' + ...
+	                     * to use the protocol of current page (http or https). Only sends 'secure' if page is secure.  
+						 * XML uses V2 API. http://collect.airbrake.io/notifier_api/v2/notices
+	                     */
+ 						url = window.location.protocol + '://' + this.options.host + '/notifier_api/v2/notices';
+                        outputData = escape(this.generateXML(this.generateDataJSON(error)));                   
                         break;
                     case 'JSON':
+						/*
+						*   JSON uses API V3. Needs project in URL. 
+						*   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
+						*/
+						url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' this.options.key;
                         outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
                         
                         break;
