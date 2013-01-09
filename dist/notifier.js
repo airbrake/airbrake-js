@@ -791,7 +791,7 @@ printStackTrace.implementation.prototype = {
 					* url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' this.options.key;
 					*/
  						outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));  
-   						url = url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.xmlData.key;
+   						url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.xmlData.key;
                         break;
 
                     default:
