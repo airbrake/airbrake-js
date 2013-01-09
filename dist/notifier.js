@@ -647,7 +647,7 @@ printStackTrace.implementation.prototype = {
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false,
-            requestType: 'POST', // Can be 'POST' or 'GET'
+            requestType: 'GET', // Can be 'POST' or 'GET'
             outputFormat: 'XML' // Can be 'XML' or 'JSON'
         }
     };
@@ -666,7 +666,7 @@ printStackTrace.implementation.prototype = {
         }, {
             variable: 'host',
             namespace: 'options'
-        }, {
+        },{
 		    variable: 'projectId',
             namespace: 'options'
 		},{
@@ -674,9 +674,6 @@ printStackTrace.implementation.prototype = {
             namespace: 'options'
         }, {
             variable: 'guessFunctionName',
-            namespace: 'options'
-        }, {
-            variable: 'requestType',
             namespace: 'options'
         }, {
             variable: 'outputFormat',
@@ -767,7 +764,7 @@ printStackTrace.implementation.prototype = {
             
             return function (error) {
                 var outputData = '',
-					url = '';
+					url =  '';
 				    //
                 
                    /*
@@ -779,35 +776,25 @@ printStackTrace.implementation.prototype = {
 			
                 switch (this.options['outputFormat']) {
                     case 'XML':
-                      
 	                   outputData = escape(this.generateXML(this.generateDataJSON(error)));
-						url = window.location.protocol + '://' + this.options.host + '/notifier_api/v2/notices';
-                        break;
+					   url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/notifier_api/v2/notices';
+                        _sendGETRequest(url, outputData);
+					   break;
 
                     case 'JSON': 
  					/*
 					*   JSON uses API V3. Needs project in URL. 
 					*   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
-					* url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' this.options.key;
+					* url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
 					*/
  						outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));  
-   						url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.xmlData.key;
-                        break;
+						url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
+                        _sendPOSTRequest(url, outputData);
+						break;
 
                     default:
                 }
-                
-                switch (this.options['requestType']) {
-                    case 'POST':
-                        _sendPOSTRequest(url, outputData);
-                        break;
-                    
-                    case 'GET':
-                        _sendGETRequest(url, outputData);
-                        break;
-                    
-                    default:
-                }
+
             };
         } ()),
         
