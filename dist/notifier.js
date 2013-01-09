@@ -381,34 +381,39 @@ printStackTrace.implementation.prototype = {
         '</notice>',
         REQUEST_VARIABLE_GROUP_XML = '<{group_name}>{inner_content}</{group_name}>',
         REQUEST_VARIABLE_XML = '<var key="{key}">{value}</var>',
-        BACKTRACE_LINE_XML = '<line method="{method}" file="{file}" number="{number}" />',
+        BACKTRACE_LINE_XML = '<line method="{function}" file="{file}" number="{line}" />',
         Config,
         Global,
         Util,
         _publicAPI,
         
         NOTICE_JSON = {
-            "version": "2.0",
-            "api-key": "{key}",
             "notifier": {
                 "name": "airbrake_js",
                 "version": "0.2.0",
                 "url": "http://airbrake.io"
             },
             "error": {
-                "class": "{exception_class}",
+                "type": "{exception_class}",
                 "message": "{exception_message}",
                 "backtrace": []
             },
-            "request": {
-                "url": "{request_url}",
-                "component": "{request_component}",
-                "action": "{request_action}"
+            "context": {
+				"language": "JavaScript",
+				"environment": "{environment}",
+				
+                "version": "1.1.1",
+				"url": "{request_url}",
+                "rootDirectory": "{project_root}",
+                "action": "{request_action}",
+
+				"userId": {},
+				"userName": {},
+				"userEmail": {},
             },
-            "server-environment": {
-                "project-root": "{project_root}",
-                "environment-name": "{environment}"
-            }
+            "environment": {},
+			"session": "{request}",
+			"params": {},
         };
 
     Util = {
@@ -957,11 +962,11 @@ printStackTrace.implementation.prototype = {
 
                     if (i === 0 && matches[2].match(document.location.href)) {
                         // backtrace.push('<line method="" file="internal: " number=""/>');
-                        
+                        // NOTE. RE-NAME to V3 API. 
                         backtrace.push({
-                            method: '',
+                            function: '',
                             file: 'internal: ',
-                            number: ''
+                            line: ''
                         });
                     }
 
@@ -969,9 +974,9 @@ printStackTrace.implementation.prototype = {
                     //        '" number="' + matches[3] + '" />');
                     
                     backtrace.push({
-                        method: matches[1],
+                        function: matches[1],
                         file: file,
-                        number: matches[3]
+                        line: matches[3]
                     });
                 }
             }
