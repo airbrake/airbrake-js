@@ -32,14 +32,10 @@ describe("Public interface.", function () {
     }
 });
 
-
-describe("Performance testing.", function () {
-    var _i = 0,
-        _XMLHttpRequest = window.XMLHttpRequest,
-        _callsNumber = 1000,
-        _recCallsLevel = 10000;
+describe("JSON data format tests.", function () {
+    var _dataObj = null;
     
-    window.Airbrake.setRequestType('POST');
+    window.Airbrake.setOutputFormat('JSON');
     
     beforeEach(function() {
         spyOn(window.XMLHttpRequest.prototype, 'open').andCallFake(function() {
@@ -49,45 +45,37 @@ describe("Performance testing.", function () {
         spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
             
         });
+        
+        try {
+            (0)();
+        } catch (e) {
+            window.Airbrake.captureException(e);
+            
+            _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
+        }
     });
     
-    it(_callsNumber + " exceptions", function () {
-        for (_i = 0; _i < _callsNumber; _i += 1) {
-            try {
-                (0)();
-            } catch (e) {
-                window.Airbrake.captureException(e);
-            }
-        }
-        
-        expect(window.XMLHttpRequest.prototype.open).toHaveBeenCalled();
-        expect(window.XMLHttpRequest.prototype.send).toHaveBeenCalled();
-        
-        expect(window.XMLHttpRequest.prototype.open.calls.length).toEqual(_callsNumber);
-        expect(window.XMLHttpRequest.prototype.send.calls.length).toEqual(_callsNumber);
+    it('Should contain \'api-key\' ', function() {
+        expect(_dataObj['api-key']).toBe(window.Airbrake.getKey());
     });
     
-    it(_callsNumber + " deeply nested exception", function () {
-        var _funcRec = function (level) {
-            if (level === 0) {
-                (0)();
-            } else {
-                _funcRec(level - 1);
-            }
-        };
-        
-        for (_i = 0; _i < _callsNumber; _i += 1) {
-            try {
-                _funcRec(_recCallsLevel);
-            } catch (e) {
-                window.Airbrake.captureException(e);
-            }
-        }
-        
-        expect(window.XMLHttpRequest.prototype.open).toHaveBeenCalled();
-        expect(window.XMLHttpRequest.prototype.send).toHaveBeenCalled();
-        
-        expect(window.XMLHttpRequest.prototype.open.calls.length).toEqual(_callsNumber);
-        expect(window.XMLHttpRequest.prototype.send.calls.length).toEqual(_callsNumber);
+    it('Should contain \'error\' ', function() {
+        expect(typeof _dataObj.error).not.toBe('undefined');
+    });
+    
+    it('Should contain \'notifier\' ', function() {
+        expect(typeof _dataObj.notifier).not.toBe('undefined');
+    });
+    
+    it('Should contain \'request\' ', function() {
+        expect(typeof _dataObj.request).not.toBe('undefined');
+    });
+    
+    it('Should contain \'server-environment\' ', function() {
+        expect(typeof _dataObj['server-environment']).not.toBe('undefined');
+    });
+    
+    it('Should contain \'version\' ', function() {
+        expect(typeof _dataObj['version']).not.toBe('undefined');
     });
 });

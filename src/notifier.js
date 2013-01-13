@@ -26,12 +26,69 @@
                 '<environment-name>{environment}</environment-name>' +
             '</server-environment>' +
         '</notice>',
+        REQUEST_VARIABLE_GROUP_XML = '<{group_name}>{inner_content}</{group_name}>',
+        REQUEST_VARIABLE_XML = '<var key="{key}">{value}</var>',
+        BACKTRACE_LINE_XML = '<line method="{function}" file="{file}" number="{line}" />',
         Config,
         Global,
         Util,
-        _publicAPI;
+        _publicAPI,
+        
+        NOTICE_JSON = {
+            "notifier": {
+                "name": "airbrake_js",
+                "version": "0.2.0",
+                "url": "http://airbrake.io"
+            },
+            "error": [
+             {
+				"type": "{exception_class}",
+                "message": "{exception_message}",
+                "backtrace": []
+				
+            }
+			],
+            "context": {
+				"language": "JavaScript",
+				"environment": "{environment}",
+				
+                "version": "1.1.1",
+				"url": "{request_url}",
+                "rootDirectory": "{project_root}",
+                "action": "{request_action}",
+
+				"userId": "{}",
+				"userName": "{}",
+				"userEmail": "{}",
+            },
+            "environment": {},
+			//"session": "",
+			"params": {},
+        };
 
     Util = {
+        /*
+         * Merge a number of objects into one.
+         * 
+         * Usage example: 
+         *  var obj1 = {
+         *          a: 'a'
+         *      },
+         *      obj2 = {
+         *          b: 'b'     
+         *      },
+         *      obj3 = {
+         *          c: 'c'     
+         *      },
+         *      mergedObj = Util.merge(obj1, obj2, obj3);  
+         *
+         * mergedObj is: {
+         *     a: 'a',
+         *     b: 'b',
+         *     c: 'c'
+         * }
+         * 
+         */
         merge: (function() {
             function processProperty (key, dest, src) {
                 if (src.hasOwnProperty(key)) {
@@ -54,22 +111,65 @@
                 return result;
             };
         })(),
-
+        
+        /*
+         * Replace &, <, >, ', " characters with correspondent HTML entities.
+         */
         escape: function (text) {
             return text.replace(/&/g, '&#38;').replace(/</g, '&#60;').replace(/>/g, '&#62;')
                     .replace(/'/g, '&#39;').replace(/"/g, '&#34;');
         },
-
+        
+        /*
+         * Remove leading and trailing space characters. 
+         */
         trim: function (text) {
             return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
         },
-
+        
+        /*
+         * Fill 'text' pattern with 'data' values.
+         * 
+         * e.g. Utils.substitute('<{tag}></{tag}>', {tag: 'div'}, true) will return '<div></div>'
+         * 
+         * emptyForUndefinedData - a flag, if true, all matched {<name>} without data.<name> value specified will be 
+         * replaced with empty string.
+         */
         substitute: function (text, data, emptyForUndefinedData) {
             return text.replace(/{([\w_.-]+)}/g, function(match, key) {
                 return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
             });
         },
-
+        
+        /*
+         * Perform pattern rendering for an array of data objects. 
+         * Returns a concatenation of rendered strings of all objects in array. 
+         */
+        substituteArr: function (text, dataArr, emptyForUndefinedData) {
+            var _i = 0, _l = 0, 
+                returnStr = '';
+            
+            for (_i = 0, _l = dataArr.length; _i < _l; _i += 1) {
+                returnStr += this.substitute(text, dataArr[_i], emptyForUndefinedData);
+            }
+            
+            return returnStr;
+        },
+        
+        /*
+         * Add hook for jQuery.fn.on function, to manualy call window.Airbrake.captureException() method
+         * for every exception occurred.
+         * 
+         * Let function 'f' be binded as an event handler:
+         * 
+         * $(window).on 'click', f
+         * 
+         * If an exception is occurred inside f's body, it will be catched here 
+         * and forwarded to captureException method.
+         * 
+         * processjQueryEventHandlerWrapping is called every time window.Airbrake.setTrackJQ method is used,
+         * if it switches previously setted value. 
+         */
         processjQueryEventHandlerWrapping: function () {
             if (Config.options.trackJQ === true) {
                 Config.jQuery_fn_on_original = Config.jQuery_fn_on_original || jQuery.fn.on;
@@ -96,10 +196,13 @@
                             }
                         };
                     })(args[fnArgIdx]);
-
+                    
+                    // Call original jQuery.fn.on, with the same list of arguments, but 
+                    // a function replaced with a proxy.
                     return Config.jQuery_fn_on_original.apply(this, args);
                 };
             } else {
+                // Recover original jQuery.fn.on if Config.options.trackJQ is set to false
                 (typeof Config.jQuery_fn_on_original === 'function') && (jQuery.fn.on = Config.jQuery_fn_on_original);
             }
         },
@@ -194,7 +297,8 @@
             host: 'api.airbrake.io',
             errorDefaults: {},
             guessFunctionName: false,
-            requestType: 'POST'
+            requestType: 'GET', // Can be 'POST' or 'GET'
+            outputFormat: 'XML' // Can be 'XML' or 'JSON'
         }
     };
     
@@ -212,14 +316,17 @@
         }, {
             variable: 'host',
             namespace: 'options'
-        }, {
+        },{
+		    variable: 'projectId',
+            namespace: 'options'
+		},{
             variable: 'errorDefaults',
             namespace: 'options'
         }, {
             variable: 'guessFunctionName',
             namespace: 'options'
         }, {
-            variable: 'requestType',
+            variable: 'outputFormat',
             namespace: 'options'
         }, {
             methodName: 'setTrackJQ',
@@ -266,7 +373,7 @@
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
         DEF_XML_DATA: {
-            request: ''
+            request: {}
         },
 
         notify: (function () {
@@ -299,66 +406,178 @@
              */
             function _sendPOSTRequest (url, data) {
                 var request = new XMLHttpRequest();
-                
                 request.open('POST', url, true);
-                
+                request.setRequestHeader('Content-Type', 'application/json');
                 request.send(data);
             }
             
             return function (error) {
-                var xml = escape(this.generateXML(error)),
-                    url = 'http://' + this.options.host + '/notifier_api/v2/notices';
+                var outputData = '',
+					url =  '';
+				    //
                 
-                switch (Config.options['requestType']) {
-                    case 'POST':
-                        _sendPOSTRequest(url, xml);
-                        break;
-                    
+                   /*
+                    * Should be changed to url = '//' + ...
+                    * to use the protocol of current page (http or https). Only sends 'secure' if page is secure.  
+					* XML uses V2 API. http://collect.airbrake.io/notifier_api/v2/notices
+			       */
+               
+			
+                switch (this.options['outputFormat']) {
+                    case 'XML':
+	                   outputData = escape(this.generateXML(this.generateDataJSON(error)));
+					   url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/notifier_api/v2/notices';
+                        _sendGETRequest(url, outputData);
+					   break;
+
+                    case 'JSON': 
+ 					/*
+					*   JSON uses API V3. Needs project in URL. 
+					*   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
+					* url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
+					*/
+ 						outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));  
+						url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
+                        _sendPOSTRequest(url, outputData);
+						break;
+
                     default:
-                        _sendGETRequest(url, xml);
                 }
+
             };
         } ()),
-
-        generateXML: function (errorWithoutDefaults) {
-            var xmlData = this.xmlData,
-                cgi_data,
-                i,
-                methods,
-                type,
-                error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
-                component = Util.trim(Util.escape(error.component || ''));
-
-            xmlData.request_url = Util.trim(Util.escape((error.url || '') + location.hash));
-
-            if (xmlData.request_url || component) {
-                cgi_data = error['cgi-data'] || {};
-                cgi_data.HTTP_USER_AGENT = navigator.userAgent;
-                xmlData.request += '<cgi-data>' + this.generateVariables(cgi_data) + '</cgi-data>';
-
-                methods = ['params', 'session'];
-
-                for (i = 0; i < methods.length; i++) {
-                    type = methods[i];
-
-                    if (error[type]) {
-                        xmlData.request += '<' + type + '>' + this.generateVariables(error[type]) + '</' + type + '>';
+        
+        /*
+         * Generate inner JSON representation of exception data that can be rendered as XML or JSON. 
+         */
+        generateDataJSON: (function () {
+            /*
+             * Generate variables array for inputObj object.
+             * 
+             * e.g.
+             * 
+             * _generateVariables({a: 'a'}) -> [{key: 'a', value: 'a'}]
+             * 
+             */
+            function _generateVariables (inputObj) {
+                var key = '', returnArr = [];
+                
+                for (key in inputObj) {
+                    if (inputObj.hasOwnProperty(key)) {
+                        returnArr.push({
+                            key: key,
+                            value: inputObj[key]
+                        });
                     }
                 }
-
-                xmlData.request_url = Util.escape((error.url || '') + location.hash);
-                xmlData.request_action = Util.escape(error.action || '');
-                xmlData.request_component = component;
+                
+                return returnArr;
             }
-
-            xmlData.project_root = this.ROOT;
-            xmlData.exception_class = Util.escape(error.type || 'Error');
-            xmlData.exception_message = Util.escape(error.message || 'Unknown error.');
-            xmlData.backtrace_lines = this.generateBacktrace(error).join('');
-
-            return Util.substitute(NOTICE_XML, xmlData, true);
+            
+            /*
+             * Generate Request part of notification.  
+             */
+            function _composeRequestObj (methods, errorObj) {
+                var _i = 0,
+                    returnObj = {},
+                    type = '';
+                
+                for (_i = 0; _i < methods.length; _i += 1) {
+                    type = methods[_i];
+                    if (typeof errorObj[type] !== 'undefined') {
+                        returnObj[type] = _generateVariables(errorObj[type]);
+                    }
+                }
+                
+                return returnObj;             
+            }
+            
+            return function (errorWithoutDefaults) {
+                    /*
+                     * A constructor line:
+                     * 
+                     * this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
+                     */
+                var outputData = this.xmlData, 
+                    error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
+                    
+                    component = error.component || '',
+                    request_url = (error.url || '' + location.hash),
+                    
+                    methods = ['cgi-data', 'params', 'session'],
+                    _outputData = null;
+                
+                _outputData = {
+                    request_url: request_url,
+                    request_action: (error.action || ''),
+                    request_component: component,
+                    request: (function () {
+                        if (request_url || component) {
+                            error['cgi-data'] = error['cgi-data'] || {};
+                            error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
+                            return Util.merge(outputData.request, _composeRequestObj(methods, error));
+                        } else {
+                            return {}
+                        }
+                    } ()),
+                    
+                    project_root: this.ROOT,
+                    exception_class: (error.type || 'Error'),
+                    exception_message: (error.message || 'Unknown error.'),
+                    backtrace_lines: this.generateBacktrace(error)
+                }
+                
+                outputData = Util.merge(outputData, _outputData);
+                
+                return outputData;
+            };
+        } ()),
+        
+        /*
+         * Generate XML notification from inner JSON representation.
+         * NOTICE_XML is used as pattern.
+         */
+        generateXML: (function () {
+            function _generateRequestVariableGroups (requestObj) {
+                var _group = '',
+                    returnStr = '';
+                
+                for (_group in requestObj) {
+                    if (requestObj.hasOwnProperty(_group)) {
+                        returnStr += Util.substitute(REQUEST_VARIABLE_GROUP_XML, {
+                            group_name: _group,
+                            inner_content: Util.substituteArr(REQUEST_VARIABLE_XML, requestObj[_group], true)
+                        }, true);
+                    }
+                }
+                
+                return returnStr;
+            }
+            
+            return function (JSONdataObj) {
+                JSONdataObj.request = _generateRequestVariableGroups(JSONdataObj.request);
+                JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE_XML, JSONdataObj.backtrace_lines, true);
+                
+                return Util.substitute(NOTICE_XML, JSONdataObj, true);
+            };
+        } ()),
+        
+        /*
+         * Generate JSON notification from inner JSON representation.
+         * NOTICE_JSON is used as pattern.
+         */
+        generateJSON: function (JSONdataObj) {
+            // Pattern string is JSON.stringify(NOTICE_JSON)
+            // The rendered string is parsed back as JSON.
+            var outputJSON = JSON.parse(Util.substitute(JSON.stringify(NOTICE_JSON), JSONdataObj, true));
+            
+            // REMOVED - Request from JSON. 
+			outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
+            outputJSON.error.backtrace = JSONdataObj.backtrace_lines;
+            
+            return outputJSON;
         },
-
+        
         generateBacktrace: function (error) {
             var backtrace = [],
                 file,
@@ -385,11 +604,24 @@
                     file = matches[2].replace(this.ROOT, '[PROJECT_ROOT]');
 
                     if (i === 0 && matches[2].match(document.location.href)) {
-                        backtrace.push('<line method="" file="internal: " number=""/>');
+                        // backtrace.push('<line method="" file="internal: " number=""/>');
+                       
+                        backtrace.push({
+						// Updated to fit in with V3 new terms for Backtrace data.
+                            'function': '',
+                            file: 'internal: ',
+                            line: ''
+                        });
                     }
 
-                    backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
-                            '" number="' + matches[3] + '" />');
+                    // backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
+                    //        '" number="' + matches[3] + '" />');
+                    
+                    backtrace.push({
+                        'function': matches[1],
+                        file: file,
+                        line: matches[3]
+                    });
                 }
             }
 
@@ -426,19 +658,6 @@
             }
 
             return true;
-        },
-
-        generateVariables: function (parameters) {
-            var key,
-                result = '';
-
-            for (key in parameters) {
-                if (parameters.hasOwnProperty(key)) {
-                    result += '<var key="' + Util.escape(key) + '">' + Util.escape(parameters[key]) + '</var>';
-                }
-            }
-
-            return result;
         }
     };
 
