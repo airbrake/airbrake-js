@@ -250,7 +250,8 @@ printStackTrace.implementation.prototype = {
             return;
         }
         req.open('GET', url, false);
-        req.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
+        // REMOVED FOR JS TEST. 
+		//req.setRequestHeader('User-Agent', 'XMLHTTP/1.0');
         req.send('');
         return req.responseText;
     },
@@ -393,11 +394,14 @@ printStackTrace.implementation.prototype = {
                 "version": "0.2.0",
                 "url": "http://airbrake.io"
             },
-            "error": {
-                "type": "{exception_class}",
+            "error": [
+             {
+				"type": "{exception_class}",
                 "message": "{exception_message}",
                 "backtrace": []
-            },
+				
+            }
+			],
             "context": {
 				"language": "JavaScript",
 				"environment": "{environment}",
@@ -407,12 +411,12 @@ printStackTrace.implementation.prototype = {
                 "rootDirectory": "{project_root}",
                 "action": "{request_action}",
 
-				"userId": {},
-				"userName": {},
-				"userEmail": {},
+				"userId": "{}",
+				"userName": "{}",
+				"userEmail": "{}",
             },
             "environment": {},
-			"session": "{request}",
+			//"session": "",
 			"params": {},
         };
 
@@ -756,9 +760,8 @@ printStackTrace.implementation.prototype = {
              */
             function _sendPOSTRequest (url, data) {
                 var request = new XMLHttpRequest();
-                
                 request.open('POST', url, true);
-                
+                request.setRequestHeader('Content-Type', 'application/json');
                 request.send(data);
             }
             
@@ -922,7 +925,8 @@ printStackTrace.implementation.prototype = {
             // The rendered string is parsed back as JSON.
             var outputJSON = JSON.parse(Util.substitute(JSON.stringify(NOTICE_JSON), JSONdataObj, true));
             
-            outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
+            // REMOVED - Request from JSON. 
+			outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
             outputJSON.error.backtrace = JSONdataObj.backtrace_lines;
             
             return outputJSON;
@@ -955,10 +959,10 @@ printStackTrace.implementation.prototype = {
 
                     if (i === 0 && matches[2].match(document.location.href)) {
                         // backtrace.push('<line method="" file="internal: " number=""/>');
-                        
+                       
                         backtrace.push({
 						// Updated to fit in with V3 new terms for Backtrace data.
-                            function_: '',
+                            'function': '',
                             file: 'internal: ',
                             line: ''
                         });
@@ -968,9 +972,9 @@ printStackTrace.implementation.prototype = {
                     //        '" number="' + matches[3] + '" />');
                     
                     backtrace.push({
-                        method: matches[1],
+                        'function': matches[1],
                         file: file,
-                        number: matches[3]
+                        line: matches[3]
                     });
                 }
             }
