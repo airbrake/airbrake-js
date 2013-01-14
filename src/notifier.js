@@ -208,9 +208,9 @@
         },
 
         isjQueryPresent: function () {
-            // Currently only 1.7.x version supported
+            // Currently only versions 1.7.x and 1.8.x are supported
             return (typeof jQuery === 'function') && ('fn' in jQuery) && ('jquery' in jQuery.fn)
-                    && (jQuery.fn.jquery.indexOf('1.7') === 0)
+                    && (jQuery.fn.jquery.indexOf('1.7') === 0 || jQuery.fn.jquery.indexOf('1.8') === 0)
         },
         
         /*
