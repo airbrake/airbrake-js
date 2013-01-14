@@ -190,7 +190,7 @@
                     args[fnArgIdx] = (function (fnOriginHandler) {
                         return function() {
                             try {
-                                fnOriginHandler.apply(this, arguments);
+                                return fnOriginHandler.apply(this, arguments);
                             } catch (e) {
                                 Global.captureException(e);
                             }
