@@ -190,7 +190,7 @@
                     args[fnArgIdx] = (function (fnOriginHandler) {
                         return function() {
                             try {
-                                fnOriginHandler.apply(this, arguments);
+                                return fnOriginHandler.apply(this, arguments);
                             } catch (e) {
                                 Global.captureException(e);
                             }
@@ -208,9 +208,9 @@
         },
 
         isjQueryPresent: function () {
-            // Currently only 1.7.x version supported
+            // Currently only versions 1.7.x and 1.8.x are supported
             return (typeof jQuery === 'function') && ('fn' in jQuery) && ('jquery' in jQuery.fn)
-                    && (jQuery.fn.jquery.indexOf('1.7') === 0)
+                    && (jQuery.fn.jquery.indexOf('1.7') === 0 || jQuery.fn.jquery.indexOf('1.8') === 0)
         },
         
         /*
@@ -334,7 +334,7 @@
             namespace: 'options',
             method: (function (value) {
                 if (!Util.isjQueryPresent()) {
-                    throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
+                    throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery isn\'t present');
                 }
     
                 value = !!value;
