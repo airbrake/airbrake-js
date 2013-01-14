@@ -334,7 +334,7 @@
             namespace: 'options',
             method: (function (value) {
                 if (!Util.isjQueryPresent()) {
-                    throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery does\'t present');
+                    throw Error('Please do not call \'Airbrake.setTrackJQ\' if jQuery isn\'t present');
                 }
     
                 value = !!value;
