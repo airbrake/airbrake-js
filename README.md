@@ -21,37 +21,35 @@ Install compiled and minified from Airbrake CDN.
 
 Include the following Javascript snippet in your header.
 
-    <script type="text/javascript">
-      (function(callback) {
-        var ab = document.createElement('script');
-        ab.type = 'text/javascript'; ab.async = true;
-        ab.onload = ab.onreadystatechange = callback;
-        // this should match your copy of the compiled notifier.js or notifier.min.js
-         ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier.min.js";
-        var p = document.getElementsByTagName('script')[0];
-        p.parentNode.insertBefore(ab, p);
-      }(function () {
-        Airbrake.setRequestType('GET');
-        Airbrake.setGuessFunctionName(false);
-        // the default is api.airbrake.io
-        //Airbrake.setHost('api.airbrake.io');
-        // insert your api key
-        Airbrake.setKey('xxxxxxxxxxxxxxxxxxxxxxx');
-        // set the environment
-        Airbrake.setEnvironment('dev');
-        // add any defaults
-        Airbrake.setErrorDefaults({
-          // you probably want to leave this line, so the error url gets set to the page url
-          url: document.URL,
-          // controller
-          component: "cookies",
-          // action
-          action: "eat",
-          // add some extras, e.g.
-          user: "steve",
-        });
-      }));
-    </script>
+```html
+<script type="text/javascript">
+  (function(callback) {
+    var ab = document.createElement('script');
+    ab.type = 'text/javascript'; ab.async = true;
+    ab.onload = ab.onreadystatechange = callback;
+    // this should match your copy of the compiled notifier.js or notifier.min.js
+     ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier.min.js";
+    var p = document.getElementsByTagName('script')[0];
+    p.parentNode.insertBefore(ab, p);
+  }(function () {
+    // insert your api key
+    Airbrake.setKey('xxxxxxxxxxxxxxxxxxxxxxx');
+    // set the environment
+    Airbrake.setEnvironment('dev');
+    // add any defaults
+    Airbrake.setErrorDefaults({
+      // you probably want to leave this line, so the error url gets set to the page url
+      url: document.URL,
+      // controller
+      component: "cookies",
+      // action
+      action: "eat",
+      // add some extras, e.g.
+      user: "steve",
+    });
+  }));
+</script>
+```
 
 This should asynchronously load the airbrake notifier after your page has finished loading.
 
