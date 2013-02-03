@@ -329,6 +329,9 @@
             variable: 'outputFormat',
             namespace: 'options'
         }, {
+            variable: 'logOnError',
+            namespace: 'options'
+        }, {
             methodName: 'setTrackJQ',
             variable: 'trackJQ',
             namespace: 'options',
@@ -365,7 +368,8 @@
         this.options = Util.merge({}, Config.options);
         this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
     }
-    
+
+    window.Airbrake.Notifier = Notifier
     Notifier.prototype = {
         constructor: Notifier,
         VERSION: '0.2.0',
@@ -662,12 +666,14 @@
     };
 
     window.onerror = function (message, file, line) {
-        setTimeout(function () {
-            new Notifier().notify({
-                message: message,
-                stack: '()@' + file + ':' + line
-            });
-        }, 0);
+        if (Airbrake.getLogOnError() != false) {
+            setTimeout(function () {
+                new Notifier().notify({
+                    message: message,
+                    stack: '()@' + file + ':' + line
+                });
+            }, 0);
+        }
 
         return true;
     };
