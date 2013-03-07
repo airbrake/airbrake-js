@@ -187,7 +187,8 @@
                     }
 
                     // If the function is found, then subscribe wrapped event handler function
-                    args[fnArgIdx] = (function (fnOriginHandler) {
+                    var origFn = args[fnArgIdx],
+                        wrappedFn = (function (fnOriginHandler) {
                         return function() {
                             try {
                                 fnOriginHandler.apply(this, arguments);
@@ -195,8 +196,11 @@
                                 Global.captureException(e);
                             }
                         };
-                    })(args[fnArgIdx]);
+                    })(origFn);
                     
+                    // Use same guid so caller can remove using origFn
+                    wrappedFn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
+
                     // Call original jQuery.fn.on, with the same list of arguments, but 
                     // a function replaced with a proxy.
                     return Config.jQuery_fn_on_original.apply(this, args);
