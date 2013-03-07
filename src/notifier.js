@@ -157,8 +157,9 @@
         },
         
         /*
-         * Add hook for jQuery.fn.on function, to manualy call window.Airbrake.captureException() method
-         * for every exception occurred.
+         * Add hooks for jQuery.fn.on, jQuery(document).ready and jQuery.ajaxPrefilters.
+         * Hooks will manualy call window.Airbrake.captureException() method
+         * for every exception.
          * 
          * Let function 'f' be binded as an event handler:
          * 
@@ -167,12 +168,23 @@
          * If an exception is occurred inside f's body, it will be catched here 
          * and forwarded to captureException method.
          * 
-         * processjQueryEventHandlerWrapping is called every time window.Airbrake.setTrackJQ method is used,
+         * processjQueryEventAndCallbackWrapping is called every time window.Airbrake.setTrackJQ method is used,
          * if it switches previously setted value. 
          */
-        processjQueryEventHandlerWrapping: function () {
+        processjQueryEventAndCallbackWrapping: function () {
             if (Config.options.trackJQ === true) {
                 Config.jQuery_fn_on_original = Config.jQuery_fn_on_original || jQuery.fn.on;
+                Config.jQuery_fn_ready_original = Config.jQuery_fn_ready_original || jQuery.fn.ready;
+
+                var wrapHandler = function (fnOriginHandler) {
+                    return function() {
+                        try {
+                            return fnOriginHandler.apply(this, arguments);
+                        } catch (e) {
+                            Global.captureException(e);
+                        }
+                    };
+                };
 
                 jQuery.fn.on = function () {
                     var args = Array.prototype.slice.call(arguments),
@@ -187,23 +199,49 @@
                     }
 
                     // If the function is found, then subscribe wrapped event handler function
-                    args[fnArgIdx] = (function (fnOriginHandler) {
-                        return function() {
-                            try {
-                                fnOriginHandler.apply(this, arguments);
-                            } catch (e) {
-                                Global.captureException(e);
-                            }
-                        };
-                    })(args[fnArgIdx]);
-                    
-                    // Call original jQuery.fn.on, with the same list of arguments, but 
+                    var origFn = args[fnArgIdx],
+                        wrappedFn = wrapHandler(origFn);
+
+                    // Use same guid so caller can remove using origFn
+                    wrappedFn.guid = origFn.guid || ( origFn.guid = jQuery.guid++ );
+
+                    // Call original jQuery.fn.on, with the same list of arguments, but
                     // a function replaced with a proxy.
                     return Config.jQuery_fn_on_original.apply(this, args);
                 };
+
+                jQuery.fn.ready = function (handler) {
+                    // Call original jQuery.fn.ready, with the proxied handler.
+                    return Config.jQuery_fn_ready_original.call(this, wrapHandler(handler));
+                };
+
+                // Set up ajax prefilters once, using jQuery.Callbacks.
+                // This lets us control a proxied callbacks list, so we can
+                // clear the callback on tear down, and re-add it on setup.
+                if (!Config.jQuery_ajax_prefilters) {
+                    Config.jQuery_ajax_prefilters = jQuery.Callbacks();
+                    jQuery.ajaxPrefilter(Config.jQuery_ajax_prefilters.fire);
+                }
+
+                // Set up prefilter that wraps ajax callbacks with try...catch blocks.
+                Config.jQuery_ajax_prefilters.add(function(options) {
+                    var originalCallback, callbacks = ['success', 'error', 'complete'];
+                    for (var i=0; i<callbacks.length; i++) {
+                        if (options[callbacks[i]]) {
+                            options[callbacks[i]] = wrapHandler(options[callbacks[i]]);
+                        }
+                    }
+                });
             } else {
-                // Recover original jQuery.fn.on if Config.options.trackJQ is set to false
-                (typeof Config.jQuery_fn_on_original === 'function') && (jQuery.fn.on = Config.jQuery_fn_on_original);
+                // Recover original jQuery.fn functions if Config.options.trackJQ is set to false.
+                if (typeof Config.jQuery_fn_on_original === 'function') {
+                    jQuery.fn.on = Config.jQuery_fn_on_original;
+                    jQuery.fn.ready = Config.jQuery_fn_ready_original;
+                }
+
+                // Clear our ajax callbacks list.
+                // jQuery.ajaxPrefilter will still be registered, but will now be shooting blanks.
+                Config.jQuery_ajax_prefilters.empty();
             }
         },
 
@@ -345,7 +383,7 @@
     
                 Config.options.trackJQ = value;
     
-                Util.processjQueryEventHandlerWrapping();
+                Util.processjQueryEventAndCallbackWrapping();
             })
         }, {
             methodName: 'captureException',
