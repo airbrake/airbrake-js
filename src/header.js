@@ -8,13 +8,17 @@ var make_xml_http_request = function(url, data) {
   request.send(data);
 };
 
+var make_mock_xml_http_request = function(url, data) {
+  console.log(data);
+};
+
 var airbrake_client_app_protocol = (window.location ? window.location.protocol : '[app_protocol]'),
     airbrake_client_app_location = (window.location ? window.location.protocol + '//' + window.location.host : '[app_url]'),
     airbrake_client_app_hostname = (window.location ? window.location.hostname : '[app_hostname]'),
     airbrake_client_app_hash = (window.location ? window.location.hash : '[app_hash]'),
     airbrake_client_app_navigator_user_agent = (window.navigator ? window.navigator.userAgent : '[app_navigator_user_agent]'),
     airbrake_client_app_href = (document.location ? document.location.href : '[app_doc_location_href]'),
-    airbrake_client_app_create_xml_http_request = (window.XMLHttpRequest ? make_xml_http_request : function() {});
+    airbrake_client_app_create_xml_http_request = (window.XMLHttpRequest ? make_xml_http_request : make_mock_xml_http_request);
 
 
 // Airbrake JavaScript Notifier Bundle
