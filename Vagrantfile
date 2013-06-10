@@ -1,0 +1,14 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "lucid64"
+  # config.vm.box_url = "http://domain.com/path/to/above.box"
+
+  config.vm.provision :chef_solo do |chef|
+    chef.cookbooks_path = "cookbooks"
+    chef.add_recipe "nodejs"
+
+    chef.json = { :nodejs => { "install_method" => "binary" } }
+  end
+end
