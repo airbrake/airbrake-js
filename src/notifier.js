@@ -399,16 +399,6 @@
                 document.body.appendChild(request);
             }
 
-            /*
-             * Cross-domain AJAX POST request.
-             *
-             * It requires a server setup as described in Cross-Origin Resource Sharing spec:
-             * http://www.w3.org/TR/cors/
-             */
-            function _sendPOSTRequest (url, data) {
-                airbrake_client_app_create_xml_http_request(url, data);
-            }
-
             return function (error) {
                 var outputData = '',
                     url =  '';
@@ -429,14 +419,17 @@
                        break;
 
                     case 'JSON':
-                     /*
-                    *   JSON uses API V3. Needs project in URL.
-                    *   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
-                    * url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
-                    */
-                         outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
+                        // JSON uses API V3. Needs project in URL.
+                        //   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
+                        //   url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
+                        outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
                         url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
-                        _sendPOSTRequest(url, outputData);
+                        console.log(this.options);
+
+                        // Cross-domain AJAX POST request.
+                        // It requires a server setup as described in Cross-Origin Resource Sharing spec:
+                        // http://www.w3.org/TR/cors/
+                        airbrake_client_app_create_xml_http_request(url, outputData);
                         break;
 
                     default:
