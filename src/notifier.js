@@ -420,7 +420,6 @@ Notifier.prototype = {
           //   url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
           outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
           url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
-          console.log(this.options);
 
           // Cross-domain AJAX POST request.
           // It requires a server setup as described in Cross-Origin Resource Sharing spec:
