@@ -370,7 +370,7 @@
     Notifier.prototype = {
         constructor: Notifier,
         VERSION: '0.2.0',
-        ROOT: window.location.protocol + '//' + window.location.host,
+        ROOT: airbrake_client_app_location,
         BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
         backtrace_filters: [/notifier\.js/],
         DEF_XML_DATA: {

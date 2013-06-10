@@ -1,1 +1,1 @@
-})(window, document);
+})(window, document, airbrake_client_app_location);
