@@ -4,3 +4,4 @@
 .settings
 .project
 /.vagrant/
+/node_modules/
