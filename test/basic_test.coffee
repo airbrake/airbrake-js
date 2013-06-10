@@ -14,7 +14,6 @@ describe "Global objects", ->
 describe "Public interface", ->
   it "Has public methods", ->
     expected_public_methods = [
-      # "setRequestType"
       "setEnvironment"
       "setKey"
       "setHost"
