@@ -2,6 +2,14 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    concat: {
+      options: {
+      },
+      dist: {
+        src: ['src/header.txt', 'src/stacktrace.js', 'src/notifier.js', 'src/footer.txt'],
+        dest: 'dist/<%= pkg.name %>.js'
+      }
+    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
@@ -43,10 +51,12 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-mocha-cli');
 
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
-  grunt.registerTask('default', ['jshint']);
+  grunt.registerTask('build', [ 'concat' ]);
+  grunt.registerTask('default', ['build']);
 
 };
