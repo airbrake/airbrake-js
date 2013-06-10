@@ -29,6 +29,7 @@
     "grunt-contrib-jshint": "~0.6.0",
     "grunt-contrib-watch": "~0.4.4",
     "grunt-mocha-cli": "~1.0.6",
-    "coffee-script": "~1.6.3"
+    "coffee-script": "~1.6.3",
+    "chai": "~1.6.1"
   }
 }
