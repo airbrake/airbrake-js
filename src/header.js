@@ -1,6 +1,3 @@
-window = GLOBAL;
-document = {};
-
 var make_xml_http_request = function(url, data) {
   var request = new window.XMLHttpRequest();
   request.open('POST', url, true);
@@ -9,7 +6,7 @@ var make_xml_http_request = function(url, data) {
 };
 
 var make_mock_xml_http_request = function(url, data) {
-  console.log(data);
+  // console.log(data);
 };
 
 var Global;
