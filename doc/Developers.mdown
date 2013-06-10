@@ -6,6 +6,8 @@ The Airbrake-js build process relies on grunt to facilitate development. Grunt i
   * Generating distribution versions of the library
   * Running tests
 
+## Development
+
 Development can be carried on inside a virtual machine managed by Vagrant and Chef.
 
   * [Install VirtualBox](https://www.virtualbox.org/)
@@ -25,3 +27,6 @@ vagrant@lucid64:/vagrant$ ./node_modules/.bin/grunt watch
 Running "watch" task
 Waiting...
 ````
+
+## Building
+
