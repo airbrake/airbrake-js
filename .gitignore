@@ -5,3 +5,4 @@
 .project
 /.vagrant/
 /node_modules/
+/dist/airbrake-js.js
