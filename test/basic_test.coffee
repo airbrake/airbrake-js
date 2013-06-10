@@ -1,4 +1,4 @@
-Airbrake = require('../src/airbrake-js')
+Airbrake = require('../dist/airbrake-js')
 expect = require('chai').expect
 
 describe "Global objects", ->
