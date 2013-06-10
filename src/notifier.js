@@ -427,7 +427,7 @@
                 switch (this.options['outputFormat']) {
                     case 'XML':
                        outputData = escape(this.generateXML(this.generateDataJSON(error)));
-                       url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/notifier_api/v2/notices';
+                       url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/notifier_api/v2/notices';
                         _sendGETRequest(url, outputData);
                        break;
 
@@ -438,7 +438,7 @@
                     * url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
                     */
                          outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
-                        url = ('https:' == document.location.protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
+                        url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
                         _sendPOSTRequest(url, outputData);
                         break;
 
@@ -503,7 +503,7 @@
                     error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
 
                     component = error.component || '',
-                    request_url = (error.url || '' + location.hash),
+                    request_url = (error.url || '' + airbrake_client_app_hash),
 
                     methods = ['cgi-data', 'params', 'session'],
                     _outputData = null;
@@ -515,7 +515,7 @@
                     request: (function () {
                         if (request_url || component) {
                             error['cgi-data'] = error['cgi-data'] || {};
-                            error['cgi-data'].HTTP_USER_AGENT = navigator.userAgent;
+                            error['cgi-data'].HTTP_USER_AGENT = airbrake_client_app_navigator_user_agent;
                             return Util.merge(outputData.request, _composeRequestObj(methods, error));
                         } else {
                             return {}
@@ -604,7 +604,7 @@
                 if (matches && this.validBacktraceLine(stacktrace[i])) {
                     file = matches[2].replace(this.ROOT, '[PROJECT_ROOT]');
 
-                    if (i === 0 && matches[2].match(document.location.href)) {
+                    if (i === 0 && matches[2].match(airbrake_client_app_href)) {
                         // backtrace.push('<line method="" file="internal: " number=""/>');
 
                         backtrace.push({

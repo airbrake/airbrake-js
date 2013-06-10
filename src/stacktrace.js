@@ -290,7 +290,7 @@ printStackTrace.implementation.prototype = {
      * @return False if we need a cross-domain request
      */
     isSameDomain: function(url) {
-        return url.indexOf(location.hostname) !== -1;
+        return url.indexOf(airbrake_client_app_hostname) !== -1;
     },
 
     /**
