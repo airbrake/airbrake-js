@@ -54,7 +54,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-mocha-cli');
 
-  grunt.registerTask('test', ['mochacli', 'jshint']);
+  grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
   grunt.registerTask('build', [ 'concat' ]);
   grunt.registerTask('default', ['build']);
