@@ -406,10 +406,7 @@
              * http://www.w3.org/TR/cors/
              */
             function _sendPOSTRequest (url, data) {
-                var request = new XMLHttpRequest();
-                request.open('POST', url, true);
-                request.setRequestHeader('Content-Type', 'application/json');
-                request.send(data);
+                airbrake_client_app_create_xml_http_request(url, data);
             }
 
             return function (error) {
