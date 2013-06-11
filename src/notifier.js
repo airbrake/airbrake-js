@@ -38,14 +38,6 @@ var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
 
 Util = {
   /*
-   * Replace &, <, >, ', " characters with correspondent HTML entities.
-   */
-  escape: function (text) {
-    return text.replace(/&/g, '&#38;').replace(/</g, '&#60;').replace(/>/g, '&#62;')
-        .replace(/'/g, '&#39;').replace(/"/g, '&#34;');
-  },
-
-  /*
    * Remove leading and trailing space characters.
    */
   trim: function (text) {
@@ -481,9 +473,6 @@ Notifier.prototype = {
             line: ''
           });
         }
-
-        // backtrace.push('<line method="' + Util.escape(matches[1]) + '" file="' + Util.escape(file) +
-        //    '" number="' + matches[3] + '" />');
 
         backtrace.push({
           'function': matches[1],
