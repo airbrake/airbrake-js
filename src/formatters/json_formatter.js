@@ -2,8 +2,16 @@ var JSONFormatter = function() {};
 
 JSONFormatter.prototype = {
   format: function(data) {
-    var errors = [];
+    var errors = [], request = {},
+        request_data = data.request || {},
+        request_key;
+
     errors.backtrace = [];
+
+    // Copy values from provided request object
+    for (request_key in request_data) {
+      request[request_key] = request_data[request_key];
+    }
 
     return {
       context: {
@@ -20,7 +28,8 @@ JSONFormatter.prototype = {
       },
       environment: {},
       params: {},
-      error: errors
+      error: errors,
+      request: request
     };
   }
 };

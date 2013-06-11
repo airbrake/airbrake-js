@@ -104,3 +104,15 @@ describe "JSONFormatter", ->
     result = new Formatter().format(outputData);
     expect(result.params).to.be.an("object")
 
+  it "has `request`", ->
+    result = new Formatter().format(outputData);
+    expect(result.request).to.be.an("object")
+
+  describe "request", ->
+    it "is object when no request is provided", ->
+      result = new Formatter().format({})
+      expect(result.request).to.be.an("object")
+
+    it "is request when request is provided", ->
+      result = new Formatter().format(request: { custom: "[custom_val]" })
+      expect(result.request.custom).to.equal("[custom_val]")
