@@ -9,6 +9,9 @@ JSONFormatter.prototype = {
         name: "airbrake_js",
         version: "<%= pkg.version %>",
         url: "http://airbrake.io"
+      },
+      error: {
+        backtrace: []
       }
     };
   }
