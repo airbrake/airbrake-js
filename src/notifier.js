@@ -368,7 +368,7 @@ Notifier.prototype = {
   VERSION: '0.2.0',
   ROOT: airbrake_client_app_location,
   BACKTRACE_MATCHER: /^(.*)\@(.*)\:(\d+)$/,
-  backtrace_filters: [/notifier\.js/],
+  backtrace_filters: [/airbrake-js\.js/],
   DEF_XML_DATA: {
     request: {}
   },
