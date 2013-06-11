@@ -84,6 +84,18 @@ describe "JSONFormatter", ->
       result = new Formatter().format(outputData)
       expect(result.context.action).to.equal("[request_action]")
 
+    # it "has `userId`", ->
+    #   result = new Formatter().format(outputData)
+    #   expect(result.context.userId).to.exist
+
+    # it "has `userName`", ->
+    #   result = new Formatter().format(outputData)
+    #   expect(result.context.userName).to.exist
+
+    # it "has `userEmail`", ->
+    #   result = new Formatter().format(outputData)
+    #   expect(result.context.userEmail).to.exist
+
   it "has `environment`", ->
     result = new Formatter().format(outputData);
     expect(result.environment).to.be.an("object")
