@@ -65,3 +65,13 @@ describe "Client", ->
     client = new Client()
     client.setErrorDefaults({ staggering: "fascination" })
     expect(client.getErrorDefaults().staggering).to.equal("fascination")
+
+  describe "captureException", ->
+    it "processes with processor", ->
+      processor = { process: sinon.spy() }
+      reporter = { report: function() {} }
+
+      client = new Client(processor, reporter)
+      client.captureException()
+
+      expect(processor.process.called).to.be.true
