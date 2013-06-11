@@ -79,11 +79,13 @@ describe("JSON data format tests.", function () {
         expect(typeof _dataObj.request).not.toBe('undefined');
     });
 
-    it('Should contain \'server-environment\' ', function() {
-        expect(typeof _dataObj['server-environment']).not.toBe('undefined');
+    it('Should contain \'environment\' in context', function() {
+        expect(typeof _dataObj['context']).not.toBe('undefined');
+        expect(typeof _dataObj['context']['environment']).not.toBe('undefined');
     });
 
-    it('Should contain \'version\' ', function() {
-        expect(typeof _dataObj['version']).not.toBe('undefined');
+    it('Should contain \'version\' in context', function() {
+        expect(typeof _dataObj['context']).not.toBe('undefined');
+        expect(typeof _dataObj['context']['version']).not.toBe('undefined');
     });
 });
