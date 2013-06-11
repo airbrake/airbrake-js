@@ -14,12 +14,12 @@ describe("Performance testing.", function () {
         spyOn(window.XMLHttpRequest.prototype, 'setRequestHeader').andCallFake(function() {
 
         });
-        
+
         spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
-            
+
         });
     });
-    
+
     it(_callsNumber + " exceptions", function () {
         for (_i = 0; _i < _callsNumber; _i += 1) {
             try {
@@ -28,14 +28,14 @@ describe("Performance testing.", function () {
                 window.Airbrake.captureException(e);
             }
         }
-        
+
         expect(window.XMLHttpRequest.prototype.open).toHaveBeenCalled();
         expect(window.XMLHttpRequest.prototype.send).toHaveBeenCalled();
-        
+
         expect(window.XMLHttpRequest.prototype.open.calls.length).toEqual(_callsNumber);
         expect(window.XMLHttpRequest.prototype.send.calls.length).toEqual(_callsNumber);
     });
-    
+
     it(_callsNumber + " deeply nested exception", function () {
         var _funcRec = function (level) {
             if (level === 0) {
@@ -44,7 +44,7 @@ describe("Performance testing.", function () {
                 _funcRec(level - 1);
             }
         };
-        
+
         for (_i = 0; _i < _callsNumber; _i += 1) {
             try {
                 _funcRec(_recCallsLevel);
@@ -52,10 +52,10 @@ describe("Performance testing.", function () {
                 window.Airbrake.captureException(e);
             }
         }
-        
+
         expect(window.XMLHttpRequest.prototype.open).toHaveBeenCalled();
         expect(window.XMLHttpRequest.prototype.send).toHaveBeenCalled();
-        
+
         expect(window.XMLHttpRequest.prototype.open.calls.length).toEqual(_callsNumber);
         expect(window.XMLHttpRequest.prototype.send.calls.length).toEqual(_callsNumber);
     });
