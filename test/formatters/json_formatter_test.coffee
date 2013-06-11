@@ -30,38 +30,31 @@ outputData = {
 
 describe "JSONFormatter", ->
   it "has `notifier`", ->
-    formatter = new Formatter();
-    result = formatter.format();
+    result = new Formatter().format(outputData)
     expect(result.notifier).to.exist
 
   describe "notifier", ->
     it "has `name`", ->
-      formatter = new Formatter();
-      result = formatter.format();
+      result = new Formatter().format(outputData)
       expect(result.notifier.name).to.exist
 
     it "has `version`", ->
-      formatter = new Formatter();
-      result = formatter.format();
+      result = new Formatter().format(outputData)
       expect(result.notifier.version).to.exist
 
     it "has `url`", ->
-      formatter = new Formatter();
-      result = formatter.format();
+      result = new Formatter().format(outputData)
       expect(result.notifier.url).to.exist
 
   it "has `error`", ->
-    formatter = new Formatter();
-    result = formatter.format();
+    result = new Formatter().format(outputData)
     expect(result.error).to.exist
 
   describe "error", ->
     it "has numeric `length`", ->
-      formatter = new Formatter();
-      result = formatter.format();
+      result = new Formatter().format(outputData)
       expect(result.error.length).to.be.a("number")
 
     it "has `backtrace`", ->
-      formatter = new Formatter();
-      result = formatter.format();
+      result = new Formatter().format(outputData);
       expect(result.error.backtrace).to.exist
