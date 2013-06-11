@@ -10,13 +10,13 @@ module.exports = function(grunt) {
         process: true
       },
       dist: {
-        src: ['src/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/footer.js'],
+        src: ['src/wrapper/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/wrapper/footer.js'],
         dest: 'tmp/src/concat-dist.js'
       }
     },
     browserify: {
       legacy: {
-        src: ['src/util/**/*.js', '<%= concat.dist.dest %>'],
+        src: ['tmp/src/util/**/*.js', '<%= concat.dist.dest %>'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -31,7 +31,7 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
-      files: ['gruntfile.js', 'src/notifier.js', 'src/stacktrace.js', 'src/formatters/**/*.js', 'test/**/*.js'],
+      files: ['gruntfile.js', 'src/Client.js', 'src/notifier.js', 'src/stacktrace.js', 'src/formatters/**/*.js', 'test/**/*.js'],
       options: {
         // options here to override JSHint defaults
         globals: {
