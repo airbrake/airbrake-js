@@ -9,7 +9,9 @@ JSONFormatter.prototype = {
       context: {
         language: "JavaScript",
         url: data.request_url,
-        environment: data.environment
+        environment: data.environment,
+        rootDirectory: data.project_root,
+        action: data.request_action
       },
       notifier: {
         name: "airbrake_js",

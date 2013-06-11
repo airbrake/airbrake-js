@@ -23,7 +23,7 @@ outputData = {
   key: "111",
   project_root: "file://localhost",
   request: {},
-  request_action: "",
+  request_action: "[request_action]",
   request_component: "",
   request_url: "[request_url]"
 }
@@ -75,6 +75,14 @@ describe "JSONFormatter", ->
     it "has `environment` from data.environment", ->
       result = new Formatter().format(outputData)
       expect(result.context.environment).to.equal("[environment]")
+
+    it "has `rootDirectory` from data.project_root", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.rootDirectory).to.equal("file://localhost")
+
+    it "has `action` from data.request_action", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.action).to.equal("[request_action]")
 
   it "has `environment`", ->
     result = new Formatter().format(outputData);
