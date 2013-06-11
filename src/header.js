@@ -1,3 +1,5 @@
+(function() {
+
 var Global;
 if ("undefined" === typeof GLOBAL) {
   Global = this;
