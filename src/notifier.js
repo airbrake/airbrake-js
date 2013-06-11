@@ -511,7 +511,7 @@ Notifier.prototype = {
         exception_class: (error.type || 'Error'),
         exception_message: (error.message || 'Unknown error.'),
         backtrace_lines: this.generateBacktrace(error)
-      }
+      };
 
       outputData = Util.merge(outputData, _outputData);
 
