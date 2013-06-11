@@ -38,13 +38,6 @@ var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
 
 Util = {
   /*
-   * Remove leading and trailing space characters.
-   */
-  trim: function (text) {
-    return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
-  },
-
-  /*
    * Add hook for jQuery.fn.on function, to manualy call window.Airbrake.captureException() method
    * for every exception occurred.
    *
