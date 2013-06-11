@@ -2,7 +2,10 @@
 // Once we're decoupled we'll be able to require notifier directly
 var Notifier = require("../concat-dist");
 
-window.onerror = function (message, file, line) {
+var Global = ("undefined" === typeof GLOBAL ? this : GLOBAL);
+
+// TODO: Drive this from somewhere rather than having it happen automatically
+Global.onerror = function (message, file, line) {
   setTimeout(function () {
     new Notifier().notify({
       message: message,
