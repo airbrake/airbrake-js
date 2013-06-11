@@ -1,11 +1,6 @@
 (function() {
 
-var Global;
-if ("undefined" === typeof GLOBAL) {
-  Global = this;
-} else {
-  Global = GLOBAL;
-}
+var Global = ("undefined" === typeof GLOBAL) ? this : GLOBAL;
 
 var make_xml_http_request = function(url, data) {
   var request = new Global.XMLHttpRequest();
