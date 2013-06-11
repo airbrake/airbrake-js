@@ -2,13 +2,16 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
+    copy: {
+      build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
+    },
     concat: {
       options: {
         process: true
       },
       dist: {
         src: ['src/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/footer.js'],
-        dest: 'tmp/concat-dist.js'
+        dest: 'tmp/src/concat-dist.js'
       }
     },
     browserify: {
@@ -55,16 +58,18 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-browserify');
+
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-mocha-cli');
 
   grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['concat', 'browserify']);
+  grunt.registerTask('build', ['copy', 'concat', 'browserify']);
   grunt.registerTask('default', ['build']);
 
 };
