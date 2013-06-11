@@ -75,3 +75,8 @@ describe "JSONFormatter", ->
     it "has `environment` from data.environment", ->
       result = new Formatter().format(outputData)
       expect(result.context.environment).to.equal("[environment]")
+
+  it "has `environment`", ->
+    result = new Formatter().format(outputData);
+    expect(result.environment).to.be.an("object")
+

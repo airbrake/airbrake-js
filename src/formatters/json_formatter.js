@@ -16,6 +16,7 @@ JSONFormatter.prototype = {
         version: "<%= pkg.version %>",
         url: "http://airbrake.io"
       },
+      environment: {},
       error: errors
     };
   }
