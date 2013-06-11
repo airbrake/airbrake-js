@@ -1,4 +1,4 @@
-Client = require("../src/client")
+Client = require("../src/Client")
 expect = require("chai").expect
 sinon = require("sinon")
 
