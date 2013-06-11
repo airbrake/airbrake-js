@@ -6,6 +6,9 @@ JSONFormatter.prototype = {
     errors.backtrace = [];
 
     return {
+      context: {
+        language: "JavaScript"
+      },
       notifier: {
         name: "airbrake_js",
         version: "<%= pkg.version %>",

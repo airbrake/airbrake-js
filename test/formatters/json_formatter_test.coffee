@@ -58,3 +58,12 @@ describe "JSONFormatter", ->
     it "has `backtrace`", ->
       result = new Formatter().format(outputData);
       expect(result.error.backtrace).to.exist
+
+  it "has `context`", ->
+    result = new Formatter().format(outputData);
+    expect(result.context).to.exist
+
+  describe "context", ->
+    it "has `language` JavaScript", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.language).to.equal("JavaScript")
