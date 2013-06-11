@@ -19,6 +19,7 @@ JSONFormatter.prototype = {
         url: "http://airbrake.io"
       },
       environment: {},
+      params: {},
       error: errors
     };
   }

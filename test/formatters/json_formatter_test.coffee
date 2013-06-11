@@ -100,3 +100,7 @@ describe "JSONFormatter", ->
     result = new Formatter().format(outputData);
     expect(result.environment).to.be.an("object")
 
+  it "has `params`", ->
+    result = new Formatter().format(outputData);
+    expect(result.params).to.be.an("object")
+
