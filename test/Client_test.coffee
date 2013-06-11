@@ -1,5 +1,6 @@
 Client = require("../src/client")
 expect = require("chai").expect
+sinon = require("sinon")
 
 describe "Client", ->
   it "can set and read `environment`", ->
@@ -26,6 +27,39 @@ describe "Client", ->
       client = new Client()
       client.setGuessFunctionName(true)
       expect(client.getGuessFunctionName()).to.be.true
+
+  describe "trackJQ", ->
+    it "is false by default", ->
+      client = new Client();
+      expect(client.getTrackJQ()).to.be.false
+
+    it "can set and read", ->
+      client = new Client()
+      client.setTrackJQ(true)
+      expect(client.getTrackJQ()).to.be.true
+
+    it "calls setupjQueryTracker", ->
+      spy = sinon.spy()
+      client = new Client(undefined, undefined, spy);
+      client.setTrackJQ(true)
+      expect(spy.called).to.be.true
+
+    it "calls setupjQueryTracker only on trackJQ state change", ->
+      spy = sinon.spy()
+      client = new Client(undefined, undefined, spy);
+      client.setTrackJQ(true)
+      client.setTrackJQ(true)
+      expect(spy.callCount).to.equal(1)
+
+  describe "outputFormat", ->
+    it "is JSON by default", ->
+      client = new Client();
+      expect(client.getOutputFormat()).to.equal("JSON")
+
+    it "can set and read", ->
+      client = new Client()
+      client.setOutputFormat("XML")
+      expect(client.getOutputFormat()).to.equal("XML")
 
   it "can set and read `errorDefaults`", ->
     client = new Client()
