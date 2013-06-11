@@ -519,3 +519,4 @@ window.onerror = function (message, file, line) {
 
   return true;
 };
+module.exports = Notifier;
