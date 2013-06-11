@@ -3,12 +3,16 @@ describe("Performance testing.", function () {
         _XMLHttpRequest = window.XMLHttpRequest,
         _callsNumber = 1000,
         _recCallsLevel = 10000;
-    
-    window.Airbrake.setRequestType('POST');
-    
+
+    window.Airbrake.setOutputFormat('JSON');
+
     beforeEach(function() {
         spyOn(window.XMLHttpRequest.prototype, 'open').andCallFake(function() {
-            
+
+        });
+
+        spyOn(window.XMLHttpRequest.prototype, 'setRequestHeader').andCallFake(function() {
+
         });
         
         spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
