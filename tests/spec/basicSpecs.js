@@ -33,8 +33,10 @@ describe("Public interface.", function () {
 });
 
 describe("JSON data format tests.", function () {
-    var _dataObj = null;
-    
+    var _dataObj = null,
+        _openMethod = null,
+        _openUrl = null;
+
     window.Airbrake.setOutputFormat('JSON');
     
     beforeEach(function() {
@@ -56,6 +58,8 @@ describe("JSON data format tests.", function () {
             window.Airbrake.captureException(e);
             
             _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
+            _openMethod = window.XMLHttpRequest.prototype.open.mostRecentCall.args[0];
+            _openUrl = window.XMLHttpRequest.prototype.open.mostRecentCall.args[1];
         }
     });
     
