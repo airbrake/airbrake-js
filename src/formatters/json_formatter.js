@@ -19,7 +19,8 @@ JSONFormatter.prototype = {
         url: data.request_url,
         environment: data.environment,
         rootDirectory: data.project_root,
-        action: data.request_action
+        action: data.request_action,
+        version: "1.1.1"
       },
       notifier: {
         name: "airbrake_js",

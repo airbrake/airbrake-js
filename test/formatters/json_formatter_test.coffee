@@ -68,6 +68,10 @@ describe "JSONFormatter", ->
       result = new Formatter().format(outputData)
       expect(result.context.language).to.equal("JavaScript")
 
+    it "has `version` 1.1.1", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.version).to.equal("1.1.1")
+
     it "has `url` from data.request_url", ->
       result = new Formatter().format(outputData)
       expect(result.context.url).to.equal("[request_url]")
