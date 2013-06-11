@@ -1,4 +1,6 @@
 /* jshint -W084, -W030, -W014, -W033, -W099, -W069, -W064, -W067 */
+var merge = require("./util/merge");
+
 var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
   '<notice version="2.0">' +
     '<api-key>{key}</api-key>' +
@@ -32,51 +34,6 @@ var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
   _publicAPI,
 
 Util = {
-  /*
-   * Merge a number of objects into one.
-   *
-   * Usage example:
-   *  var obj1 = {
-   *      a: 'a'
-   *    },
-   *    obj2 = {
-   *      b: 'b'
-   *    },
-   *    obj3 = {
-   *      c: 'c'
-   *    },
-   *    mergedObj = Util.merge(obj1, obj2, obj3);
-   *
-   * mergedObj is: {
-   *   a: 'a',
-   *   b: 'b',
-   *   c: 'c'
-   * }
-   *
-   */
-  merge: (function() {
-    function processProperty (key, dest, src) {
-      if (src.hasOwnProperty(key)) {
-        dest[key] = src[key];
-      }
-    }
-
-    return function() {
-      var objects = Array.prototype.slice.call(arguments),
-        obj,
-        key,
-        result = {};
-
-      while (obj = objects.shift()) {
-        for (key in obj) {
-          processProperty(key, result, obj);
-        }
-      }
-
-      return result;
-    };
-  })(),
-
   /*
    * Replace &, <, >, ', " characters with correspondent HTML entities.
    */
@@ -327,8 +284,8 @@ _publicAPI = [
 Global = window.Airbrake = window.Hoptoad = Util.generatePublicAPI(_publicAPI, Config);
 
 function Notifier() {
-  this.options = Util.merge({}, Config.options);
-  this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
+  this.options = merge({}, Config.options);
+  this.xmlData = merge(this.DEF_XML_DATA, Config.xmlData);
 }
 
 Notifier.prototype = {
@@ -449,10 +406,10 @@ Notifier.prototype = {
         /*
          * A constructor line:
          *
-         * this.xmlData = Util.merge(this.DEF_XML_DATA, Config.xmlData);
+         * this.xmlData = merge(this.DEF_XML_DATA, Config.xmlData);
          */
       var outputData = this.xmlData,
-        error = Util.merge(this.options.errorDefaults, errorWithoutDefaults),
+        error = merge(this.options.errorDefaults, errorWithoutDefaults),
 
         component = error.component || '',
         request_url = (error.url || '' + airbrake_client_app_hash),
@@ -468,7 +425,7 @@ Notifier.prototype = {
           if (request_url || component) {
             error['cgi-data'] = error['cgi-data'] || {};
             error['cgi-data'].HTTP_USER_AGENT = airbrake_client_app_navigator_user_agent;
-            return Util.merge(outputData.request, _composeRequestObj(methods, error));
+            return merge(outputData.request, _composeRequestObj(methods, error));
           } else {
             return {};
           }
@@ -480,7 +437,7 @@ Notifier.prototype = {
         backtrace_lines: this.generateBacktrace(error)
       };
 
-      outputData = Util.merge(outputData, _outputData);
+      outputData = merge(outputData, _outputData);
 
       return outputData;
     };

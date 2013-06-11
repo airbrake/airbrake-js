@@ -16,7 +16,7 @@ module.exports = function(grunt) {
     },
     browserify: {
       legacy: {
-        src: ['<%= concat.dist.dest %>'],
+        src: ['src/util/**/*.js', '<%= concat.dist.dest %>'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
