@@ -1,5 +1,12 @@
+var Global;
+if ("undefined" === typeof GLOBAL) {
+  Global = this;
+} else {
+  Global = GLOBAL;
+}
+
 var make_xml_http_request = function(url, data) {
-  var request = new window.XMLHttpRequest();
+  var request = new Global.XMLHttpRequest();
   request.open('POST', url, true);
   request.setRequestHeader('Content-Type', 'application/json');
   request.send(data);
@@ -8,13 +15,6 @@ var make_xml_http_request = function(url, data) {
 var make_mock_xml_http_request = function(url, data) {
   // console.log(data);
 };
-
-var Global;
-if ("undefined" === typeof GLOBAL) {
-  Global = this;
-} else {
-  Global = GLOBAL;
-}
 
 var airbrake_client_app_protocol = (Global.location ? Global.location.protocol : '[app_protocol]'),
     airbrake_client_app_location = (Global.location ? Global.location.protocol + '//' + Global.location.host : '[app_url]'),
