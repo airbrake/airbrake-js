@@ -41,7 +41,11 @@ describe("JSON data format tests.", function () {
         spyOn(window.XMLHttpRequest.prototype, 'open').andCallFake(function() {
             
         });
-        
+
+        spyOn(window.XMLHttpRequest.prototype, 'setRequestHeader').andCallFake(function() {
+
+        });
+
         spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
             
         });
