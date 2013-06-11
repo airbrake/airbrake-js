@@ -17,7 +17,7 @@ outputData = {
     { file: "unsupported.js", line: "0", function: "    at jasmine.Queue.next_ (file://localhost/Users/duncanbeevers/Projects/airbrake/airbrake-js/tests/lib/jasmine-1.2.0/jasmine.js:2025:31)" },
     { file: "unsupported.js", line: "0", function: "    at onComplete (file://localhost/Users/duncanbeevers/Projects/airbrake/airbrake-js/tests/lib/jasmine-1.2.0/jasmine.js:2021:18)" },
   ],
-  environment: "environment",
+  environment: "[environment]",
   exception_class: "Error",
   exception_message: "number is not a function",
   key: "111",
@@ -71,3 +71,7 @@ describe "JSONFormatter", ->
     it "has `url` from data.request_url", ->
       result = new Formatter().format(outputData)
       expect(result.context.url).to.equal("[request_url]")
+
+    it "has `environment` from data.environment", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.environment).to.equal("[environment]")
