@@ -62,9 +62,9 @@ describe("JSON data format tests.", function () {
             _openUrl = window.XMLHttpRequest.prototype.open.mostRecentCall.args[1];
         }
     });
-    
-    it('Should contain \'api-key\' ', function() {
-        expect(_dataObj['api-key']).toBe(window.Airbrake.getKey());
+
+    it('Should use \'api-key\' in url', function() {
+        expect(_openUrl).toMatch(new RegExp("key=" + window.Airbrake.getKey()));
     });
     
     it('Should contain \'error\' ', function() {
