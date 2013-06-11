@@ -95,14 +95,6 @@ Util = {
   },
 
   /*
-   * Make first letter in a string capital. e.g. 'guessFunctionName' -> 'GuessFunctionName'
-   * Is used to generate getter and setter method names.
-   */
-  capitalizeFirstLetter: function (str) {
-    return str[0].toUpperCase() + str.slice(1);
-  },
-
-  /*
    * Generate public API from an array of specifically formated objects, e.g.
    *
    * - this will generate 'setEnvironment' and 'getEnvironment' API methods for configObj.xmlData.environment variable:
@@ -131,6 +123,12 @@ Util = {
       };
     }
 
+    // Make first letter in a string capital. e.g. 'guessFunctionName' -> 'GuessFunctionName'
+    // Is used to generate getter and setter method names.
+    function _capitalizeFirstLetter (str) {
+      return str[0].toUpperCase() + str.slice(1);
+    }
+
     /*
      * publicAPI: array of specifically formated objects
      * configObj: inner configuration object
@@ -144,7 +142,7 @@ Util = {
 
         switch (true) {
           case (typeof _m.variable !== 'undefined') && (typeof _m.methodName === 'undefined'):
-            _capitalized = Util.capitalizeFirstLetter(_m.variable)
+            _capitalized = _capitalizeFirstLetter(_m.variable)
             returnObj['set' + _capitalized] = _generateSetter(_m.variable, _m.namespace, configObj);
             returnObj['get' + _capitalized] = _generateGetter(_m.variable, _m.namespace, configObj);
 
