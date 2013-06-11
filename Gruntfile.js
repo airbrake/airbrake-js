@@ -13,7 +13,7 @@ module.exports = function(grunt) {
     },
     browserify: {
       legacy: {
-        src: ['tmp/concat-dist.js'],
+        src: ['<%= concat.dist.dest %>'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
