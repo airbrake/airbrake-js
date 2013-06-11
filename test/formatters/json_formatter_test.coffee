@@ -31,6 +31,11 @@ describe "JSONFormatter", ->
     expect(result.error).to.exist
 
   describe "error", ->
+    it "has numeric `length`", ->
+      formatter = new Formatter();
+      result = formatter.format();
+      expect(result.error.length).to.be.a("number")
+
     it "has `backtrace`", ->
       formatter = new Formatter();
       result = formatter.format();
