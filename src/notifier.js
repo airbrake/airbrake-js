@@ -503,7 +503,7 @@ Notifier.prototype = {
             error['cgi-data'].HTTP_USER_AGENT = airbrake_client_app_navigator_user_agent;
             return Util.merge(outputData.request, _composeRequestObj(methods, error));
           } else {
-            return {}
+            return {};
           }
         } ()),
 
