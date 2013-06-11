@@ -25,7 +25,7 @@ outputData = {
   request: {},
   request_action: "",
   request_component: "",
-  request_url: ""
+  request_url: "[request_url]"
 }
 
 describe "JSONFormatter", ->
@@ -67,3 +67,7 @@ describe "JSONFormatter", ->
     it "has `language` JavaScript", ->
       result = new Formatter().format(outputData)
       expect(result.context.language).to.equal("JavaScript")
+
+    it "has `url` from data.request_url", ->
+      result = new Formatter().format(outputData)
+      expect(result.context.url).to.equal("[request_url]")

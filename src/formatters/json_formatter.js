@@ -1,13 +1,14 @@
 var JSONFormatter = function() {};
 
 JSONFormatter.prototype = {
-  format: function() {
+  format: function(data) {
     var errors = [];
     errors.backtrace = [];
 
     return {
       context: {
-        language: "JavaScript"
+        language: "JavaScript",
+        url: data.request_url
       },
       notifier: {
         name: "airbrake_js",
