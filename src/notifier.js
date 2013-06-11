@@ -31,38 +31,6 @@ var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
   Util,
   _publicAPI,
 
-  NOTICE_JSON = {
-    "notifier": {
-      "name": "airbrake_js",
-      "version": "0.2.0",
-      "url": "http://airbrake.io"
-    },
-    "error": [
-     {
-      "type": "{exception_class}",
-      "message": "{exception_message}",
-      "backtrace": []
-
-    }
-    ],
-    "context": {
-      "language": "JavaScript",
-      "environment": "{environment}",
-
-      "version": "1.1.1",
-      "url": "{request_url}",
-      "rootDirectory": "{project_root}",
-      "action": "{request_action}",
-
-      "userId": "{}",
-      "userName": "{}",
-      "userEmail": "{}",
-    },
-    "environment": {},
-    //"session": "",
-    "params": {},
-  };
-
 Util = {
   /*
    * Merge a number of objects into one.
@@ -423,10 +391,7 @@ Notifier.prototype = {
           //   url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
           url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
 
-          // Cross-domain AJAX POST request.
-          // It requires a server setup as described in Cross-Origin Resource Sharing spec:
-          // http://www.w3.org/TR/cors/
-          airbrake_client_app_create_xml_http_request(url, JSON.stringify(this.generateJSON(outputData)));
+          airbrake_client_app_create_xml_http_request(url, JSON.stringify(airbrake_client_app_formatter.format(outputData)));
           break;
 
         default:
@@ -549,22 +514,6 @@ Notifier.prototype = {
       return Util.substitute(NOTICE_XML, JSONdataObj, true);
     };
   } ()),
-
-  /*
-   * Generate JSON notification from inner JSON representation.
-   * NOTICE_JSON is used as pattern.
-   */
-  generateJSON: function (JSONdataObj) {
-    // Pattern string is JSON.stringify(NOTICE_JSON)
-    // The rendered string is parsed back as JSON.
-    var outputJSON = JSON.parse(Util.substitute(JSON.stringify(NOTICE_JSON), JSONdataObj, true));
-
-    // REMOVED - Request from JSON.
-    outputJSON.request = Util.merge(outputJSON.request, JSONdataObj.request);
-    outputJSON.error.backtrace = JSONdataObj.backtrace_lines;
-
-    return outputJSON;
-  },
 
   generateBacktrace: function (error) {
     var backtrace = [],

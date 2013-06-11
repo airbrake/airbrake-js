@@ -1,5 +1,7 @@
 (function() {
 
+var JSONFormatter = require("./formatters/json_formatter");
+
 var Global = ("undefined" === typeof GLOBAL) ? this : GLOBAL;
 
 var make_xml_http_request = function(url, data) {
@@ -19,7 +21,8 @@ var airbrake_client_app_protocol = (Global.location ? Global.location.protocol :
     airbrake_client_app_hash = (Global.location ? Global.location.hash : '[app_hash]'),
     airbrake_client_app_navigator_user_agent = (Global.navigator ? Global.navigator.userAgent : '[app_navigator_user_agent]'),
     airbrake_client_app_href = (Global.document ? Global.document.location.href : '[app_doc_location_href]'),
-    airbrake_client_app_create_xml_http_request = (Global.XMLHttpRequest ? make_xml_http_request : make_mock_xml_http_request);
+    airbrake_client_app_create_xml_http_request = (Global.XMLHttpRequest ? make_xml_http_request : make_mock_xml_http_request),
+    airbrake_client_app_formatter = new JSONFormatter();
 
 // Airbrake JavaScript Notifier Bundle
-(function(window, document, airbrake_client_app_protocol, airbrake_client_app_location, airbrake_client_app_hostname, airbrake_client_app_hash, airbrake_client_app_navigator_user_agent, airbrake_client_app_href, airbrake_client_app_create_xml_http_request, undefined) {
+(function(window, document, airbrake_client_app_protocol, airbrake_client_app_location, airbrake_client_app_hostname, airbrake_client_app_hash, airbrake_client_app_navigator_user_agent, airbrake_client_app_href, airbrake_client_app_create_xml_http_request, airbrake_client_app_formatter, undefined) {
