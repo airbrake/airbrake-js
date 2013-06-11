@@ -26,7 +26,7 @@ describe("Public interface.", function () {
             expect(typeof window.Airbrake[methodName]).toBe('function');
         });
     }
-    
+
     for (_i = 0; _i < _methods.length; _i += 1) {
         _createMathodSpec(_methods[_i]);
     }
@@ -38,10 +38,10 @@ describe("JSON data format tests.", function () {
         _openUrl = null;
 
     window.Airbrake.setOutputFormat('JSON');
-    
+
     beforeEach(function() {
         spyOn(window.XMLHttpRequest.prototype, 'open').andCallFake(function() {
-            
+
         });
 
         spyOn(window.XMLHttpRequest.prototype, 'setRequestHeader').andCallFake(function() {
@@ -49,14 +49,14 @@ describe("JSON data format tests.", function () {
         });
 
         spyOn(window.XMLHttpRequest.prototype, 'send').andCallFake(function() {
-            
+
         });
-        
+
         try {
             (0)();
         } catch (e) {
             window.Airbrake.captureException(e);
-            
+
             _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
             _openMethod = window.XMLHttpRequest.prototype.open.mostRecentCall.args[0];
             _openUrl = window.XMLHttpRequest.prototype.open.mostRecentCall.args[1];
@@ -66,23 +66,23 @@ describe("JSON data format tests.", function () {
     it('Should use \'api-key\' in url', function() {
         expect(_openUrl).toMatch(new RegExp("key=" + window.Airbrake.getKey()));
     });
-    
+
     it('Should contain \'error\' ', function() {
         expect(typeof _dataObj.error).not.toBe('undefined');
     });
-    
+
     it('Should contain \'notifier\' ', function() {
         expect(typeof _dataObj.notifier).not.toBe('undefined');
     });
-    
+
     it('Should contain \'request\' ', function() {
         expect(typeof _dataObj.request).not.toBe('undefined');
     });
-    
+
     it('Should contain \'server-environment\' ', function() {
         expect(typeof _dataObj['server-environment']).not.toBe('undefined');
     });
-    
+
     it('Should contain \'version\' ', function() {
         expect(typeof _dataObj['version']).not.toBe('undefined');
     });
