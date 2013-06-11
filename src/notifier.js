@@ -407,24 +407,26 @@ Notifier.prototype = {
          */
 
 
+      if (this.options['outputFormat'] === 'XML' || this.options['outputFormat'] === 'JSON') {
+        outputData = this.generateDataJSON(error);
+      }
+
       switch (this.options['outputFormat']) {
         case 'XML':
-           outputData = escape(this.generateXML(this.generateDataJSON(error)));
            url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/notifier_api/v2/notices';
-          _sendGETRequest(url, outputData);
+          _sendGETRequest(url, escape(this.generateXML(outputData)));
            break;
 
         case 'JSON':
           // JSON uses API V3. Needs project in URL.
           //   http://collect.airbrake.io/api/v3/projects/[PROJECT_ID]/notices?key=[API_KEY]
           //   url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
-          outputData = JSON.stringify(this.generateJSON(this.generateDataJSON(error)));
           url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
 
           // Cross-domain AJAX POST request.
           // It requires a server setup as described in Cross-Origin Resource Sharing spec:
           // http://www.w3.org/TR/cors/
-          airbrake_client_app_create_xml_http_request(url, outputData);
+          airbrake_client_app_create_xml_http_request(url, JSON.stringify(this.generateJSON(outputData)));
           break;
 
         default:
