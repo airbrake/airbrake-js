@@ -148,7 +148,7 @@ Util = {
 
             break;
           case (typeof _m.methodName !== 'undefined') && (typeof _m.method !== 'undefined'):
-            returnObj[_m.methodName] = _m.method
+            returnObj[_m.methodName] = _m.method;
 
             break;
 
