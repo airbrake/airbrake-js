@@ -1,5 +1,8 @@
 /* jshint -W084, -W030, -W014, -W033, -W099, -W069, -W064, -W067 */
-var merge = require("./util/merge");
+
+// Import utils
+var merge = require("./util/merge"),
+    sub = require("./util/substitute");
 
 var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
   '<notice version="2.0">' +
@@ -47,35 +50,6 @@ Util = {
    */
   trim: function (text) {
     return text.toString().replace(/^\s+/, '').replace(/\s+$/, '');
-  },
-
-  /*
-   * Fill 'text' pattern with 'data' values.
-   *
-   * e.g. Utils.substitute('<{tag}></{tag}>', {tag: 'div'}, true) will return '<div></div>'
-   *
-   * emptyForUndefinedData - a flag, if true, all matched {<name>} without data.<name> value specified will be
-   * replaced with empty string.
-   */
-  substitute: function (text, data, emptyForUndefinedData) {
-    return text.replace(/{([\w_.-]+)}/g, function(match, key) {
-      return (key in data) ? data[key] : (emptyForUndefinedData ? '' : match);
-    });
-  },
-
-  /*
-   * Perform pattern rendering for an array of data objects.
-   * Returns a concatenation of rendered strings of all objects in array.
-   */
-  substituteArr: function (text, dataArr, emptyForUndefinedData) {
-    var _i = 0, _l = 0,
-      returnStr = '';
-
-    for (_i = 0, _l = dataArr.length; _i < _l; _i += 1) {
-      returnStr += this.substitute(text, dataArr[_i], emptyForUndefinedData);
-    }
-
-    return returnStr;
   },
 
   /*
@@ -454,9 +428,9 @@ Notifier.prototype = {
 
       for (_group in requestObj) {
         if (requestObj.hasOwnProperty(_group)) {
-          returnStr += Util.substitute(REQUEST_VARIABLE_GROUP_XML, {
+          returnStr += sub.substitute(REQUEST_VARIABLE_GROUP_XML, {
             group_name: _group,
-            inner_content: Util.substituteArr(REQUEST_VARIABLE_XML, requestObj[_group], true)
+            inner_content: sub.substituteArr(REQUEST_VARIABLE_XML, requestObj[_group], true)
           }, true);
         }
       }
@@ -466,9 +440,9 @@ Notifier.prototype = {
 
     return function (JSONdataObj) {
       JSONdataObj.request = _generateRequestVariableGroups(JSONdataObj.request);
-      JSONdataObj.backtrace_lines = Util.substituteArr(BACKTRACE_LINE_XML, JSONdataObj.backtrace_lines, true);
+      JSONdataObj.backtrace_lines = sub.substituteArr(BACKTRACE_LINE_XML, JSONdataObj.backtrace_lines, true);
 
-      return Util.substitute(NOTICE_XML, JSONdataObj, true);
+      return sub.substitute(NOTICE_XML, JSONdataObj, true);
     };
   } ()),
 
