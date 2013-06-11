@@ -8,6 +8,12 @@ module.exports = function(grunt) {
       },
       dist: {
         src: ['src/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/footer.js'],
+        dest: 'tmp/concat-dist.js'
+      }
+    },
+    browserify: {
+      legacy: {
+        src: ['tmp/concat-dist.js'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -49,6 +55,7 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -57,7 +64,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
-  grunt.registerTask('build', [ 'concat' ]);
+  grunt.registerTask('build', ['concat', 'browserify']);
   grunt.registerTask('default', ['build']);
 
 };
