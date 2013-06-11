@@ -4,6 +4,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     concat: {
       options: {
+        process: true
       },
       dist: {
         src: ['src/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/footer.js'],
