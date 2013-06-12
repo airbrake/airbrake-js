@@ -32,7 +32,7 @@ var merge = (function() {
     var objects = Array.prototype.slice.call(arguments),
       obj,
       key,
-      result = {},
+      result = objects.shift(),
       i, l = objects.length;
 
     for (i = 0; i < l; i++) {
