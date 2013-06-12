@@ -46,6 +46,16 @@ module.exports = function(grunt) {
       files: ['<%= jshint.files %>', 'test/**/*.coffee'],
       tasks: ['test']
     },
+    connect: {
+      server: {
+        options: {
+          hostname: '*',
+          port: 9001,
+          base: 'dist',
+          keepalive: true
+        }
+      }
+    },
     mochacli: {
       all: ['test/**/*.coffee'],
       options: {
@@ -65,11 +75,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-mocha-cli');
 
   grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
   grunt.registerTask('build', ['copy', 'concat', 'browserify']);
+  grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build']);
 
 };
