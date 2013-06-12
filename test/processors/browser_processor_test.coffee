@@ -66,6 +66,15 @@ describe "BrowserProcessor", ->
         result = new Processor().process(type: "[error_type]")
         expect(result.exception_class).to.equal("[error_type]")
 
+    describe "exception_message", ->
+      it "has `exception_message` as \"Unknown error.\"", ->
+        result = new Processor().process({})
+        expect(result.exception_message).to.equal("Unknown error.")
+
+      it "has `exception_message` from error.message", ->
+        result = new Processor().process(message: "[error_message]")
+        expect(result.exception_message).to.equal("[error_message]")
+
     it "has `backtrace_lines`", ->
       result = new Processor(splitStack).process(error)
       expect(result.backtrace_lines).to.exist

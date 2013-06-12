@@ -79,6 +79,7 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
         error_component = error.component || "",
         error_action    = error.action    || "",
         error_type      = error.type      || "Error",
+        error_message   = error.message   || "Unknown error.",
         request_data    = {},
         tmp_obj;
 
@@ -104,7 +105,8 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
       request_action: error_action,
       request_component: error_component,
       request_url: error_url,
-      exception_class: error_type
+      exception_class: error_type,
+      exception_message: error_message
     };
 
     return output_data;
