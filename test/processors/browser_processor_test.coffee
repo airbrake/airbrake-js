@@ -75,3 +75,7 @@ describe "BrowserProcessor", ->
         result = new Processor(undefined, undefined, splitStack).process(error)
         line = result.backtrace_lines[0]
         expect(line.function).to.exist
+
+    it "has `request`", ->
+      result = new Processor(undefined, undefined, splitStack).process(error)
+      expect(result.request).to.exist
