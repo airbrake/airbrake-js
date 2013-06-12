@@ -20,7 +20,7 @@ error = {
 
 describe "BrowserProcessor", ->
   splitStack = (error) ->
-    return error.stack.split("\n")
+    return (error.stack || "").split("\n")
 
   describe "recognizeFrame", ->
     describe "Chrome stacktrace", ->
