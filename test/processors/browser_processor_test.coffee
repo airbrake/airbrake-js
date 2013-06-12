@@ -23,11 +23,24 @@ describe "BrowserProcessor", ->
     return error.stack.split("\n")
 
   describe "recognizeFrame", ->
-    it "recognizes top-level frame", ->
-      result = new Processor().recognizeFrame("TypeError: number is not a function")
-      expect(result.function).to.equal("TypeError: number is not a function")
-      expect(result.file).to.equal("unsupported.js")
-      expect(result.line).to.equal("0")
+    describe "Chrome stacktrace", ->
+      it "recognizes top-level frame", ->
+        result = new Processor().recognizeFrame("TypeError: number is not a function")
+        expect(result.function).to.equal("TypeError: number is not a function")
+        expect(result.file).to.equal("unsupported.js")
+        expect(result.line).to.equal("0")
+
+      it "recognizes remote JavaScript", ->
+        result = new Processor().recognizeFrame("    at ErrorMaker (http://127.0.0.1:9001/error.js:2:6)")
+        expect(result.function).to.equal("at ErrorMaker")
+        expect(result.file).to.equal("http://127.0.0.1:9001/error.js")
+        expect(result.line).to.equal("2")
+
+      it "recognizes inline JavaScript", ->
+        result = new Processor().recognizeFrame("    at HTMLButtonElement.onclick (http://127.0.0.1:9001/:8:184)")
+        expect(result.function).to.equal("at HTMLButtonElement.onclick")
+        expect(result.file).to.equal("http://127.0.0.1:9001/")
+        expect(result.line).to.equal("8")
 
   describe "process", ->
     it "has `key`", ->
@@ -37,7 +50,6 @@ describe "BrowserProcessor", ->
     it "has `environment`", ->
       result = new Processor(undefined, "[environment]").process(error)
       expect(result.environment).to.equal("[environment]")
-
 
     it "has `backtrace_lines`", ->
       result = new Processor(undefined, undefined, splitStack).process(error)
