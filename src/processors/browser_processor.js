@@ -80,11 +80,13 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
         tmp_obj;
 
     if (error_url || error_component) {
+      request_data['cgi-data'] = [];
+      request_data.key = key;
+      request_data.environment = environment;
+
       addErrorDataToRequest('cgi-data', error, request_data);
       addErrorDataToRequest('params', error, request_data);
       addErrorDataToRequest('session', error, request_data);
-      request_data.key = key;
-      request_data.environment = environment;
     }
 
     var output_data = {

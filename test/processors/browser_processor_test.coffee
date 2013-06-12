@@ -92,12 +92,18 @@ describe "BrowserProcessor", ->
           result = new Processor().process({})
           expect(result.request).to.be.an("object")
 
-        it "has `cgi-data`", ->
-          result = new Processor().process(url: "[error_url]", 'cgi-data': { "X_KEY": "X_VAL" })
-          data = result.request['cgi-data']
-          expect(data.length).to.equal(1)
-          expect(data[0].key).to.equal("X_KEY")
-          expect(data[0].value).to.equal("X_VAL")
+        describe "cgi-data", ->
+          it "has `cgi-data`", ->
+            result = new Processor().process(url: "[error_url]")
+            data = result.request['cgi-data']
+            expect(data).to.exist
+
+          it "has `cgi-data` from error['cgi-data']", ->
+            result = new Processor().process(url: "[error_url]", 'cgi-data': { "X_KEY": "X_VAL" })
+            data = result.request['cgi-data']
+            expect(data.length).to.equal(1)
+            expect(data[0].key).to.equal("X_KEY")
+            expect(data[0].value).to.equal("X_VAL")
 
         it "has `params`", ->
           result = new Processor().process(url: "[error_url]", 'params': { "X_KEY": "X_VAL" })
