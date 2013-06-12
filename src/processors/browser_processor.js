@@ -48,7 +48,7 @@ function BrowserProcessor(key, environment, splitFn) {
       request: {},
       request_action: '',
       request_component: '',
-      request_url: ''
+      request_url: error.url
     };
 
     return output_data;
