@@ -3,7 +3,6 @@ sinon = require("sinon")
 
 Reporter = require("../../src/reporters/xhr_reporter")
 
-oldXhr = null
 MockXhr = ->
 MockXhr.prototype = {
   open: ->
@@ -12,6 +11,7 @@ MockXhr.prototype = {
 }
 
 describe "XHRReporter", ->
+  oldXhr = null
   beforeEach ->
     oldXhr = global.XMLHttpRequest
     global.XMLHttpRequest = MockXhr
