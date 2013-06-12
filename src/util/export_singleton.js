@@ -6,13 +6,16 @@ var Client = require("../client"),
 var printStackTrace = require("stacktrace-js");
 
 function getProcessor(client) {
-  var key = client.getKey(),
-      environment = client.getEnvironment(),
+  // Vars from global
+  var document_location_hash = global.document.location.hash,
+      navigator_user_agent   = global.navigator.userAgent,
+      app_root               = global.location.protocol + '//' + global.location.host;
+
+  // Vars from client
+  var key                 = client.getKey(),
+      environment         = client.getEnvironment(),
       guess_function_name = client.getGuessFunctionName(),
-      error_defaults = client.getErrorDefaults(),
-      document_location_hash = document.location.hash,
-      navigator_user_agent = window.navigator.userAgent,
-      app_root = window.location.protocol + '//' + window.location.host;
+      error_defaults      = client.getErrorDefaults();
 
   function splitErrorBacktrace(error) {
     var options = {
