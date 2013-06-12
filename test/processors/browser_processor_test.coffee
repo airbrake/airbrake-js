@@ -91,9 +91,13 @@ describe "BrowserProcessor", ->
 
       describe "request_url", ->
         it "has `request_url` from error.url", ->
-          result = new Processor(null, null, splitStack).process(url: "[error_url]")
+          result = new Processor(null, null, null).process(url: "[error_url]")
           expect(result.request_url).to.equal("[error_url]")
 
         it "has `request_url` from errorDefaults.url", ->
-          result = new Processor(null, null, splitStack, { url: "[error_defaults_url]" }).process(url: "[error_url]")
+          result = new Processor(null, null, null, { url: "[error_defaults_url]" }).process(url: "[error_url]")
           expect(result.request_url).to.equal("[error_defaults_url]")
+
+        it "has `request_url` from document hash", ->
+          result = new Processor(null, null, null, null, "[document_location_hash]").process(error)
+          expect(result.request_url).to.equal("[document_location_hash]")

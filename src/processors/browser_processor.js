@@ -39,10 +39,12 @@ function getStackTrace(error, splitFn) {
   return stacktrace;
 }
 
-function BrowserProcessor(key, environment, splitFn, errorDefaults) {
-  this.process = function(errorWithoutDefaults) {
+function BrowserProcessor(key, environment, splitFn, error_defaults, document_location_hash) {
+  this.process = function(error_without_defaults) {
 
-    var error = merge(errorWithoutDefaults, errorDefaults);
+    var error = merge(error_without_defaults, error_defaults);
+
+    var error_url = error.url || '' + document_location_hash;
 
     var output_data = {
       key: key,
@@ -51,7 +53,7 @@ function BrowserProcessor(key, environment, splitFn, errorDefaults) {
       request: {},
       request_action: '',
       request_component: '',
-      request_url: error.url
+      request_url: error_url
     };
 
     return output_data;
