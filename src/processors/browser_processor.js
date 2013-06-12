@@ -3,7 +3,7 @@ var merge = require("../util/merge");
 var match_message_file_line_column = /\s+([^\(]+)\s+\((.*):(\d+):(\d+)\)/;
 
 function recognizeFrame(string) {
-  var fn,
+  var message,
       file,
       line;
 
@@ -11,15 +11,17 @@ function recognizeFrame(string) {
 
   match = string.match(match_message_file_line_column);
   if (match) {
-    fn = match[1];
+    message = match[1];
     file = match[2];
     line = match[3];
   }
 
-  fn = fn || string;
+  // Function falls back to entire string if
+  // the function name can't be extracted
+  message = message || string;
 
   return {
-    'function': fn,
+    'function': message,
     file: file || "unsupported.js",
     line: line || "0"
   };
