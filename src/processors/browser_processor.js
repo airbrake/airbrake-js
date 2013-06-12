@@ -1,23 +1,28 @@
 var merge = require("../util/merge");
 
-function stacktraceObjFromString(string) {
-  var function_name,
-      file_name,
-      line_number;
+var backtrace_matcher = /^(.*)\@(.*)\:(\d+)$/;
 
-  return {
-    'function': function_name,
-    file: file_name,
-    line: line_number
-  };
+function recognizeFrame(string) {
+  var fn,
+      file,
+      line;
+
+  if (~string.indexOf("@")) {
+    file = "unsupported.js";
+  } else {
+
+  }
+
+  return { 'function': fn, file: file, line: line };
 }
 
 function getStackTrace(error, splitFn) {
   var stacktrace_strings = splitFn ? splitFn(error) : [];
-  var stacktrace = [];
+  var frame, stacktrace = [];
 
   for(var i = stacktrace_strings.length - 1; i >= 0; i--) {
-    stacktrace[i] = stacktraceObjFromString(stacktrace_strings[i]);
+    frame = recognizeFrame(stacktrace_strings[i]);
+    if (frame) { stacktrace.unshift(frame); }
   }
 
   return stacktrace;
@@ -36,8 +41,7 @@ function BrowserProcessor(key, environment, splitFn) {
 }
 
 BrowserProcessor.prototype = {
-  process: function(error) {
-  }
+  recognizeFrame: recognizeFrame
 };
 
 module.exports = BrowserProcessor;
