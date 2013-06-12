@@ -78,7 +78,7 @@ describe "BrowserProcessor", ->
 
     describe "request-related values", ->
       it "has `request`", ->
-        result = new Processor(null, null, splitStack).process(error)
+        result = new Processor(null, null, null).process(error)
         expect(result.request).to.exist
 
       it "has `request_action`", ->
