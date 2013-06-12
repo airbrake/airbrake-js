@@ -13,6 +13,11 @@ describe "Client", ->
     client.setKey("[custom_key]")
     expect(client.getKey()).to.equal("[custom_key]")
 
+  it "can set and read `projectId`", ->
+    client = new Client()
+    client.setProjectId("[custom_project_id]")
+    expect(client.getProjectId()).to.equal("[custom_project_id]")
+
   describe "host", ->
     it "is \"api.airbrake.io\" by default", ->
       client = new Client()
