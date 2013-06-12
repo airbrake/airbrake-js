@@ -1,4 +1,4 @@
-Client = require("../src/Client")
+Client = require("../src/client")
 expect = require("chai").expect
 sinon = require("sinon")
 
@@ -76,10 +76,15 @@ describe "Client", ->
       client.setOutputFormat("XML")
       expect(client.getOutputFormat()).to.equal("XML")
 
-  it "can set and read `errorDefaults`", ->
-    client = new Client()
-    client.setErrorDefaults({ staggering: "fascination" })
-    expect(client.getErrorDefaults().staggering).to.equal("fascination")
+  describe "errorDefaults", ->
+    it "is empty object by default", ->
+      client = new Client()
+      expect(client.getErrorDefaults()).to.deep.equal({})
+
+    it "can be set and read", ->
+      client = new Client()
+      client.setErrorDefaults({ staggering: "fascination" })
+      expect(client.getErrorDefaults().staggering).to.equal("fascination")
 
   describe "captureException", ->
     exception = do ->
