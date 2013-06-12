@@ -5,6 +5,11 @@ module.exports = function(grunt) {
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
+    bower: {
+      dist: {
+        dest: 'tmp/bower'
+      }
+    },
     browserify: {
       dist: {
         src: ['tmp/src/util/**/*.js'],
@@ -60,6 +65,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-bower');
   grunt.loadNpmTasks('grunt-browserify');
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -70,7 +76,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['copy', 'browserify']);
+  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build']);
 
