@@ -6,6 +6,7 @@ Vagrant.configure("2") do |config|
   # config.vm.box_url = "http://domain.com/path/to/above.box"
 
   config.vm.network :forwarded_port, :guest => 5858, :host => 5858
+  config.vm.network :forwarded_port, :guest => 9001, :host => 9001
 
   config.vm.provision :chef_solo do |chef|
     chef.cookbooks_path = "cookbooks"
