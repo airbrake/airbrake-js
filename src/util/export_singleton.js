@@ -18,7 +18,7 @@ function getProcessor(client) {
       guess: guess_function_name
     };
     return printStackTrace(options);
-}
+  }
 
   return new BrowserProcessor(key, environment, splitErrorBacktrace, error_defaults, document_location_hash);
 }
