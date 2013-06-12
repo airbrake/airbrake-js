@@ -13,10 +13,15 @@ describe "Client", ->
     client.setKey("[custom_key]")
     expect(client.getKey()).to.equal("[custom_key]")
 
-  it "can set and read `host`", ->
-    client = new Client()
-    client.setHost("[custom_host]")
-    expect(client.getHost()).to.equal("[custom_host]")
+  describe "host", ->
+    it "is \"api.airbrake.io\" by default", ->
+      client = new Client()
+      expect(client.getHost()).to.equal("api.airbrake.io")
+
+    it "can be set and read", ->
+      client = new Client()
+      client.setHost("[custom_host]")
+      expect(client.getHost()).to.equal("[custom_host]")
 
   describe "guessFunctionName", ->
     it "is false by default", ->

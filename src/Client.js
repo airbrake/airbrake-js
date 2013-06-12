@@ -16,7 +16,7 @@ function Client(getProcessor, getReporter, setupjQueryTracker) {
   instance.setKey = function(val) { _key = val; };
   instance.getKey = function() { return _key; };
 
-  var _host;
+  var _host = "api.airbrake.io";
   instance.setHost = function(val) { _host = val; };
   instance.getHost = function() { return _host; };
 
