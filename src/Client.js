@@ -1,7 +1,7 @@
 // The Client is the entry point to interacting with the Airbrake JS library.
 // It stores configuration information and dispatches errors.
 // window.Airbrake is an instance of Client.
-function Client(processor, reporter, setupjQueryTracker) {
+function Client(getProcessor, getReporter, setupjQueryTracker) {
   var instance = this;
 
   var _environment;
@@ -40,6 +40,9 @@ function Client(processor, reporter, setupjQueryTracker) {
   instance.getTrackJQ = function() { return !!_trackJQ; };
 
   instance.captureException = function(exception) {
+    var processor = getProcessor && getProcessor(instance),
+        reporter = processor && getReporter(instance);
+
     if (processor && reporter) {
       var data = processor.process(exception);
       reporter.report(data);

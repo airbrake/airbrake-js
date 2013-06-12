@@ -2,15 +2,6 @@ Client = require("../src/Client")
 expect = require("chai").expect
 sinon = require("sinon")
 
-exception = do ->
-  error = undefined
-  try
-    (0)()
-  catch _err
-    error = _err
-
-  return error
-
 describe "Client", ->
   it "can set and read `environment`", ->
     client = new Client()
@@ -76,11 +67,22 @@ describe "Client", ->
     expect(client.getErrorDefaults().staggering).to.equal("fascination")
 
   describe "captureException", ->
+    exception = do ->
+      error = undefined
+      try
+        (0)()
+      catch _err
+        error = _err
+
+      return error
+
     it "processes with processor", ->
       processor = { process: sinon.spy() }
       reporter = { report: -> }
+      getProcessor = -> processor
+      getReporter = -> reporter
 
-      client = new Client(processor, reporter)
+      client = new Client(getProcessor, getReporter)
       client.captureException(exception)
 
       expect(processor.process.called).to.be.true
