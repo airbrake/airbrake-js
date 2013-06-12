@@ -45,7 +45,10 @@ function BrowserProcessor(key, environment, splitFn) {
       key: key,
       environment: environment,
       backtrace_lines: getStackTrace(error, splitFn),
-      request: {}
+      request: {},
+      request_action: '',
+      request_component: '',
+      request_url: ''
     };
 
     return output_data;

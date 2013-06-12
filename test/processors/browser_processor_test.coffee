@@ -79,3 +79,15 @@ describe "BrowserProcessor", ->
     it "has `request`", ->
       result = new Processor(undefined, undefined, splitStack).process(error)
       expect(result.request).to.exist
+
+    it "has `request_action`", ->
+      result = new Processor(undefined, undefined, splitStack).process(error)
+      expect(result.request_action).to.exist
+
+    it "has `request_component`", ->
+      result = new Processor(undefined, undefined, splitStack).process(error)
+      expect(result.request_component).to.exist
+
+    it "has `request_url`", ->
+      result = new Processor(undefined, undefined, splitStack).process(error)
+      expect(result.request_url).to.exist
