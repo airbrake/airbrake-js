@@ -58,7 +58,7 @@ describe "BrowserProcessor", ->
       expect(result.environment).to.equal("[environment]")
 
     it "has `backtrace_lines`", ->
-      result = new Processor(splitStack, null, null).process(error)
+      result = new Processor(splitStack).process(error)
       expect(result.backtrace_lines).to.exist
 
 
@@ -89,25 +89,25 @@ describe "BrowserProcessor", ->
     describe "request-related values", ->
       describe "request", ->
         it "has `request` as object", ->
-          result = new Processor(null, null, null).process({})
+          result = new Processor().process({})
           expect(result.request).to.be.an("object")
 
         it "has `cgi-data`", ->
-          result = new Processor(null, null, null).process(url: "[error_url]", 'cgi-data': { "X_KEY": "X_VAL" })
+          result = new Processor().process(url: "[error_url]", 'cgi-data': { "X_KEY": "X_VAL" })
           data = result.request['cgi-data']
           expect(data.length).to.equal(1)
           expect(data[0].key).to.equal("X_KEY")
           expect(data[0].value).to.equal("X_VAL")
 
         it "has `params`", ->
-          result = new Processor(null, null, null).process(url: "[error_url]", 'params': { "X_KEY": "X_VAL" })
+          result = new Processor().process(url: "[error_url]", 'params': { "X_KEY": "X_VAL" })
           data = result.request['params']
           expect(data.length).to.equal(1)
           expect(data[0].key).to.equal("X_KEY")
           expect(data[0].value).to.equal("X_VAL")
 
         it "has `session`", ->
-          result = new Processor(null, null, null).process(url: "[error_url]", 'session': { "X_KEY": "X_VAL" })
+          result = new Processor().process(url: "[error_url]", 'session': { "X_KEY": "X_VAL" })
           data = result.request['session']
           expect(data.length).to.equal(1)
           expect(data[0].key).to.equal("X_KEY")
@@ -115,27 +115,27 @@ describe "BrowserProcessor", ->
 
       describe "request_action", ->
         it "has `request_action` from error.action", ->
-          result = new Processor(null, null, null).process(action: "[error_action]")
+          result = new Processor().process(action: "[error_action]")
           expect(result.request_action).to.equal("[error_action]")
 
         it "has `request_action` string", ->
-          result = new Processor(null, null, null).process({})
+          result = new Processor().process({})
           expect(result.request_action).to.equal("")
 
 
       describe "request_component", ->
         it "has `request_component` from error.component", ->
-          result = new Processor(null, null, null).process(component: "[error_component]")
+          result = new Processor().process(component: "[error_component]")
           expect(result.request_component).to.equal("[error_component]")
 
         it "has `request_component` string", ->
-          result = new Processor(null, null, null).process({})
+          result = new Processor().process({})
           expect(result.request_component).to.equal("")
 
 
       describe "request_url", ->
         it "has `request_url` from error.url", ->
-          result = new Processor(null, null, null).process(url: "[error_url]")
+          result = new Processor().process(url: "[error_url]")
           expect(result.request_url).to.equal("[error_url]")
 
         it "has `request_url` from errorDefaults.url", ->
@@ -147,5 +147,5 @@ describe "BrowserProcessor", ->
           expect(result.request_url).to.equal("[document_location_hash]")
 
         it "has `request_url` string", ->
-          result = new Processor(null, null, null, null, null).process(error)
+          result = new Processor().process(error)
           expect(result.request_url).to.equal("")
