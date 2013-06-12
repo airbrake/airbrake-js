@@ -32,11 +32,15 @@ var merge = (function() {
     var objects = Array.prototype.slice.call(arguments),
       obj,
       key,
-      result = {};
+      result = {},
+      i, l = objects.length;
 
-    while (obj = objects.shift()) {
-      for (key in obj) {
-        processProperty(key, result, obj);
+    for (i = 0; i < l; i++) {
+      obj = objects[i];
+      if (obj) {
+        for (key in obj) {
+          processProperty(key, result, obj);
+        }
       }
     }
 
