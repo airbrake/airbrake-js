@@ -1,6 +1,6 @@
 var Client = require("../client"),
-    BrowserProcessor = require("../processors/browser_processor"),
-    BrowserReporter = require("../reporters/browser_reporter");
+    Processor = require("../processors/browser_processor"),
+    Reporter  = require("../reporters/xhr_reporter");
 
 // This error-to-array-of-strings implementation can be swapped out
 var printStackTrace = require("stacktrace-js");
@@ -25,11 +25,21 @@ function getProcessor(client) {
     return printStackTrace(options);
   }
 
-  return new BrowserProcessor(splitErrorBacktrace, key, environment, error_defaults, document_location_hash, navigator_user_agent, app_root);
+  return new Processor(splitErrorBacktrace, key, environment, error_defaults, document_location_hash, navigator_user_agent, app_root);
 }
 
 function getReporter(client) {
-  return new BrowserReporter();
+  // TODO: Examine this, should we just default to ssl? What happens with spdy?
+  var protocol = ("https:" === global.location.protocol ? "https://" : "http://");
+
+  // Vars from client
+  var host       = client.getHost(),
+      project_id = client.getProjectId(),
+      key        = client.getKey();
+
+  var url = protocol + host + "/api/v3/projects/" + project_id + "/notices?key=" + key;
+
+  return new Reporter(url);
 }
 
 var client = new Client(getProcessor, getReporter);
