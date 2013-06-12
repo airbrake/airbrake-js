@@ -44,7 +44,7 @@ function addErrorDataToRequest(error_key, error, request_data) {
       collection, key;
 
   if (error_val) {
-    collection = request_data[error_key] = [];
+    collection = request_data[error_key] || (request_data[error_key] = []);
 
     for (key in error_val) {
       collection.push({
