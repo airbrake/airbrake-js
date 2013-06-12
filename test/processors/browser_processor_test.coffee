@@ -85,9 +85,14 @@ describe "BrowserProcessor", ->
         result = new Processor(null, null, splitStack).process(error)
         expect(result.request_action).to.exist
 
-      it "has `request_component`", ->
-        result = new Processor(null, null, splitStack).process(error)
-        expect(result.request_component).to.exist
+      describe "request_component", ->
+        it "has `request_component` from error.component", ->
+          result = new Processor(null, null, null).process(component: "[error_component]")
+          expect(result.request_component).to.equal("[error_component]")
+
+        it "has `request_component` string", ->
+          result = new Processor(null, null, null).process({})
+          expect(result.request_component).to.equal("")
 
       describe "request_url", ->
         it "has `request_url` from error.url", ->
@@ -101,3 +106,7 @@ describe "BrowserProcessor", ->
         it "has `request_url` from document hash", ->
           result = new Processor(null, null, null, null, "[document_location_hash]").process(error)
           expect(result.request_url).to.equal("[document_location_hash]")
+
+        it "has `request_url` string", ->
+          result = new Processor(null, null, null, null, null).process(error)
+          expect(result.request_url).to.equal("")

@@ -44,15 +44,16 @@ function BrowserProcessor(key, environment, splitFn, error_defaults, document_lo
 
     var error = merge(error_without_defaults, error_defaults);
 
-    var error_url = error.url || '' + document_location_hash;
+    var error_url = error.url || "" + (document_location_hash || ""),
+        error_component = error.component || "";
 
     var output_data = {
       key: key,
       environment: environment,
       backtrace_lines: getStackTrace(error, splitFn),
       request: {},
-      request_action: '',
-      request_component: '',
+      request_action: "",
+      request_component: error_component,
       request_url: error_url
     };
 
