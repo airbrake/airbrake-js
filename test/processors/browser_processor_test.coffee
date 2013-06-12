@@ -113,6 +113,14 @@ describe "BrowserProcessor", ->
           expect(data[0].key).to.equal("X_KEY")
           expect(data[0].value).to.equal("X_VAL")
 
+        it "has `key`", ->
+          result = new Processor(null, "[key]").process(url: "[error_url]")
+          expect(result.request.key).to.equal("[key]")
+
+        it "has `environment`", ->
+          result = new Processor(null, null, "[environment]").process(url: "[error_url]")
+          expect(result.request.environment).to.equal("[environment]")
+
       describe "request_action", ->
         it "has `request_action` from error.action", ->
           result = new Processor().process(action: "[error_action]")
