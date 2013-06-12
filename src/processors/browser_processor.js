@@ -39,6 +39,22 @@ function getStackTrace(error, splitFn) {
   return stacktrace;
 }
 
+function addErrorDataToRequest(error_key, error, request_data) {
+  var error_val = error[error_key],
+      collection, key;
+
+  if (error_val) {
+    collection = request_data[error_key] = [];
+
+    for (key in error_val) {
+      collection.push({
+        key: key,
+        value: error_val[key]
+      });
+    }
+  }
+}
+
 // BrowserProcessor must be initialized with a number
 // of parameters in order to capture data dependencies
 //
@@ -57,15 +73,23 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
 
     var error = merge(error_without_defaults, error_defaults);
 
-    var error_url = error.url || "" + (document_location_hash || ""),
+    var error_url       = error.url       || "" + (document_location_hash || ""),
         error_component = error.component || "",
-        error_action = error.action || "";
+        error_action    = error.action    || "",
+        request_data    = {},
+        tmp_obj;
+
+    if (error_url || error_component) {
+      addErrorDataToRequest('cgi-data', error, request_data);
+      addErrorDataToRequest('params', error, request_data);
+      addErrorDataToRequest('session', error, request_data);
+    }
 
     var output_data = {
       key: key,
       environment: environment,
       backtrace_lines: getStackTrace(error, splitFn),
-      request: {},
+      request: request_data,
       request_action: error_action,
       request_component: error_component,
       request_url: error_url
