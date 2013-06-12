@@ -68,6 +68,8 @@ function addErrorDataToRequest(error_key, error, request_data) {
 //  `document_location_hash` comes from
 //    document.location.hash as a fallback for the error url
 //
+//  `navigator_user_agent` comes from
+//    window.navigator.userAgent for populating request HTTP_USER_AGENT
 function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash, navigator_user_agent) {
   this.process = function(error_without_defaults) {
 
