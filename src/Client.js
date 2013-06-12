@@ -8,7 +8,7 @@
 function Client(getProcessor, getReporter, setupjQueryTracker) {
   var instance = this;
 
-  var _environment;
+  var _environment = "environment";
   instance.setEnvironment = function(val) { _environment = val; };
   instance.getEnvironment = function() { return _environment; };
 

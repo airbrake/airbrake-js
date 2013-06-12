@@ -3,10 +3,15 @@ expect = require("chai").expect
 sinon = require("sinon")
 
 describe "Client", ->
-  it "can set and read `environment`", ->
-    client = new Client()
-    client.setEnvironment("[custom_environment]")
-    expect(client.getEnvironment()).to.equal("[custom_environment]")
+  describe "environment", ->
+    it "is \"environment\" by default", ->
+      client = new Client()
+      expect(client.getEnvironment()).to.equal("environment")
+
+    it "can be set and read", ->
+      client = new Client()
+      client.setEnvironment("[custom_environment]")
+      expect(client.getEnvironment()).to.equal("[custom_environment]")
 
   it "can set and read `key`", ->
     client = new Client()
