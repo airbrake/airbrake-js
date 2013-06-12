@@ -20,9 +20,9 @@ function Client(getProcessor, getReporter, setupjQueryTracker) {
   instance.setHost = function(val) { _host = val; };
   instance.getHost = function() { return _host; };
 
-  var _errorDefaults;
-  instance.setErrorDefaults = function(val) { _errorDefaults = val; };
-  instance.getErrorDefaults = function() { return _errorDefaults; };
+  var _error_defaults;
+  instance.setErrorDefaults = function(val) { _error_defaults = val; };
+  instance.getErrorDefaults = function() { return _error_defaults; };
 
   var _guessFunctionName = false;
   instance.setGuessFunctionName = function(val) { _guessFunctionName = val; };
