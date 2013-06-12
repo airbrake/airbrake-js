@@ -20,7 +20,7 @@ function getProcessor(client) {
     return printStackTrace(options);
   }
 
-  return new BrowserProcessor(key, environment, splitErrorBacktrace, error_defaults, document_location_hash);
+  return new BrowserProcessor(splitErrorBacktrace, key, environment, error_defaults, document_location_hash);
 }
 
 function getReporter(client) {

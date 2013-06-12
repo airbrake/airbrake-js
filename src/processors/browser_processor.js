@@ -39,7 +39,20 @@ function getStackTrace(error, splitFn) {
   return stacktrace;
 }
 
-function BrowserProcessor(key, environment, splitFn, error_defaults, document_location_hash) {
+// BrowserProcessor must be initialized with a number
+// of parameters in order to capture data dependencies
+//
+//   `splitFn` is a function that returns an array of
+//     strings representing frames of a JavaScript backtrace,
+//     used as an injection point for stacktrace-js#printStackTrace
+//
+//   `key`, `environment`, and `error_defaults` come
+//     from Client configuration options, (eg Airbrake.setErrorDefaults())
+//
+//  `document_location_hash` comes from
+//    document.location.hash as a fallback for the error url
+//
+function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash) {
   this.process = function(error_without_defaults) {
 
     var error = merge(error_without_defaults, error_defaults);

@@ -44,35 +44,35 @@ describe "BrowserProcessor", ->
 
   describe "process", ->
     it "has `key`", ->
-      result = new Processor("[key]").process(error)
+      result = new Processor(null, "[key]").process(error)
       expect(result.key).to.equal("[key]")
 
     it "has `environment`", ->
-      result = new Processor(null, "[environment]").process(error)
+      result = new Processor(null, null, "[environment]").process(error)
       expect(result.environment).to.equal("[environment]")
 
     it "has `backtrace_lines`", ->
-      result = new Processor(null, null, splitStack).process(error)
+      result = new Processor(splitStack, null, null).process(error)
       expect(result.backtrace_lines).to.exist
 
     describe "backtrace_lines", ->
       it "splits error stack with provided splitter", ->
         spy = sinon.spy(splitStack)
-        result = new Processor(null, null, spy).process(error)
+        result = new Processor(spy, null, null).process(error)
         expect(spy.calledWith(error)).to.be.true
 
       it "has `file`", ->
-        result = new Processor(null, null, splitStack).process(error)
+        result = new Processor(splitStack, null, null).process(error)
         line = result.backtrace_lines[0]
         expect(line.file).to.exist
 
       it "has `line`", ->
-        result = new Processor(null, null, splitStack).process(error)
+        result = new Processor(splitStack, null, null).process(error)
         line = result.backtrace_lines[0]
         expect(line.line).to.exist
 
       it "has `function`", ->
-        result = new Processor(null, null, splitStack).process(error)
+        result = new Processor(splitStack, null, null).process(error)
         line = result.backtrace_lines[0]
         expect(line.function).to.exist
 
