@@ -242,6 +242,8 @@ _publicAPI = [
 
 // Share to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
 // Global = window.Airbrake = window.Hoptoad = Util.generatePublicAPI(_publicAPI, Config);
+Global = window.OldAirbrake = Util.generatePublicAPI(_publicAPI, Config);
+// window.Airbrake = Global;
 
 function Notifier() {
   this.options = merge({}, Config.options);
