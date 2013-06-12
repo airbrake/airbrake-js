@@ -5,18 +5,9 @@ module.exports = function(grunt) {
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
-    concat: {
-      options: {
-        process: true
-      },
-      dist: {
-        src: ['src/wrapper/header.js', 'src/notifier.js', 'src/wrapper/footer.js'],
-        dest: 'tmp/src/concat-dist.js'
-      }
-    },
     browserify: {
-      legacy: {
-        src: ['tmp/src/util/**/*.js', '<%= concat.dist.dest %>'],
+      dist: {
+        src: ['tmp/src/util/**/*.js'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -26,7 +17,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['<%= concat.dist.dest %>']
+          'dist/<%= pkg.name %>.min.js': ['<%= browserify.dist.dest %>']
         }
       }
     },
@@ -69,7 +60,6 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-browserify');
 
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -80,7 +70,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['copy', 'concat', 'browserify']);
+  grunt.registerTask('build', ['copy', 'browserify']);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build']);
 
