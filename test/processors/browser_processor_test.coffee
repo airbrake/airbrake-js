@@ -48,46 +48,46 @@ describe "BrowserProcessor", ->
       expect(result.key).to.equal("[key]")
 
     it "has `environment`", ->
-      result = new Processor(undefined, "[environment]").process(error)
+      result = new Processor(null, "[environment]").process(error)
       expect(result.environment).to.equal("[environment]")
 
     it "has `backtrace_lines`", ->
-      result = new Processor(undefined, undefined, splitStack).process(error)
+      result = new Processor(null, null, splitStack).process(error)
       expect(result.backtrace_lines).to.exist
 
     describe "backtrace_lines", ->
       it "splits error stack with provided splitter", ->
         spy = sinon.spy(splitStack)
-        result = new Processor(undefined, undefined, spy).process(error)
+        result = new Processor(null, null, spy).process(error)
         expect(spy.calledWith(error)).to.be.true
 
       it "has `file`", ->
-        result = new Processor(undefined, undefined, splitStack).process(error)
+        result = new Processor(null, null, splitStack).process(error)
         line = result.backtrace_lines[0]
         expect(line.file).to.exist
 
       it "has `line`", ->
-        result = new Processor(undefined, undefined, splitStack).process(error)
+        result = new Processor(null, null, splitStack).process(error)
         line = result.backtrace_lines[0]
         expect(line.line).to.exist
 
       it "has `function`", ->
-        result = new Processor(undefined, undefined, splitStack).process(error)
+        result = new Processor(null, null, splitStack).process(error)
         line = result.backtrace_lines[0]
         expect(line.function).to.exist
 
     it "has `request`", ->
-      result = new Processor(undefined, undefined, splitStack).process(error)
+      result = new Processor(null, null, splitStack).process(error)
       expect(result.request).to.exist
 
     it "has `request_action`", ->
-      result = new Processor(undefined, undefined, splitStack).process(error)
+      result = new Processor(null, null, splitStack).process(error)
       expect(result.request_action).to.exist
 
     it "has `request_component`", ->
-      result = new Processor(undefined, undefined, splitStack).process(error)
+      result = new Processor(null, null, splitStack).process(error)
       expect(result.request_component).to.exist
 
     it "has `request_url` from error.url", ->
-      result = new Processor(undefined, undefined, splitStack).process(url: "[error_url]")
+      result = new Processor(null, null, splitStack).process(url: "[error_url]")
       expect(result.request_url).to.equal("[error_url]")
