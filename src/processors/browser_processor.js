@@ -70,7 +70,7 @@ function addErrorDataToRequest(error_key, error, request_data) {
 //
 //  `navigator_user_agent` comes from
 //    window.navigator.userAgent for populating request HTTP_USER_AGENT
-function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash, navigator_user_agent) {
+function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash, navigator_user_agent, app_root) {
   this.process = function(error_without_defaults) {
 
     var error = merge(error_without_defaults, error_defaults);
@@ -106,7 +106,8 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
       request_component: error_component,
       request_url: error_url,
       exception_class: error_type,
-      exception_message: error_message
+      exception_message: error_message,
+      project_root: app_root
     };
 
     return output_data;

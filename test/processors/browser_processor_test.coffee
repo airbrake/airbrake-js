@@ -50,12 +50,17 @@ describe "BrowserProcessor", ->
 
   describe "process", ->
     it "has `key`", ->
-      result = new Processor(null, "[key]").process(error)
+      result = new Processor(null, "[key]").process({})
       expect(result.key).to.equal("[key]")
 
     it "has `environment`", ->
-      result = new Processor(null, null, "[environment]").process(error)
+      result = new Processor(null, null, "[environment]").process({})
       expect(result.environment).to.equal("[environment]")
+
+    describe "project_root", ->
+      it "has `project_root`", ->
+        result = new Processor(null, null, null, null, null, null, "[app_root]").process({})
+        expect(result.project_root).to.equal("[app_root]")
 
     describe "exception_class", ->
       it "has `exception_class` as \"Error\"", ->
@@ -66,6 +71,7 @@ describe "BrowserProcessor", ->
         result = new Processor().process(type: "[error_type]")
         expect(result.exception_class).to.equal("[error_type]")
 
+
     describe "exception_message", ->
       it "has `exception_message` as \"Unknown error.\"", ->
         result = new Processor().process({})
@@ -74,6 +80,7 @@ describe "BrowserProcessor", ->
       it "has `exception_message` from error.message", ->
         result = new Processor().process(message: "[error_message]")
         expect(result.exception_message).to.equal("[error_message]")
+
 
     it "has `backtrace_lines`", ->
       result = new Processor(splitStack).process(error)
