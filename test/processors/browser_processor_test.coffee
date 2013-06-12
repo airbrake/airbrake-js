@@ -81,9 +81,14 @@ describe "BrowserProcessor", ->
         result = new Processor(null, null, null).process(error)
         expect(result.request).to.exist
 
-      it "has `request_action`", ->
-        result = new Processor(null, null, splitStack).process(error)
-        expect(result.request_action).to.exist
+      describe "request_action", ->
+        it "has `request_action` from error.action", ->
+          result = new Processor(null, null, null).process(action: "[error_action]")
+          expect(result.request_action).to.equal("[error_action]")
+
+        it "has `request_action` string", ->
+          result = new Processor(null, null, null).process({})
+          expect(result.request_action).to.equal("")
 
       describe "request_component", ->
         it "has `request_component` from error.component", ->
