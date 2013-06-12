@@ -57,11 +57,18 @@ describe "BrowserProcessor", ->
       result = new Processor(null, null, "[environment]").process(error)
       expect(result.environment).to.equal("[environment]")
 
+    describe "exception_class", ->
+      it "has `exception_class` as \"Error\"", ->
+        result = new Processor().process({})
+        expect(result.exception_class).to.equal("Error")
+
+      it "has `exception_class` from error.type", ->
+        result = new Processor().process(type: "[error_type]")
+        expect(result.exception_class).to.equal("[error_type]")
+
     it "has `backtrace_lines`", ->
       result = new Processor(splitStack).process(error)
       expect(result.backtrace_lines).to.exist
-
-
 
     describe "backtrace_lines", ->
       it "splits error stack with provided splitter", ->

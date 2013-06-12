@@ -76,6 +76,7 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
     var error_url       = error.url       || "" + (document_location_hash || ""),
         error_component = error.component || "",
         error_action    = error.action    || "",
+        error_type      = error.type      || "Error",
         request_data    = {},
         tmp_obj;
 
@@ -100,7 +101,8 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
       request: request_data,
       request_action: error_action,
       request_component: error_component,
-      request_url: error_url
+      request_url: error_url,
+      exception_class: error_type
     };
 
     return output_data;
