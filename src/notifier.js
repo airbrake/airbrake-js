@@ -4,6 +4,9 @@
 var merge = require("./util/merge"),
     sub = require("./util/substitute");
 
+// Import stacktrace from node module
+var printStackTrace = require("stacktrace-js");
+
 var NOTICE_XML = '<?xml version="1.0" encoding="UTF-8"?>' +
   '<notice version="2.0">' +
     '<api-key>{key}</api-key>' +

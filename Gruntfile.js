@@ -10,7 +10,7 @@ module.exports = function(grunt) {
         process: true
       },
       dist: {
-        src: ['src/wrapper/header.js', 'src/stacktrace.js', 'src/notifier.js', 'src/wrapper/footer.js'],
+        src: ['src/wrapper/header.js', 'src/notifier.js', 'src/wrapper/footer.js'],
         dest: 'tmp/src/concat-dist.js'
       }
     },
