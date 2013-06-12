@@ -7,8 +7,6 @@ function recognizeFrame(string) {
       file,
       line;
 
-  var augmented_string = string;
-
   var match;
 
   match = string.match(match_message_file_line_column);
