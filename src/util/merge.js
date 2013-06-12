@@ -1,3 +1,4 @@
+/* jshint -W084 */
 /*
  * Merge a number of objects into one.
  *

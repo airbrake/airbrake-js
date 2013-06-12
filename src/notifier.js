@@ -1,4 +1,4 @@
-/* jshint -W084, -W030, -W014, -W033, -W099, -W069, -W064, -W067 */
+/* jshint -W030, -W014, -W033, -W099, -W069, -W064, -W067 */
 
 // Import utils
 var merge = require("./util/merge"),
