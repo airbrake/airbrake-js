@@ -68,7 +68,7 @@ function addErrorDataToRequest(error_key, error, request_data) {
 //  `document_location_hash` comes from
 //    document.location.hash as a fallback for the error url
 //
-function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash) {
+function BrowserProcessor(splitFn, key, environment, error_defaults, document_location_hash, navigator_user_agent) {
   this.process = function(error_without_defaults) {
 
     var error = merge(error_without_defaults, error_defaults);
@@ -80,7 +80,7 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
         tmp_obj;
 
     if (error_url || error_component) {
-      request_data['cgi-data'] = [];
+      request_data['cgi-data'] = [{ key: 'HTTP_USER_AGENT', value: navigator_user_agent }];
       request_data.key = key;
       request_data.environment = environment;
 
