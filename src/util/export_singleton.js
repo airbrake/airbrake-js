@@ -2,7 +2,31 @@ var Client = require("../client"),
     BrowserProcessor = require("../processors/browser_processor"),
     BrowserReporter = require("../reporters/browser_reporter");
 
-var processor = new BrowserProcessor(),
-    reporter = new BrowserReporter();
+// This error-to-array-of-strings implementation can be swapped out
+var printStackTrace = require("stacktrace-js");
 
-global.Airbrake = global.Hoptoad = new Client(processor, reporter);
+function getProcessor(client) {
+  var key = client.getKey(),
+      environment = client.getEnvironment(),
+      guess_function_name = client.getGuessFunctionName();
+
+  function splitErrorBacktrace(error) {
+    var options = {
+      e: error,
+      guess: guess_function_name
+    };
+    return printStackTrace(options);
+}
+
+  return new BrowserProcessor(key, environment, splitErrorBacktrace);
+}
+
+function getReporter(client) {
+  return new BrowserReporter();
+}
+
+var client = new Client(getProcessor, getReporter);
+
+// global.Airbrake = global.Hoptoad = new Client(processor, reporter);
+global.NewAirbrake = client;
+global.Airbrake = client;
