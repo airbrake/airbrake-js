@@ -76,18 +76,24 @@ describe "BrowserProcessor", ->
         line = result.backtrace_lines[0]
         expect(line.function).to.exist
 
-    it "has `request`", ->
-      result = new Processor(null, null, splitStack).process(error)
-      expect(result.request).to.exist
+    describe "request-related values", ->
+      it "has `request`", ->
+        result = new Processor(null, null, splitStack).process(error)
+        expect(result.request).to.exist
 
-    it "has `request_action`", ->
-      result = new Processor(null, null, splitStack).process(error)
-      expect(result.request_action).to.exist
+      it "has `request_action`", ->
+        result = new Processor(null, null, splitStack).process(error)
+        expect(result.request_action).to.exist
 
-    it "has `request_component`", ->
-      result = new Processor(null, null, splitStack).process(error)
-      expect(result.request_component).to.exist
+      it "has `request_component`", ->
+        result = new Processor(null, null, splitStack).process(error)
+        expect(result.request_component).to.exist
 
-    it "has `request_url` from error.url", ->
-      result = new Processor(null, null, splitStack).process(url: "[error_url]")
-      expect(result.request_url).to.equal("[error_url]")
+      describe "request_url", ->
+        it "has `request_url` from error.url", ->
+          result = new Processor(null, null, splitStack).process(url: "[error_url]")
+          expect(result.request_url).to.equal("[error_url]")
+
+        it "has `request_url` from errorDefaults.url", ->
+          result = new Processor(null, null, splitStack, { url: "[error_defaults_url]" }).process(url: "[error_url]")
+          expect(result.request_url).to.equal("[error_defaults_url]")
