@@ -80,10 +80,14 @@ function BrowserProcessor(splitFn, key, environment, error_defaults, document_lo
         tmp_obj;
 
     if (error_url || error_component) {
+      // Always add cgi-data, and prepopulate user agent
       request_data['cgi-data'] = [{ key: 'HTTP_USER_AGENT', value: navigator_user_agent }];
+
+      // Copy key and environment to request data
       request_data.key = key;
       request_data.environment = environment;
 
+      // Map object properties from error onto request data
       addErrorDataToRequest('cgi-data', error, request_data);
       addErrorDataToRequest('params', error, request_data);
       addErrorDataToRequest('session', error, request_data);
