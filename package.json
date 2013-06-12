@@ -34,6 +34,7 @@
     "grunt-contrib-connect": "~0.3.0",
     "grunt-mocha-cli": "~1.0.6",
     "coffee-script": "~1.6.3",
-    "chai": "~1.6.1"
+    "chai": "~1.6.1",
+    "node-inspector": "~0.2.0beta4"
   }
 }
