@@ -45,4 +45,5 @@ function getReporter(client) {
 var client = new Client(getProcessor, getReporter);
 
 global.NewAirbrake = client;
-// global.Airbrake = global.Hoptoad = client;
+global.Airbrake = global.Airbrake || client;
+global.Hoptoad = global.Airbrake;
