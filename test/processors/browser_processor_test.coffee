@@ -19,15 +19,27 @@ error = {
 }
 
 describe "BrowserProcessor", ->
-  client = {
-    getKey: -> "[key]"
-    getEnvironment: -> "[environment]"
-  }
+  splitStack = (error) -> return error.stack.split("\n")
 
-  it "has `key` provided by client", ->
-    result = new Processor(client).process(error)
+  it "has `key`", ->
+    result = new Processor("[key]").process(error)
     expect(result.key).to.equal("[key]")
 
-  it "has `environment` provided by client", ->
-    result = new Processor(client).process(error)
+  it "has `environment`", ->
+    result = new Processor(undefined, "[environment]").process(error)
     expect(result.environment).to.equal("[environment]")
+
+  describe "backtrace_lines", ->
+    it "splits error stack with provided splitter", ->
+      spy = sinon.spy(splitStack)
+      result = new Processor(undefined, undefined, spy).process(error)
+      expect(spy.calledWith(error)).to.be.true
+
+    # it "has `backtrace_lines`", ->
+    #   # splitStack = (error) ->
+    #   #   return error.stack.split("\n")
+
+    #   # result = new Processor(undefined, undefined, undefined, splitStack).process(error)
+
+    #   result = new Processor(undefined, undefined, undefined, splitStack).process(error)
+    #   expect(result.backtrace_lines).to.have.property("length", 11)
