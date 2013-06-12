@@ -10,7 +10,8 @@ function getProcessor(client) {
       environment = client.getEnvironment(),
       guess_function_name = client.getGuessFunctionName(),
       error_defaults = client.getErrorDefaults(),
-      document_location_hash = document.location.hash;
+      document_location_hash = document.location.hash,
+      navigator_user_agent = window.navigator.userAgent;
 
   function splitErrorBacktrace(error) {
     var options = {
@@ -20,7 +21,7 @@ function getProcessor(client) {
     return printStackTrace(options);
   }
 
-  return new BrowserProcessor(splitErrorBacktrace, key, environment, error_defaults, document_location_hash);
+  return new BrowserProcessor(splitErrorBacktrace, key, environment, error_defaults, document_location_hash, navigator_user_agent);
 }
 
 function getReporter(client) {
@@ -29,6 +30,5 @@ function getReporter(client) {
 
 var client = new Client(getProcessor, getReporter);
 
-// global.Airbrake = global.Hoptoad = new Client(processor, reporter);
 global.NewAirbrake = client;
-global.Airbrake = client;
+// global.Airbrake = global.Hoptoad = client;
