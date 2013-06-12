@@ -9,7 +9,8 @@ function getProcessor(client) {
   var key = client.getKey(),
       environment = client.getEnvironment(),
       guess_function_name = client.getGuessFunctionName(),
-      error_defaults = client.getErrorDefaults();
+      error_defaults = client.getErrorDefaults(),
+      document_location_hash = document.location.hash;
 
   function splitErrorBacktrace(error) {
     var options = {
@@ -19,7 +20,7 @@ function getProcessor(client) {
     return printStackTrace(options);
 }
 
-  return new BrowserProcessor(key, environment, splitErrorBacktrace, error_defaults);
+  return new BrowserProcessor(key, environment, splitErrorBacktrace, error_defaults, document_location_hash);
 }
 
 function getReporter(client) {
