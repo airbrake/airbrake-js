@@ -11,8 +11,8 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
     };
 
     var context_data = merge(custom_context_data, {
-      language: "JavaScript",
-      environment: environment_name
+      language    : "JavaScript",
+      environment : environment_name
     });
 
     // Build the mandatory pieces of the output payload
