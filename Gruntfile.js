@@ -19,7 +19,17 @@ module.exports = function(grunt) {
     browserify: {
       dist: {
         src: ['tmp/src/util/export_singleton.js'],
-        dest: 'dist/<%= pkg.name %>.js'
+        dest: 'tmp/dist/<%= pkg.name %>.js'
+      }
+    },
+    template: {
+      options: {
+        data: { pkg: grunt.file.readJSON('package.json') }
+      },
+      dist: {
+        files: {
+          'dist/<%= pkg.name %>.js': 'tmp/dist/<%= pkg.name %>.js'
+        }
       }
     },
     uglify: {
@@ -28,7 +38,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['<%= browserify.dist.dest %>']
+          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js']
         }
       }
     },
@@ -69,13 +79,13 @@ module.exports = function(grunt) {
     }
   });
 
-  grunt.loadNpmTasks('grunt-contrib-concat');
-
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-bower');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-browserify');
-
+  grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
@@ -83,7 +93,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'concat', 'browserify']);
+  grunt.registerTask('build', ['copy', 'bower', 'concat', 'browserify', 'template', 'uglify']);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build']);
 
