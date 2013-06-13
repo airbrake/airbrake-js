@@ -67,3 +67,12 @@ describe "API_V3_Reporter", ->
       result = new Reporter(null, null, null, null, null, "PARAM_KEY": "PARAM_VAL").generateOutputData()
       expect(result.params).to.deep.equal("PARAM_KEY": "PARAM_VAL")
 
+    it "has `errors`", ->
+      result = new Reporter().generateOutputData(type: "ERR_DATA_TYPE", message: "ERR_DATA_MESSAGE", backtrace: [])
+      errors = result.errors
+      expect(errors.length).to.equal(1)
+      expect(errors[0]).to.deep.equal(
+        type: "ERR_DATA_TYPE"
+        message: "ERR_DATA_MESSAGE"
+        backtrace: []
+      )

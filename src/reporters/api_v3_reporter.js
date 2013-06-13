@@ -4,6 +4,18 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
 
   // Responsible for creating a payload consumable by the Airbrake v3 API
   function generateOutputData(error_data) {
+    // `error_data` should be of the format
+    //   { type: String,
+    //     message: String,
+    //     backtrace: Array
+    //   }
+    //
+    // Each member of `error_data.backtrace` should be of the format
+    //   { file: String,
+    //     line: Number,
+    //     function: String
+    //   }
+
     var notifier_data = {
       name    : "Airbrake JS",
       version : "<%= pkg.version %>",
@@ -17,8 +29,9 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
 
     // Build the mandatory pieces of the output payload
     var output_data = {
-      notifier: notifier_data,
-      context: context_data
+      notifier : notifier_data,
+      context  : context_data,
+      errors   : [ error_data ]
     };
 
     // Add optional top-level keys to the output payload
