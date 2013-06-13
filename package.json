@@ -23,6 +23,7 @@
   "author": "Airbrake",
   "license": "MIT",
   "devDependencies": {
+    "grunt-contrib-concat": "~0.3.0",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
     "stacktrace-js": "~0.5.0",
