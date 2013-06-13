@@ -7,8 +7,8 @@ module.exports = function(grunt) {
     },
     concat: {
       build: {
-        src: ['legacy/header.js', 'legacy/notifier.js', 'legacy/footer.js'],
-        dest: 'tmp/src/notifier-wrapped.js'
+        src: ['legacy/notifier.js'],
+        dest: 'tmp/src/legacy-notifier.js'
       }
     },
     bower: {
@@ -18,7 +18,7 @@ module.exports = function(grunt) {
     },
     browserify: {
       dist: {
-        src: ['tmp/src/util/**/*.js'],
+        src: ['tmp/src/util/export_singleton.js'],
         dest: 'dist/<%= pkg.name %>.js'
       }
     },
@@ -33,7 +33,7 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
-      files: ['gruntfile.js', 'src/client.js', 'src/notifier.js', 'src/stacktrace.js', 'src/util/**/*.js', 'src/processors/**/*.js', 'src/formatters/**/*.js', 'src/reporters/**/*.js', 'test/**/*.js'],
+      files: ['gruntfile.js', 'src/**/*.js'],
       options: {
         // options here to override JSHint defaults
         globals: {
@@ -61,7 +61,6 @@ module.exports = function(grunt) {
     mochacli: {
       all: ['test/**/*.coffee'],
       options: {
-        // require: ['should'],
         compilers: [ 'coffee:coffee-script' ],
         files: 'test/**/*.coffee',
         bail: true,
@@ -69,6 +68,8 @@ module.exports = function(grunt) {
       }
     }
   });
+
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-bower');
@@ -80,9 +81,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-mocha-cli');
 
-  grunt.registerTask('test', ['build', 'mochacli', 'jshint']);
+  grunt.registerTask('test', ['mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
+  grunt.registerTask('build', ['copy', 'bower', 'concat', 'browserify']);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build']);
 
