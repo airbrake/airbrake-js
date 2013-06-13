@@ -1,4 +1,6 @@
 var TraceKit = require("../shims/TraceKit");
+TraceKit.remoteFetching = false;
+TraceKit.collectWindowErrors = false;
 
 function TraceKitProcessor() {
   this.process = function(error) {
