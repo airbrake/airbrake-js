@@ -18,7 +18,7 @@ module.exports = function(grunt) {
     },
     browserify: {
       dist: {
-        src: ['tmp/src/util/export_singleton.js'],
+        src: ['tmp/src/main.js'],
         dest: 'tmp/dist/<%= pkg.name %>.js'
       }
     },
