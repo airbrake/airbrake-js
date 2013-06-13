@@ -2,13 +2,48 @@
 
 ## Overview
 
-The Airbrake-js build process relies on grunt to facilitate development. Grunt is responsible for:
+The Airbrake-js build process relies on [Grunt](http://gruntjs.com/). Grunt is responsible for:
   * Generating distribution versions of the library
-  * Running tests
+  * Testing and linting code
+  * Serving code over http for tire-kicking
 
-## Development
+## Quick Start
 
-Development can be carried on inside a virtual machine managed by Vagrant and Chef.
+### Install node modules to ./node_modules
+
+The only requirement for development are npm and git. If these are already installed, go ahead and install the project's node module dependencies.
+
+````
+(airbrake-js) $ npm install --save-dev
+````
+
+### Install bower components to ./components
+
+Some JavaScript modules, such as TraceKit, are distributed as [Bower](http://bower.io/) components.
+
+````
+(airbrake-js) $ ./node_modules/.bin/bower install
+````
+
+### Start grunt watcher
+
+````
+(airbrake-js) $ ./node_modules/.bin/grunt watch
+````
+
+### Edit files and watch the tests run
+
+````
+Running "watch" task
+Waiting...OK
+>> File "src/reporters/api_v3_reporter.js" changed.
+
+Running "mochacli:all" (mochacli) task
+````
+
+## Vagrant
+
+If you prefer to keep your development environment isolated, a virtual machine managed by Vagrant and Chef can be.
 
   * [Install VirtualBox](https://www.virtualbox.org/)
   * [Install Vagrant](http://www.vagrantup.com/)
@@ -28,5 +63,22 @@ Running "watch" task
 Waiting...
 ````
 
+  * Edit files and watch the tests run
+
 ## Building
 
+To build distribution versions of the library at `dist/airbrake-js.js` and `dist/airbrake-js.min.js`, use the `build` grunt task.
+
+````
+(airbrake-js) $ ./node_modules/.bin/grunt build
+
+...
+
+Running "template:dist" (template) task
+File `dist/airbrake-js.js` created.
+
+Running "uglify:dist" (uglify) task
+File "dist/airbrake-js.min.js" created.
+
+Done, without errors.
+````
