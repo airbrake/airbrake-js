@@ -67,10 +67,10 @@ Waiting...
 
 ## Building
 
-To build distribution versions of the library at `dist/airbrake-js.js` and `dist/airbrake-js.min.js`, use the `build` grunt task.
+To build distribution versions of the library at `dist/airbrake-js.js` and `dist/airbrake-js.min.js`, use the `build` and `minify` grunt tasks.
 
 ````
-(airbrake-js) $ ./node_modules/.bin/grunt build
+(airbrake-js) $ ./node_modules/.bin/grunt build minify
 
 ...
 
