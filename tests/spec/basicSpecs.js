@@ -67,8 +67,15 @@ describe("JSON data format tests.", function () {
         expect(_openUrl).toMatch(new RegExp("key=" + window.Airbrake.getKey()));
     });
 
-    it('Should contain \'error\' ', function() {
-        expect(typeof _dataObj.error).not.toBe('undefined');
+    it('Should contain \'errors\' ', function() {
+        expect(typeof _dataObj.errors).not.toBe('undefined');
+        expect(_dataObj.errors.length).toEqual(1);
+        expect(typeof _dataObj.errors[0].type).not.toBe('undefined');
+        expect(typeof _dataObj.errors[0].message).not.toBe('undefined');
+        expect(typeof _dataObj.errors[0].backtrace.length).not.toBe('undefined');
+        expect(typeof _dataObj.errors[0].backtrace[0].file).toBe('string');
+        expect(typeof _dataObj.errors[0].backtrace[0]['function']).toBe('string');
+        expect(typeof _dataObj.errors[0].backtrace[0].line).toBe('number');
     });
 
     it('Should contain \'notifier\' ', function() {
