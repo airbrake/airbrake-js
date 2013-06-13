@@ -1,7 +1,7 @@
 expect = require("chai").expect
 sinon = require("sinon")
 
-Reporter = require("../../src/reporters/xhr_reporter")
+Reporter = require("../../src/reporters/api_v3_reporter")
 
 MockXhr = ->
 MockXhr.prototype = {
@@ -10,7 +10,7 @@ MockXhr.prototype = {
   setRequestHeader: ->
 }
 
-describe "XHRReporter", ->
+describe "API_V3_Reporter", ->
   oldXhr = null
   beforeEach ->
     oldXhr = global.XMLHttpRequest

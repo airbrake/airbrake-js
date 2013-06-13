@@ -1,9 +1,9 @@
 var Client = require("../client"),
     Processor = require("../processors/browser_processor"),
-    Reporter  = require("../reporters/xhr_reporter");
 
 // This error-to-array-of-strings implementation can be swapped out
 var printStackTrace = require("stacktrace-js");
+    Reporter  = require("../reporters/api_v3_reporter");
 
 function getProcessor(client) {
   // Vars from global
