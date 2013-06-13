@@ -1,7 +1,8 @@
 module.exports = function(grunt) {
+  var pkg_data = grunt.file.readJSON('package.json');
 
   grunt.initConfig({
-    pkg: grunt.file.readJSON('package.json'),
+    pkg: pkg_data,
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
@@ -17,19 +18,31 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
-      dist: {
-        src: ['tmp/src/main.js'],
-        dest: 'tmp/dist/<%= pkg.name %>.js'
+      tracekit: {
+        src: ['tmp/src/main-tracekit.js'],
+        dest: 'dist/<%= pkg.name %>-tracekit.js'
+      },
+      stacktrace_js: {
+        src: ['tmp/src/main-stacktrace_js.js'],
+        dest: 'dist/<%= pkg.name %>-stacktrace_js.js'
+      },
+      fallback: {
+        src: ['tmp/src/main-fallback.js'],
+        dest: 'dist/<%= pkg.name %>-fallback.js'
       }
     },
     template: {
-      options: {
-        data: { pkg: grunt.file.readJSON('package.json') }
+      tracekit_processor: {
+        options: { data: { pkg: pkg_data, processor_name: 'tracekit_processor' } },
+        files: { 'tmp/src/main-tracekit.js': 'tmp/src/main.js' }
       },
-      dist: {
-        files: {
-          'dist/<%= pkg.name %>.js': 'tmp/dist/<%= pkg.name %>.js'
-        }
+      stacktrace_js_processor: {
+        options: { data: { pkg: pkg_data, processor_name: 'stacktrace_js_processor' } },
+        files: { 'tmp/src/main-stacktrace_js.js': 'tmp/src/main.js' }
+      },
+      fallback_processor: {
+        options: { data: { pkg: pkg_data, processor_name: 'fallback_processor' } },
+        files: { 'tmp/src/main-fallback.js': 'tmp/src/main.js' }
       }
     },
     uglify: {
@@ -38,7 +51,19 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js']
+          'tmp/ugly/<%= pkg.name %>-tracekit.js':      ['dist/<%= pkg.name %>-tracekit.js'],
+          'tmp/ugly/<%= pkg.name %>-stacktrace_js.js': ['dist/<%= pkg.name %>-stacktrace_js.js'],
+          'tmp/ugly/<%= pkg.name %>-fallback.js':      ['dist/<%= pkg.name %>-fallback.js']
+        }
+      }
+    },
+    jscrush: {
+      dist: {
+        options: {},
+        files: {
+          'dist/<%= pkg.name %>-tracekit.min.js':      ['tmp/ugly/<%= pkg.name %>-tracekit.js'],
+          'dist/<%= pkg.name %>-stacktrace_js.min.js': ['tmp/ugly/<%= pkg.name %>-stacktrace_js.js'],
+          'dist/<%= pkg.name %>-fallback.min.js':      ['tmp/ugly/<%= pkg.name %>-fallback.js']
         }
       }
     },
@@ -85,6 +110,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-jscrush');
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -93,8 +119,9 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'concat', 'browserify', 'template', 'uglify']);
+  grunt.registerTask('build', ['copy', 'bower', 'concat', 'template', 'browserify']);
+  grunt.registerTask('minify', [ 'uglify', 'jscrush' ]);
   grunt.registerTask('serve', ['connect']);
-  grunt.registerTask('default', ['build']);
+  grunt.registerTask('default', ['build', 'minify']);
 
 };

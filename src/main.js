@@ -1,6 +1,5 @@
 var Client = require("./client"),
-    // Processor = require("./processors/tracekit_processor"),
-    Processor = require("./processors/fallback_processor"),
+    Processor = require("./processors/<%= processor_name %>"),
     Reporter  = require("./reporters/api_v3_reporter");
 
 function getProcessor(client) {
@@ -24,7 +23,7 @@ function getReporter(client) {
 
 var client = new Client(getProcessor, getReporter);
 
-// require("../legacy-notifier");
+// require("./legacy-notifier");
 
 global.NewAirbrake = client;
 global.Airbrake = global.Airbrake || client;
