@@ -27,26 +27,34 @@ function recognizeFrame(string) {
   };
 }
 
+function processWithStack(error, stack) {
+  var backtrace = [], i,
+      error_type = stack[0].match(/\s*([^:]+)/)[1],
+      error_message = error.message;
+
+  for (i = stack.length - 1; i >= 0; i--) {
+    backtrace[i] = recognizeFrame(stack[i]);
+  }
+
+  return {
+    type: error_type,
+    message: error_message,
+    backtrace: backtrace
+  };
+}
+
 function FallbackProcessor() {}
 
 FallbackProcessor.prototype = {
+  processWithStack: processWithStack,
   process: function(error) {
-    var backtrace = [], i,
-        stack = (error.stack || "").split("\n");
+    var stack = (error.stack || "").split("\n");
 
-    var error_type = stack[0].match(/\s*([^:]+)/)[1],
-        error_message = error.message;
-
-    for (i = stack.length - 1; i >= 0; i--) {
-      backtrace[i] = recognizeFrame(stack[i]);
-    }
-
-    return {
-      type: error_type,
-      message: error_message,
-      backtrace: backtrace
-    };
+    return processWithStack(error, stack);
   }
 };
+
+// Export processWithStack as class function
+FallbackProcessor.processWithStack = processWithStack;
 
 module.exports = FallbackProcessor;
