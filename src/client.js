@@ -5,7 +5,7 @@
 // to transform an exception into data, and then to transport that data.
 //
 // window.Airbrake is an instance of Client
-function Client(getProcessor, getReporter, setupjQueryTracker) {
+function Client(getProcessor, getReporter, trackJQOn, trackJQOff) {
   var instance = this;
 
   var _environment = "environment";
@@ -40,8 +40,10 @@ function Client(getProcessor, getReporter, setupjQueryTracker) {
   var _trackJQ = false;
   instance.setTrackJQ = function(val) {
     // fire if the status toggled from false to true and the callback is defined
-    if (!_trackJQ && val && setupjQueryTracker) {
-      setupjQueryTracker();
+    if (!_trackJQ && val && trackJQOn) {
+      trackJQOn();
+    } else if (_trackJQ && !val && trackJQOff) {
+      trackJQOff();
     }
     _trackJQ = val;
   };

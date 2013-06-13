@@ -53,17 +53,32 @@ describe "Client", ->
       client.setTrackJQ(true)
       expect(client.getTrackJQ()).to.be.true
 
-    it "calls setupjQueryTracker", ->
+    it "calls jqOn", ->
       spy = sinon.spy()
-      client = new Client(undefined, undefined, spy);
+      client = new Client(null, null, spy);
       client.setTrackJQ(true)
       expect(spy.called).to.be.true
 
-    it "calls setupjQueryTracker only on trackJQ state change", ->
+    it "calls jqOn only on trackJQ state change to on", ->
       spy = sinon.spy()
-      client = new Client(undefined, undefined, spy);
+      client = new Client(null, null, spy);
       client.setTrackJQ(true)
       client.setTrackJQ(true)
+      expect(spy.callCount).to.equal(1)
+
+    it "calls jqOff", ->
+      spy = sinon.spy()
+      client = new Client(null, null, null, spy);
+      client.setTrackJQ(true)
+      client.setTrackJQ(false)
+      expect(spy.called).to.be.true
+
+    it "calls jqOff only on trackJQ state change to off", ->
+      spy = sinon.spy()
+      client = new Client(null, null, null, spy);
+      client.setTrackJQ(true)
+      client.setTrackJQ(false)
+      client.setTrackJQ(false)
       expect(spy.callCount).to.equal(1)
 
   describe "outputFormat", ->
