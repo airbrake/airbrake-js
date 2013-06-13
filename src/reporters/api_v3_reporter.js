@@ -15,10 +15,14 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
       environment: environment_name
     });
 
+    // Build the outer output structure using the inner pieces
     var output_data = {
       notifier: notifier_data,
       context: context_data
     };
+
+    if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
+    if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
 
     return output_data;
   }

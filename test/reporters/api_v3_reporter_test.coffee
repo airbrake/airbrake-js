@@ -25,7 +25,9 @@ describe "API_V3_Reporter", ->
       expect(spy.calledWith('POST', "http://0.0.0.0/endpoint", true)).to.be.true
 
   describe "generateOutputData", ->
-    result = new Reporter(null, "[environment_name]").generateOutputData()
+    result = null
+    beforeEach ->
+      result = new Reporter(null, "[environment_name]").generateOutputData()
 
     it "has `notifier`", ->
       expect(result.notifier).to.deep.equal(
@@ -41,6 +43,20 @@ describe "API_V3_Reporter", ->
       )
 
     it "merges custom context", ->
-      result = new Reporter(null, null, { "X_KEY": "X_VAL" }).generateOutputData()
-      expect(result.context.X_KEY).to.equal("X_VAL")
+      result = new Reporter(null, null, "CONTEXT_KEY": "CONTEXT_VAL").generateOutputData()
+      expect(result.context.CONTEXT_KEY).to.equal("CONTEXT_VAL")
+
+    it "has no `environment`", ->
+      expect(result).not.to.have.property("environment")
+
+    it "merges custom environment", ->
+      result = new Reporter(null, null, null, "ENV_KEY": "ENV_VAL").generateOutputData()
+      expect(result.environment).to.deep.equal("ENV_KEY": "ENV_VAL")
+
+    it "has no `session`", ->
+      expect(result).not.to.have.property("session")
+
+    it "merges custom session", ->
+      result = new Reporter(null, null, null, null, "SESS_KEY": "SESS_VAL").generateOutputData()
+      expect(result.session).to.deep.equal("SESS_KEY": "SESS_VAL")
 
