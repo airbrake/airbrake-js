@@ -19,15 +19,28 @@ describe "XHRReporter", ->
     global.XMLHttpRequest = oldXhr
 
   describe "report", ->
-
     it "opens async POST to url", ->
       spy = sinon.spy(global.XMLHttpRequest.prototype, 'open')
       new Reporter("http://0.0.0.0/endpoint").report({})
       expect(spy.calledWith('POST', "http://0.0.0.0/endpoint", true)).to.be.true
 
-    it "sends formatted data", ->
-      spy = sinon.spy(global.XMLHttpRequest.prototype, 'send')
-      new Reporter("http://0.0.0.0/endpoint").report({})
-      formatted_data = spy.args[0][0]
-      parsed = JSON.parse(formatted_data)
-      expect(parsed.context).to.exist
+  describe "generateOutputData", ->
+    result = new Reporter(null, "[environment_name]").generateOutputData()
+
+    it "has `notifier`", ->
+      expect(result.notifier).to.deep.equal(
+        name: "Airbrake JS",
+        version: "<%= pkg.version %>",
+        url: "http://airbrake.io"
+      )
+
+    it "has `context`", ->
+      expect(result.context).to.deep.equal(
+        language: "JavaScript",
+        environment: "[environment_name]"
+      )
+
+    it "merges custom context", ->
+      result = new Reporter(null, null, { "X_KEY": "X_VAL" }).generateOutputData()
+      expect(result.context.X_KEY).to.equal("X_VAL")
+
