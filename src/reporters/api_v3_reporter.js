@@ -1,6 +1,6 @@
 var merge = require("../util/merge");
 
-function API_V3_Reporter(url, environment_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
+function API_V3_Reporter(url, environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
 
   // Responsible for creating a payload consumable by the Airbrake v3 API
   function generateOutputData(error_data) {
@@ -17,8 +17,8 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
     //   }
 
     var notifier_data = {
-      name    : "Airbrake JS: <%= processor_name %>",
-      version : "<%= pkg.version %>",
+      name    : "Airbrake JS",
+      version : "<%= pkg.version %>+" + processor_name,
       url     : "http://airbrake.io"
     };
 

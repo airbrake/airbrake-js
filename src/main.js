@@ -18,7 +18,7 @@ function getReporter(client) {
 
   var url = protocol + host + "/api/v3/projects/" + project_id + "/notices?key=" + key;
 
-  return new Reporter(url, environment);
+  return new Reporter(url, environment, "<%= processor_name %>");
 }
 
 var client = new Client(getProcessor, getReporter);

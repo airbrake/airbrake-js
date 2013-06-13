@@ -27,12 +27,12 @@ describe "API_V3_Reporter", ->
   describe "generateOutputData", ->
     result = null
     beforeEach ->
-      result = new Reporter(null, "[environment_name]").generateOutputData()
+      result = new Reporter(null, "[environment_name]", "[processor_name]").generateOutputData()
 
     it "has `notifier`", ->
       expect(result.notifier).to.deep.equal(
-        name: "Airbrake JS: <%= processor_name %>",
-        version: "<%= pkg.version %>",
+        name: "Airbrake JS",
+        version: "<%= pkg.version %>+[processor_name]",
         url: "http://airbrake.io"
       )
 
@@ -43,28 +43,28 @@ describe "API_V3_Reporter", ->
       )
 
     it "merges custom context", ->
-      result = new Reporter(null, null, "CONTEXT_KEY": "CONTEXT_VAL").generateOutputData()
+      result = new Reporter(null, null, null, "CONTEXT_KEY": "CONTEXT_VAL").generateOutputData()
       expect(result.context.CONTEXT_KEY).to.equal("CONTEXT_VAL")
 
     it "has no `environment`", ->
       expect(result).not.to.have.property("environment")
 
     it "merges custom environment", ->
-      result = new Reporter(null, null, null, "ENV_KEY": "ENV_VAL").generateOutputData()
+      result = new Reporter(null, null, null, null, "ENV_KEY": "ENV_VAL").generateOutputData()
       expect(result.environment).to.deep.equal("ENV_KEY": "ENV_VAL")
 
     it "has no `session`", ->
       expect(result).not.to.have.property("session")
 
     it "merges custom session", ->
-      result = new Reporter(null, null, null, null, "SESS_KEY": "SESS_VAL").generateOutputData()
+      result = new Reporter(null, null, null, null, null, "SESS_KEY": "SESS_VAL").generateOutputData()
       expect(result.session).to.deep.equal("SESS_KEY": "SESS_VAL")
 
     it "has no `params`", ->
       expect(result).not.to.have.property("params")
 
     it "merges custom params", ->
-      result = new Reporter(null, null, null, null, null, "PARAM_KEY": "PARAM_VAL").generateOutputData()
+      result = new Reporter(null, null, null, null, null, null, "PARAM_KEY": "PARAM_VAL").generateOutputData()
       expect(result.params).to.deep.equal("PARAM_KEY": "PARAM_VAL")
 
     it "has `errors`", ->
