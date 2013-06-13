@@ -19,34 +19,7 @@ error = {
 }
 
 describe "BrowserProcessor", ->
-  splitStack = (error) ->
-    return (error.stack || "").split("\n")
-
-
-
-
-  describe "recognizeFrame", ->
-    describe "Chrome stacktrace", ->
-      it "recognizes top-level frame", ->
-        result = new Processor().recognizeFrame("TypeError: number is not a function")
-        expect(result.function).to.equal("TypeError: number is not a function")
-        expect(result.file).to.equal("unsupported.js")
-        expect(result.line).to.equal("0")
-
-      it "recognizes remote JavaScript", ->
-        result = new Processor().recognizeFrame("    at ErrorMaker (http://127.0.0.1:9001/error.js:2:6)")
-        expect(result.function).to.equal("at ErrorMaker")
-        expect(result.file).to.equal("http://127.0.0.1:9001/error.js")
-        expect(result.line).to.equal("2")
-
-      it "recognizes inline JavaScript", ->
-        result = new Processor().recognizeFrame("    at HTMLButtonElement.onclick (http://127.0.0.1:9001/:8:184)")
-        expect(result.function).to.equal("at HTMLButtonElement.onclick")
-        expect(result.file).to.equal("http://127.0.0.1:9001/")
-        expect(result.line).to.equal("8")
-
-
-
+  splitStack = (error) -> []
 
   describe "process", ->
     it "has `key`", ->
@@ -86,27 +59,12 @@ describe "BrowserProcessor", ->
       result = new Processor(splitStack).process(error)
       expect(result.backtrace_lines).to.exist
 
+
     describe "backtrace_lines", ->
       it "splits error stack with provided splitter", ->
         spy = sinon.spy(splitStack)
         result = new Processor(spy, null, null).process(error)
         expect(spy.calledWith(error)).to.be.true
-
-      it "has `file`", ->
-        result = new Processor(splitStack, null, null).process(error)
-        line = result.backtrace_lines[0]
-        expect(line.file).to.exist
-
-      it "has `line`", ->
-        result = new Processor(splitStack, null, null).process(error)
-        line = result.backtrace_lines[0]
-        expect(line.line).to.exist
-
-      it "has `function`", ->
-        result = new Processor(splitStack, null, null).process(error)
-        line = result.backtrace_lines[0]
-        expect(line.function).to.exist
-
 
 
     describe "request-related values", ->
