@@ -1,6 +1,7 @@
-var Client = require("../client"),
-    Processor = require("../processors/tracekit_processor"),
-    Reporter  = require("../reporters/api_v3_reporter");
+var Client = require("./client"),
+    // Processor = require("./processors/tracekit_processor"),
+    Processor = require("./processors/fallback_processor"),
+    Reporter  = require("./reporters/api_v3_reporter");
 
 function getProcessor(client) {
   return new Processor();
