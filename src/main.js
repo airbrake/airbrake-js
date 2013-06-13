@@ -1,6 +1,11 @@
 var Client = require("./client"),
     Processor = require("./processors/<%= processor_name %>"),
-    Reporter  = require("./reporters/api_v3_reporter");
+    Reporter  = require("./reporters/api_v3_reporter"),
+    JQWrapperToggler = require("./jquery_event_handler_wrapper");
+
+var client, handler, toggler;
+
+toggler = new JQWrapperToggler(function(error) { client.captureException(error); });
 
 function getProcessor(client) {
   return new Processor();
@@ -21,7 +26,7 @@ function getReporter(client) {
   return new Reporter(url, environment, "<%= processor_name %>");
 }
 
-var client = new Client(getProcessor, getReporter);
+client = new Client(getProcessor, getReporter, toggler.on, toggler.off);
 
 // require("./legacy-notifier");
 
