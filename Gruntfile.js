@@ -62,7 +62,6 @@ module.exports = function(grunt) {
       options: {
         // options here to override JSHint defaults
         globals: {
-          jQuery: true,
           console: true,
           module: true,
           document: true
@@ -70,8 +69,16 @@ module.exports = function(grunt) {
       }
     },
     watch: {
-      files: ['<%= jshint.files %>', 'test/**/*.coffee'],
-      tasks: ['test']
+      test_only: {
+        files: ['test/**/*.coffee'],
+        tasks: ['test'],
+        options: { interrupt: true }
+      },
+      build_and_test: {
+        files: ['<%= jshint.files %>'],
+        tasks: ['build', 'test'],
+        options: { interrupt: true }
+      }
     },
     connect: {
       server: {
@@ -109,7 +116,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
   grunt.registerTask('build', ['copy', 'bower', 'concat', 'template', 'browserify']);
-  grunt.registerTask('minify', [ 'uglify' ]);
+  grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build', 'minify']);
 
