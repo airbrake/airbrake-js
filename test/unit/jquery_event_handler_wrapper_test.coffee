@@ -5,12 +5,16 @@ sinon = require("sinon")
 
 describe "jQueryEventHandlerWrapper", ->
   report_error_spy = null
-  jqtrack = null
+  on_spy           = null
+  off_spy          = null
+  jqtrack          = null
 
   # Setup
   beforeEach ->
     report_error_spy = sinon.spy()
-    jqtrack = new jQueryEventHandlerWrapper(report_error_spy)
+    on_spy           = sinon.spy()
+    off_spy          = sinon.spy()
+    jqtrack          = new jQueryEventHandlerWrapper(report_error_spy)
 
   it "has `on`", ->
     expect(jqtrack.on).to.exist
@@ -18,49 +22,45 @@ describe "jQueryEventHandlerWrapper", ->
   it "has `off`", ->
     expect(jqtrack.off).to.exist
 
+  describe "when jQuery is not defined", ->
+    global.jQuery = undefined
 
-  describe "on", ->
-    on_spy = null
-    off_spy = null
+    it "throws", ->
+      expect(jqtrack.on).to.Throw()
 
+  describe "when jQuery is defined", ->
     beforeEach ->
-      on_spy = sinon.spy()
-      off_spy = sinon.spy()
+      global.jQuery = { fn: { on: on_spy, off: off_spy } }
 
+    it "does not throw", ->
+      expect(jqtrack.on).not.to.Throw()
 
-    describe "when jQuery is not defined", ->
-      global.jQuery = undefined
+    it "wraps handler", ->
+      handler = sinon.spy()
 
-      it "throws", ->
-        expect(jqtrack.on).to.Throw()
+      jqtrack.on()
+      jQuery.fn.on("click", handler)
 
-    describe "when jQuery is defined", ->
-      beforeEach ->
-        global.jQuery = { fn: { on: on_spy, off: off_spy } }
+      call_args = on_spy.lastCall.args
+      wrapper = call_args[1]
 
-      it "does not throw", ->
-        expect(jqtrack.on).not.to.Throw()
+      # Verify we received the same args except for the handler
+      expect(call_args[0]).to.equal("click")
 
-      it "wraps handler", ->
-        handler = sinon.spy()
+      # Handler should be wrapped now
+      expect(wrapper).not.to.equal(handler)
 
-        jqtrack.on()
-        jQuery.fn.on("click", handler)
+      # Manually invoke the wrapper in order to flush args
+      # through to original handler
+      wrapper("[threaded]")
+      expect(handler.calledWith("[threaded]")).to.be.true
 
-        call_args = on_spy.lastCall.args
-        wrapper = call_args[1]
+    it "stops wrapping handler", ->
+      handler = sinon.spy()
+      jqtrack.on()
+      jqtrack.off()
 
-        # Verify we received the same args except for the handler
-        expect(call_args[0]).to.equal("click")
+      jQuery.fn.on("click",  handler)
 
-        # Handler should be wrapped now
-        expect(wrapper).not.to.equal(handler)
-
-        # Manually invoke the wrapper in order to flush args
-        # through to original handler
-        wrapper("[threaded]")
-        expect(handler.calledWith("[threaded]")).to.be.true
-
-        # expect(on_spy.calledWith)
-        # expect(on_spy)
-  # describe "off", ->
+      call_args = on_spy.lastCall.args
+      expect(call_args).to.deep.equal(["click", handler])

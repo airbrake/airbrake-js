@@ -1,4 +1,6 @@
 function jQueryEventHandlerWrapper(reportError) {
+  var originalOnFn;
+
   this.on = function() {
     // Start wrapping jQuery event handlers
 
@@ -7,7 +9,7 @@ function jQueryEventHandlerWrapper(reportError) {
       throw new Error('jQuery unavailable');
     }
 
-    var originalOnFn = jQuery.fn.on;
+    originalOnFn = originalOnFn || jQuery.fn.on;
 
     jQuery.fn.on = function() {
       var args = Array.prototype.slice.call(arguments),
@@ -34,7 +36,10 @@ function jQueryEventHandlerWrapper(reportError) {
   };
 
   this.off = function() {
+    if (!originalOnFn) { return; }
+
     // Stop wrapping jQuery event handlers
+    jQuery.fn.on = originalOnFn;
   };
 }
 
