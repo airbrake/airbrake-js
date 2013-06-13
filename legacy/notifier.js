@@ -243,7 +243,7 @@ _publicAPI = [
 // Share to global scope as Airbrake ("window.Hoptoad" for backward compatibility)
 // Global = window.Airbrake = window.Hoptoad = Util.generatePublicAPI(_publicAPI, Config);
 Global = window.OldAirbrake = Util.generatePublicAPI(_publicAPI, Config);
-// window.Airbrake = Global;
+window.Airbrake = Global;
 
 function Notifier() {
   this.options = merge({}, Config.options);
@@ -310,6 +310,7 @@ Notifier.prototype = {
           //   url = window.location.protocol + '://' + this.options.host + '/api/v3/projects' + this.options.projectId + '/notices?key=' + this.options.key;
           url = ('https:' == airbrake_client_app_protocol ? 'https://' : 'http://') + this.options.host + '/api/v3/projects/' + this.options.projectId + '/notices?key=' + this.xmlData.key;
 
+          debugger;
           airbrake_client_app_create_xml_http_request(url, JSON.stringify(airbrake_client_app_formatter.format(outputData)));
           break;
 

@@ -5,6 +5,12 @@ module.exports = function(grunt) {
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
+    concat: {
+      build: {
+        src: ['legacy/header.js', 'legacy/notifier.js', 'legacy/footer.js'],
+        dest: 'tmp/src/notifier-wrapped.js'
+      }
+    },
     bower: {
       dist: {
         dest: 'tmp/bower'
