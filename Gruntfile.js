@@ -81,11 +81,11 @@ module.exports = function(grunt) {
       }
     },
     connect: {
-      server: {
+      integration_test: {
         options: {
           hostname: '*',
           port: 9001,
-          base: '.',
+          base: 'test/integration',
           keepalive: true
         }
       }
