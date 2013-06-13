@@ -82,17 +82,9 @@ describe("JSON data format tests.", function () {
         expect(typeof _dataObj.notifier).not.toBe('undefined');
     });
 
-    it('Should contain \'request\' ', function() {
-        expect(typeof _dataObj.request).not.toBe('undefined');
-    });
-
     it('Should contain \'environment\' in context', function() {
         expect(typeof _dataObj['context']).not.toBe('undefined');
         expect(typeof _dataObj['context']['environment']).not.toBe('undefined');
     });
 
-    it('Should contain \'version\' in context', function() {
-        expect(typeof _dataObj['context']).not.toBe('undefined');
-        expect(typeof _dataObj['context']['version']).not.toBe('undefined');
-    });
 });
