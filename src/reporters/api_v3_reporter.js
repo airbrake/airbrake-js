@@ -17,7 +17,7 @@ function API_V3_Reporter(url, environment_name, custom_context_data, custom_envi
     //   }
 
     var notifier_data = {
-      name    : "Airbrake JS",
+      name    : "Airbrake JS: <%= processor_name %>",
       version : "<%= pkg.version %>",
       url     : "http://airbrake.io"
     };

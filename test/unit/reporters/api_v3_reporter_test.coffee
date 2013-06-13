@@ -31,7 +31,7 @@ describe "API_V3_Reporter", ->
 
     it "has `notifier`", ->
       expect(result.notifier).to.deep.equal(
-        name: "Airbrake JS",
+        name: "Airbrake JS: <%= processor_name %>",
         version: "<%= pkg.version %>",
         url: "http://airbrake.io"
       )
