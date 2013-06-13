@@ -60,3 +60,10 @@ describe "API_V3_Reporter", ->
       result = new Reporter(null, null, null, null, "SESS_KEY": "SESS_VAL").generateOutputData()
       expect(result.session).to.deep.equal("SESS_KEY": "SESS_VAL")
 
+    it "has no `params`", ->
+      expect(result).not.to.have.property("params")
+
+    it "merges custom params", ->
+      result = new Reporter(null, null, null, null, null, "PARAM_KEY": "PARAM_VAL").generateOutputData()
+      expect(result.params).to.deep.equal("PARAM_KEY": "PARAM_VAL")
+
