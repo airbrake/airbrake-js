@@ -1,4 +1,4 @@
-var TraceKit = require("../shims/TraceKit");
+var TraceKit = require("../lib/TraceKit");
 TraceKit.remoteFetching = false;
 TraceKit.collectWindowErrors = false;
 
@@ -12,7 +12,7 @@ function TraceKitProcessor() {
       frame = stack[i];
       backtrace.unshift({
         file: frame.url,
-        line: frame.line,
+        line: parseInt(frame.line, 10),
         "function": frame.func
       });
     }
