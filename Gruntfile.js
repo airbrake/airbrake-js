@@ -1,6 +1,16 @@
 module.exports = function(grunt) {
   var pkg_data = grunt.file.readJSON('package.json');
 
+  var processor_names = ['tracekit', 'stacktrace_js', 'fallback'];
+
+  // Interpolates pkg variables into files during browserification
+  function addPackageVars(file) {
+    var through = require('through'), data = "";
+    function write(buf) { data += grunt.template.process(buf, { pkg: pkg_data }); }
+    function end() { this.queue(data); this.queue(null); }
+    return through(write, end);
+  }
+
   grunt.initConfig({
     pkg: pkg_data,
     copy: {
@@ -18,6 +28,7 @@ module.exports = function(grunt) {
       }
     },
     browserify: {
+      options: { transform: [ addPackageVars ] },
       tracekit: {
         src: ['tmp/src/main-tracekit.js'],
         dest: 'dist/<%= pkg.name %>-tracekit.js'
