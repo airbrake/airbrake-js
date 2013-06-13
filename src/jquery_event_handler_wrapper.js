@@ -10,7 +10,7 @@ function jQueryEventHandlerWrapper(reportError) {
     var originalOnFn = jQuery.fn.on;
 
     jQuery.fn.on = function() {
-      var args = Array.prototype.splice.call(arguments),
+      var args = Array.prototype.slice.call(arguments),
           handler, newHandler;
 
       // Pop the original event handler off

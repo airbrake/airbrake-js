@@ -34,7 +34,6 @@ describe "jQueryEventHandlerWrapper", ->
       it "throws", ->
         expect(jqtrack.on).to.Throw()
 
-
     describe "when jQuery is defined", ->
       beforeEach ->
         global.jQuery = { fn: { on: on_spy, off: off_spy } }
@@ -42,4 +41,26 @@ describe "jQueryEventHandlerWrapper", ->
       it "does not throw", ->
         expect(jqtrack.on).not.to.Throw()
 
+      it "wraps handler", ->
+        handler = sinon.spy()
+
+        jqtrack.on()
+        jQuery.fn.on("click", handler)
+
+        call_args = on_spy.lastCall.args
+        wrapper = call_args[1]
+
+        # Verify we received the same args except for the handler
+        expect(call_args[0]).to.equal("click")
+
+        # Handler should be wrapped now
+        expect(wrapper).not.to.equal(handler)
+
+        # Manually invoke the wrapper in order to flush args
+        # through to original handler
+        wrapper("[threaded]")
+        expect(handler.calledWith("[threaded]")).to.be.true
+
+        # expect(on_spy.calledWith)
+        # expect(on_spy)
   # describe "off", ->
