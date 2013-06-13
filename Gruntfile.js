@@ -51,19 +51,9 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'tmp/ugly/<%= pkg.name %>-tracekit.js':      ['dist/<%= pkg.name %>-tracekit.js'],
-          'tmp/ugly/<%= pkg.name %>-stacktrace_js.js': ['dist/<%= pkg.name %>-stacktrace_js.js'],
-          'tmp/ugly/<%= pkg.name %>-fallback.js':      ['dist/<%= pkg.name %>-fallback.js']
-        }
-      }
-    },
-    jscrush: {
-      dist: {
-        options: {},
-        files: {
-          'dist/<%= pkg.name %>-tracekit.min.js':      ['tmp/ugly/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-stacktrace_js.min.js': ['tmp/ugly/<%= pkg.name %>-stacktrace_js.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':      ['tmp/ugly/<%= pkg.name %>-fallback.js']
+          'dist/<%= pkg.name %>-tracekit.min.js':      ['dist/<%= pkg.name %>-tracekit.js'],
+          'dist/<%= pkg.name %>-stacktrace_js.min.js': ['dist/<%= pkg.name %>-stacktrace_js.js'],
+          'dist/<%= pkg.name %>-fallback.min.js':      ['dist/<%= pkg.name %>-fallback.js']
         }
       }
     },
@@ -110,7 +100,6 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-jscrush');
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
@@ -120,7 +109,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
   grunt.registerTask('build', ['copy', 'bower', 'concat', 'template', 'browserify']);
-  grunt.registerTask('minify', [ 'uglify', 'jscrush' ]);
+  grunt.registerTask('minify', [ 'uglify' ]);
   grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build', 'minify']);
 
