@@ -104,7 +104,7 @@ module.exports = function(grunt) {
     mochacli: {
       all: ['test/**/*.coffee'],
       options: {
-        compilers: [ 'coffee:coffee-script' ],
+        compilers: ['coffee:coffee-script'],
         files: 'test/**/*.coffee',
         bail: true,
         reporter: 'spec'
