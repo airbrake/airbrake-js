@@ -1,0 +1,2 @@
+# PhantonJS dependencies
+package "fontconfig"

@@ -109,6 +109,16 @@ module.exports = function(grunt) {
         bail: true,
         reporter: 'spec'
       }
+    },
+    jasmine: {
+      integration: {
+        src: 'dist/**/*.js',
+        options: {
+          outfile: 'test/integration/SpecRunner.html',
+          keepRunner: true,
+          specs: 'test/integration/spec/**/*.js'
+        }
+      }
     }
   });
 
@@ -123,6 +133,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-mocha-cli');
+  grunt.loadNpmTasks('grunt-contrib-jasmine');
 
   grunt.registerTask('test', ['mochacli', 'jshint']);
 

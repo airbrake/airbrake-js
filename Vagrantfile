@@ -12,6 +12,7 @@ Vagrant.configure("2") do |config|
     chef.cookbooks_path = "cookbooks"
     chef.add_recipe "nodejs"
     chef.add_recipe "git"
+    chef.add_recipe "packages"
     chef.add_recipe "npm_package_json"
 
     chef.json = { :nodejs => { "install_method" => "binary" } }
