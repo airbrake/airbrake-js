@@ -96,7 +96,7 @@ module.exports = function(grunt) {
         options: {
           hostname: '*',
           port: 9001,
-          base: 'test/integration',
+          base: 'test/examples',
           keepalive: true
         }
       }

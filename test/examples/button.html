@@ -2,17 +2,16 @@
 <html>
   <head>
     <title>Inline event handlers handling</title>
-    <script src="../dist/airbrake-js-tracekit.js"></script>
-    <script src="error.js"></script>
-    <script>
-      Airbrake.setKey("[my_airbrake_key]");
-      Airbrake.setProjectId("[my_project_id]");
-    </script>
+    <script src="./dist/airbrake-js-tracekit.js"></script>
+    <script src="./js/error.js"></script>
   </head>
   <body>
     <h2>Capture an exception</h2>
     <code>
       <pre id="code">
+Airbrake.setKey("[my_airbrake_key]");
+Airbrake.setProjectId("[my_project_id]");
+
 try { ErrorMaker(); } catch(er) { NewAirbrake.captureException(er); }
       </pre>
     </code>
