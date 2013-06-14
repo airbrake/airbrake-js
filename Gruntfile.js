@@ -111,11 +111,21 @@ module.exports = function(grunt) {
       }
     },
     jasmine: {
-      integration: {
-        src: 'dist/**/*.js',
+      tracekit_processor: {
+        src: 'dist/<%= pkg.name %>-tracekit.js',
         options: {
-          outfile: 'test/integration/SpecRunner.html',
-          keepRunner: true,
+          specs: 'test/integration/spec/**/*.js'
+        }
+      },
+      stacktrace_js_processor: {
+        src: 'dist/<%= pkg.name %>-stacktrace_js.js',
+        options: {
+          specs: 'test/integration/spec/**/*.js'
+        }
+      },
+      fallback_processor: {
+        src: 'dist/<%= pkg.name %>-fallback.js',
+        options: {
           specs: 'test/integration/spec/**/*.js'
         }
       }
