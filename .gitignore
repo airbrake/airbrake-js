@@ -4,6 +4,7 @@
 .settings
 .project
 /.vagrant/
+/.grunt/
 /node_modules/
 /tmp/*
 /dist/airbrake-js.js
