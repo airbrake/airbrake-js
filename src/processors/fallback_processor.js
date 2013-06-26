@@ -27,9 +27,18 @@ function recognizeFrame(string) {
   };
 }
 
+function errorType(error, stack) {
+  var first_line = stack[0],
+      match = first_line.match(/\s*([^:]+)/);
+
+  if (match) {
+    return match[1];
+  } else {
+    return "Error";
+  }
+}
 function processWithStack(error, stack) {
   var backtrace = [], i,
-      error_type = stack[0].match(/\s*([^:]+)/)[1],
       error_message = error.message;
 
   for (i = stack.length - 1; i >= 0; i--) {
@@ -37,7 +46,7 @@ function processWithStack(error, stack) {
   }
 
   return {
-    type: error_type,
+    type: errorType(error, stack),
     message: error_message,
     backtrace: backtrace
   };
@@ -48,6 +57,7 @@ function FallbackProcessor() {}
 FallbackProcessor.prototype = {
   processWithStack: processWithStack,
   process: function(error) {
+    error = error || {};
     var stack = (error.stack || "").split("\n");
 
     return processWithStack(error, stack);
