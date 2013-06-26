@@ -50,15 +50,19 @@ function Client(getProcessor, getReporter, trackJQOn, trackJQOff) {
   instance.getTrackJQ = function() { return !!_trackJQ; };
 
   instance.captureException = function(exception) {
-    // Get up-to-date Processor and Reporter for this exception
-    var processor = getProcessor && getProcessor(instance),
-        reporter = processor && getReporter(instance);
+    try {
+      // Get up-to-date Processor and Reporter for this exception
+      var processor = getProcessor && getProcessor(instance),
+          reporter = processor && getReporter(instance);
 
-    if (processor && reporter) {
-      // Transform the exception into a "standard" data format
-      var data = processor.process(exception);
-      // Transport data to receiver
-      reporter.report(data);
+      if (processor && reporter) {
+        // Transform the exception into a "standard" data format
+        var data = processor.process(exception);
+        // Transport data to receiver
+        reporter.report(data);
+      }
+    } catch(_) {
+      // Well, this is embarassing
     }
   };
 }

@@ -102,6 +102,11 @@ describe "Client", ->
       expect(client.getErrorDefaults().staggering).to.equal("fascination")
 
   describe "captureException", ->
+    processor = { process: sinon.spy() }
+    reporter = { report: -> }
+    getProcessor = -> processor
+    getReporter = -> reporter
+
     exception = do ->
       error = undefined
       try
@@ -112,12 +117,19 @@ describe "Client", ->
       return error
 
     it "processes with processor", ->
-      processor = { process: sinon.spy() }
-      reporter = { report: -> }
-      getProcessor = -> processor
-      getReporter = -> reporter
-
       client = new Client(getProcessor, getReporter)
       client.captureException(exception)
 
       expect(processor.process.called).to.be.true
+
+    it "ignores errors throw by processor", ->
+      processor = { process: -> throw(new Error("Processor Error")) }
+      getProcessor = -> processor
+      client = new Client(getProcessor, getReporter)
+      client.captureException(exception)
+
+    it "ignores errors throw by reporter", ->
+      reporter = { report: -> throw(new Error("Reporter Error")) }
+      getReporter = -> processor
+      client = new Client(getProcessor, getReporter)
+      client.captureException(exception)
