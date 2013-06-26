@@ -1,4 +1,4 @@
-var TraceKit = require("../lib/TraceKit");
+var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = false;
 TraceKit.collectWindowErrors = false;
 

@@ -24,7 +24,7 @@ module.exports = function(grunt) {
     },
     bower: {
       dist: {
-        dest: 'tmp/bower'
+        dest: 'tmp/components'
       }
     },
     browserify: {
@@ -96,7 +96,7 @@ module.exports = function(grunt) {
         options: {
           hostname: '*',
           port: 9001,
-          base: 'test/examples',
+          base: '.',
           keepalive: true
         }
       }
@@ -112,20 +112,26 @@ module.exports = function(grunt) {
     },
     jasmine: {
       tracekit_processor: {
-        src: 'dist/<%= pkg.name %>-tracekit.js',
+        src: 'test/examples/dist/<%= pkg.name %>-tracekit.js',
         options: {
+          keepRunner: true,
+          outfile: 'test/examples/tracekit_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
       },
       stacktrace_js_processor: {
-        src: 'dist/<%= pkg.name %>-stacktrace_js.js',
+        src: 'test/examples/dist/<%= pkg.name %>-stacktrace_js.js',
         options: {
+          keepRunner: true,
+          outfile: 'test/examples/stacktrace_js_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
       },
       fallback_processor: {
-        src: 'dist/<%= pkg.name %>-fallback.js',
+        src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
         options: {
+          keepRunner: true,
+          outfile: 'test/examples/fallback_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
       }
@@ -147,9 +153,14 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['mochacli', 'jshint']);
 
+  // Running the `serve` command starts up a webserver
+  grunt.registerTask('serve', ['connect']);
+
   grunt.registerTask('build', ['copy', 'bower', 'concat', 'template', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
-  grunt.registerTask('serve', ['connect']);
   grunt.registerTask('default', ['build', 'minify']);
 
+  // Push distribution libraries to CDN
+  // Build and publish distribution site
+  grunt.registerTask('publish', []);
 };
