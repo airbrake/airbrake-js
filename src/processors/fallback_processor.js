@@ -27,6 +27,8 @@ function recognizeFrame(string) {
   };
 }
 
+// Extract the error type name
+// from the first line of a stack trace array
 function errorType(error, stack) {
   var first_line = stack[0],
       match = first_line.match(/\s*([^:]+)/);
@@ -37,6 +39,7 @@ function errorType(error, stack) {
     return "Error";
   }
 }
+
 function processWithStack(error, stack) {
   var backtrace = [], i,
       error_message = error.message;
