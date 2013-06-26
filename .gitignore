@@ -9,3 +9,4 @@
 /tmp/*
 /dist/airbrake-js.js
 /dist/airbrake-js.min.js
+/test/examples/*
