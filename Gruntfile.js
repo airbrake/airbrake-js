@@ -81,7 +81,7 @@ module.exports = function(grunt) {
     },
     watch: {
       test_only: {
-        files: ['test/**/*.coffee'],
+        files: ['test/*.coffee', 'test/**/*.coffee'],
         tasks: ['test'],
         options: { interrupt: true }
       },
