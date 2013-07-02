@@ -23,7 +23,7 @@ describe "FallbackProcessor", ->
       it "recognizes line numbers", ->
         result = processor.process(stack: stack)
         backtrace_line = result.backtrace[0]
-        expect(backtrace_line.line).to.equal('2')
+        expect(backtrace_line.line).to.equal(2)
 
       it "recognizes files", ->
         result = processor.process(stack: stack)

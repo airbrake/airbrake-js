@@ -22,7 +22,8 @@ function recognizeFrame(string) {
 
   return {
     file: file || "unsupported.js",
-    line: line || 0,
+    line: parseInt(line || 0, 10),
+    column: parseInt(column || 0, 10),
     "function": func
   };
 }
