@@ -3,7 +3,7 @@ TraceKit.remoteFetching = false;
 TraceKit.collectWindowErrors = false;
 
 function TraceKitProcessor() {
-  this.process = function(error) {
+  this.process = function(error, fn) {
     var tracekit_result = TraceKit.computeStackTrace(error),
         stack = tracekit_result.stack;
 
@@ -17,11 +17,11 @@ function TraceKitProcessor() {
       });
     }
 
-    return {
+    fn({
       type: tracekit_result.name,
       message: tracekit_result.message,
       backtrace: backtrace
-    };
+    });
   };
 }
 

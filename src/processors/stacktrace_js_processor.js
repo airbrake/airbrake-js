@@ -5,9 +5,9 @@ var FallbackProcessor = require("./fallback_processor");
 function StacktraceJsProcessor() {}
 
 StacktraceJsProcessor.prototype = {
-  process: function(error) {
+  process: function(error, fn) {
     var stack = printStackTrace(error);
-    return FallbackProcessor.processWithStack(error, stack);
+    fn(FallbackProcessor.processWithStack(error, stack));
   }
 };
 
