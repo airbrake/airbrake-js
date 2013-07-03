@@ -60,11 +60,11 @@ function FallbackProcessor() {}
 
 FallbackProcessor.prototype = {
   processWithStack: processWithStack,
-  process: function(error) {
+  process: function(error, fn) {
     error = error || {};
     var stack = (error.stack || "").split("\n");
 
-    return processWithStack(error, stack);
+    fn(processWithStack(error, stack));
   }
 };
 
