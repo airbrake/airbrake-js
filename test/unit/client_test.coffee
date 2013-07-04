@@ -107,7 +107,7 @@ describe "Client", ->
 
   describe "captureException", ->
     processor = { process: sinon.spy() }
-    reporter = { report: -> }
+    reporter = { report: sinon.spy() }
     getProcessor = -> processor
     getReporter = -> reporter
 
@@ -125,6 +125,22 @@ describe "Client", ->
       client.captureException(exception)
 
       expect(processor.process).to.have.been.called
+
+    it "reports with reporter", ->
+      client = new Client(getProcessor, getReporter)
+      client.captureException(exception)
+
+      # Reporter is not called until Processor invokes the
+      # callback provided
+      expect(reporter.report).not.to.have.been.called
+
+      # The first argument passed the processor is the error to be handled
+      # The second is the continuation handed off to the reporter
+      continueFromProcessor = processor.process.lastCall.args[1]
+      processed_error = sinon.spy()
+      continueFromProcessor(processed_error)
+
+      expect(reporter.report).to.have.been.calledWith(processed_error)
 
     it "ignores errors thrown by processor", ->
       processor = { process: -> throw(new Error("Processor Error")) }
