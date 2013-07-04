@@ -1,6 +1,10 @@
+chai       = require("chai")
+sinon      = require("sinon")
+sinon_chai = require("sinon-chai")
+expect     = chai.expect
+chai.use(sinon_chai)
+
 Client = require("../../src/client")
-expect = require("chai").expect
-sinon = require("sinon")
 
 describe "Client", ->
   describe "environment", ->
@@ -120,7 +124,7 @@ describe "Client", ->
       client = new Client(getProcessor, getReporter)
       client.captureException(exception)
 
-      expect(processor.process.called).to.be.true
+      expect(processor.process).to.have.been.called
 
     it "ignores errors thrown by processor", ->
       processor = { process: -> throw(new Error("Processor Error")) }
