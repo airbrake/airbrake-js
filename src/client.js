@@ -57,9 +57,10 @@ function Client(getProcessor, getReporter, trackJQOn, trackJQOff) {
 
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
-        var data = processor.process(exception);
-        // Transport data to receiver
-        reporter.report(data);
+        processor.process(exception, function(data) {
+          // Transport data to receiver
+          reporter.report(data);
+        });
       }
     } catch(_) {
       // Well, this is embarassing
