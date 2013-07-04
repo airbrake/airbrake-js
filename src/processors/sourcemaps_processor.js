@@ -6,34 +6,77 @@
 // var SourceMap = require("../lib/source-map");
 var SourceMap = require("source-map");
 
-function SourcemapsProcessor(preprocessor, source_maps_by_url) {
-  this.process = function(error) {
+function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
+  function obtainOne(url, obtainer) {
+    obtainer(url, function(json) {
+      if (json) {
+        // As each sourcemaps json payload is obtained,
+        // generate a sourcemap consumer from it, and cache it
+        source_maps[url] = new SourceMap.SourceMapConsumer(json);
+      }
+      if (!--remaining) { allObtained(source_maps); }
+    });
+  }
+
+  var remaining = backtrace_files.length,
+      i = remaining - 1;
+
+  for (; i >= 0; i--) {
+    obtainOne(backtrace_files[i], obtainer);
+  }
+}
+
+function SourcemapsProcessor(preprocessor, obtainer) {
+  this._source_maps = {};
+
+  this.process = function(error, fn) {
+    // Process the error through the native error handler
     var preprocessor_result = preprocessor.process(error),
-        preprocessor_backtrace = preprocessor_result.backtrace,
-        backtrace_entry, backtrace_file,
-        json, consumer, result;
+        preprocessor_backtrace = preprocessor_result.backtrace;
+
+    // Collect the filenames of each file mentioned in the backtrace
+    var backtrace_files = [], backtrace_file, cache = {};
 
     for (var i = preprocessor_backtrace.length - 1; i >= 0; i--) {
-      backtrace_entry = preprocessor_backtrace[i];
-      backtrace_file = backtrace_entry.file;
-      json = source_maps_by_url[backtrace_file];
-
-      if (json) {
-        consumer = new SourceMap.SourceMapConsumer(json);
-        result = consumer.originalPositionFor({
-          line: backtrace_entry.line,
-          column: backtrace_entry.column
-        });
-
-        // Modify backtrace entry in-place, replacing file, line, and column
-        backtrace_entry.file = result.source;
-        backtrace_entry.line = result.line;
-        backtrace_entry.column = result.column;
+      backtrace_file = preprocessor_backtrace[i].file;
+      // Use an object to track whether an item as already been added to
+      // the list of backtrace files to avoid scanning the list for each
+      // each file
+      if (!cache[backtrace_file]) {
+        cache[backtrace_file] = true;
+        backtrace_files.push(backtrace_file);
       }
     }
 
-    return preprocessor_result;
+    // There may be several sourcemaps to obtain. Once all are available,
+    // the processed error can be further processed using the the source maps
+    function allObtained(source_maps) {
+      var backtrace_entry, consumer, original_position;
+      // Go line-by-line through the backtrace, substituting
+      // SourceMapConsumer-supplied file names and positions
+      // when available
+      for (var i = preprocessor_backtrace.length - 1; i >= 0; i--) {
+        backtrace_entry = preprocessor_backtrace[i];
+        consumer = source_maps[backtrace_entry.file];
+
+        if (consumer) {
+          original_position = consumer.originalPositionFor({
+            line: backtrace_entry.line,
+            column: backtrace_entry.column
+          });
+
+          backtrace_entry.file = original_position.source;
+          backtrace_entry.line = original_position.line;
+          backtrace_entry.column = original_position.column;
+        }
+      }
+      fn(preprocessor_result);
+    }
+
+    // Begin obtaining the source maps
+    obtainMany(backtrace_files, obtainer, this._source_maps, allObtained);
   };
 }
+
 
 module.exports = SourcemapsProcessor;
