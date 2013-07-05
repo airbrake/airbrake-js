@@ -146,10 +146,14 @@ describe "Client", ->
       processor = { process: -> throw(new Error("Processor Error")) }
       getProcessor = -> processor
       client = new Client(getProcessor, getReporter)
-      client.captureException(exception)
+
+      run = -> client.captureException(exception)
+      expect(run).not.to.throw()
 
     it "ignores errors thrown by reporter", ->
       reporter = { report: -> throw(new Error("Reporter Error")) }
-      getReporter = -> processor
+      getReporter = -> reporter
       client = new Client(getProcessor, getReporter)
-      client.captureException(exception)
+
+      run = -> client.captureException(exception)
+      expect(run).not.to.throw()
