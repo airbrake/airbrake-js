@@ -8,7 +8,7 @@ var SourceMap = require("source-map");
 
 function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
   function obtainOne(url, obtainer) {
-    obtainer(url, function(json) {
+    obtainer.obtain(url, function(json) {
       if (json) {
         // As each sourcemaps json payload is obtained,
         // generate a sourcemap consumer from it, and cache it
@@ -29,10 +29,9 @@ function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
 function SourcemapsProcessor(preprocessor, obtainer) {
   this._source_maps = {};
 
-  this.process = function(error, fn) {
+  function preprocessorComplete(preprocessor_result, source_maps, fn) {
     // Process the error through the native error handler
-    var preprocessor_result = preprocessor.process(error),
-        preprocessor_backtrace = preprocessor_result.backtrace;
+    var preprocessor_backtrace = preprocessor_result.backtrace;
 
     // Collect the filenames of each file mentioned in the backtrace
     var backtrace_files = [], backtrace_file, cache = {};
@@ -74,7 +73,15 @@ function SourcemapsProcessor(preprocessor, obtainer) {
     }
 
     // Begin obtaining the source maps
-    obtainMany(backtrace_files, obtainer, this._source_maps, allObtained);
+    obtainMany(backtrace_files, obtainer, source_maps, allObtained);
+  }
+
+  this.process = function(error, fn) {
+    var source_maps = this._source_maps;
+
+    preprocessor.process(error, function(result) {
+      preprocessorComplete(result, source_maps, fn);
+    });
   };
 }
 

@@ -25,22 +25,22 @@ describe "SourcemapsProcessor", ->
 
     it "obtains sourcemap by url", ->
       parent_processor_result = { backtrace: [ { file: "min.js", line: 13, column: 12, function: "at module.exports" } ] }
-      parent_processor = { process: -> parent_processor_result }
+      parent_processor = { process: (error, fn) -> fn(parent_processor_result) }
 
-      obtainer = sinon.spy()
+      obtainer = { obtain: sinon.spy() }
       processor = new Processor(parent_processor, obtainer);
 
       processor.process({}, ->)
 
-      url = obtainer.lastCall.args[0]
+      url = obtainer.obtain.lastCall.args[0]
       expect(url).to.equal("min.js")
 
 
     it "does not complete processing until source map is obtained", ->
       parent_processor_result = { backtrace: [ { file: 'min.js', line: 13, column: 12, function: 'at module.exports' } ] }
-      parent_processor = { process: -> parent_processor_result }
+      parent_processor = { process: (error, fn) -> fn(parent_processor_result) }
 
-      obtainer = sinon.spy()
+      obtainer = { obtain: sinon.spy() }
       processor = new Processor(parent_processor, obtainer);
 
       processed = sinon.spy()
@@ -48,7 +48,7 @@ describe "SourcemapsProcessor", ->
 
       # The obtainer should be called with a url, and a continuation
       # to invoke when a JSON payload is available.
-      obtained = obtainer.lastCall.args[1]
+      obtained = obtainer.obtain.lastCall.args[1]
 
       # Until the sourcemaps are available, the processor can't
       # hand off the payload
