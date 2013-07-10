@@ -4,7 +4,8 @@ function recognizeFrame(string) {
   var func,
       file,
       line,
-      column;
+      column,
+      result;
 
   var match;
 
@@ -20,12 +21,14 @@ function recognizeFrame(string) {
   // the function name can't be extracted
   func = func || string;
 
-  return {
+  result = {
     file: file || "unsupported.js",
     line: parseInt(line || 0, 10),
     column: parseInt(column || 0, 10),
     "function": func
   };
+
+  return result;
 }
 
 // Extract the error type name

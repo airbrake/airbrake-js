@@ -9,10 +9,12 @@ var SourceMap = require("source-map");
 function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
   function obtainOne(url, obtainer) {
     obtainer.obtain(url, function(json) {
+      var consumer;
       if (json) {
+        consumer = new SourceMap.SourceMapConsumer(json);
         // As each sourcemaps json payload is obtained,
         // generate a sourcemap consumer from it, and cache it
-        source_maps[url] = new SourceMap.SourceMapConsumer(json);
+        source_maps[url] = consumer;
       }
       if (!--remaining) { allObtained(source_maps); }
     });
