@@ -40,6 +40,10 @@ module.exports = function(grunt) {
       fallback: {
         src: ['tmp/src/main-fallback.js'],
         dest: 'dist/<%= pkg.name %>-fallback.js'
+      },
+      'fallback-sourcemap': {
+        src: ['tmp/src/main-fallback-sourcemaps.js'],
+        dest: 'dist/<%= pkg.name %>-fallback-sourcemap.js'
       }
     },
     template: {
