@@ -16,12 +16,6 @@ module.exports = function(grunt) {
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
-    concat: {
-      build: {
-        src: ['legacy/notifier.js'],
-        dest: 'tmp/src/legacy-notifier.js'
-      }
-    },
     bower: {
       dist: {
         dest: 'tmp/components'
@@ -144,7 +138,6 @@ module.exports = function(grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-bower');
-  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -160,7 +153,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'concat', 'template', 'browserify']);
+  grunt.registerTask('build', ['copy', 'bower', 'template', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 
