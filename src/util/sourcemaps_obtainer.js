@@ -1,4 +1,4 @@
-var source_maps_matcher = /\/\/@|# sourceMappingURL=(.*)/,
+var source_maps_matcher = /\/\/(?:@|#) sourceMappingURL=(.+)$/,
     data_uri_matcher = /data:application\/json;base64,(.*)/;
 
 function xhr(url, fn) {
@@ -10,23 +10,32 @@ function xhr(url, fn) {
   };
 }
 
+// Extract the source maps url (if any) from a corpus of text
+function sourceMapUrl(body) {
+  var body_match = body.match(source_maps_matcher);
+  if (body_match) { return body_match[1]; }
+}
+
+// Convert a base64 data-uri to a (hopefully) JSON string
+function dataUri(url) {
+  var data_uri_match = url.match(data_uri_matcher);
+  if (data_uri_match) {
+    // It's a data-uri, extract JSON directly
+    // TODO: Use cheaper base64 decode like atob
+    // because browserify util stuff is big
+    return new Buffer(data_uri_match[1], "base64").toString("utf-8");
+  }
+}
+
 function SourcemapsObtainer() {
   function scriptReceived(body, obtained) {
-    var body_match = body.match(source_maps_matcher),
-        source_maps_url, json;
-
-    if (body_match) {
-      source_maps_url = body_match[1];
-
-      var data_uri_match = source_maps_url.match(data_uri_matcher);
-      if (data_uri_match) {
-        // It's a data-uri, extract JSON directly
-        // TODO: Use cheaper base64 decode like atob
-        // because browserify util stuff is big
-        json = new Buffer(data_uri_match[1], "base64").toString("utf-8");
-        obtained(json);
+    var url = sourceMapUrl(body);
+    if (url) {
+      var data_uri = dataUri(url);
+      if (data_uri) {
+        obtained(data_uri);
       } else {
-        xhr(source_maps_url, function(json) { obtained(json); });
+        xhr(url, function(json) { obtained(json); });
       }
     } else {
       obtained(null);
@@ -34,8 +43,12 @@ function SourcemapsObtainer() {
   }
 
   this.obtain = function(url, obtained) {
+    // Closure around `obtained`
     xhr(url, function(body) { scriptReceived(body, obtained); });
   };
 }
+
+SourcemapsObtainer.sourceMapUrl = sourceMapUrl;
+SourcemapsObtainer.dataUri = dataUri;
 
 module.exports = SourcemapsObtainer;
