@@ -38,6 +38,10 @@ module.exports = function(grunt) {
       'fallback-sourcemap': {
         src: ['tmp/src/main-fallback-sourcemaps.js'],
         dest: 'dist/<%= pkg.name %>-fallback-sourcemap.js'
+      },
+      'tracekit-sourcemap': {
+        src: ['tmp/src/main-tracekit-sourcemaps.js'],
+        dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
       }
     },
     template: {
