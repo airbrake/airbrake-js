@@ -11,6 +11,7 @@ TraceKit.report.subscribe(function(tracekit_result, fn) {
     backtrace.unshift({
       file: frame.url,
       line: parseInt(frame.line, 10),
+      column: parseInt(frame.column, 10),
       "function": frame.func
     });
   }
