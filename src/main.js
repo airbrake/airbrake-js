@@ -28,8 +28,5 @@ function getReporter(client) {
 
 client = new Client(getProcessor, getReporter, toggler.on, toggler.off);
 
-// require("./legacy-notifier");
-
-global.NewAirbrake = client;
 global.Airbrake = global.Airbrake || client;
 global.Hoptoad = global.Airbrake;

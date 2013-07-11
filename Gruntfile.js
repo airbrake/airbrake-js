@@ -1,8 +1,6 @@
 module.exports = function(grunt) {
   var pkg_data = grunt.file.readJSON('package.json');
 
-  var processor_names = ['tracekit', 'stacktrace_js', 'fallback'];
-
   // Interpolates pkg variables into files during browserification
   function addPackageVars(file) {
     var through = require('through'), data = "";
@@ -27,10 +25,6 @@ module.exports = function(grunt) {
         src: ['tmp/src/main-tracekit.js'],
         dest: 'dist/<%= pkg.name %>-tracekit.js'
       },
-      stacktrace_js: {
-        src: ['tmp/src/main-stacktrace_js.js'],
-        dest: 'dist/<%= pkg.name %>-stacktrace_js.js'
-      },
       fallback: {
         src: ['tmp/src/main-fallback.js'],
         dest: 'dist/<%= pkg.name %>-fallback.js'
@@ -44,29 +38,16 @@ module.exports = function(grunt) {
         dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
       }
     },
-    template: {
-      tracekit_processor: {
-        options: { data: { pkg: pkg_data, processor_name: 'tracekit_processor' } },
-        files: { 'tmp/src/main-tracekit.js': 'tmp/src/main.js' }
-      },
-      stacktrace_js_processor: {
-        options: { data: { pkg: pkg_data, processor_name: 'stacktrace_js_processor' } },
-        files: { 'tmp/src/main-stacktrace_js.js': 'tmp/src/main.js' }
-      },
-      fallback_processor: {
-        options: { data: { pkg: pkg_data, processor_name: 'fallback_processor' } },
-        files: { 'tmp/src/main-fallback.js': 'tmp/src/main.js' }
-      }
-    },
     uglify: {
       options: {
         banner: '/*! <%= pkg.name %> <%= grunt.template.today("dd-mm-yyyy") %> */\n'
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>-tracekit.min.js':      ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-stacktrace_js.min.js': ['dist/<%= pkg.name %>-stacktrace_js.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':      ['dist/<%= pkg.name %>-fallback.js']
+          'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
+          'dist/<%= pkg.name %>-tracekit-sourcemaps.min.js':  ['dist/<%= pkg.name %>-tracekit-sourcemaps.js'],
+          'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
+          'dist/<%= pkg.name %>-fallback-sourcemaps.min.js':  ['dist/<%= pkg.name %>-fallback-sourcemaps.js']
         }
       }
     },
@@ -116,23 +97,15 @@ module.exports = function(grunt) {
       tracekit_processor: {
         src: 'test/examples/dist/<%= pkg.name %>-tracekit.js',
         options: {
-          keepRunner: true,
+          keepRunner: false,
           outfile: 'test/examples/tracekit_runner.html',
-          specs: 'test/integration/spec/**/*.js'
-        }
-      },
-      stacktrace_js_processor: {
-        src: 'test/examples/dist/<%= pkg.name %>-stacktrace_js.js',
-        options: {
-          keepRunner: true,
-          outfile: 'test/examples/stacktrace_js_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
       },
       fallback_processor: {
         src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
         options: {
-          keepRunner: true,
+          keepRunner: false,
           outfile: 'test/examples/fallback_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
@@ -157,7 +130,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'template', 'browserify']);
+  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 
