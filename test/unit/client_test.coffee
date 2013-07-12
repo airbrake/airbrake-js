@@ -47,44 +47,6 @@ describe "Client", ->
       client.setGuessFunctionName(true)
       expect(client.getGuessFunctionName()).to.be.true
 
-  describe "trackJQ", ->
-    it "is false by default", ->
-      client = new Client();
-      expect(client.getTrackJQ()).to.be.false
-
-    it "can set and read", ->
-      client = new Client()
-      client.setTrackJQ(true)
-      expect(client.getTrackJQ()).to.be.true
-
-    it "calls jqOn", ->
-      spy = sinon.spy()
-      client = new Client(null, null, spy);
-      client.setTrackJQ(true)
-      expect(spy.called).to.be.true
-
-    it "calls jqOn only on trackJQ state change to on", ->
-      spy = sinon.spy()
-      client = new Client(null, null, spy);
-      client.setTrackJQ(true)
-      client.setTrackJQ(true)
-      expect(spy.callCount).to.equal(1)
-
-    it "calls jqOff", ->
-      spy = sinon.spy()
-      client = new Client(null, null, null, spy);
-      client.setTrackJQ(true)
-      client.setTrackJQ(false)
-      expect(spy.called).to.be.true
-
-    it "calls jqOff only on trackJQ state change to off", ->
-      spy = sinon.spy()
-      client = new Client(null, null, null, spy);
-      client.setTrackJQ(true)
-      client.setTrackJQ(false)
-      client.setTrackJQ(false)
-      expect(spy.callCount).to.equal(1)
-
   describe "outputFormat", ->
     it "is JSON by default", ->
       client = new Client();

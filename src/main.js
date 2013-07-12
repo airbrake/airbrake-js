@@ -1,11 +1,8 @@
 var Client = require("./client"),
     Processor = require("./processors/<%= processor_name %>"),
-    Reporter  = require("./reporters/api_v3_reporter"),
-    JQWrapperToggler = require("./jquery_event_handler_wrapper");
+    Reporter  = require("./reporters/api_v3_reporter");
 
-var client, handler, toggler;
-
-toggler = new JQWrapperToggler(function(error) { client.captureException(error); });
+var client, handler;
 
 function getProcessor(client) {
   return new Processor();
@@ -26,7 +23,7 @@ function getReporter(client) {
   return new Reporter(url, environment, "<%= processor_name %>");
 }
 
-client = new Client(getProcessor, getReporter, toggler.on, toggler.off);
+client = new Client(getProcessor, getReporter);
 
 global.Airbrake = global.Airbrake || client;
 global.Hoptoad = global.Airbrake;

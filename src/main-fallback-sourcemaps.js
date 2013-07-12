@@ -2,11 +2,9 @@ var Client              = require("./client"),
     SourcemapsObtainer  = require("./util/sourcemaps_obtainer"),
     SourcemapsProcessor = require("./processors/sourcemaps_processor"),
     FallbackProcessor   = require("./processors/fallback_processor"),
-    Reporter            = require("./reporters/api_v3_reporter"),
-    JQWrapperToggler    = require("./jquery_event_handler_wrapper");
+    Reporter            = require("./reporters/api_v3_reporter");
 
-var client, handler, toggler;
-toggler = new JQWrapperToggler(function(error) { client.captureException(error); });
+var client, handler;
 
 function getProcessor(client) {
   var fallback_processor  = new FallbackProcessor();
@@ -30,7 +28,7 @@ function getReporter(client) {
   return new Reporter(url, environment, "fallback+sourcemaps");
 }
 
-client = new Client(getProcessor, getReporter, toggler.on, toggler.off);
+client = new Client(getProcessor, getReporter);
 
 global.Airbrake = global.Airbrake || client;
 global.Hoptoad = global.Airbrake;
