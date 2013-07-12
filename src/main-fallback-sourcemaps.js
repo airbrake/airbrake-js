@@ -1,16 +1,16 @@
 var Client              = require("./client"),
     SourcemapsObtainer  = require("./util/sourcemaps_obtainer"),
     SourcemapsProcessor = require("./processors/sourcemaps_processor"),
-    FallbackProcessor   = require("./processors/fallback_processor"),
+    Processor           = require("./processors/fallback_processor"),
     Reporter            = require("./reporters/api_v3_reporter");
 
 var client, handler;
 
 function getProcessor(client) {
-  var fallback_processor  = new FallbackProcessor();
+  var processor           = new Processor();
   var sourcemaps_obtainer = new SourcemapsObtainer();
 
-  return new SourcemapsProcessor(fallback_processor, sourcemaps_obtainer);
+  return new SourcemapsProcessor(processor, sourcemaps_obtainer);
 }
 
 function getReporter(client) {

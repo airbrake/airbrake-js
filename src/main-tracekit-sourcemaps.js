@@ -7,7 +7,7 @@ var Client              = require("./client"),
 var client, handler;
 
 function getProcessor(client) {
-  var processor  = new Processor();
+  var processor           = new Processor();
   var sourcemaps_obtainer = new SourcemapsObtainer();
 
   return new SourcemapsProcessor(processor, sourcemaps_obtainer);
