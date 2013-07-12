@@ -5,15 +5,6 @@ describe("Global objects.", function () {
         expect(window.Airbrake).not.toBe(null);
         expect( typeof window.Airbrake).toBe('object');
     });
-
-    it("Global variable defined: window.Hoptoad.", function() {
-        expect(window.Hoptoad).not.toBe(null);
-        expect( typeof window.Hoptoad).toBe('object');
-    });
-
-    it("window.Airbrake and window.Hoptoad are the same object.", function() {
-        expect(window.Hoptoad).toBe(window.Airbrake);
-    });
 });
 
 describe("Public interface.", function () {

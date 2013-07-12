@@ -26,4 +26,3 @@ function getReporter(client) {
 client = new Client(getProcessor, getReporter);
 
 global.Airbrake = global.Airbrake || client;
-global.Hoptoad = global.Airbrake;

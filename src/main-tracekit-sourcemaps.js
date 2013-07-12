@@ -34,7 +34,6 @@ client = new Client(getProcessor, getReporter);
 
 global.NewAirbrake = client;
 global.Airbrake = global.Airbrake || client;
-global.Hoptoad = global.Airbrake;
 
 // Hook into the window onerror handler
 require("./util/window_onerror");
