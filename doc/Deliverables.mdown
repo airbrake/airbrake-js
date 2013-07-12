@@ -21,27 +21,14 @@
   * Latest build / Download page
   * Compiled output separated from repository
 
-# Future
-
-How important is backwards compatability?
-How do we want to manage versioning?
-
-My opinion is that since the scripts are served from versioned CDN endpoints and the code is specifically listed as beta-quality, breaking compatibility is not an issue. New versions can be distributed without interfering with existing installations.
-
-I would like to make the following modifications to the public API.
+## API v3 Support
 
   * Remove `setHost` - is this used?
-  * Remove `setKey` and `setProjectId`, both are necessary, combine `setProject(key, id)`
+  * Remove `setKey` and `setProjectId`, both values are necessary, combine `setProject(key, id)`
   * Remove `setTrackJQ`, favor less-invasive integration points
   * Remove `setGuessFunctionName`, favor configuring stack handler, injecting at build time
   * Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
-
-
-## API v3 Support
-
-The collections supported by the API are: `context`, `env`, `params` and `session`.
-
-* Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
-* Auto-populate appropriate `context` fields
-* Validate allowed `context` fields
-* Auto-populate `params` fields from queryString
+  * Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
+  * Auto-populate appropriate `context` fields
+  * Validate allowed `context` fields
+  * Auto-populate `params` fields from queryString
