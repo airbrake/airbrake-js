@@ -30,7 +30,4 @@ function getReporter(client) {
 
 client = new Client(getProcessor, getReporter);
 
-// require("./legacy-notifier");
-
-global.NewAirbrake = client;
 global.Airbrake = global.Airbrake || client;
