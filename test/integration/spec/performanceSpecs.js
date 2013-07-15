@@ -1,8 +1,8 @@
 describe("Performance testing.", function () {
   var _i = 0,
     _XMLHttpRequest = window.XMLHttpRequest,
-    _callsNumber = 1000,
-    _recCallsLevel = 10000;
+    _callsNumber = 10,
+    _recCallsLevel = 10;
 
   window.Airbrake.setOutputFormat('JSON');
 

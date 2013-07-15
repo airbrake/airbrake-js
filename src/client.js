@@ -23,10 +23,6 @@ function Client(getProcessor, getReporter) {
   instance.setErrorDefaults = function(val) { _error_defaults = val; };
   instance.getErrorDefaults = function() { return _error_defaults; };
 
-  var _guessFunctionName = false;
-  instance.setGuessFunctionName = function(val) { _guessFunctionName = val; };
-  instance.getGuessFunctionName = function() { return _guessFunctionName; };
-
   var _outputFormat = "JSON";
   instance.setOutputFormat = function(val) { _outputFormat = val; };
   instance.getOutputFormat = function() { return _outputFormat; };
