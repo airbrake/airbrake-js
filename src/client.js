@@ -19,6 +19,9 @@ function Client(getProcessor, getReporter) {
   };
   instance.getProject = function() { return [ _project_id, _key ]; };
 
+  var _context = {};
+  instance.getContext = function() { return _context; };
+  instance.addContext = function(context) { _context = context; };
 
   instance.captureException = function(exception) {
     try {

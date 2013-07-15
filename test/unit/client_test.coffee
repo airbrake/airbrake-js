@@ -22,6 +22,18 @@ describe "Client", ->
     client.setProject("[custom_project_id]", "[custom_key]")
     expect(client.getProject()).to.deep.equal([ "[custom_project_id]", "[custom_key]" ])
 
+  describe "addContext", ->
+    it "can be set and read", ->
+      client = new Client()
+      client.addContext(key1: "[custom_context_key1_value]")
+      expect(client.getContext().key1).to.equal("[custom_context_key1_value]")
+
+    it "overrides previously set key", ->
+      client = new Client()
+      client.addContext(key1: "[custom_context_key1_value]")
+      client.addContext(key1: "[custom_context_key1_value2]")
+      expect(client.getContext().key1).to.equal("[custom_context_key1_value2]")
+
   describe "captureException", ->
     processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }
