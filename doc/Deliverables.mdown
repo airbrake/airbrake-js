@@ -23,12 +23,12 @@
 
 ## API v3 Support
 
-  * Remove `setHost` - is this used?
-  * Remove `setKey` and `setProjectId`, both values are necessary, combine `setProject(key, id)`
-  * Remove `setTrackJQ`, favor less-invasive integration points
-  * Remove `setGuessFunctionName`, favor configuring stack handler, injecting at build time
-  * Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
-  * Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
-  * Auto-populate appropriate `context` fields
-  * Validate allowed `context` fields
-  * Auto-populate `params` fields from queryString
+  * [x] Remove `setHost` - is this used?
+  * [x] Remove `setKey` and `setProjectId`, both values are necessary, combine `setProject(key, id)`
+  * [ ] Remove `setTrackJQ`, favor less-invasive integration points
+  * [ ] Remove `setGuessFunctionName`, favor configuring stack handler, injecting at build time
+  * [ ] Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
+  * [ ] Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
+  * [ ] Auto-populate appropriate `context` fields
+  * [ ] Validate allowed `context` fields
+  * [ ] Auto-populate `params` fields from queryString
