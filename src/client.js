@@ -12,13 +12,12 @@ function Client(getProcessor, getReporter) {
   instance.setEnvironment = function(val) { _environment = val; };
   instance.getEnvironment = function() { return _environment; };
 
-  var _key;
-  instance.setKey = function(val) { _key = val; };
-  instance.getKey = function() { return _key; };
-
-  var _project_id;
-  instance.setProjectId = function(val) { _project_id = val; };
-  instance.getProjectId = function() { return _project_id; };
+  var _project_id, _key;
+  instance.setProject = function(project_id, key) {
+    _project_id = project_id;
+    _key = key;
+  };
+  instance.getProject = function() { return [ _project_id, _key ]; };
 
   var _error_defaults = {};
   instance.setErrorDefaults = function(val) { _error_defaults = val; };

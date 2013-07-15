@@ -17,15 +17,10 @@ describe "Client", ->
       client.setEnvironment("[custom_environment]")
       expect(client.getEnvironment()).to.equal("[custom_environment]")
 
-  it "can set and read `key`", ->
+  it "can set and read `project`", ->
     client = new Client()
-    client.setKey("[custom_key]")
-    expect(client.getKey()).to.equal("[custom_key]")
-
-  it "can set and read `projectId`", ->
-    client = new Client()
-    client.setProjectId("[custom_project_id]")
-    expect(client.getProjectId()).to.equal("[custom_project_id]")
+    client.setProject("[custom_project_id]", "[custom_key]")
+    expect(client.getProject()).to.deep.equal([ "[custom_project_id]", "[custom_key]" ])
 
   describe "guessFunctionName", ->
     it "is false by default", ->
