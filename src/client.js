@@ -5,6 +5,9 @@
 // to transform an exception into data, and then to transport that data.
 //
 // window.Airbrake is an instance of Client
+
+var merge = require("./util/merge");
+
 function Client(getProcessor, getReporter) {
   var instance = this;
 
@@ -22,9 +25,7 @@ function Client(getProcessor, getReporter) {
   var _context = {};
   instance.getContext = function() { return _context; };
   instance.addContext = function(context) {
-    for (var key in context) {
-      _context[key] = context[key];
-    }
+    merge(_context, context);
   };
 
   instance.captureException = function(exception) {
