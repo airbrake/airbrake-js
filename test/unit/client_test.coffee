@@ -42,16 +42,6 @@ describe "Client", ->
       client.setOutputFormat("XML")
       expect(client.getOutputFormat()).to.equal("XML")
 
-  describe "errorDefaults", ->
-    it "is empty object by default", ->
-      client = new Client()
-      expect(client.getErrorDefaults()).to.deep.equal({})
-
-    it "can be set and read", ->
-      client = new Client()
-      client.setErrorDefaults({ staggering: "fascination" })
-      expect(client.getErrorDefaults().staggering).to.equal("fascination")
-
   describe "captureException", ->
     processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }

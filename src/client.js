@@ -19,10 +19,6 @@ function Client(getProcessor, getReporter) {
   };
   instance.getProject = function() { return [ _project_id, _key ]; };
 
-  var _error_defaults = {};
-  instance.setErrorDefaults = function(val) { _error_defaults = val; };
-  instance.getErrorDefaults = function() { return _error_defaults; };
-
   var _outputFormat = "JSON";
   instance.setOutputFormat = function(val) { _outputFormat = val; };
   instance.getOutputFormat = function() { return _outputFormat; };
