@@ -34,6 +34,12 @@ describe "Client", ->
       client.addContext(key1: "[custom_context_key1_value2]")
       expect(client.getContext().key1).to.equal("[custom_context_key1_value2]")
 
+    it "preserves unspecified keys", ->
+      client = new Client()
+      client.addContext(key1: "[custom_context_key1_value]")
+      client.addContext(key2: "[custom_context_key1_value2]")
+      expect(client.getContext().key1).to.equal("[custom_context_key1_value]")
+
   describe "captureException", ->
     processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }

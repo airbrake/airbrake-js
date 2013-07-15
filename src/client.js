@@ -21,7 +21,11 @@ function Client(getProcessor, getReporter) {
 
   var _context = {};
   instance.getContext = function() { return _context; };
-  instance.addContext = function(context) { _context = context; };
+  instance.addContext = function(context) {
+    for (var key in context) {
+      _context[key] = context[key];
+    }
+  };
 
   instance.captureException = function(exception) {
     try {
