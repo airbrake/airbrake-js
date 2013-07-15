@@ -19,9 +19,6 @@ function Client(getProcessor, getReporter) {
   };
   instance.getProject = function() { return [ _project_id, _key ]; };
 
-  var _outputFormat = "JSON";
-  instance.setOutputFormat = function(val) { _outputFormat = val; };
-  instance.getOutputFormat = function() { return _outputFormat; };
 
   instance.captureException = function(exception) {
     try {

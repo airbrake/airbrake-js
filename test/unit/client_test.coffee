@@ -22,16 +22,6 @@ describe "Client", ->
     client.setProject("[custom_project_id]", "[custom_key]")
     expect(client.getProject()).to.deep.equal([ "[custom_project_id]", "[custom_key]" ])
 
-  describe "outputFormat", ->
-    it "is JSON by default", ->
-      client = new Client()
-      expect(client.getOutputFormat()).to.equal("JSON")
-
-    it "can set and read", ->
-      client = new Client()
-      client.setOutputFormat("XML")
-      expect(client.getOutputFormat()).to.equal("XML")
-
   describe "captureException", ->
     processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }
