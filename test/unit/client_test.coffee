@@ -22,16 +22,6 @@ describe "Client", ->
     client.setProject("[custom_project_id]", "[custom_key]")
     expect(client.getProject()).to.deep.equal([ "[custom_project_id]", "[custom_key]" ])
 
-  describe "guessFunctionName", ->
-    it "is false by default", ->
-      client = new Client();
-      expect(client.getGuessFunctionName()).to.be.false
-
-    it "can set and read", ->
-      client = new Client()
-      client.setGuessFunctionName(true)
-      expect(client.getGuessFunctionName()).to.be.true
-
   describe "outputFormat", ->
     it "is JSON by default", ->
       client = new Client()
