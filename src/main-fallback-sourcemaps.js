@@ -18,7 +18,7 @@ function getReporter(client) {
   var protocol = ("https:" === global.location.protocol ? "https://" : "http://");
 
   // Vars from client
-  var host        = client.getHost(),
+  var host        = "api.airbrake.io",
       project_id  = client.getProjectId(),
       key         = client.getKey(),
       environment = client.getEnvironment();

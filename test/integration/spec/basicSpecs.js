@@ -8,7 +8,7 @@ describe("Global objects.", function () {
 });
 
 describe("Public interface.", function () {
-    var _methods = ['setEnvironment', 'setKey', 'setHost', 'setErrorDefaults', 'setGuessFunctionName', 'setTrackJQ', 'captureException'],
+    var _methods = ['setEnvironment', 'setKey', 'setErrorDefaults', 'setGuessFunctionName', 'setTrackJQ', 'captureException'],
         _i = 0;
 
     function _createMathodSpec (methodName) {
