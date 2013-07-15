@@ -34,7 +34,7 @@ describe "Client", ->
 
   describe "outputFormat", ->
     it "is JSON by default", ->
-      client = new Client();
+      client = new Client()
       expect(client.getOutputFormat()).to.equal("JSON")
 
     it "can set and read", ->
