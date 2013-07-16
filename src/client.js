@@ -11,9 +11,9 @@ var merge = require("./util/merge");
 function Client(getProcessor, getReporter) {
   var instance = this;
 
-  var _environment = "environment";
-  instance.setEnvironment = function(val) { _environment = val; };
-  instance.getEnvironment = function() { return _environment; };
+  var _environment_name = "environment";
+  instance.setEnvironmentName = function(val) { _environment_name = val; };
+  instance.getEnvironmentName = function() { return _environment_name; };
 
   var _project_id, _key;
   instance.setProject = function(project_id, key) {

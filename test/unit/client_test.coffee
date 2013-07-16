@@ -7,15 +7,15 @@ chai.use(sinon_chai)
 Client = require("../../src/client")
 
 describe "Client", ->
-  describe "environment", ->
+  describe "environmentName", ->
     it "is \"environment\" by default", ->
       client = new Client()
-      expect(client.getEnvironment()).to.equal("environment")
+      expect(client.getEnvironmentName()).to.equal("environment")
 
     it "can be set and read", ->
       client = new Client()
-      client.setEnvironment("[custom_environment]")
-      expect(client.getEnvironment()).to.equal("[custom_environment]")
+      client.setEnvironmentName("[custom_environment]")
+      expect(client.getEnvironmentName()).to.equal("[custom_environment]")
 
   it "can set and read `project`", ->
     client = new Client()

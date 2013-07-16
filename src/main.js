@@ -16,11 +16,11 @@ function getReporter(client) {
   var host        = "api.airbrake.io",
       project_id  = client.getProjectId(),
       key         = client.getKey(),
-      environment = client.getEnvironment();
+      environment_name   = client.getEnvironmentName();
 
   var url = protocol + host + "/api/v3/projects/" + project_id + "/notices?key=" + key;
 
-  return new Reporter(url, environment, "<%= processor_name %>");
+  return new Reporter(url, environment_name, "<%= processor_name %>");
 }
 
 client = new Client(getProcessor, getReporter);
