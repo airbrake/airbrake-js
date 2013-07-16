@@ -27,8 +27,8 @@
   * [x] Remove `setKey` and `setProjectId`, both values are necessary, combine `setProject(key, id)`
   * [x] Remove `setTrackJQ`, favor less-invasive integration points
   * [x] Remove `setGuessFunctionName`, favor configuring stack handler, injecting at build time
-  * [ ] Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
-  * [ ] Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
+  * [x] Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
+  * [x] Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
   * [ ] Auto-populate appropriate `context` fields
   * [ ] Validate allowed `context` fields
   * [ ] Auto-populate `params` fields from queryString
