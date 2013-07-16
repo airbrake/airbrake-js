@@ -9,8 +9,7 @@
     <h2>Capture an exception and process it using Tracekit</h2>
     <code>
       <pre id="code">
-Airbrake.setKey("[my_airbrake_key]");
-Airbrake.setProjectId("[my_project_id]");
+Airbrake.setProject("[my_project_id]", "[my_airbrake_key]");
 
 try { CoffeeErrorMaker(); } catch(er) { Airbrake.captureException(er); }
       </pre>
