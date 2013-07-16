@@ -1,5 +1,5 @@
 var Client = require("./client"),
-    Processor = require("./processors/<%= processor_name %>"),
+    Processor = require("./processors/fallback_processor"),
     Reporter  = require("./reporters/xhr_reporter");
 
 var client;
@@ -21,7 +21,7 @@ function getReporter(client) {
 
   var url = protocol + host + "/api/v3/projects/" + project_id + "/notices?key=" + key;
 
-  return new Reporter(url, environment_name, "<%= processor_name %>");
+  return new Reporter(url, environment_name, "fallback");
 }
 
 client = new Client(getProcessor, getReporter);
