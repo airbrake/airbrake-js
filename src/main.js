@@ -1,6 +1,6 @@
 var Client = require("./client"),
     Processor = require("./processors/<%= processor_name %>"),
-    Reporter  = require("./reporters/api_v3_reporter");
+    Reporter  = require("./reporters/xhr_reporter");
 
 var client;
 
