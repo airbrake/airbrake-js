@@ -95,9 +95,7 @@ describe "Client", ->
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
   describe "captureException", ->
-    processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }
-    getProcessor = -> processor
     getReporter = -> reporter
 
     exception = do ->
@@ -109,40 +107,105 @@ describe "Client", ->
 
       return error
 
-    it "processes with processor", ->
-      client = new Client(getProcessor, getReporter)
-      client.captureException(exception)
-
-      expect(processor.process).to.have.been.called
-
-    it "reports with reporter", ->
-      client = new Client(getProcessor, getReporter)
-      client.captureException(exception)
-
-      # Reporter is not called until Processor invokes the
-      # callback provided
-      expect(reporter.report).not.to.have.been.called
-
-      # The first argument passed the processor is the error to be handled
-      # The second is the continuation handed off to the reporter
-      continueFromProcessor = processor.process.lastCall.args[1]
-      processed_error = sinon.spy()
-      continueFromProcessor(processed_error)
-
-      expect(reporter.report).to.have.been.calledWith(processed_error)
-
-    it "ignores errors thrown by processor", ->
-      processor = { process: -> throw(new Error("Processor Error")) }
+    describe "with captured calls to processor", ->
+      processor = { process: sinon.spy() }
       getProcessor = -> processor
-      client = new Client(getProcessor, getReporter)
 
-      run = -> client.captureException(exception)
-      expect(run).not.to.throw()
+      it "processes with processor", ->
+        client = new Client(getProcessor, getReporter)
+        client.captureException(exception)
 
-    it "ignores errors thrown by reporter", ->
-      reporter = { report: -> throw(new Error("Reporter Error")) }
-      getReporter = -> reporter
-      client = new Client(getProcessor, getReporter)
+        expect(processor.process).to.have.been.called
 
-      run = -> client.captureException(exception)
-      expect(run).not.to.throw()
+      it "reports with reporter", ->
+        client = new Client(getProcessor, getReporter)
+        client.captureException(exception)
+
+        # Reporter is not called until Processor invokes the
+        # callback provided
+        expect(reporter.report).not.to.have.been.called
+
+        # The first argument passed the processor is the error to be handled
+        # The second is the continuation handed off to the reporter
+        continueFromProcessor = processor.process.lastCall.args[1]
+        processed_error = sinon.spy()
+        continueFromProcessor(processed_error)
+
+        expect(reporter.report).to.have.been.calledWith(processed_error)
+
+      it "ignores errors thrown by processor", ->
+        processor = { process: -> throw(new Error("Processor Error")) }
+        getProcessor = -> processor
+        client = new Client(getProcessor, getReporter)
+
+        run = -> client.captureException(exception)
+        expect(run).not.to.throw()
+
+      it "ignores errors thrown by reporter", ->
+        reporter = { report: -> throw(new Error("Reporter Error")) }
+        getReporter = -> reporter
+        client = new Client(getProcessor, getReporter)
+
+        run = -> client.captureException(exception)
+        expect(run).not.to.throw()
+
+    describe "custom data sent to reporter", ->
+      it "reports context", ->
+        reporter = { report: sinon.spy() }
+        processor = { process: (data, fn) -> fn(data) }
+        getReporter = -> reporter
+        getProcessor = -> processor
+
+        client = new Client(getProcessor, getReporter)
+        client.addContext(context_key: "[custom_context]")
+        client.captureException(exception)
+
+        reported = reporter.report.lastCall.args[0]
+        console.log(reported)
+
+        expect(reported.context.context_key).to.equal("[custom_context]")
+
+      it "reports env", ->
+        reporter = { report: sinon.spy() }
+        processor = { process: (data, fn) -> fn(data) }
+        getReporter = -> reporter
+        getProcessor = -> processor
+
+        client = new Client(getProcessor, getReporter)
+        client.addEnv(env_key: "[custom_env]")
+        client.captureException(exception)
+
+        reported = reporter.report.lastCall.args[0]
+        console.log(reported)
+
+        expect(reported.env.env_key).to.equal("[custom_env]")
+
+      it "reports params", ->
+        reporter = { report: sinon.spy() }
+        processor = { process: (data, fn) -> fn(data) }
+        getReporter = -> reporter
+        getProcessor = -> processor
+
+        client = new Client(getProcessor, getReporter)
+        client.addParams(params_key: "[custom_params]")
+        client.captureException(exception)
+
+        reported = reporter.report.lastCall.args[0]
+        console.log(reported)
+
+        expect(reported.params.params_key).to.equal("[custom_params]")
+
+      it "reports session", ->
+        reporter = { report: sinon.spy() }
+        processor = { process: (data, fn) -> fn(data) }
+        getReporter = -> reporter
+        getProcessor = -> processor
+
+        client = new Client(getProcessor, getReporter)
+        client.addSession(session_key: "[custom_session]")
+        client.captureException(exception)
+
+        reported = reporter.report.lastCall.args[0]
+        console.log(reported)
+
+        expect(reported.session.session_key).to.equal("[custom_session]")

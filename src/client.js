@@ -47,6 +47,14 @@ function Client(getProcessor, getReporter) {
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception, function(data) {
+          // Decorate data-to-be-reported with client data
+          merge(data, {
+            context : _context,
+            env     : _env,
+            params  : _params,
+            session : _session
+          });
+
           // Transport data to receiver
           reporter.report(data);
         });
