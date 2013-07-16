@@ -2,7 +2,7 @@ var Client = require("./client"),
     Processor = require("./processors/<%= processor_name %>"),
     Reporter  = require("./reporters/api_v3_reporter");
 
-var client, handler;
+var client;
 
 function getProcessor(client) {
   return new Processor();
