@@ -161,8 +161,6 @@ describe "Client", ->
         client.captureException(exception)
 
         reported = reporter.report.lastCall.args[0]
-        console.log(reported)
-
         expect(reported.context.context_key).to.equal("[custom_context]")
 
       it "reports env", ->
@@ -176,8 +174,6 @@ describe "Client", ->
         client.captureException(exception)
 
         reported = reporter.report.lastCall.args[0]
-        console.log(reported)
-
         expect(reported.env.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
@@ -191,8 +187,6 @@ describe "Client", ->
         client.captureException(exception)
 
         reported = reporter.report.lastCall.args[0]
-        console.log(reported)
-
         expect(reported.params.params_key).to.equal("[custom_params]")
 
       it "reports session", ->
@@ -206,6 +200,4 @@ describe "Client", ->
         client.captureException(exception)
 
         reported = reporter.report.lastCall.args[0]
-        console.log(reported)
-
         expect(reported.session.session_key).to.equal("[custom_session]")
