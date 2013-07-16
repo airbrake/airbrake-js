@@ -40,6 +40,60 @@ describe "Client", ->
       client.addContext(key2: "[custom_context_key1_value2]")
       expect(client.getContext().key1).to.equal("[custom_context_key1_value]")
 
+  describe "addEnv", ->
+    it "can be set and read", ->
+      client = new Client()
+      client.addEnv(key1: "[custom_env_key1_value]")
+      expect(client.getEnv().key1).to.equal("[custom_env_key1_value]")
+
+    it "overrides previously set key", ->
+      client = new Client()
+      client.addEnv(key1: "[custom_env_key1_value]")
+      client.addEnv(key1: "[custom_env_key1_value2]")
+      expect(client.getEnv().key1).to.equal("[custom_env_key1_value2]")
+
+    it "preserves unspecified keys", ->
+      client = new Client()
+      client.addEnv(key1: "[custom_env_key1_value]")
+      client.addEnv(key2: "[custom_env_key1_value2]")
+      expect(client.getEnv().key1).to.equal("[custom_env_key1_value]")
+
+  describe "addParams", ->
+    it "can be set and read", ->
+      client = new Client()
+      client.addParams(key1: "[custom_params_key1_value]")
+      expect(client.getParams().key1).to.equal("[custom_params_key1_value]")
+
+    it "overrides previously set key", ->
+      client = new Client()
+      client.addParams(key1: "[custom_params_key1_value]")
+      client.addParams(key1: "[custom_params_key1_value2]")
+      expect(client.getParams().key1).to.equal("[custom_params_key1_value2]")
+
+    it "preserves unspecified keys", ->
+      client = new Client()
+      client.addParams(key1: "[custom_params_key1_value]")
+      client.addParams(key2: "[custom_params_key1_value2]")
+      expect(client.getParams().key1).to.equal("[custom_params_key1_value]")
+
+  describe "addSession", ->
+    it "can be set and read", ->
+      client = new Client()
+      client.addSession(key1: "[custom_session_key1_value]")
+      expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
+
+    it "overrides previously set key", ->
+      client = new Client()
+      client.addSession(key1: "[custom_session_key1_value]")
+      client.addSession(key1: "[custom_session_key1_value2]")
+      expect(client.getSession().key1).to.equal("[custom_session_key1_value2]")
+
+    it "preserves unspecified keys", ->
+      client = new Client()
+      client.addSession(key1: "[custom_session_key1_value]")
+      client.addSession(key2: "[custom_session_key1_value2]")
+      expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
+
   describe "captureException", ->
     processor = { process: sinon.spy() }
     reporter = { report: sinon.spy() }

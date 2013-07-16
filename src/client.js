@@ -24,9 +24,19 @@ function Client(getProcessor, getReporter) {
 
   var _context = {};
   instance.getContext = function() { return _context; };
-  instance.addContext = function(context) {
-    merge(_context, context);
-  };
+  instance.addContext = function(context) { merge(_context, context); };
+
+  var _env = {};
+  instance.getEnv = function() { return _env; };
+  instance.addEnv = function(env) { merge(_env, env); };
+
+  var _params = {};
+  instance.getParams = function() { return _params; };
+  instance.addParams = function(params) { merge(_params, params); };
+
+  var _session = {};
+  instance.getSession = function() { return _session; };
+  instance.addSession = function(session) { merge(_session, session); };
 
   instance.captureException = function(exception) {
     try {
