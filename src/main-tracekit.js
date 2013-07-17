@@ -9,19 +9,13 @@ function getProcessor(client) {
 }
 
 function getReporter(client) {
-  // TODO: Examine this, should we just default to ssl? What happens with spdy?
-  var protocol = ("https:" === global.location.protocol ? "https://" : "http://");
-
   // Vars from client
-  var host               = "api.airbrake.io",
-      project_id_and_key = client.getProject(),
+  var project_id_and_key = client.getProject(),
       project_id         = project_id_and_key[0],
-      key                = project_id_and_key[1],
+      project_key        = project_id_and_key[1],
       environment_name   = client.getEnvironmentName();
 
-  var url = protocol + host + "/api/v3/projects/" + project_id + "/notices?key=" + key;
-
-  return new Reporter(url, environment_name, "tracekit");
+  return new Reporter(project_id, project_key, environment_name, "tracekit");
 }
 
 client = new Client(getProcessor, getReporter);
