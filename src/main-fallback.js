@@ -1,6 +1,6 @@
 var Client = require("./client"),
     Processor = require("./processors/fallback_processor"),
-    Reporter  = require("./reporters/xhr_reporter");
+    Reporter  = require("./reporters/jsonp_reporter");
 
 var client;
 
