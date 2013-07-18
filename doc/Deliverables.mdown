@@ -29,6 +29,3 @@
   * [x] Remove `setGuessFunctionName`, favor configuring stack handler, injecting at build time
   * [x] Remove `setErrorDefaults`, copy https://github.com/vmihailenco/airbrake-js collection-name modifying methods
   * [x] Add `addContext`, `addEnv`, `addParams`, and `addSession` methods
-  * [ ] Auto-populate appropriate `context` fields
-  * [ ] Validate allowed `context` fields
-  * [ ] Auto-populate `params` fields from queryString
