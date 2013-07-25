@@ -205,3 +205,10 @@ describe "Client", ->
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.session.session_key).to.equal("[custom_session]")
+
+  it "processes extant errors", ->
+    processor = { process: sinon.spy() }
+    getProcessor = -> processor
+    getReporter = -> { report: -> }
+    client = new Client(getProcessor, getReporter, [ "extant error" ])
+    expect(processor.process).to.have.been.calledWith("extant error")

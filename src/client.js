@@ -8,7 +8,7 @@
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter) {
+function Client(getProcessor, getReporter, extant_errors) {
   var instance = this;
 
   var _environment_name = "environment";
@@ -66,6 +66,13 @@ function Client(getProcessor, getReporter) {
 
   instance.captureException = captureException;
   instance.push = captureException;
+
+  // Attempt to consume any errors already pushed to the extant Airbrake object
+  if (extant_errors) {
+    for (var i = 0, len = extant_errors.length; i < len; i++) {
+      instance.push(extant_errors[i]);
+    }
+  }
 }
 
 module.exports = Client;
