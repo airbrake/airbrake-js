@@ -38,7 +38,7 @@ function Client(getProcessor, getReporter) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  instance.captureException = function(exception) {
+  function captureException(exception) {
     try {
       // Get up-to-date Processor and Reporter for this exception
       var processor = getProcessor && getProcessor(instance),
@@ -62,7 +62,10 @@ function Client(getProcessor, getReporter) {
     } catch(_) {
       // Well, this is embarassing
     }
-  };
+  }
+
+  instance.captureException = captureException;
+  instance.push = captureException;
 }
 
 module.exports = Client;

@@ -107,6 +107,10 @@ describe "Client", ->
 
       return error
 
+    it "is aliased as push", ->
+      client = new Client()
+      expect(client.push).to.equal(client.captureException)
+
     describe "with captured calls to processor", ->
       processor = { process: sinon.spy() }
       getProcessor = -> processor
