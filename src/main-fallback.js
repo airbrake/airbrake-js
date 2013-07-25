@@ -18,6 +18,5 @@ function getReporter(client) {
   return new Reporter(project_id, project_key, environment_name, "fallback");
 }
 
-client = new Client(getProcessor, getReporter);
-
-global.Airbrake = global.Airbrake || client;
+client = new Client(getProcessor, getReporter, global.Airbrake);
+global.Airbrake = client;
