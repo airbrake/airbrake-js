@@ -1,3 +1,5 @@
+var decodeBase64 = require("../util/base64_decode").decode;
+
 var source_maps_matcher = /\/\/(?:@|#) sourceMappingURL=(.+)$/,
     data_uri_matcher = /data:application\/json;base64,(.*)/;
 
@@ -20,10 +22,7 @@ function sourceMapUrl(body) {
 function dataUri(url) {
   var data_uri_match = url.match(data_uri_matcher);
   if (data_uri_match) {
-    // It's a data-uri, extract JSON directly
-    // TODO: Use cheaper base64 decode like atob
-    // because browserify util stuff is big
-    return new Buffer(data_uri_match[1], "base64").toString("utf-8");
+    return decodeBase64(data_uri_match[1]);
   }
 }
 
