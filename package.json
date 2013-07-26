@@ -29,6 +29,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-concat": "~0.3.0",
     "grunt-bower": "~0.5.1",
+    "amdefine": "0.0.5",
     "through": "~2.3.4",
     "grunt-browserify": "~1.0.5",
     "grunt-template": "~0.1.0",

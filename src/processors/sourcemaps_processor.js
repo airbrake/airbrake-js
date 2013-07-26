@@ -2,16 +2,14 @@
 // This processor runs the error through an underlying processor,
 // then translates the output to file/line pairs as indicated by
 // the supplied source maps
-
-// var SourceMap = require("../lib/source-map");
-var SourceMap = require("source-map");
+var SourceMapConsumer = require("../lib/source-map/source-map-consumer").SourceMapConsumer;
 
 function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
   function obtainOne(url, obtainer) {
     obtainer.obtain(url, function(json) {
       var consumer;
       if (json) {
-        consumer = new SourceMap.SourceMapConsumer(json);
+        consumer = new SourceMapConsumer(json);
         // As each sourcemaps json payload is obtained,
         // generate a sourcemap consumer from it, and cache it
         source_maps[url] = consumer;
@@ -86,6 +84,5 @@ function SourcemapsProcessor(preprocessor, obtainer) {
     });
   };
 }
-
 
 module.exports = SourcemapsProcessor;
