@@ -2,15 +2,14 @@
 <html>
   <head>
     <title>Inline event handlers handling</title>
-    <script src="./dist/airbrake-js-fallback-sourcemap.js"></script>
+    <script>window.Airbrake = [];</script>
+    <script defer src="./dist/airbrake-js-fallback-sourcemap.js" data-airbrake-project-id="[my_project_id]" data-airbrake-project-key="[my_project_key]"></script>
     <script src="./js/uglify/bundle.js"></script>
   </head>
   <body>
     <h2>Capture an exception, report error lines translated via remote source map</h2>
     <code>
       <pre id="code">
-Airbrake.setProject("[my_project_id]", "[my_airbrake_key]");
-
 try { ErrorMaker(); } catch(er) { Airbrake.captureException(er); }
       </pre>
     </code>
