@@ -1,7 +1,7 @@
 // A Sourcemaps-aware processor
 // This processor runs the error through an underlying processor,
 // then translates the output to file/line pairs as indicated by
-// the supplied source maps
+// the sourcemaps it obtains
 var SourceMapConsumer = require("../lib/source-map/source-map-consumer").SourceMapConsumer;
 
 function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
@@ -48,7 +48,7 @@ function SourcemapsProcessor(preprocessor, obtainer) {
     }
 
     // There may be several sourcemaps to obtain. Once all are available,
-    // the processed error can be further processed using the the source maps
+    // the processed error can be further processed using the the sourcemaps
     function allObtained(source_maps) {
       var backtrace_entry, consumer, original_position;
       // Go line-by-line through the backtrace, substituting
