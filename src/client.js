@@ -73,6 +73,14 @@ function Client(getProcessor, getReporter, extant_errors) {
       instance.push(extant_errors[i]);
     }
   }
+
+  instance.try = function(fn) {
+    try {
+      fn();
+    } catch(er) {
+      instance.capture(er);
+    }
+  };
 }
 
 module.exports = Client;

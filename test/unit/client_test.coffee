@@ -212,3 +212,27 @@ describe "Client", ->
     getReporter = -> { report: -> }
     client = new Client(getProcessor, getReporter, [ "extant error" ])
     expect(processor.process).to.have.been.calledWith("extant error")
+
+  describe "try", ->
+    it "executes lambda", ->
+      client = new Client();
+      lambda = sinon.spy()
+      client.try(lambda)
+      expect(lambda).to.have.been.called
+
+    it "catches error thrown by lambda", ->
+      getProcessor = -> { processor: -> }
+      getReporter = -> { report: -> }
+      client = new Client(getProcessor, getReporter)
+      error = "An error"
+      tryAndThrow = -> client.try(-> throw(error))
+      expect(tryAndThrow).not.to.throw(error)
+
+    it "captures error thrown by lambda", ->
+      processor = { process: sinon.spy() }
+      getProcessor = -> processor
+      getReporter = -> { report: -> }
+      client = new Client(getProcessor, getReporter)
+      error = "An error"
+      client.try -> throw(error)
+      expect(processor.process).to.have.been.calledWith(error)
