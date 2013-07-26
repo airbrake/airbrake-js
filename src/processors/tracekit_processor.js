@@ -1,6 +1,6 @@
 var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = true;
+TraceKit.collectWindowErrors = false;
 
 TraceKit.report.subscribe(function(tracekit_result, fn) {
   var stack = tracekit_result.stack;
