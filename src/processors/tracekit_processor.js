@@ -16,11 +16,11 @@ TraceKit.report.subscribe(function(tracekit_result, fn) {
     });
   }
 
-    fn({
-      type: tracekit_result.name,
-      message: tracekit_result.message,
-      backtrace: backtrace
-    });
+  fn({
+    type: tracekit_result.name,
+    message: tracekit_result.message,
+    backtrace: backtrace
+  });
 
 });
 
