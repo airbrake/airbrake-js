@@ -8,7 +8,7 @@ describe("Global objects.", function () {
 });
 
 describe("Public interface.", function () {
-    var _methods = ['setEnvironment', 'setKey', 'setErrorDefaults', 'setGuessFunctionName', 'setTrackJQ', 'captureException'],
+    var _methods = ['setEnvironment', 'setKey', 'setErrorDefaults', 'setGuessFunctionName', 'setTrackJQ', 'capture'],
         _i = 0;
 
     function _createMathodSpec (methodName) {
@@ -46,7 +46,7 @@ describe("JSON data format tests.", function () {
         try {
             (0)();
         } catch (e) {
-            window.Airbrake.captureException(e);
+            window.Airbrake.capture(e);
 
             _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
             _openMethod = window.XMLHttpRequest.prototype.open.mostRecentCall.args[0];

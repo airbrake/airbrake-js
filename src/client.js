@@ -38,7 +38,7 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  function captureException(exception) {
+  function capture(exception) {
     try {
       // Get up-to-date Processor and Reporter for this exception
       var processor = getProcessor && getProcessor(instance),
@@ -64,8 +64,8 @@ function Client(getProcessor, getReporter, extant_errors) {
     }
   }
 
-  instance.captureException = captureException;
-  instance.push = captureException;
+  instance.capture = capture;
+  instance.push = capture;
 
   // Attempt to consume any errors already pushed to the extant Airbrake object
   if (extant_errors) {

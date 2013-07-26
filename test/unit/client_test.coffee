@@ -94,7 +94,7 @@ describe "Client", ->
       client.addSession(key2: "[custom_session_key1_value2]")
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
-  describe "captureException", ->
+  describe "capture", ->
     reporter = { report: sinon.spy() }
     getReporter = -> reporter
 
@@ -109,7 +109,7 @@ describe "Client", ->
 
     it "is aliased as push", ->
       client = new Client()
-      expect(client.push).to.equal(client.captureException)
+      expect(client.push).to.equal(client.capture)
 
     describe "with captured calls to processor", ->
       processor = { process: sinon.spy() }
@@ -117,13 +117,13 @@ describe "Client", ->
 
       it "processes with processor", ->
         client = new Client(getProcessor, getReporter)
-        client.captureException(exception)
+        client.capture(exception)
 
         expect(processor.process).to.have.been.called
 
       it "reports with reporter", ->
         client = new Client(getProcessor, getReporter)
-        client.captureException(exception)
+        client.capture(exception)
 
         # Reporter is not called until Processor invokes the
         # callback provided
@@ -142,7 +142,7 @@ describe "Client", ->
         getProcessor = -> processor
         client = new Client(getProcessor, getReporter)
 
-        run = -> client.captureException(exception)
+        run = -> client.capture(exception)
         expect(run).not.to.throw()
 
       it "ignores errors thrown by reporter", ->
@@ -150,7 +150,7 @@ describe "Client", ->
         getReporter = -> reporter
         client = new Client(getProcessor, getReporter)
 
-        run = -> client.captureException(exception)
+        run = -> client.capture(exception)
         expect(run).not.to.throw()
 
     describe "custom data sent to reporter", ->
@@ -162,7 +162,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addContext(context_key: "[custom_context]")
-        client.captureException(exception)
+        client.capture(exception)
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.context.context_key).to.equal("[custom_context]")
@@ -175,7 +175,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addEnv(env_key: "[custom_env]")
-        client.captureException(exception)
+        client.capture(exception)
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.env.env_key).to.equal("[custom_env]")
@@ -188,7 +188,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addParams(params_key: "[custom_params]")
-        client.captureException(exception)
+        client.capture(exception)
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.params.params_key).to.equal("[custom_params]")
@@ -201,7 +201,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addSession(session_key: "[custom_session]")
-        client.captureException(exception)
+        client.capture(exception)
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.session.session_key).to.equal("[custom_session]")
