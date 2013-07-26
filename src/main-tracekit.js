@@ -20,3 +20,6 @@ function getReporter(client) {
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
 global.Airbrake = client;
+
+// Read project id and key from DOM
+require("./util/slurp_project_from_dom")(client);
