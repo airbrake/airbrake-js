@@ -1,8 +1,4 @@
 .DS_Store
-
-# Ignore Eclipse IDE specific data
-.settings
-.project
 /.vagrant/
 /.grunt/
 /node_modules/
