@@ -28,12 +28,12 @@ The simplest method for capturing errors is to run any code which may throw erro
 
 Alternatively, you can report errors directly.
 
-  try {
-    // This will throw if the document has no head tag
-    document.head.insertBefore(document.createElement("style"));
-  } catch(er) {
-    Airbrake.push(er);
-  }
+    try {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    } catch(er) {
+      Airbrake.push(er);
+    }
 
 If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
 
