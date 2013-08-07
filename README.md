@@ -1,4 +1,4 @@
-# Airbrake
+# Not Yet Ready For Production Use - Airbrake-JS
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
