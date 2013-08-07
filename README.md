@@ -32,7 +32,9 @@ Alternatively, you can report errors directly.
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     } catch(er) {
-      Airbrake.push(er);
+      Airbrake.push({
+        error: er
+      });
     }
 
 If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
@@ -40,7 +42,10 @@ If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferre
     $.ajax("/operation").done(function(data) {
       console.log("Success, got data: %o", data);
     }).fail(function(jqXhr, textStatus, er) {
-      if (er) Airbrake.push(er);
+      if (er)
+        Airbrake.push({
+          error: er
+        });
     });
 
 ## Advanced Usage
@@ -52,6 +57,21 @@ It's possible to annotate error reports with all sorts of useful information. Be
 * `Airbrake.addEnv(object)` Merges environment information about the application's environment.
 * `Airbrake.addParams(object)` Merges params information reported alongside all errors.
 * `Airbrake.addSession(object)` Merges session information reported alongside all errors.
+
+Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
+
+    try {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    } catch(er) {
+      Airbrake.push({
+        error: er,
+        context: { backbone_controller: 'style' },
+        env:     { navigator_vendor: window.navigator.vendor },
+        params:  { search: document.location.search },
+        session: { username: active_user.username }
+      });
+    }
 
 ## Global Error Handling
 
