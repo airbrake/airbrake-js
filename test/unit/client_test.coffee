@@ -223,8 +223,47 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception)
-
           expect(processor.process).to.have.been.calledWith(exception)
+
+        it "reports custom context", ->
+          reporter = { report: sinon.spy() }
+          processor = { process: (error, fn) -> fn({}) }
+          getReporter = -> reporter
+          getProcessor = -> processor
+
+          client = new Client(getProcessor, getReporter)
+          client.capture(error: exception, context: { flavor: 'banana' })
+          expect(reporter.report).to.have.been.calledWithMatch(context: { flavor: 'banana' })
+
+        it "reports custom env", ->
+          reporter = { report: sinon.spy() }
+          processor = { process: (error, fn) -> fn({}) }
+          getReporter = -> reporter
+          getProcessor = -> processor
+
+          client = new Client(getProcessor, getReporter)
+          client.capture(error: exception, env: { landmark: 'Metolius' })
+          expect(reporter.report).to.have.been.calledWithMatch(env: { landmark: 'Metolius' })
+
+        it "reports custom params", ->
+          reporter = { report: sinon.spy() }
+          processor = { process: (error, fn) -> fn({}) }
+          getReporter = -> reporter
+          getProcessor = -> processor
+
+          client = new Client(getProcessor, getReporter)
+          client.capture(error: exception, params: { action: 'show' })
+          expect(reporter.report).to.have.been.calledWithMatch(params: { action: 'show' })
+
+        it "reports custom session", ->
+          reporter = { report: sinon.spy() }
+          processor = { process: (error, fn) -> fn({}) }
+          getReporter = -> reporter
+          getProcessor = -> processor
+
+          client = new Client(getProcessor, getReporter)
+          client.capture(error: exception, session: { username: 'jbr' })
+          expect(reporter.report).to.have.been.calledWithMatch(session: { username: 'jbr' })
 
   it "processes extant errors", ->
     processor = { process: sinon.spy() }

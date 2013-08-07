@@ -44,17 +44,21 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
-      var exception_to_process = exception.error || exception;
+      var exception_to_process = exception.error   || exception,
+          capture_context      = exception.context || {},
+          capture_env          = exception.env     || {},
+          capture_params       = exception.params  || {},
+          capture_session      = exception.session || {};
 
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception_to_process, function(data) {
           // Decorate data-to-be-reported with client data
           merge(data, {
-            context : _context,
-            env     : _env,
-            params  : _params,
-            session : _session
+            context : merge({}, capture_context, _context),
+            env     : merge({}, capture_env, _env),
+            params  : merge({}, capture_params, _params),
+            session : merge({}, capture_session, _session)
           });
 
           // Transport data to receiver
