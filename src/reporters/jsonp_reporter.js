@@ -10,7 +10,9 @@ function JsonpReporter(project_id, project_key, environment_name, processor_name
         script_tag  = document.createElement("script"),
         body        = JSON.stringify(output_data),
         cb_name     = "airbrake_cb_" + cb_count,
-        url         = "https://api.airbrake.io/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&cb=" + cb_name + "&body=" + encodeURIComponent(body);
+        prefix      = "http://getexceptional.err.io",
+        // prefix      = "https://api.airbrake.io", // swap to the production endpoint when this is ready to launch
+        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
 
 
     // Attach an anonymous function to the global namespace to consume the callback.
