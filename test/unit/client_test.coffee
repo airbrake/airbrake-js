@@ -95,9 +95,6 @@ describe "Client", ->
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
   describe "capture", ->
-    reporter = { report: sinon.spy() }
-    getReporter = -> reporter
-
     exception = do ->
       error = undefined
       try
@@ -112,16 +109,23 @@ describe "Client", ->
       expect(client.push).to.equal(client.capture)
 
     describe "with captured calls to processor", ->
-      processor = { process: sinon.spy() }
-      getProcessor = -> processor
-
       it "processes with processor", ->
+        processor = { process: sinon.spy() }
+        reporter = { report: sinon.spy() }
+        getProcessor = -> processor
+        getReporter = -> reporter
+
         client = new Client(getProcessor, getReporter)
         client.capture(exception)
 
         expect(processor.process).to.have.been.called
 
       it "reports with reporter", ->
+        processor = { process: sinon.spy() }
+        reporter = { report: sinon.spy() }
+        getReporter = -> reporter
+        getProcessor = -> processor
+
         client = new Client(getProcessor, getReporter)
         client.capture(exception)
 
@@ -139,14 +143,18 @@ describe "Client", ->
 
       it "ignores errors thrown by processor", ->
         processor = { process: -> throw(new Error("Processor Error")) }
+        reporter = { report: sinon.spy() }
         getProcessor = -> processor
+        getReporter = -> reporter
         client = new Client(getProcessor, getReporter)
 
         run = -> client.capture(exception)
         expect(run).not.to.throw()
 
       it "ignores errors thrown by reporter", ->
+        processor = { process: sinon.spy() }
         reporter = { report: -> throw(new Error("Reporter Error")) }
+        getProcessor = -> processor
         getReporter = -> reporter
         client = new Client(getProcessor, getReporter)
 
@@ -205,6 +213,18 @@ describe "Client", ->
 
         reported = reporter.report.lastCall.args[0]
         expect(reported.session.session_key).to.equal("[custom_session]")
+
+      describe "wrapped error", ->
+        it "unwraps and processes error", ->
+          reporter = { report: sinon.spy() }
+          processor = { process: sinon.spy() }
+          getReporter = -> reporter
+          getProcessor = -> processor
+
+          client = new Client(getProcessor, getReporter)
+          client.capture(error: exception)
+
+          expect(processor.process).to.have.been.calledWith(exception)
 
   it "processes extant errors", ->
     processor = { process: sinon.spy() }

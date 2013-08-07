@@ -44,9 +44,11 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
+      var exception_to_process = exception.error || exception;
+
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
-        processor.process(exception, function(data) {
+        processor.process(exception_to_process, function(data) {
           // Decorate data-to-be-reported with client data
           merge(data, {
             context : _context,
