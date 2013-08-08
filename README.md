@@ -12,7 +12,8 @@ Include the following Javascript snippet in your header.
     </script>
     <script defer src="https://ssljscdn.airbrake.io/notifier-v0.2.js"
             data-airbrake-project-id="1234"
-            data-airbrake-project-key="abcd"></script>
+            data-airbrake-project-key="abcd"
+            data-airbrake-project-environment-name="production"></script>
 
 This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint.
 It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
