@@ -1,0 +1,9 @@
+{
+  "name": "traceKit",
+  "version": "0.0.0",
+  "commit": "aba506def7506aaf3d760e29f87ccee416d1702a",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/occ/TraceKit.git"
+  }
+}

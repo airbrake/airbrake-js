@@ -1,0 +1,3 @@
+function ErrorMaker() {
+  (0)();
+}

@@ -1,2 +1,0 @@
-// Airbrake JavaScript Notifier Bundle
-(function(window, document, undefined) {

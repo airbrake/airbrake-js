@@ -1,95 +1,91 @@
-NOTE: This is a work in progress. This document isn't ready for production deployment. 
+# Not Yet Ready For Production Use - Airbrake-JS
 
-Airbrake
-========
+This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
-This is the javascript source code for notifying [Airbrake](http://airbrake.io) when your javascript has an exception. 
-
-When an uncaught exception occurs, Airbrake Javascript notifier will POST the relevant data
-to the Airbrake server specified in your environment.
-
-Help
-----
-
-For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
-
-
-Install compiled and minified from Airbrake CDN. 
-------------------------------------------------
-
-### Basic Setup. 
+## Setup
 
 Include the following Javascript snippet in your header.
 
-    <script type="text/javascript">
-      (function(callback) {
-        var ab = document.createElement('script');
-        ab.type = 'text/javascript'; ab.async = true;
-        ab.onload = ab.onreadystatechange = callback;
-        // this should match your copy of the compiled notifier.js or notifier.min.js
-         ab.src = (("https:" == document.location.protocol) ? "https://ssljscdn" : "http://jscdn") + ".airbrake.io/notifier.min.js";
-        var p = document.getElementsByTagName('script')[0];
-        p.parentNode.insertBefore(ab, p);
-      }(function () {
-        Airbrake.setRequestType('GET');
-        Airbrake.setGuessFunctionName(false);
-        // the default is api.airbrake.io
-        //Airbrake.setHost('api.airbrake.io');
-        // insert your api key
-        Airbrake.setKey('xxxxxxxxxxxxxxxxxxxxxxx');
-        // set the environment
-        Airbrake.setEnvironment('dev');
-        // add any defaults
-        Airbrake.setErrorDefaults({
-          // you probably want to leave this line, so the error url gets set to the page url
-          url: document.URL,
-          // controller
-          component: "cookies",
-          // action
-          action: "eat",
-          // add some extras, e.g.
-          user: "steve",
-        });
-      }));
+    <script>
+      window.Airbrake = [];
+      window.Airbrake.try = function(fn) { try { fn() } catch(er) { window.Airbrake.push(er); } };
     </script>
+    <script defer src="https://ssljscdn.airbrake.io/notifier-v0.2.js"
+            data-airbrake-project-id="1234"
+            data-airbrake-project-key="abcd"
+            data-airbrake-project-environment-name="production"></script>
 
-This should asynchronously load the airbrake notifier after your page has finished loading.
+This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint.
+It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
 
-Options. 
-------------------------------------------------
+## Basic Usage
 
-### Guess Function name using Stacktrace.js.
+The simplest method for capturing errors is to run any code which may throw errors from within the client's `try` method.
 
-We include [stacktrace.js](https://github.com/eriwen/javascript-stacktrace) into the Airbrake notifier. To use it to guess the function name and get the stacktrace add Airbrake.setGuessFunctionName(true); to the settings.  
+    Airbrake.try(function() {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    });
 
-	Airbrake.setGuessFunctionName(true);
+Alternatively, you can report errors directly.
 
-### Manually Send Errors. 
+    try {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    } catch(er) {
+      Airbrake.push({
+        error: er
+      });
+    }
 
--- Work in Progress --  
+If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
 
-		Airbrake.captureException (new Error("hello error world."));
-		
-We handle the Error (exception) manually with "Airbrake.captureException (err);", we  only get the "message" field of this exception. Field "lineNumber" and "url" will obtained, since not all browsers fill these Error fields. Thus, exception handling so "Airbrake.captureException (err);" and thus "window.onerror = function (message, file, line) {" will be different.
+    $.ajax("/operation").done(function(data) {
+      console.log("Success, got data: %o", data);
+    }).fail(function(jqXhr, textStatus, er) {
+      if (er)
+        Airbrake.push({
+          error: er
+        });
+    });
 
-###  Send Parameters. 
+## Advanced Usage
 
--- Work in Progress --  
+It's possible to annotate error reports with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
-		
-### Track JQuery Errors for JQuery 1.7
+* `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
+* `Airbrake.addContext(object)` Merges context information reported alongside all errors.
+* `Airbrake.addEnv(object)` Merges environment information about the application's environment.
+* `Airbrake.addParams(object)` Merges params information reported alongside all errors.
+* `Airbrake.addSession(object)` Merges session information reported alongside all errors.
 
--- Work in Progress --  
+Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
 
-		Airbrake.setTrackJQ(true)
+    try {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    } catch(er) {
+      Airbrake.push({
+        error: er,
+        context: { backbone_controller: 'style' },
+        env:     { navigator_vendor: window.navigator.vendor },
+        params:  { search: document.location.search },
+        session: { username: active_user.username }
+      });
+    }
 
-Development
------------
+## Global Error Handling
 
-Run Ant to compile the source. We don't have a testing framework in place, but we welcome full requests.
+## Help
 
-Changelog
----------
+For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
+
+## Changelog
+
+### v0.2
+
+Rewrite. Use TraceKit to normalize and capture errors. JSONP error-reporting
+
 
 ### v0.1.2-JSON
 
@@ -100,19 +96,18 @@ Changelog
 
 ### v0.1.1
 
-- Public API improvement: getters and setters are generated automatically from inner JSON. e.g. `key` value can be set with `Airbrake.setKey(<key value>);` and the current value is available as `Airbrake.getKey();`. 
+- Public API improvement: getters and setters are generated automatically from inner JSON. e.g. `key` value can be set with `Airbrake.setKey(<key value>);` and the current value is available as `Airbrake.getKey();`.
 - New configuration parameter: `requestType`. Set it to 'GET' (`Airbrake.setRequestType('GET');`) to send <iframe> notification request; 'POST' is for XMLHttpRequest POST.
-- Basic Jasmine test are available in `tests/` directory. 
+- Basic Jasmine test are available in `tests/` directory.
 
-Credits
--------
+## Credits
 
 Airbrake is maintained and funded by [airbrake.io](http://airbrake.io)
 
 Thank you to all [the contributors](https://github.com/airbrake/airbrake-js/contributors).
 
-The names and logos for Airbrake are trademarks of Exceptional Software Inc. 
+The names and logos for Airbrake are trademarks of Rackspace Hosting Inc.
 
 License
 -------
-Airbrake is Copyright © 2008-2012 Airbrake. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
+Airbrake is Copyright © 2008-2013 Rackspace Hosting Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
