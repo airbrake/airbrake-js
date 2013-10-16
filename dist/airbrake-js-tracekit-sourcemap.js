@@ -31,7 +31,7 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],7:[function(require,module,exports){
+},{"./client":2,"./util/sourcemaps_obtainer":3,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7}],7:[function(require,module,exports){
 (function(global){module.exports = function(client) {
   var scripts = global.document.getElementsByTagName("script"),
       i = 0, len = scripts.length, script,
@@ -137,12 +137,17 @@ function Client(getProcessor, getReporter, extant_errors) {
     }
   }
 
-  instance.try = function(fn) {
+  instance.try = function(fn, as) {
     try {
-      fn();
+      return fn.call(as);
     } catch(er) {
       instance.capture(er);
     }
+  };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
   };
 }
 
@@ -1712,18 +1717,14 @@ define(function (require, exports, module) {
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file', null);
+    var file = util.getArg(sourceMap, 'file');
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
-    // Pass `true` below to allow duplicate names and sources. While source maps
-    // are intended to be compressed and deduplicated, the TypeScript compiler
-    // sometimes generates source maps with duplicates in them. See Github issue
-    // #72 and bugzil.la/889492.
-    this._names = ArraySet.fromArray(names, true);
-    this._sources = ArraySet.fromArray(sources, true);
+    this._names = ArraySet.fromArray(names);
+    this._sources = ArraySet.fromArray(sources);
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
     this.file = file;
@@ -2100,7 +2101,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":16,"./base64-vlq":17,"./binary-search":15,"./util":14,"amdefine":18}],19:[function(require,module,exports){
+},{"./util":14,"./binary-search":15,"./array-set":16,"./base64-vlq":17,"amdefine":18}],19:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2456,7 +2457,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../../node_modules/amdefine/amdefine.js")
-},{"__browserify_process":19,"path":20}],20:[function(require,module,exports){
+},{"path":20,"__browserify_process":19}],20:[function(require,module,exports){
 (function(process){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -2632,8 +2633,6 @@ exports.relative = function(from, to) {
 
   return outputParts.join('/');
 };
-
-exports.sep = '/';
 
 })(require("__browserify_process"))
 },{"__browserify_process":19}],14:[function(require,module,exports){
@@ -2866,10 +2865,10 @@ define(function (require, exports, module) {
   /**
    * Static method for creating ArraySet instances from an existing array.
    */
-  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
+  ArraySet.fromArray = function ArraySet_fromArray(aArray) {
     var set = new ArraySet();
     for (var i = 0, len = aArray.length; i < len; i++) {
-      set.add(aArray[i], aAllowDuplicates);
+      set.add(aArray[i]);
     }
     return set;
   };
@@ -2879,15 +2878,14 @@ define(function (require, exports, module) {
    *
    * @param String aStr
    */
-  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
-    var isDuplicate = this.has(aStr);
+  ArraySet.prototype.add = function ArraySet_add(aStr) {
+    if (this.has(aStr)) {
+      // Already a member; nothing to do.
+      return;
+    }
     var idx = this._array.length;
-    if (!isDuplicate || aAllowDuplicates) {
-      this._array.push(aStr);
-    }
-    if (!isDuplicate) {
-      this._set[util.toSetString(aStr)] = idx;
-    }
+    this._array.push(aStr);
+    this._set[util.toSetString(aStr)] = idx;
   };
 
   /**
