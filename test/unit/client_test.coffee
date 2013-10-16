@@ -295,3 +295,16 @@ describe "Client", ->
       error = "An error"
       client.try -> throw(error)
       expect(processor.process).to.have.been.calledWith(error)
+
+    it "returns value from lambda", ->
+      client = new Client()
+      lambda = -> 'expected return value'
+      expect(client.try(lambda)).to.equal('expected return value')
+
+    it "binds lambda", ->
+      client = new Client()
+      expectedContext = {}
+      calledContext = undefined
+      lambda = -> calledContext = this
+      client.try(lambda, expectedContext)
+      expect(calledContext).to.equal(expectedContext)

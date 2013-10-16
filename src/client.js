@@ -80,9 +80,9 @@ function Client(getProcessor, getReporter, extant_errors) {
     }
   }
 
-  instance.try = function(fn) {
+  instance.try = function(fn, as) {
     try {
-      fn();
+      return fn.call(as);
     } catch(er) {
       instance.capture(er);
     }
