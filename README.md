@@ -1,4 +1,4 @@
-# Not Yet Ready For Production Use - Airbrake-JS
+# Airbrake-JS
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
@@ -11,7 +11,7 @@ Include the following Javascript snippet in your header.
       window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
       window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
     </script>
-    <script defer src="https://ssljscdn.airbrake.io/notifier-v0.2.js"
+    <script defer src="https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js"
             data-airbrake-project-id="1234"
             data-airbrake-project-key="abcd"
             data-airbrake-project-environment-name="production"></script>

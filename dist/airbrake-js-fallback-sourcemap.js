@@ -31,7 +31,7 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./util/sourcemaps_obtainer":3,"./processors/sourcemaps_processor":4,"./processors/fallback_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7}],5:[function(require,module,exports){
+},{"./client":2,"./processors/fallback_processor":5,"./processors/sourcemaps_processor":4,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],5:[function(require,module,exports){
 (function(){var match_message_file_line_column = /\s+([^\(]+)\s+\((.*):(\d+):(\d+)\)/;
 
 function recognizeFrame(string) {
@@ -389,8 +389,7 @@ function JsonpReporter(project_id, project_key, environment_name, processor_name
         script_tag  = document.createElement("script"),
         body        = JSON.stringify(output_data),
         cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "http://getexceptional.err.io",
-        // prefix      = "https://api.airbrake.io", // swap to the production endpoint when this is ready to launch
+        prefix      = "https://api.airbrake.io", 
         url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
 
 
@@ -631,14 +630,18 @@ define(function (require, exports, module) {
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file');
+    var file = util.getArg(sourceMap, 'file', null);
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
-    this._names = ArraySet.fromArray(names);
-    this._sources = ArraySet.fromArray(sources);
+    // Pass `true` below to allow duplicate names and sources. While source maps
+    // are intended to be compressed and deduplicated, the TypeScript compiler
+    // sometimes generates source maps with duplicates in them. See Github issue
+    // #72 and bugzil.la/889492.
+    this._names = ArraySet.fromArray(names, true);
+    this._sources = ArraySet.fromArray(sources, true);
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
     this.file = file;
@@ -1015,7 +1018,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":12,"./binary-search":13,"./array-set":14,"./base64-vlq":15,"amdefine":16}],17:[function(require,module,exports){
+},{"./array-set":14,"./base64-vlq":15,"./binary-search":13,"./util":12,"amdefine":16}],17:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1371,7 +1374,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../../node_modules/amdefine/amdefine.js")
-},{"path":18,"__browserify_process":17}],18:[function(require,module,exports){
+},{"__browserify_process":17,"path":18}],18:[function(require,module,exports){
 (function(process){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -1547,6 +1550,8 @@ exports.relative = function(from, to) {
 
   return outputParts.join('/');
 };
+
+exports.sep = '/';
 
 })(require("__browserify_process"))
 },{"__browserify_process":17}],12:[function(require,module,exports){
@@ -1779,10 +1784,10 @@ define(function (require, exports, module) {
   /**
    * Static method for creating ArraySet instances from an existing array.
    */
-  ArraySet.fromArray = function ArraySet_fromArray(aArray) {
+  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
     var set = new ArraySet();
     for (var i = 0, len = aArray.length; i < len; i++) {
-      set.add(aArray[i]);
+      set.add(aArray[i], aAllowDuplicates);
     }
     return set;
   };
@@ -1792,14 +1797,15 @@ define(function (require, exports, module) {
    *
    * @param String aStr
    */
-  ArraySet.prototype.add = function ArraySet_add(aStr) {
-    if (this.has(aStr)) {
-      // Already a member; nothing to do.
-      return;
-    }
+  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+    var isDuplicate = this.has(aStr);
     var idx = this._array.length;
-    this._array.push(aStr);
-    this._set[util.toSetString(aStr)] = idx;
+    if (!isDuplicate || aAllowDuplicates) {
+      this._array.push(aStr);
+    }
+    if (!isDuplicate) {
+      this._set[util.toSetString(aStr)] = idx;
+    }
   };
 
   /**
