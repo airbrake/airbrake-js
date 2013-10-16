@@ -210,25 +210,28 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.capture = capture;
   instance.push = capture;
 
-  // Attempt to consume any errors already pushed to the extant Airbrake object
-  if (extant_errors) {
-    for (var i = 0, len = extant_errors.length; i < len; i++) {
-      instance.push(extant_errors[i]);
+  // Client is not yet configured, defer pushing extant errors.
+  setTimeout(function() {
+    // Attempt to consume any errors already pushed to the extant Airbrake object
+    if (extant_errors) {
+      for (var i = 0, len = extant_errors.length; i < len; i++) {
+        instance.push(extant_errors[i]);
+      }
     }
-  }
 
-  instance.try = function(fn, as) {
-    try {
-      return fn.call(as);
-    } catch(er) {
-      instance.capture(er);
-    }
-  };
-  instance.wrap = function(fn, as) {
-    return function() {
-      return instance.try(fn, as);
+    instance.try = function(fn, as) {
+      try {
+        return fn.call(as);
+      } catch(er) {
+        instance.capture(er);
+      }
     };
-  };
+    instance.wrap = function(fn, as) {
+      return function() {
+        return instance.try(fn, as);
+      };
+    };
+  });
 }
 
 module.exports = Client;
