@@ -274,7 +274,7 @@ describe "Client", ->
 
   describe "try", ->
     it "executes lambda", ->
-      client = new Client();
+      client = new Client()
       lambda = sinon.spy()
       client.try(lambda)
       expect(lambda).to.have.been.called
