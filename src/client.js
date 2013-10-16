@@ -87,6 +87,11 @@ function Client(getProcessor, getReporter, extant_errors) {
       instance.capture(er);
     }
   };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
+  };
 }
 
 module.exports = Client;

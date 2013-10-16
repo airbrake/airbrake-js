@@ -308,3 +308,19 @@ describe "Client", ->
       lambda = -> calledContext = this
       client.try(lambda, expectedContext)
       expect(calledContext).to.equal(expectedContext)
+
+  describe "wrap", ->
+    it "does not invoke lambda immediately", ->
+      client = new Client()
+      lambda = sinon.spy()
+      client.wrap(lambda)
+      expect(lambda).not.to.have.been.called
+
+    it "returns lambda trying supplied lambda", ->
+      client = new Client()
+      trySpy = sinon.spy(client, 'try')
+      lambda = sinon.spy()
+      wrapped = client.wrap(lambda)
+      wrapped()
+      expect(trySpy).to.have.been.calledWith(lambda)
+      expect(lambda).to.have.been.called
