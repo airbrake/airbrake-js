@@ -1,4 +1,5 @@
-<img src="http://f.cl.ly/items/3i0l2w030t0G0b3l443W/JS-airbrakeman.png" height="300px" float="right">
+<img src="http://f.cl.ly/items/3i0l2w030t0G0b3l443W/JS-airbrakeman.png" height=300px position=fixed
+top=30px right=5px>
 
 # Airbrake-JS
 
