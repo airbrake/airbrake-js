@@ -1,5 +1,6 @@
-# Airbrake-JS
 <img src="http://f.cl.ly/items/3i0l2w030t0G0b3l443W/JS-airbrakeman.png" float=right>
+
+# Airbrake-JS
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
