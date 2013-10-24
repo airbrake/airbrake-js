@@ -1,5 +1,7 @@
 # Airbrake-JS
 
+<img src="http://f.cl.ly/items/3W1v360C2n3u2q0a172Z/JS-airbrakeman.png" width=800px>
+
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
 ## Setup
@@ -20,8 +22,6 @@ This snippet asynchronously downloads the Airbrake notifier and configures it to
 It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
 
 ## Basic Usage
-
-<img src="http://f.cl.ly/items/0j0S2M311L0e3m2t2H0x/JS-airbrakeman.png" height=300px>
 
 The simplest method for capturing errors is to run any code which may throw errors from within the client's `try` method.
 
@@ -54,8 +54,6 @@ If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferre
 
 ## Advanced Usage
 
-<img src="http://f.cl.ly/items/3i0l2w030t0G0b3l443W/JS-airbrakeman.png" height=300px style="float:right; padding-left:20px">
-
 It's possible to annotate error reports with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
 * `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
@@ -86,8 +84,6 @@ Additionally, much of this information can be added to captured errors at the ti
 For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
 
 ## Changelog
-
-<img src="http://f.cl.ly/items/0L2e3a1t18440K183y3Y/JS-airbrakeman.png" height=300px>
 
 ### v0.2
 
