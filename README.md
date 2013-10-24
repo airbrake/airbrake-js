@@ -2,7 +2,7 @@
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
-<img src="http://f.cl.ly/items/3W1v360C2n3u2q0a172Z/JS-airbrakeman.png" width=400px>
+<img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
 
 ## Setup
 
