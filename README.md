@@ -8,7 +8,8 @@ Include the following Javascript snippet in your header.
 
     <script>
       window.Airbrake = [];
-      window.Airbrake.try = function(fn) { try { fn() } catch(er) { window.Airbrake.push(er); } };
+      window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
+      window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
     </script>
     <script defer src="https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js"
             data-airbrake-project-id="1234"

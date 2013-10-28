@@ -274,7 +274,7 @@ describe "Client", ->
 
   describe "try", ->
     it "executes lambda", ->
-      client = new Client();
+      client = new Client()
       lambda = sinon.spy()
       client.try(lambda)
       expect(lambda).to.have.been.called
@@ -295,3 +295,32 @@ describe "Client", ->
       error = "An error"
       client.try -> throw(error)
       expect(processor.process).to.have.been.calledWith(error)
+
+    it "returns value from lambda", ->
+      client = new Client()
+      lambda = -> 'expected return value'
+      expect(client.try(lambda)).to.equal('expected return value')
+
+    it "binds lambda", ->
+      client = new Client()
+      expectedContext = {}
+      calledContext = undefined
+      lambda = -> calledContext = this
+      client.try(lambda, expectedContext)
+      expect(calledContext).to.equal(expectedContext)
+
+  describe "wrap", ->
+    it "does not invoke lambda immediately", ->
+      client = new Client()
+      lambda = sinon.spy()
+      client.wrap(lambda)
+      expect(lambda).not.to.have.been.called
+
+    it "returns lambda trying supplied lambda", ->
+      client = new Client()
+      trySpy = sinon.spy(client, 'try')
+      lambda = sinon.spy()
+      wrapped = client.wrap(lambda)
+      wrapped()
+      expect(trySpy).to.have.been.calledWith(lambda)
+      expect(lambda).to.have.been.called
