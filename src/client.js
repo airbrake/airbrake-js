@@ -73,6 +73,19 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.capture = capture;
   instance.push = capture;
 
+  instance.try = function(fn, as) {
+    try {
+      return fn.call(as);
+    } catch(er) {
+      instance.capture(er);
+    }
+  };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
+  };
+
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
     // Attempt to consume any errors already pushed to the extant Airbrake object
@@ -81,19 +94,6 @@ function Client(getProcessor, getReporter, extant_errors) {
         instance.push(extant_errors[i]);
       }
     }
-
-    instance.try = function(fn, as) {
-      try {
-        return fn.call(as);
-      } catch(er) {
-        instance.capture(er);
-      }
-    };
-    instance.wrap = function(fn, as) {
-      return function() {
-        return instance.try(fn, as);
-      };
-    };
   });
 }
 

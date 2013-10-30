@@ -266,10 +266,13 @@ describe "Client", ->
           expect(reporter.report).to.have.been.calledWithMatch(session: { username: 'jbr' })
 
   it "processes extant errors", ->
+    setTimeout = sinon.spy(global, 'setTimeout')
     processor = { process: sinon.spy() }
     getProcessor = -> processor
     getReporter = -> { report: -> }
     client = new Client(getProcessor, getReporter, [ "extant error" ])
+    deferredFunction = setTimeout.lastCall.args[0]
+    deferredFunction()
     expect(processor.process).to.have.been.calledWith("extant error")
 
   describe "try", ->
