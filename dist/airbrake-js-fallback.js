@@ -205,6 +205,19 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.capture = capture;
   instance.push = capture;
 
+  instance.try = function(fn, as) {
+    try {
+      return fn.call(as);
+    } catch(er) {
+      instance.capture(er);
+    }
+  };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
+  };
+
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
     // Attempt to consume any errors already pushed to the extant Airbrake object
@@ -213,19 +226,6 @@ function Client(getProcessor, getReporter, extant_errors) {
         instance.push(extant_errors[i]);
       }
     }
-
-    instance.try = function(fn, as) {
-      try {
-        return fn.call(as);
-      } catch(er) {
-        instance.capture(er);
-      }
-    };
-    instance.wrap = function(fn, as) {
-      return function() {
-        return instance.try(fn, as);
-      };
-    };
   });
 }
 
@@ -341,7 +341,7 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
 
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.0+" + processor_name,
+    version : "0.2.1+" + processor_name,
     url     : "http://airbrake.io"
   };
 
@@ -351,16 +351,18 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
   });
 
   // Build the mandatory pieces of the output payload
+  // Add optional error-level keys to the output payload
+  var reported_error_data = merge({}, error_data || {});
+
+  if (custom_environment_data) { merge(reported_error_data, { environment: custom_environment_data }); }
+  if (custom_session_data) { merge(reported_error_data, { session: custom_session_data }); }
+  if (custom_params_data) { merge(reported_error_data, { params: custom_params_data }); }
+
   var output_data = {
     notifier : notifier_data,
     context  : context_data,
-    errors   : [ error_data ]
+    errors   : [ reported_error_data ]
   };
-
-  // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
 
   return output_data;
 };
