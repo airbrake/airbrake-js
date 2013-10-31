@@ -185,16 +185,15 @@ function Client(getProcessor, getReporter, extant_errors) {
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data
-          merge(data, {
-            context : merge({}, capture_context, _context),
-            env     : merge({}, capture_env, _env),
-            params  : merge({}, capture_params, _params),
-            session : merge({}, capture_session, _session)
-          });
-
-          // Transport data to receiver
-          reporter.report(data);
+          // Decorate data-to-be-reported with client data and
+          // transport data to receiver
+          reporter.report(
+            data,
+            merge({}, capture_context, _context),
+            merge({}, capture_env, _env),
+            merge({}, capture_params, _params),
+            merge({}, capture_session, _session)
+          );
         });
       }
     } catch(_) {
@@ -237,15 +236,15 @@ module.exports = Client;
 
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
-  this.report = function(error_data) {
+function JsonpReporter(project_id, project_key, environment_name, processor_name) {
+  this.report = function(error_data, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
     var output_data = ReportBuilder.build(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
         body        = JSON.stringify(output_data),
         cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io", 
+        prefix      = "https://api.airbrake.io",
         url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
 
 
@@ -351,18 +350,16 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
   });
 
   // Build the mandatory pieces of the output payload
-  // Add optional error-level keys to the output payload
-  var reported_error_data = merge({}, error_data || {});
-
-  if (custom_environment_data) { merge(reported_error_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(reported_error_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(reported_error_data, { params: custom_params_data }); }
-
   var output_data = {
     notifier : notifier_data,
     context  : context_data,
-    errors   : [ reported_error_data ]
+    errors   : [ error_data ]
   };
+
+  // Add optional top-level keys to the output payload
+  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
+  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
+  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
 
   return output_data;
 };
