@@ -53,16 +53,15 @@ function Client(getProcessor, getReporter, extant_errors) {
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data
-          merge(data, {
-            context : merge({}, capture_context, _context),
-            env     : merge({}, capture_env, _env),
-            params  : merge({}, capture_params, _params),
-            session : merge({}, capture_session, _session)
-          });
-
-          // Transport data to receiver
-          reporter.report(data);
+          // Decorate data-to-be-reported with client data and
+          // transport data to receiver
+          reporter.report(
+            data,
+            merge({}, capture_context, _context),
+            merge({}, capture_env, _env),
+            merge({}, capture_params, _params),
+            merge({}, capture_session, _session)
+          );
         });
       }
     } catch(_) {
