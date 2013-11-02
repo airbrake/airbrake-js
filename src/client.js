@@ -55,13 +55,13 @@ function Client(getProcessor, getReporter, extant_errors) {
         processor.process(exception_to_process, function(data) {
           // Decorate data-to-be-reported with client data and
           // transport data to receiver
-          reporter.report(
-            data,
-            merge({}, capture_context, _context),
-            merge({}, capture_env, _env),
-            merge({}, capture_params, _params),
-            merge({}, capture_session, _session)
-          );
+          var options = {
+            context:     merge({}, capture_context, _context),
+            environment: merge({}, capture_env, _env),
+            params:      merge({}, capture_params, _params),
+            session:     merge({}, capture_session, _session)
+          };
+          reporter.report(data, options);
         });
       }
     } catch(_) {
