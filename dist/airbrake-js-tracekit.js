@@ -107,13 +107,13 @@ function Client(getProcessor, getReporter, extant_errors) {
         processor.process(exception_to_process, function(data) {
           // Decorate data-to-be-reported with client data and
           // transport data to receiver
-          reporter.report(
-            data,
-            merge({}, capture_context, _context),
-            merge({}, capture_env, _env),
-            merge({}, capture_params, _params),
-            merge({}, capture_session, _session)
-          );
+          var options = {
+            context:     merge({}, capture_context, _context),
+            environment: merge({}, capture_env, _env),
+            params:      merge({}, capture_params, _params),
+            session:     merge({}, capture_session, _session)
+          };
+          reporter.report(data, options);
         });
       }
     } catch(_) {
@@ -193,8 +193,8 @@ module.exports = TraceKitProcessor;
 var cb_count = 0;
 
 function JsonpReporter(project_id, project_key, environment_name, processor_name) {
-  this.report = function(error_data, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data),
+  this.report = function(error_data, options) {
+    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
@@ -290,7 +290,7 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data) {
+ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -302,6 +302,15 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
   //     line: Number,
   //     function: String
   //   }
+
+  if (!options) {
+    options = {};
+  }
+
+  var custom_context_data     = options.context,
+      custom_environment_data = options.environment,
+      custom_session_data     = options.session,
+      custom_params_data      = options.params;
 
   var notifier_data = {
     name    : "Airbrake JS",
