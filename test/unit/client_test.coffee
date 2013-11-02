@@ -172,7 +172,7 @@ describe "Client", ->
         client.addContext(context_key: "[custom_context]")
         client.capture(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.report.lastCall.args[1]
         expect(reported.context.context_key).to.equal("[custom_context]")
 
       it "reports env", ->
@@ -185,8 +185,8 @@ describe "Client", ->
         client.addEnv(env_key: "[custom_env]")
         client.capture(exception)
 
-        reported = reporter.report.lastCall.args[0]
-        expect(reported.env.env_key).to.equal("[custom_env]")
+        reported = reporter.report.lastCall.args[1]
+        expect(reported.environment.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
         reporter = { report: sinon.spy() }
@@ -198,7 +198,7 @@ describe "Client", ->
         client.addParams(params_key: "[custom_params]")
         client.capture(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.report.lastCall.args[1]
         expect(reported.params.params_key).to.equal("[custom_params]")
 
       it "reports session", ->
@@ -211,7 +211,7 @@ describe "Client", ->
         client.addSession(session_key: "[custom_session]")
         client.capture(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.report.lastCall.args[1]
         expect(reported.session.session_key).to.equal("[custom_session]")
 
       describe "wrapped error", ->
@@ -233,7 +233,7 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, context: { flavor: 'banana' })
-          expect(reporter.report).to.have.been.calledWithMatch(context: { flavor: 'banana' })
+          expect(reporter.report.lastCall.args[1].context).to.deep.equal({ flavor: 'banana' })
 
         it "reports custom env", ->
           reporter = { report: sinon.spy() }
@@ -243,7 +243,7 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, env: { landmark: 'Metolius' })
-          expect(reporter.report).to.have.been.calledWithMatch(env: { landmark: 'Metolius' })
+          expect(reporter.report.lastCall.args[1].environment).to.deep.equal({ landmark: 'Metolius' })
 
         it "reports custom params", ->
           reporter = { report: sinon.spy() }
@@ -253,7 +253,7 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, params: { action: 'show' })
-          expect(reporter.report).to.have.been.calledWithMatch(params: { action: 'show' })
+          expect(reporter.report.lastCall.args[1].params).to.deep.equal({ action: 'show' })
 
         it "reports custom session", ->
           reporter = { report: sinon.spy() }
@@ -263,13 +263,16 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, session: { username: 'jbr' })
-          expect(reporter.report).to.have.been.calledWithMatch(session: { username: 'jbr' })
+          expect(reporter.report.lastCall.args[1].session).to.deep.equal({ username: 'jbr' })
 
   it "processes extant errors", ->
+    setTimeout = sinon.spy(global, 'setTimeout')
     processor = { process: sinon.spy() }
     getProcessor = -> processor
     getReporter = -> { report: -> }
     client = new Client(getProcessor, getReporter, [ "extant error" ])
+    deferredFunction = setTimeout.lastCall.args[0]
+    deferredFunction()
     expect(processor.process).to.have.been.calledWith("extant error")
 
   describe "try", ->

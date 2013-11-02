@@ -190,16 +190,15 @@ function Client(getProcessor, getReporter, extant_errors) {
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data
-          merge(data, {
-            context : merge({}, capture_context, _context),
-            env     : merge({}, capture_env, _env),
-            params  : merge({}, capture_params, _params),
-            session : merge({}, capture_session, _session)
-          });
-
-          // Transport data to receiver
-          reporter.report(data);
+          // Decorate data-to-be-reported with client data and
+          // transport data to receiver
+          var options = {
+            context:     merge({}, capture_context, _context),
+            environment: merge({}, capture_env, _env),
+            params:      merge({}, capture_params, _params),
+            session:     merge({}, capture_session, _session)
+          };
+          reporter.report(data, options);
         });
       }
     } catch(_) {
@@ -210,6 +209,19 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.capture = capture;
   instance.push = capture;
 
+  instance.try = function(fn, as) {
+    try {
+      return fn.call(as);
+    } catch(er) {
+      instance.capture(er);
+    }
+  };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
+  };
+
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
     // Attempt to consume any errors already pushed to the extant Airbrake object
@@ -218,19 +230,6 @@ function Client(getProcessor, getReporter, extant_errors) {
         instance.push(extant_errors[i]);
       }
     }
-
-    instance.try = function(fn, as) {
-      try {
-        return fn.call(as);
-      } catch(er) {
-        instance.capture(er);
-      }
-    };
-    instance.wrap = function(fn, as) {
-      return function() {
-        return instance.try(fn, as);
-      };
-    };
   });
 }
 
@@ -389,15 +388,15 @@ module.exports = SourcemapsProcessor;
 
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data) {
-  this.report = function(error_data) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data),
+function JsonpReporter(project_id, project_key, environment_name, processor_name) {
+  this.report = function(error_data, options) {
+    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
         body        = JSON.stringify(output_data),
         cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io", 
+        prefix      = "https://api.airbrake.io",
         url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
 
 
@@ -538,7 +537,7 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data) {
+ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -551,9 +550,18 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
   //     function: String
   //   }
 
+  if (!options) {
+    options = {};
+  }
+
+  var custom_context_data     = options.context,
+      custom_environment_data = options.environment,
+      custom_session_data     = options.session,
+      custom_params_data      = options.params;
+
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.0+" + processor_name,
+    version : "0.2.1+" + processor_name,
     url     : "http://airbrake.io"
   };
 

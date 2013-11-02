@@ -2,7 +2,7 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, custom_context_data, custom_environment_data, custom_session_data, custom_params_data, error_data) {
+ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -14,6 +14,15 @@ ReportBuilder.build = function(environment_name, processor_name, custom_context_
   //     line: Number,
   //     function: String
   //   }
+
+  if (!options) {
+    options = {};
+  }
+
+  var custom_context_data     = options.context,
+      custom_environment_data = options.environment,
+      custom_session_data     = options.session,
+      custom_params_data      = options.params;
 
   var notifier_data = {
     name    : "Airbrake JS",
