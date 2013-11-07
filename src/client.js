@@ -53,16 +53,15 @@ function Client(getProcessor, getReporter, extant_errors) {
       if (processor && reporter) {
         // Transform the exception into a "standard" data format
         processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data
-          merge(data, {
-            context : merge({}, capture_context, _context),
-            env     : merge({}, capture_env, _env),
-            params  : merge({}, capture_params, _params),
-            session : merge({}, capture_session, _session)
-          });
-
-          // Transport data to receiver
-          reporter.report(data);
+          // Decorate data-to-be-reported with client data and
+          // transport data to receiver
+          var options = {
+            context:     merge({}, capture_context, _context),
+            environment: merge({}, capture_env, _env),
+            params:      merge({}, capture_params, _params),
+            session:     merge({}, capture_session, _session)
+          };
+          reporter.report(data, options);
         });
       }
     } catch(_) {
@@ -73,6 +72,19 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.capture = capture;
   instance.push = capture;
 
+  instance.try = function(fn, as) {
+    try {
+      return fn.call(as);
+    } catch(er) {
+      instance.capture(er);
+    }
+  };
+  instance.wrap = function(fn, as) {
+    return function() {
+      return instance.try(fn, as);
+    };
+  };
+
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
     // Attempt to consume any errors already pushed to the extant Airbrake object
@@ -81,19 +93,6 @@ function Client(getProcessor, getReporter, extant_errors) {
         instance.push(extant_errors[i]);
       }
     }
-
-    instance.try = function(fn, as) {
-      try {
-        return fn.call(as);
-      } catch(er) {
-        instance.capture(er);
-      }
-    };
-    instance.wrap = function(fn, as) {
-      return function() {
-        return instance.try(fn, as);
-      };
-    };
   });
 }
 
