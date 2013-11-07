@@ -11,7 +11,7 @@ Include the following Javascript snippet in your header.
       window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
       window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
     </script>
-    <script defer src="https://b6205046efa2dc025e1b-c416c2beee4f9f7e05c46c8b78f8efe6.ssl.cf5.rackcdn.com/airbrake-js-tracekit-sourcemap.min.js"
+    <script defer src="https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js"
             data-airbrake-project-id="1234"
             data-airbrake-project-key="abcd"
             data-airbrake-project-environment-name="production"></script>
