@@ -2,7 +2,8 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
+
+ReportBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -19,35 +20,25 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     options = {};
   }
 
-  var custom_context_data     = options.context,
-      custom_environment_data = options.environment,
-      custom_session_data     = options.session,
-      custom_params_data      = options.params;
-
   var notifier_data = {
     name    : "Airbrake JS",
     version : "<%= pkg.version %>+" + processor_name,
     url     : "http://airbrake.io"
   };
 
-  var context_data = merge(custom_context_data, {
-    language    : "JavaScript",
-    environment : environment_name
-  });
-
   // Build the mandatory pieces of the output payload
-  var output_data = {
+  var output = {
     notifier : notifier_data,
-    context  : context_data,
     errors   : [ error_data ]
   };
 
   // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
+  if (options.context) { merge(output, { context: options.context }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
+  if (options.session) { merge(output, { session: options.session }); }
+  if (options.params) { merge(output, { params: options.params }); }
 
-  return output_data;
+  return output;
 };
 
 module.exports = ReportBuilder;

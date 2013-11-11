@@ -8,9 +8,9 @@ Client = require("../../src/client")
 
 describe "Client", ->
   describe "environmentName", ->
-    it "is \"environment\" by default", ->
+    it "is \"\" by default", ->
       client = new Client()
-      expect(client.getEnvironmentName()).to.equal("environment")
+      expect(client.getEnvironmentName()).to.equal("")
 
     it "can be set and read", ->
       client = new Client()
@@ -40,23 +40,23 @@ describe "Client", ->
       client.addContext(key2: "[custom_context_key1_value2]")
       expect(client.getContext().key1).to.equal("[custom_context_key1_value]")
 
-  describe "addEnv", ->
+  describe "addEnvironment", ->
     it "can be set and read", ->
       client = new Client()
-      client.addEnv(key1: "[custom_env_key1_value]")
-      expect(client.getEnv().key1).to.equal("[custom_env_key1_value]")
+      client.addEnvironment(key1: "[custom_env_key1_value]")
+      expect(client.getEnvironment().key1).to.equal("[custom_env_key1_value]")
 
     it "overrides previously set key", ->
       client = new Client()
-      client.addEnv(key1: "[custom_env_key1_value]")
-      client.addEnv(key1: "[custom_env_key1_value2]")
-      expect(client.getEnv().key1).to.equal("[custom_env_key1_value2]")
+      client.addEnvironment(key1: "[custom_env_key1_value]")
+      client.addEnvironment(key1: "[custom_env_key1_value2]")
+      expect(client.getEnvironment().key1).to.equal("[custom_env_key1_value2]")
 
     it "preserves unspecified keys", ->
       client = new Client()
-      client.addEnv(key1: "[custom_env_key1_value]")
-      client.addEnv(key2: "[custom_env_key1_value2]")
-      expect(client.getEnv().key1).to.equal("[custom_env_key1_value]")
+      client.addEnvironment(key1: "[custom_env_key1_value]")
+      client.addEnvironment(key2: "[custom_env_key1_value2]")
+      expect(client.getEnvironment().key1).to.equal("[custom_env_key1_value]")
 
   describe "addParams", ->
     it "can be set and read", ->
@@ -162,7 +162,7 @@ describe "Client", ->
         expect(run).not.to.throw()
 
     describe "custom data sent to reporter", ->
-      it "reports context", ->
+     it "reports context", ->
         reporter = { report: sinon.spy() }
         processor = { process: (data, fn) -> fn(data) }
         getReporter = -> reporter
@@ -175,14 +175,14 @@ describe "Client", ->
         reported = reporter.report.lastCall.args[1]
         expect(reported.context.context_key).to.equal("[custom_context]")
 
-      it "reports env", ->
+      it "reports environment", ->
         reporter = { report: sinon.spy() }
         processor = { process: (data, fn) -> fn(data) }
         getReporter = -> reporter
         getProcessor = -> processor
 
         client = new Client(getProcessor, getReporter)
-        client.addEnv(env_key: "[custom_env]")
+        client.addEnvironment(env_key: "[custom_env]")
         client.capture(exception)
 
         reported = reporter.report.lastCall.args[1]
@@ -227,43 +227,84 @@ describe "Client", ->
 
         it "reports custom context", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (error, fn) -> fn({}) }
+          processor = { process: (data, fn) -> fn(data) }
           getReporter = -> reporter
           getProcessor = -> processor
 
           client = new Client(getProcessor, getReporter)
-          client.capture(error: exception, context: { flavor: 'banana' })
-          expect(reporter.report.lastCall.args[1].context).to.deep.equal({ flavor: 'banana' })
+          client.addContext(context1: "value1", context2: "value2")
+          client.capture
+            error: exception
+            context:
+              context1: "capture_value1"
+              context3: "capture_value3"
 
-        it "reports custom env", ->
+          reported = reporter.report.lastCall.args[1]
+          expect(reported.context).to.deep.equal
+            language: "JavaScript"
+            context1: "capture_value1"
+            context2: "value2"
+            context3: "capture_value3"
+
+        it "reports custom environment", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (error, fn) -> fn({}) }
+          processor = { process: (data, fn) -> fn(data) }
           getReporter = -> reporter
           getProcessor = -> processor
 
           client = new Client(getProcessor, getReporter)
-          client.capture(error: exception, env: { landmark: 'Metolius' })
-          expect(reporter.report.lastCall.args[1].environment).to.deep.equal({ landmark: 'Metolius' })
+          client.addEnvironment(env1: "value1", env2: "value2")
+          client.capture
+            error: exception
+            environment:
+              env1: "capture_value1"
+              env3: "capture_value3"
+
+          reported = reporter.report.lastCall.args[1]
+          expect(reported.environment).to.deep.equal
+            env1: "capture_value1"
+            env2: "value2"
+            env3: "capture_value3"
 
         it "reports custom params", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (error, fn) -> fn({}) }
+          processor = { process: (data, fn) -> fn(data) }
           getReporter = -> reporter
           getProcessor = -> processor
 
           client = new Client(getProcessor, getReporter)
-          client.capture(error: exception, params: { action: 'show' })
-          expect(reporter.report.lastCall.args[1].params).to.deep.equal({ action: 'show' })
+          client.addParams(param1: "value1", param2: "value2")
+          client.capture
+            error: exception
+            params:
+              param1: "capture_value1"
+              param3: "capture_value3"
+
+          reported = reporter.report.lastCall.args[1]
+          expect(reported.params).to.deep.equal
+            param1: "capture_value1"
+            param2: "value2"
+            param3: "capture_value3"
 
         it "reports custom session", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (error, fn) -> fn({}) }
+          processor = { process: (data, fn) -> fn(data) }
           getReporter = -> reporter
           getProcessor = -> processor
 
           client = new Client(getProcessor, getReporter)
-          client.capture(error: exception, session: { username: 'jbr' })
-          expect(reporter.report.lastCall.args[1].session).to.deep.equal({ username: 'jbr' })
+          client.addSession(session1: "value1", session2: "value2")
+          client.capture
+            error: exception
+            session:
+              session1: "capture_value1"
+              session3: "capture_value3"
+
+          reported = reporter.report.lastCall.args[1]
+          expect(reported.session).to.deep.equal
+            session1: "capture_value1"
+            session2: "value2"
+            session3: "capture_value3"
 
   it "processes extant errors", ->
     setTimeout = sinon.spy(global, 'setTimeout')

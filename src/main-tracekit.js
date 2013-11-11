@@ -12,10 +12,9 @@ function getReporter(client) {
   // Vars from client
   var project_id_and_key = client.getProject(),
       project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1],
-      environment_name   = client.getEnvironmentName();
+      project_key        = project_id_and_key[1];
 
-  return new Reporter(project_id, project_key, environment_name, "tracekit");
+  return new Reporter(project_id, project_key, "tracekit");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
