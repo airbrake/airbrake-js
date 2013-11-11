@@ -2,9 +2,9 @@ var ReportBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, environment_name, processor_name) {
+function JsonpReporter(project_id, project_key, processor_name) {
   this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),

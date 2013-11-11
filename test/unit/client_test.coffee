@@ -8,9 +8,9 @@ Client = require("../../src/client")
 
 describe "Client", ->
   describe "environmentName", ->
-    it "is \"environment\" by default", ->
+    it "is \"\" by default", ->
       client = new Client()
-      expect(client.getEnvironmentName()).to.equal("environment")
+      expect(client.getEnvironmentName()).to.equal("")
 
     it "can be set and read", ->
       client = new Client()
@@ -186,7 +186,7 @@ describe "Client", ->
         client.capture(exception)
 
         reported = reporter.report.lastCall.args[1]
-        expect(reported.environment.env_key).to.equal("[custom_env]")
+        expect(reported.env.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
         reporter = { report: sinon.spy() }
@@ -233,7 +233,10 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, context: { flavor: 'banana' })
-          expect(reporter.report.lastCall.args[1].context).to.deep.equal({ flavor: 'banana' })
+          expect(reporter.report.lastCall.args[1].context).to.deep.equal({
+            language: 'JavaScript'
+            flavor: 'banana'
+          })
 
         it "reports custom env", ->
           reporter = { report: sinon.spy() }
@@ -243,7 +246,7 @@ describe "Client", ->
 
           client = new Client(getProcessor, getReporter)
           client.capture(error: exception, env: { landmark: 'Metolius' })
-          expect(reporter.report.lastCall.args[1].environment).to.deep.equal({ landmark: 'Metolius' })
+          expect(reporter.report.lastCall.args[1].env).to.deep.equal({ landmark: 'Metolius' })
 
         it "reports custom params", ->
           reporter = { report: sinon.spy() }
