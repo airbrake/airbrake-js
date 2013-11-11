@@ -71,7 +71,7 @@ Additionally, much of this information can be added to captured errors at the ti
     } catch(er) {
       Airbrake.push({
         error: er,
-        context: { backbone_controller: 'style' },
+        context: { component: 'style' },
         env:     { navigator_vendor: window.navigator.vendor },
         params:  { search: document.location.search },
         session: { username: active_user.username }
