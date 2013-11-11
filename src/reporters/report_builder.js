@@ -34,7 +34,7 @@ ReportBuilder.build = function(processor_name, error_data, options) {
 
   // Add optional top-level keys to the output payload
   if (options.context) { merge(output, { context: options.context }); }
-  if (options.env) { merge(output, { environment: options.env }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
   if (options.session) { merge(output, { session: options.session }); }
   if (options.params) { merge(output, { params: options.params }); }
 

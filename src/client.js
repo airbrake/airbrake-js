@@ -30,9 +30,9 @@ function Client(getProcessor, getReporter, extant_errors) {
     return '';
   };
 
-  var _env = {};
-  instance.getEnv = function() { return _env; };
-  instance.addEnv = function(env) { merge(_env, env); };
+  var _environment = {};
+  instance.getEnvironment = function() { return _environment; };
+  instance.addEnvironment = function(environment) { merge(_environment, environment); };
 
   var _params = {};
   instance.getParams = function() { return _params; };
@@ -69,10 +69,10 @@ function Client(getProcessor, getReporter, extant_errors) {
         // Decorate data-to-be-reported with client data and
         // transport data to receiver
         var options = {
-          context: merge(default_context, _context, exception.context),
-          env:     merge({}, _env, exception.env),
-          params:  merge({}, _params, exception.params),
-          session: merge({}, _session, exception.session)
+          context:     merge(default_context, _context, exception.context),
+          environment: merge({}, _environment, exception.environment),
+          params:      merge({}, _params, exception.params),
+          session:     merge({}, _session, exception.session)
         };
         reporter.report(data, options);
       });

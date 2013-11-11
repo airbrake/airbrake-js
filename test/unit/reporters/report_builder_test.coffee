@@ -22,21 +22,21 @@ describe "ReportBuilder", ->
     it "has no `environment`", ->
       expect(result).not.to.have.property("environment")
 
-    it "merges custom environment", ->
-      result = ReportBuilder.build("", {}, { env: "ENV_KEY": "ENV_VAL" })
+    it "merges environment", ->
+      result = ReportBuilder.build("", {}, { environment: "ENV_KEY": "ENV_VAL" })
       expect(result.environment).to.deep.equal("ENV_KEY": "ENV_VAL")
 
     it "has no `session`", ->
       expect(result).not.to.have.property("session")
 
-    it "merges custom session", ->
+    it "merges session", ->
       result = ReportBuilder.build("", {}, { session: "SESS_KEY": "SESS_VAL" })
       expect(result.session).to.deep.equal("SESS_KEY": "SESS_VAL")
 
     it "has no `params`", ->
       expect(result).not.to.have.property("params")
 
-    it "merges custom params", ->
+    it "merges params", ->
       result = ReportBuilder.build("", {}, { params: "PARAM_KEY": "PARAM_VAL" })
       expect(result.params).to.deep.equal("PARAM_KEY": "PARAM_VAL")
 
