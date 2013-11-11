@@ -156,63 +156,43 @@ function Client(getProcessor, getReporter, extant_errors) {
 module.exports = Client;
 
 })()
-},{"./util/merge":8}],3:[function(require,module,exports){
-(function(global){var decodeBase64 = require("../util/base64_decode").decode;
+},{"./util/merge":8}],5:[function(require,module,exports){
+(function(){var TraceKit = require("../shims/tracekit_browserify_shim");
+TraceKit.remoteFetching = true;
+TraceKit.collectWindowErrors = false;
 
-var source_maps_matcher = /\/\/(?:@|#) sourceMappingURL=(.+)$/,
-    data_uri_matcher = /data:application\/json;base64,(.*)/;
+TraceKit.report.subscribe(function(tracekit_result, fn) {
+  var stack = tracekit_result.stack;
 
-function xhr(url, fn) {
-  var request = new global.XMLHttpRequest();
-  request.open('GET', url, true);
-  request.send();
-  request.onreadystatechange = function() {
-    if (4 === request.readyState) { fn(request.responseText); }
+  var backtrace = [], i, frame;
+  for (i = stack.length - 1; i >= 0; i--) {
+    frame = stack[i];
+    backtrace.unshift({
+      file: frame.url,
+      line: parseInt(frame.line, 10),
+      column: parseInt(frame.column, 10),
+      "function": frame.func
+    });
+  }
+
+  fn({
+    type: tracekit_result.name,
+    message: tracekit_result.message,
+    backtrace: backtrace
+  });
+
+});
+
+function TraceKitProcessor() {
+  this.process = function(error, fn) {
+    TraceKit.report(error, fn);
   };
 }
 
-// Extract the source maps url (if any) from a corpus of text
-function sourceMapUrl(body) {
-  var body_match = body.match(source_maps_matcher);
-  if (body_match) { return body_match[1]; }
-}
+module.exports = TraceKitProcessor;
 
-// Convert a base64 data-uri to a (hopefully) JSON string
-function dataUri(url) {
-  var data_uri_match = url.match(data_uri_matcher);
-  if (data_uri_match) {
-    return decodeBase64(data_uri_match[1]);
-  }
-}
-
-function SourcemapsObtainer() {
-  function scriptReceived(body, obtained) {
-    var url = sourceMapUrl(body);
-    if (url) {
-      var data_uri = dataUri(url);
-      if (data_uri) {
-        obtained(data_uri);
-      } else {
-        xhr(url, function(json) { obtained(json); });
-      }
-    } else {
-      obtained(null);
-    }
-  }
-
-  this.obtain = function(url, obtained) {
-    // Closure around `obtained`
-    xhr(url, function(body) { scriptReceived(body, obtained); });
-  };
-}
-
-SourcemapsObtainer.sourceMapUrl = sourceMapUrl;
-SourcemapsObtainer.dataUri = dataUri;
-
-module.exports = SourcemapsObtainer;
-
-})(window)
-},{"../util/base64_decode":9}],4:[function(require,module,exports){
+})()
+},{"../shims/tracekit_browserify_shim":9}],4:[function(require,module,exports){
 (function(){// A Sourcemaps-aware processor
 // This processor runs the error through an underlying processor,
 // then translates the output to file/line pairs as indicated by
@@ -303,43 +283,63 @@ function SourcemapsProcessor(preprocessor, obtainer) {
 module.exports = SourcemapsProcessor;
 
 })()
-},{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
-(function(){var TraceKit = require("../shims/tracekit_browserify_shim");
-TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = false;
+},{"../lib/source-map/source-map-consumer":10}],3:[function(require,module,exports){
+(function(global){var decodeBase64 = require("../util/base64_decode").decode;
 
-TraceKit.report.subscribe(function(tracekit_result, fn) {
-  var stack = tracekit_result.stack;
+var source_maps_matcher = /\/\/(?:@|#) sourceMappingURL=(.+)$/,
+    data_uri_matcher = /data:application\/json;base64,(.*)/;
 
-  var backtrace = [], i, frame;
-  for (i = stack.length - 1; i >= 0; i--) {
-    frame = stack[i];
-    backtrace.unshift({
-      file: frame.url,
-      line: parseInt(frame.line, 10),
-      column: parseInt(frame.column, 10),
-      "function": frame.func
-    });
-  }
-
-  fn({
-    type: tracekit_result.name,
-    message: tracekit_result.message,
-    backtrace: backtrace
-  });
-
-});
-
-function TraceKitProcessor() {
-  this.process = function(error, fn) {
-    TraceKit.report(error, fn);
+function xhr(url, fn) {
+  var request = new global.XMLHttpRequest();
+  request.open('GET', url, true);
+  request.send();
+  request.onreadystatechange = function() {
+    if (4 === request.readyState) { fn(request.responseText); }
   };
 }
 
-module.exports = TraceKitProcessor;
+// Extract the source maps url (if any) from a corpus of text
+function sourceMapUrl(body) {
+  var body_match = body.match(source_maps_matcher);
+  if (body_match) { return body_match[1]; }
+}
 
-})()
-},{"../shims/tracekit_browserify_shim":11}],6:[function(require,module,exports){
+// Convert a base64 data-uri to a (hopefully) JSON string
+function dataUri(url) {
+  var data_uri_match = url.match(data_uri_matcher);
+  if (data_uri_match) {
+    return decodeBase64(data_uri_match[1]);
+  }
+}
+
+function SourcemapsObtainer() {
+  function scriptReceived(body, obtained) {
+    var url = sourceMapUrl(body);
+    if (url) {
+      var data_uri = dataUri(url);
+      if (data_uri) {
+        obtained(data_uri);
+      } else {
+        xhr(url, function(json) { obtained(json); });
+      }
+    } else {
+      obtained(null);
+    }
+  }
+
+  this.obtain = function(url, obtained) {
+    // Closure around `obtained`
+    xhr(url, function(body) { scriptReceived(body, obtained); });
+  };
+}
+
+SourcemapsObtainer.sourceMapUrl = sourceMapUrl;
+SourcemapsObtainer.dataUri = dataUri;
+
+module.exports = SourcemapsObtainer;
+
+})(window)
+},{"../util/base64_decode":11}],6:[function(require,module,exports){
 (function(global){var ReportBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
@@ -428,7 +428,7 @@ var merge = (function() {
 
 module.exports = merge;
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /*
 Copyright Vassilis Petroulias [DRDigit]
 
@@ -488,7 +488,7 @@ var B64 = {
 
 module.exports = B64;
 
-},{}],11:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 (function(global){// browserify shim for TraceKit bower module
 // Expose TraceKit to global namespace
 require("../lib/tracekit");
@@ -498,7 +498,7 @@ module.exports = global.TraceKit.noConflict();
 
 })(window)
 },{"../lib/tracekit":13}],12:[function(require,module,exports){
-var merge = require("../util/merge");
+(function(global){var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
@@ -530,14 +530,13 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     language    : "JavaScript",
     environment : environment_name
   };
-  if (typeof window !== 'undefined') {
-    if (window.navigator && window.navigator.userAgent) {
-      context.browser = window.navigator.userAgent;
-    }
-    if (window.location) {
-      context.url = String(window.location);
-    }
+  if (global.navigator && global.navigator.userAgent) {
+    context.browser = global.navigator.userAgent;
   }
+  if (global.location) {
+    context.url = String(global.location);
+  }
+
 
   context = merge(context, options.context);
 
@@ -558,6 +557,7 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
 
 module.exports = ReportBuilder;
 
+})(window)
 },{"../util/merge":8}],13:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit

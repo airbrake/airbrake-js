@@ -286,7 +286,7 @@ module.exports = global.TraceKit.noConflict();
 
 })(window)
 },{"../lib/tracekit":9}],8:[function(require,module,exports){
-var merge = require("../util/merge");
+(function(global){var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
@@ -318,14 +318,13 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     language    : "JavaScript",
     environment : environment_name
   };
-  if (typeof window !== 'undefined') {
-    if (window.navigator && window.navigator.userAgent) {
-      context.browser = window.navigator.userAgent;
-    }
-    if (window.location) {
-      context.url = String(window.location);
-    }
+  if (global.navigator && global.navigator.userAgent) {
+    context.browser = global.navigator.userAgent;
   }
+  if (global.location) {
+    context.url = String(global.location);
+  }
+
 
   context = merge(context, options.context);
 
@@ -346,6 +345,7 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
 
 module.exports = ReportBuilder;
 
+})(window)
 },{"../util/merge":6}],9:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit

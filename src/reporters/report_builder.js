@@ -30,13 +30,11 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     language    : "JavaScript",
     environment : environment_name
   };
-  if (typeof window !== 'undefined') {
-    if (window.navigator && window.navigator.userAgent) {
-      context.browser = window.navigator.userAgent;
-    }
-    if (window.location) {
-      context.url = String(window.location);
-    }
+  if (global.navigator && global.navigator.userAgent) {
+    context.browser = global.navigator.userAgent;
+  }
+  if (global.location) {
+    context.url = String(global.location);
   }
 
   context = merge(context, options.context);
