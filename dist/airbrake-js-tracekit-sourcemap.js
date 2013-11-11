@@ -31,7 +31,7 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./util/sourcemaps_obtainer":3,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7}],7:[function(require,module,exports){
+},{"./client":2,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],7:[function(require,module,exports){
 (function(global){module.exports = function(client) {
   var scripts = global.document.getElementsByTagName("script"),
       i = 0, len = scripts.length, script,
@@ -502,6 +502,7 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
+
 ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
@@ -519,35 +520,40 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     options = {};
   }
 
-  var custom_context_data     = options.context,
-      custom_environment_data = options.environment,
-      custom_session_data     = options.session,
-      custom_params_data      = options.params;
-
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.1+" + processor_name,
+    version : "0.2.2+" + processor_name,
     url     : "http://airbrake.io"
   };
 
-  var context_data = merge(custom_context_data, {
+  var context = {
     language    : "JavaScript",
     environment : environment_name
-  });
+  };
+  if (typeof window !== 'undefined') {
+    if (window.navigator && window.navigator.userAgent) {
+      context.browser = window.navigator.userAgent;
+    }
+    if (window.location) {
+      context.url = String(window.location);
+    }
+  }
+
+  context = merge(context, options.context);
 
   // Build the mandatory pieces of the output payload
-  var output_data = {
+  var output = {
     notifier : notifier_data,
-    context  : context_data,
+    context  : context,
     errors   : [ error_data ]
   };
 
   // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
+  if (options.session) { merge(output, { session: options.session }); }
+  if (options.params) { merge(output, { params: options.params }); }
 
-  return output_data;
+  return output;
 };
 
 module.exports = ReportBuilder;
@@ -1728,14 +1734,18 @@ define(function (require, exports, module) {
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file');
+    var file = util.getArg(sourceMap, 'file', null);
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
-    this._names = ArraySet.fromArray(names);
-    this._sources = ArraySet.fromArray(sources);
+    // Pass `true` below to allow duplicate names and sources. While source maps
+    // are intended to be compressed and deduplicated, the TypeScript compiler
+    // sometimes generates source maps with duplicates in them. See Github issue
+    // #72 and bugzil.la/889492.
+    this._names = ArraySet.fromArray(names, true);
+    this._sources = ArraySet.fromArray(sources, true);
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
     this.file = file;
@@ -1767,6 +1777,32 @@ define(function (require, exports, module) {
     this._originalMappings = [];
     this._parseMappings(mappings, sourceRoot);
   }
+
+  /**
+   * Create a SourceMapConsumer from a SourceMapGenerator.
+   *
+   * @param SourceMapGenerator aSourceMap
+   *        The source map that will be consumed.
+   * @returns SourceMapConsumer
+   */
+  SourceMapConsumer.fromSourceMap =
+    function SourceMapConsumer_fromSourceMap(aSourceMap) {
+      var smc = Object.create(SourceMapConsumer.prototype);
+
+      smc._names = ArraySet.fromArray(aSourceMap._names.toArray(), true);
+      smc._sources = ArraySet.fromArray(aSourceMap._sources.toArray(), true);
+      smc.sourceRoot = aSourceMap._sourceRoot;
+      smc.sourcesContent = aSourceMap._generateSourcesContent(smc._sources.toArray(),
+                                                              smc.sourceRoot);
+      smc.file = aSourceMap._file;
+
+      smc._generatedMappings = aSourceMap._mappings.slice()
+        .sort(util.compareByGeneratedPositions);
+      smc._originalMappings = aSourceMap._mappings.slice()
+        .sort(util.compareByOriginalPositions);
+
+      return smc;
+    };
 
   /**
    * The version of the source mapping spec that we are consuming.
@@ -1863,37 +1899,7 @@ define(function (require, exports, module) {
         }
       }
 
-      this._originalMappings.sort(this._compareOriginalPositions);
-    };
-
-  /**
-   * Comparator between two mappings where the original positions are compared.
-   */
-  SourceMapConsumer.prototype._compareOriginalPositions =
-    function SourceMapConsumer_compareOriginalPositions(mappingA, mappingB) {
-      if (mappingA.source > mappingB.source) {
-        return 1;
-      }
-      else if (mappingA.source < mappingB.source) {
-        return -1;
-      }
-      else {
-        var cmp = mappingA.originalLine - mappingB.originalLine;
-        return cmp === 0
-          ? mappingA.originalColumn - mappingB.originalColumn
-          : cmp;
-      }
-    };
-
-  /**
-   * Comparator between two mappings where the generated positions are compared.
-   */
-  SourceMapConsumer.prototype._compareGeneratedPositions =
-    function SourceMapConsumer_compareGeneratedPositions(mappingA, mappingB) {
-      var cmp = mappingA.generatedLine - mappingB.generatedLine;
-      return cmp === 0
-        ? mappingA.generatedColumn - mappingB.generatedColumn
-        : cmp;
+      this._originalMappings.sort(util.compareByOriginalPositions);
     };
 
   /**
@@ -1946,7 +1952,7 @@ define(function (require, exports, module) {
                                       this._generatedMappings,
                                       "generatedLine",
                                       "generatedColumn",
-                                      this._compareGeneratedPositions);
+                                      util.compareByGeneratedPositions);
 
       if (mapping) {
         var source = util.getArg(mapping, 'source', null);
@@ -2040,7 +2046,7 @@ define(function (require, exports, module) {
                                       this._originalMappings,
                                       "originalLine",
                                       "originalColumn",
-                                      this._compareOriginalPositions);
+                                      util.compareByOriginalPositions);
 
       if (mapping) {
         return {
@@ -2112,7 +2118,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":14,"./binary-search":15,"./array-set":16,"./base64-vlq":17,"amdefine":18}],19:[function(require,module,exports){
+},{"./array-set":16,"./base64-vlq":17,"./binary-search":15,"./util":14,"amdefine":18}],19:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2468,7 +2474,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../../node_modules/amdefine/amdefine.js")
-},{"path":20,"__browserify_process":19}],20:[function(require,module,exports){
+},{"__browserify_process":19,"path":20}],20:[function(require,module,exports){
 (function(process){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -2645,6 +2651,8 @@ exports.relative = function(from, to) {
   return outputParts.join('/');
 };
 
+exports.sep = '/';
+
 })(require("__browserify_process"))
 },{"__browserify_process":19}],14:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -2680,6 +2688,7 @@ define(function (require, exports, module) {
   exports.getArg = getArg;
 
   var urlRegexp = /([\w+\-.]+):\/\/((\w+:\w+)@)?([\w.]+)?(:(\d+))?(\S+)?/;
+  var dataUrlRegexp = /^data:.+\,.+/;
 
   function urlParse(aUrl) {
     var match = aUrl.match(urlRegexp);
@@ -2717,7 +2726,7 @@ define(function (require, exports, module) {
   function join(aRoot, aPath) {
     var url;
 
-    if (aPath.match(urlRegexp)) {
+    if (aPath.match(urlRegexp) || aPath.match(dataUrlRegexp)) {
       return aPath;
     }
 
@@ -2763,6 +2772,93 @@ define(function (require, exports, module) {
   }
   exports.relative = relative;
 
+  function strcmp(aStr1, aStr2) {
+    var s1 = aStr1 || "";
+    var s2 = aStr2 || "";
+    return (s1 > s2) - (s1 < s2);
+  }
+
+  /**
+   * Comparator between two mappings where the original positions are compared.
+   *
+   * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+   * mappings with the same original source/line/column, but different generated
+   * line and column the same. Useful when searching for a mapping with a
+   * stubbed out mapping.
+   */
+  function compareByOriginalPositions(mappingA, mappingB, onlyCompareOriginal) {
+    var cmp;
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp || onlyCompareOriginal) {
+      return cmp;
+    }
+
+    cmp = strcmp(mappingA.name, mappingB.name);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    return mappingA.generatedColumn - mappingB.generatedColumn;
+  };
+  exports.compareByOriginalPositions = compareByOriginalPositions;
+
+  /**
+   * Comparator between two mappings where the generated positions are
+   * compared.
+   *
+   * Optionally pass in `true` as `onlyCompareGenerated` to consider two
+   * mappings with the same generated line and column, but different
+   * source/name/original line and column the same. Useful when searching for a
+   * mapping with a stubbed out mapping.
+   */
+  function compareByGeneratedPositions(mappingA, mappingB, onlyCompareGenerated) {
+    var cmp;
+
+    cmp = mappingA.generatedLine - mappingB.generatedLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.generatedColumn - mappingB.generatedColumn;
+    if (cmp || onlyCompareGenerated) {
+      return cmp;
+    }
+
+    cmp = strcmp(mappingA.source, mappingB.source);
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalLine - mappingB.originalLine;
+    if (cmp) {
+      return cmp;
+    }
+
+    cmp = mappingA.originalColumn - mappingB.originalColumn;
+    if (cmp) {
+      return cmp;
+    }
+
+    return strcmp(mappingA.name, mappingB.name);
+  };
+  exports.compareByGeneratedPositions = compareByGeneratedPositions;
+
 });
 
 },{"amdefine":18}],15:[function(require,module,exports){
@@ -2798,7 +2894,7 @@ define(function (require, exports, module) {
     //      element which is less than the one we are searching for, so we
     //      return null.
     var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-    var cmp = aCompare(aNeedle, aHaystack[mid]);
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
     if (cmp === 0) {
       // Found the element we are looking for.
       return aHaystack[mid];
@@ -2876,10 +2972,10 @@ define(function (require, exports, module) {
   /**
    * Static method for creating ArraySet instances from an existing array.
    */
-  ArraySet.fromArray = function ArraySet_fromArray(aArray) {
+  ArraySet.fromArray = function ArraySet_fromArray(aArray, aAllowDuplicates) {
     var set = new ArraySet();
     for (var i = 0, len = aArray.length; i < len; i++) {
-      set.add(aArray[i]);
+      set.add(aArray[i], aAllowDuplicates);
     }
     return set;
   };
@@ -2889,14 +2985,15 @@ define(function (require, exports, module) {
    *
    * @param String aStr
    */
-  ArraySet.prototype.add = function ArraySet_add(aStr) {
-    if (this.has(aStr)) {
-      // Already a member; nothing to do.
-      return;
-    }
+  ArraySet.prototype.add = function ArraySet_add(aStr, aAllowDuplicates) {
+    var isDuplicate = this.has(aStr);
     var idx = this._array.length;
-    this._array.push(aStr);
-    this._set[util.toSetString(aStr)] = idx;
+    if (!isDuplicate || aAllowDuplicates) {
+      this._array.push(aStr);
+    }
+    if (!isDuplicate) {
+      this._set[util.toSetString(aStr)] = idx;
+    }
   };
 
   /**
