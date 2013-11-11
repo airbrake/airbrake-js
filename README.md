@@ -86,9 +86,13 @@ For help with using Airbrake and this notifier visit [our support site](http://h
 
 ## Changelog
 
+### v0.2.1
+
+- Fix params.
+
 ### v0.2
 
-Rewrite. Use TraceKit to normalize and capture errors. JSONP error-reporting
+Rewrite. Use TraceKit to normalize and capture errors. JSONP error-reporting.
 
 
 ### v0.1.2-JSON
