@@ -18,10 +18,9 @@ function getReporter(client) {
   // Vars from client
   var project_id_and_key = client.getProject(),
       project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1],
-      environment_name   = client.getEnvironmentName();
+      project_key        = project_id_and_key[1];
 
-  return new Reporter(project_id, project_key, environment_name, "fallback+sourcemaps");
+  return new Reporter(project_id, project_key, "fallback+sourcemaps");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
@@ -31,7 +30,7 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./processors/fallback_processor":5,"./processors/sourcemaps_processor":4,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],5:[function(require,module,exports){
+},{"./client":2,"./processors/fallback_processor":6,"./processors/sourcemaps_processor":4,"./reporters/jsonp_reporter":5,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],6:[function(require,module,exports){
 (function(){var match_message_file_line_column = /\s+([^\(]+)\s+\((.*):(\d+):(\d+)\)/;
 
 function recognizeFrame(string) {
@@ -135,7 +134,7 @@ module.exports = FallbackProcessor;
 
 })(window)
 },{}],2:[function(require,module,exports){
-(function(){// The Client is the entry point to interacting with the Airbrake JS library.
+(function(global){// The Client is the entry point to interacting with the Airbrake JS library.
 // It stores configuration information and handles exceptions provided to it.
 //
 // It generates a Processor and a Reporter for each exception and uses them
@@ -148,10 +147,6 @@ var merge = require("./util/merge");
 function Client(getProcessor, getReporter, extant_errors) {
   var instance = this;
 
-  var _environment_name = "environment";
-  instance.setEnvironmentName = function(val) { _environment_name = val; };
-  instance.getEnvironmentName = function() { return _environment_name; };
-
   var _project_id, _key;
   instance.setProject = function(project_id, key) {
     _project_id = project_id;
@@ -163,9 +158,17 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getContext = function() { return _context; };
   instance.addContext = function(context) { merge(_context, context); };
 
-  var _env = {};
-  instance.getEnv = function() { return _env; };
-  instance.addEnv = function(env) { merge(_env, env); };
+  instance.setEnvironmentName = function(val) { _context.environment = val; };
+  instance.getEnvironmentName = function() {
+    if (_context.environment) {
+      return _context.environment;
+    }
+    return '';
+  };
+
+  var _environment = {};
+  instance.getEnvironment = function() { return _environment; };
+  instance.addEnvironment = function(environment) { merge(_environment, environment); };
 
   var _params = {};
   instance.getParams = function() { return _params; };
@@ -181,28 +184,33 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
-      var exception_to_process = exception.error   || exception,
-          capture_context      = exception.context || {},
-          capture_env          = exception.env     || {},
-          capture_params       = exception.params  || {},
-          capture_session      = exception.session || {};
-
-      if (processor && reporter) {
-        // Transform the exception into a "standard" data format
-        processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data and
-          // transport data to receiver
-          var options = {
-            context:     merge({}, capture_context, _context),
-            environment: merge({}, capture_env, _env),
-            params:      merge({}, capture_params, _params),
-            session:     merge({}, capture_session, _session)
-          };
-          reporter.report(data, options);
-        });
+      var default_context = {
+        language: "JavaScript"
+      };
+      if (global.navigator && global.navigator.userAgent) {
+        default_context.userAgent = global.navigator.userAgent;
       }
+      if (global.location) {
+        default_context.url = String(global.location);
+      }
+
+      var exception_to_process = exception.error || exception;
+
+      // Transform the exception into a "standard" data format
+      processor.process(exception_to_process, function(data) {
+        // Decorate data-to-be-reported with client data and
+        // transport data to receiver
+        var options = {
+          context:     merge(default_context, _context, exception.context),
+          environment: merge({}, _environment, exception.environment),
+          params:      merge({}, _params, exception.params),
+          session:     merge({}, _session, exception.session)
+        };
+        reporter.report(data, options);
+      });
     } catch(_) {
       // Well, this is embarassing
+      // TODO: log exception
     }
   }
 
@@ -235,7 +243,7 @@ function Client(getProcessor, getReporter, extant_errors) {
 
 module.exports = Client;
 
-})()
+})(window)
 },{"./util/merge":8}],3:[function(require,module,exports){
 (function(global){var decodeBase64 = require("../util/base64_decode").decode;
 
@@ -383,14 +391,14 @@ function SourcemapsProcessor(preprocessor, obtainer) {
 module.exports = SourcemapsProcessor;
 
 })()
-},{"../lib/source-map/source-map-consumer":10}],6:[function(require,module,exports){
+},{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
 (function(global){var ReportBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, environment_name, processor_name) {
+function JsonpReporter(project_id, project_key, processor_name) {
   this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
@@ -537,7 +545,8 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
+
+ReportBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -554,35 +563,25 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     options = {};
   }
 
-  var custom_context_data     = options.context,
-      custom_environment_data = options.environment,
-      custom_session_data     = options.session,
-      custom_params_data      = options.params;
-
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.1+" + processor_name,
+    version : "0.2.2+" + processor_name,
     url     : "http://airbrake.io"
   };
 
-  var context_data = merge(custom_context_data, {
-    language    : "JavaScript",
-    environment : environment_name
-  });
-
   // Build the mandatory pieces of the output payload
-  var output_data = {
+  var output = {
     notifier : notifier_data,
-    context  : context_data,
     errors   : [ error_data ]
   };
 
   // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
+  if (options.context) { merge(output, { context: options.context }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
+  if (options.session) { merge(output, { session: options.session }); }
+  if (options.params) { merge(output, { params: options.params }); }
 
-  return output_data;
+  return output;
 };
 
 module.exports = ReportBuilder;
@@ -642,17 +641,13 @@ define(function (require, exports, module) {
 
     var version = util.getArg(sourceMap, 'version');
     var sources = util.getArg(sourceMap, 'sources');
-    // Sass 3.3 leaves out the 'names' array, so we deviate from the spec (which
-    // requires the array) to play nice here.
-    var names = util.getArg(sourceMap, 'names', []);
+    var names = util.getArg(sourceMap, 'names');
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
     var file = util.getArg(sourceMap, 'file', null);
 
-    // Once again, Sass deviates from the spec and supplies the version as a
-    // string rather than a number, so we use loose equality checking here.
-    if (version != this._version) {
+    if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
@@ -662,11 +657,36 @@ define(function (require, exports, module) {
     // #72 and bugzil.la/889492.
     this._names = ArraySet.fromArray(names, true);
     this._sources = ArraySet.fromArray(sources, true);
-
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
-    this._mappings = mappings;
     this.file = file;
+
+    // `this._generatedMappings` and `this._originalMappings` hold the parsed
+    // mapping coordinates from the source map's "mappings" attribute. Each
+    // object in the array is of the form
+    //
+    //     {
+    //       generatedLine: The line number in the generated code,
+    //       generatedColumn: The column number in the generated code,
+    //       source: The path to the original source file that generated this
+    //               chunk of code,
+    //       originalLine: The line number in the original source that
+    //                     corresponds to this chunk of generated code,
+    //       originalColumn: The column number in the original source that
+    //                       corresponds to this chunk of generated code,
+    //       name: The name of the original symbol which generated this chunk of
+    //             code.
+    //     }
+    //
+    // All properties except for `generatedLine` and `generatedColumn` can be
+    // `null`.
+    //
+    // `this._generatedMappings` is ordered by the generated positions.
+    //
+    // `this._originalMappings` is ordered by the original positions.
+    this._generatedMappings = [];
+    this._originalMappings = [];
+    this._parseMappings(mappings, sourceRoot);
   }
 
   /**
@@ -687,9 +707,9 @@ define(function (require, exports, module) {
                                                               smc.sourceRoot);
       smc.file = aSourceMap._file;
 
-      smc.__generatedMappings = aSourceMap._mappings.slice()
+      smc._generatedMappings = aSourceMap._mappings.slice()
         .sort(util.compareByGeneratedPositions);
-      smc.__originalMappings = aSourceMap._mappings.slice()
+      smc._originalMappings = aSourceMap._mappings.slice()
         .sort(util.compareByOriginalPositions);
 
       return smc;
@@ -711,66 +731,9 @@ define(function (require, exports, module) {
     }
   });
 
-  // `__generatedMappings` and `__originalMappings` are arrays that hold the
-  // parsed mapping coordinates from the source map's "mappings" attribute. They
-  // are lazily instantiated, accessed via the `_generatedMappings` and
-  // `_originalMappings` getters respectively, and we only parse the mappings
-  // and create these arrays once queried for a source location. We jump through
-  // these hoops because there can be many thousands of mappings, and parsing
-  // them is expensive, so we only want to do it if we must.
-  //
-  // Each object in the arrays is of the form:
-  //
-  //     {
-  //       generatedLine: The line number in the generated code,
-  //       generatedColumn: The column number in the generated code,
-  //       source: The path to the original source file that generated this
-  //               chunk of code,
-  //       originalLine: The line number in the original source that
-  //                     corresponds to this chunk of generated code,
-  //       originalColumn: The column number in the original source that
-  //                       corresponds to this chunk of generated code,
-  //       name: The name of the original symbol which generated this chunk of
-  //             code.
-  //     }
-  //
-  // All properties except for `generatedLine` and `generatedColumn` can be
-  // `null`.
-  //
-  // `_generatedMappings` is ordered by the generated positions.
-  //
-  // `_originalMappings` is ordered by the original positions.
-
-  SourceMapConsumer.prototype.__generatedMappings = null;
-  Object.defineProperty(SourceMapConsumer.prototype, '_generatedMappings', {
-    get: function () {
-      if (!this.__generatedMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
-        this._parseMappings(this._mappings, this.sourceRoot);
-      }
-
-      return this.__generatedMappings;
-    }
-  });
-
-  SourceMapConsumer.prototype.__originalMappings = null;
-  Object.defineProperty(SourceMapConsumer.prototype, '_originalMappings', {
-    get: function () {
-      if (!this.__originalMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
-        this._parseMappings(this._mappings, this.sourceRoot);
-      }
-
-      return this.__originalMappings;
-    }
-  });
-
   /**
    * Parse the mappings in a string in to a data structure which we can easily
-   * query (the ordered arrays in the `this.__generatedMappings` and
-   * `this.__originalMappings` properties).
+   * query (an ordered list in this._generatedMappings).
    */
   SourceMapConsumer.prototype._parseMappings =
     function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
@@ -840,14 +803,14 @@ define(function (require, exports, module) {
             }
           }
 
-          this.__generatedMappings.push(mapping);
+          this._generatedMappings.push(mapping);
           if (typeof mapping.originalLine === 'number') {
-            this.__originalMappings.push(mapping);
+            this._originalMappings.push(mapping);
           }
         }
       }
 
-      this.__originalMappings.sort(util.compareByOriginalPositions);
+      this._originalMappings.sort(util.compareByOriginalPositions);
     };
 
   /**

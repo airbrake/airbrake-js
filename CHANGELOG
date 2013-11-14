@@ -1,0 +1,13 @@
+# v0.2.2
+
+- Report userAgent and URL.
+- Fix configuration priorities.
+- Rename env to environment.
+
+# v0.2.1
+
+- Fix params.
+
+# v0.2
+
+- Rewrite. Use TraceKit to normalize and capture errors. JSONP error-reporting.

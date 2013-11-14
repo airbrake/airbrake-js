@@ -18,10 +18,9 @@ function getReporter(client) {
   // Vars from client
   var project_id_and_key = client.getProject(),
       project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1],
-      environment_name   = client.getEnvironmentName();
+      project_key        = project_id_and_key[1];
 
-  return new Reporter(project_id, project_key, environment_name, "fallback+sourcemaps");
+  return new Reporter(project_id, project_key, "fallback+sourcemaps");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
@@ -55,7 +54,7 @@ require("./util/slurp_project_from_dom")(client);
 
 })(window)
 },{}],2:[function(require,module,exports){
-(function(){// The Client is the entry point to interacting with the Airbrake JS library.
+(function(global){// The Client is the entry point to interacting with the Airbrake JS library.
 // It stores configuration information and handles exceptions provided to it.
 //
 // It generates a Processor and a Reporter for each exception and uses them
@@ -68,10 +67,6 @@ var merge = require("./util/merge");
 function Client(getProcessor, getReporter, extant_errors) {
   var instance = this;
 
-  var _environment_name = "environment";
-  instance.setEnvironmentName = function(val) { _environment_name = val; };
-  instance.getEnvironmentName = function() { return _environment_name; };
-
   var _project_id, _key;
   instance.setProject = function(project_id, key) {
     _project_id = project_id;
@@ -83,9 +78,17 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getContext = function() { return _context; };
   instance.addContext = function(context) { merge(_context, context); };
 
-  var _env = {};
-  instance.getEnv = function() { return _env; };
-  instance.addEnv = function(env) { merge(_env, env); };
+  instance.setEnvironmentName = function(val) { _context.environment = val; };
+  instance.getEnvironmentName = function() {
+    if (_context.environment) {
+      return _context.environment;
+    }
+    return '';
+  };
+
+  var _environment = {};
+  instance.getEnvironment = function() { return _environment; };
+  instance.addEnvironment = function(environment) { merge(_environment, environment); };
 
   var _params = {};
   instance.getParams = function() { return _params; };
@@ -101,28 +104,33 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
-      var exception_to_process = exception.error   || exception,
-          capture_context      = exception.context || {},
-          capture_env          = exception.env     || {},
-          capture_params       = exception.params  || {},
-          capture_session      = exception.session || {};
-
-      if (processor && reporter) {
-        // Transform the exception into a "standard" data format
-        processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data and
-          // transport data to receiver
-          var options = {
-            context:     merge({}, capture_context, _context),
-            environment: merge({}, capture_env, _env),
-            params:      merge({}, capture_params, _params),
-            session:     merge({}, capture_session, _session)
-          };
-          reporter.report(data, options);
-        });
+      var default_context = {
+        language: "JavaScript"
+      };
+      if (global.navigator && global.navigator.userAgent) {
+        default_context.userAgent = global.navigator.userAgent;
       }
+      if (global.location) {
+        default_context.url = String(global.location);
+      }
+
+      var exception_to_process = exception.error || exception;
+
+      // Transform the exception into a "standard" data format
+      processor.process(exception_to_process, function(data) {
+        // Decorate data-to-be-reported with client data and
+        // transport data to receiver
+        var options = {
+          context:     merge(default_context, _context, exception.context),
+          environment: merge({}, _environment, exception.environment),
+          params:      merge({}, _params, exception.params),
+          session:     merge({}, _session, exception.session)
+        };
+        reporter.report(data, options);
+      });
     } catch(_) {
       // Well, this is embarassing
+      // TODO: log exception
     }
   }
 
@@ -155,7 +163,7 @@ function Client(getProcessor, getReporter, extant_errors) {
 
 module.exports = Client;
 
-})()
+})(window)
 },{"./util/merge":8}],3:[function(require,module,exports){
 (function(global){var decodeBase64 = require("../util/base64_decode").decode;
 
@@ -303,43 +311,7 @@ function SourcemapsProcessor(preprocessor, obtainer) {
 module.exports = SourcemapsProcessor;
 
 })()
-},{"../lib/source-map/source-map-consumer":10}],6:[function(require,module,exports){
-(function(global){var ReportBuilder = require("../reporters/report_builder");
-
-var cb_count = 0;
-
-function JsonpReporter(project_id, project_key, environment_name, processor_name) {
-  this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
-        document    = global.document,
-        head        = document.getElementsByTagName("head")[0],
-        script_tag  = document.createElement("script"),
-        body        = JSON.stringify(output_data),
-        cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io",
-        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
-
-
-    // Attach an anonymous function to the global namespace to consume the callback.
-    // This pevents syntax errors from trying to directly execute the JSON response.
-    global[cb_name] = function() { delete global[cb_name]; };
-    cb_count += 1;
-
-    function removeTag() { head.removeChild(script_tag); }
-
-    script_tag.src     = url;
-    script_tag.type    = "text/javascript";
-    script_tag.onload  = removeTag;
-    script_tag.onerror = removeTag;
-
-    head.appendChild(script_tag);
-  };
-}
-
-module.exports = JsonpReporter;
-
-})(window)
-},{"../reporters/report_builder":11}],5:[function(require,module,exports){
+},{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
 (function(){var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = true;
 TraceKit.collectWindowErrors = false;
@@ -375,7 +347,43 @@ function TraceKitProcessor() {
 module.exports = TraceKitProcessor;
 
 })()
-},{"../shims/tracekit_browserify_shim":12}],8:[function(require,module,exports){
+},{"../shims/tracekit_browserify_shim":11}],6:[function(require,module,exports){
+(function(global){var ReportBuilder = require("../reporters/report_builder");
+
+var cb_count = 0;
+
+function JsonpReporter(project_id, project_key, processor_name) {
+  this.report = function(error_data, options) {
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
+        document    = global.document,
+        head        = document.getElementsByTagName("head")[0],
+        script_tag  = document.createElement("script"),
+        body        = JSON.stringify(output_data),
+        cb_name     = "airbrake_cb_" + cb_count,
+        prefix      = "https://api.airbrake.io",
+        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
+
+
+    // Attach an anonymous function to the global namespace to consume the callback.
+    // This pevents syntax errors from trying to directly execute the JSON response.
+    global[cb_name] = function() { delete global[cb_name]; };
+    cb_count += 1;
+
+    function removeTag() { head.removeChild(script_tag); }
+
+    script_tag.src     = url;
+    script_tag.type    = "text/javascript";
+    script_tag.onload  = removeTag;
+    script_tag.onerror = removeTag;
+
+    head.appendChild(script_tag);
+  };
+}
+
+module.exports = JsonpReporter;
+
+})(window)
+},{"../reporters/report_builder":12}],8:[function(require,module,exports){
 /* jshint -W084 */
 /*
  * Merge a number of objects into one.
@@ -489,11 +497,21 @@ var B64 = {
 module.exports = B64;
 
 },{}],11:[function(require,module,exports){
+(function(global){// browserify shim for TraceKit bower module
+// Expose TraceKit to global namespace
+require("../lib/tracekit");
+
+// Capture reference and remove from global namespace
+module.exports = global.TraceKit.noConflict();
+
+})(window)
+},{"../lib/tracekit":13}],12:[function(require,module,exports){
 var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
+
+ReportBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -510,49 +528,30 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     options = {};
   }
 
-  var custom_context_data     = options.context,
-      custom_environment_data = options.environment,
-      custom_session_data     = options.session,
-      custom_params_data      = options.params;
-
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.1+" + processor_name,
+    version : "0.2.2+" + processor_name,
     url     : "http://airbrake.io"
   };
 
-  var context_data = merge(custom_context_data, {
-    language    : "JavaScript",
-    environment : environment_name
-  });
-
   // Build the mandatory pieces of the output payload
-  var output_data = {
+  var output = {
     notifier : notifier_data,
-    context  : context_data,
     errors   : [ error_data ]
   };
 
   // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
+  if (options.context) { merge(output, { context: options.context }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
+  if (options.session) { merge(output, { session: options.session }); }
+  if (options.params) { merge(output, { params: options.params }); }
 
-  return output_data;
+  return output;
 };
 
 module.exports = ReportBuilder;
 
-},{"../util/merge":8}],12:[function(require,module,exports){
-(function(global){// browserify shim for TraceKit bower module
-// Expose TraceKit to global namespace
-require("../lib/tracekit");
-
-// Capture reference and remove from global namespace
-module.exports = global.TraceKit.noConflict();
-
-})(window)
-},{"../lib/tracekit":13}],13:[function(require,module,exports){
+},{"../util/merge":8}],13:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit
  MIT license
@@ -1724,17 +1723,13 @@ define(function (require, exports, module) {
 
     var version = util.getArg(sourceMap, 'version');
     var sources = util.getArg(sourceMap, 'sources');
-    // Sass 3.3 leaves out the 'names' array, so we deviate from the spec (which
-    // requires the array) to play nice here.
-    var names = util.getArg(sourceMap, 'names', []);
+    var names = util.getArg(sourceMap, 'names');
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
     var file = util.getArg(sourceMap, 'file', null);
 
-    // Once again, Sass deviates from the spec and supplies the version as a
-    // string rather than a number, so we use loose equality checking here.
-    if (version != this._version) {
+    if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
     }
 
@@ -1744,11 +1739,36 @@ define(function (require, exports, module) {
     // #72 and bugzil.la/889492.
     this._names = ArraySet.fromArray(names, true);
     this._sources = ArraySet.fromArray(sources, true);
-
     this.sourceRoot = sourceRoot;
     this.sourcesContent = sourcesContent;
-    this._mappings = mappings;
     this.file = file;
+
+    // `this._generatedMappings` and `this._originalMappings` hold the parsed
+    // mapping coordinates from the source map's "mappings" attribute. Each
+    // object in the array is of the form
+    //
+    //     {
+    //       generatedLine: The line number in the generated code,
+    //       generatedColumn: The column number in the generated code,
+    //       source: The path to the original source file that generated this
+    //               chunk of code,
+    //       originalLine: The line number in the original source that
+    //                     corresponds to this chunk of generated code,
+    //       originalColumn: The column number in the original source that
+    //                       corresponds to this chunk of generated code,
+    //       name: The name of the original symbol which generated this chunk of
+    //             code.
+    //     }
+    //
+    // All properties except for `generatedLine` and `generatedColumn` can be
+    // `null`.
+    //
+    // `this._generatedMappings` is ordered by the generated positions.
+    //
+    // `this._originalMappings` is ordered by the original positions.
+    this._generatedMappings = [];
+    this._originalMappings = [];
+    this._parseMappings(mappings, sourceRoot);
   }
 
   /**
@@ -1769,9 +1789,9 @@ define(function (require, exports, module) {
                                                               smc.sourceRoot);
       smc.file = aSourceMap._file;
 
-      smc.__generatedMappings = aSourceMap._mappings.slice()
+      smc._generatedMappings = aSourceMap._mappings.slice()
         .sort(util.compareByGeneratedPositions);
-      smc.__originalMappings = aSourceMap._mappings.slice()
+      smc._originalMappings = aSourceMap._mappings.slice()
         .sort(util.compareByOriginalPositions);
 
       return smc;
@@ -1793,66 +1813,9 @@ define(function (require, exports, module) {
     }
   });
 
-  // `__generatedMappings` and `__originalMappings` are arrays that hold the
-  // parsed mapping coordinates from the source map's "mappings" attribute. They
-  // are lazily instantiated, accessed via the `_generatedMappings` and
-  // `_originalMappings` getters respectively, and we only parse the mappings
-  // and create these arrays once queried for a source location. We jump through
-  // these hoops because there can be many thousands of mappings, and parsing
-  // them is expensive, so we only want to do it if we must.
-  //
-  // Each object in the arrays is of the form:
-  //
-  //     {
-  //       generatedLine: The line number in the generated code,
-  //       generatedColumn: The column number in the generated code,
-  //       source: The path to the original source file that generated this
-  //               chunk of code,
-  //       originalLine: The line number in the original source that
-  //                     corresponds to this chunk of generated code,
-  //       originalColumn: The column number in the original source that
-  //                       corresponds to this chunk of generated code,
-  //       name: The name of the original symbol which generated this chunk of
-  //             code.
-  //     }
-  //
-  // All properties except for `generatedLine` and `generatedColumn` can be
-  // `null`.
-  //
-  // `_generatedMappings` is ordered by the generated positions.
-  //
-  // `_originalMappings` is ordered by the original positions.
-
-  SourceMapConsumer.prototype.__generatedMappings = null;
-  Object.defineProperty(SourceMapConsumer.prototype, '_generatedMappings', {
-    get: function () {
-      if (!this.__generatedMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
-        this._parseMappings(this._mappings, this.sourceRoot);
-      }
-
-      return this.__generatedMappings;
-    }
-  });
-
-  SourceMapConsumer.prototype.__originalMappings = null;
-  Object.defineProperty(SourceMapConsumer.prototype, '_originalMappings', {
-    get: function () {
-      if (!this.__originalMappings) {
-        this.__generatedMappings = [];
-        this.__originalMappings = [];
-        this._parseMappings(this._mappings, this.sourceRoot);
-      }
-
-      return this.__originalMappings;
-    }
-  });
-
   /**
    * Parse the mappings in a string in to a data structure which we can easily
-   * query (the ordered arrays in the `this.__generatedMappings` and
-   * `this.__originalMappings` properties).
+   * query (an ordered list in this._generatedMappings).
    */
   SourceMapConsumer.prototype._parseMappings =
     function SourceMapConsumer_parseMappings(aStr, aSourceRoot) {
@@ -1922,14 +1885,14 @@ define(function (require, exports, module) {
             }
           }
 
-          this.__generatedMappings.push(mapping);
+          this._generatedMappings.push(mapping);
           if (typeof mapping.originalLine === 'number') {
-            this.__originalMappings.push(mapping);
+            this._originalMappings.push(mapping);
           }
         }
       }
 
-      this.__originalMappings.sort(util.compareByOriginalPositions);
+      this._originalMappings.sort(util.compareByOriginalPositions);
     };
 
   /**
@@ -2891,89 +2854,6 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":18}],15:[function(require,module,exports){
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
-}
-define(function (require, exports, module) {
-
-  /**
-   * Recursive implementation of binary search.
-   *
-   * @param aLow Indices here and lower do not contain the needle.
-   * @param aHigh Indices here and higher do not contain the needle.
-   * @param aNeedle The element being searched for.
-   * @param aHaystack The non-empty array being searched.
-   * @param aCompare Function which takes two elements and returns -1, 0, or 1.
-   */
-  function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare) {
-    // This function terminates when one of the following is true:
-    //
-    //   1. We find the exact element we are looking for.
-    //
-    //   2. We did not find the exact element, but we can return the next
-    //      closest element that is less than that element.
-    //
-    //   3. We did not find the exact element, and there is no next-closest
-    //      element which is less than the one we are searching for, so we
-    //      return null.
-    var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-    var cmp = aCompare(aNeedle, aHaystack[mid], true);
-    if (cmp === 0) {
-      // Found the element we are looking for.
-      return aHaystack[mid];
-    }
-    else if (cmp > 0) {
-      // aHaystack[mid] is greater than our needle.
-      if (aHigh - mid > 1) {
-        // The element is in the upper half.
-        return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare);
-      }
-      // We did not find an exact match, return the next closest one
-      // (termination case 2).
-      return aHaystack[mid];
-    }
-    else {
-      // aHaystack[mid] is less than our needle.
-      if (mid - aLow > 1) {
-        // The element is in the lower half.
-        return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare);
-      }
-      // The exact needle element was not found in this haystack. Determine if
-      // we are in termination case (2) or (3) and return the appropriate thing.
-      return aLow < 0
-        ? null
-        : aHaystack[aLow];
-    }
-  }
-
-  /**
-   * This is an implementation of binary search which will always try and return
-   * the next lowest value checked if there is no exact hit. This is because
-   * mappings between original and generated line/col pairs are single points,
-   * and there is an implicit region between each of them, so a miss just means
-   * that you aren't on the very start of a region.
-   *
-   * @param aNeedle The element you are looking for.
-   * @param aHaystack The array that is being searched.
-   * @param aCompare A function which takes the needle and an element in the
-   *     array and returns -1, 0, or 1 depending on whether the needle is less
-   *     than, equal to, or greater than the element, respectively.
-   */
-  exports.search = function search(aNeedle, aHaystack, aCompare) {
-    return aHaystack.length > 0
-      ? recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
-      : null;
-  };
-
-});
-
 },{"amdefine":18}],16:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
@@ -3219,7 +3099,90 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":21,"amdefine":18}],21:[function(require,module,exports){
+},{"./base64":21,"amdefine":18}],15:[function(require,module,exports){
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+if (typeof define !== 'function') {
+    var define = require('amdefine')(module, require);
+}
+define(function (require, exports, module) {
+
+  /**
+   * Recursive implementation of binary search.
+   *
+   * @param aLow Indices here and lower do not contain the needle.
+   * @param aHigh Indices here and higher do not contain the needle.
+   * @param aNeedle The element being searched for.
+   * @param aHaystack The non-empty array being searched.
+   * @param aCompare Function which takes two elements and returns -1, 0, or 1.
+   */
+  function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare) {
+    // This function terminates when one of the following is true:
+    //
+    //   1. We find the exact element we are looking for.
+    //
+    //   2. We did not find the exact element, but we can return the next
+    //      closest element that is less than that element.
+    //
+    //   3. We did not find the exact element, and there is no next-closest
+    //      element which is less than the one we are searching for, so we
+    //      return null.
+    var mid = Math.floor((aHigh - aLow) / 2) + aLow;
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
+    if (cmp === 0) {
+      // Found the element we are looking for.
+      return aHaystack[mid];
+    }
+    else if (cmp > 0) {
+      // aHaystack[mid] is greater than our needle.
+      if (aHigh - mid > 1) {
+        // The element is in the upper half.
+        return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare);
+      }
+      // We did not find an exact match, return the next closest one
+      // (termination case 2).
+      return aHaystack[mid];
+    }
+    else {
+      // aHaystack[mid] is less than our needle.
+      if (mid - aLow > 1) {
+        // The element is in the lower half.
+        return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare);
+      }
+      // The exact needle element was not found in this haystack. Determine if
+      // we are in termination case (2) or (3) and return the appropriate thing.
+      return aLow < 0
+        ? null
+        : aHaystack[aLow];
+    }
+  }
+
+  /**
+   * This is an implementation of binary search which will always try and return
+   * the next lowest value checked if there is no exact hit. This is because
+   * mappings between original and generated line/col pairs are single points,
+   * and there is an implicit region between each of them, so a miss just means
+   * that you aren't on the very start of a region.
+   *
+   * @param aNeedle The element you are looking for.
+   * @param aHaystack The array that is being searched.
+   * @param aCompare A function which takes the needle and an element in the
+   *     array and returns -1, 0, or 1 depending on whether the needle is less
+   *     than, equal to, or greater than the element, respectively.
+   */
+  exports.search = function search(aNeedle, aHaystack, aCompare) {
+    return aHaystack.length > 0
+      ? recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
+      : null;
+  };
+
+});
+
+},{"amdefine":18}],21:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors

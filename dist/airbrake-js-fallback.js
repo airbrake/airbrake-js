@@ -13,10 +13,9 @@ function getReporter(client) {
   // Vars from client
   var project_id_and_key = client.getProject(),
       project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1],
-      environment_name   = client.getEnvironmentName();
+      project_key        = project_id_and_key[1];
 
-  return new Reporter(project_id, project_key, environment_name, "fallback");
+  return new Reporter(project_id, project_key, "fallback");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
@@ -130,7 +129,7 @@ module.exports = FallbackProcessor;
 
 })(window)
 },{}],2:[function(require,module,exports){
-(function(){// The Client is the entry point to interacting with the Airbrake JS library.
+(function(global){// The Client is the entry point to interacting with the Airbrake JS library.
 // It stores configuration information and handles exceptions provided to it.
 //
 // It generates a Processor and a Reporter for each exception and uses them
@@ -143,10 +142,6 @@ var merge = require("./util/merge");
 function Client(getProcessor, getReporter, extant_errors) {
   var instance = this;
 
-  var _environment_name = "environment";
-  instance.setEnvironmentName = function(val) { _environment_name = val; };
-  instance.getEnvironmentName = function() { return _environment_name; };
-
   var _project_id, _key;
   instance.setProject = function(project_id, key) {
     _project_id = project_id;
@@ -158,9 +153,17 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getContext = function() { return _context; };
   instance.addContext = function(context) { merge(_context, context); };
 
-  var _env = {};
-  instance.getEnv = function() { return _env; };
-  instance.addEnv = function(env) { merge(_env, env); };
+  instance.setEnvironmentName = function(val) { _context.environment = val; };
+  instance.getEnvironmentName = function() {
+    if (_context.environment) {
+      return _context.environment;
+    }
+    return '';
+  };
+
+  var _environment = {};
+  instance.getEnvironment = function() { return _environment; };
+  instance.addEnvironment = function(environment) { merge(_environment, environment); };
 
   var _params = {};
   instance.getParams = function() { return _params; };
@@ -176,28 +179,33 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
-      var exception_to_process = exception.error   || exception,
-          capture_context      = exception.context || {},
-          capture_env          = exception.env     || {},
-          capture_params       = exception.params  || {},
-          capture_session      = exception.session || {};
-
-      if (processor && reporter) {
-        // Transform the exception into a "standard" data format
-        processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data and
-          // transport data to receiver
-          var options = {
-            context:     merge({}, capture_context, _context),
-            environment: merge({}, capture_env, _env),
-            params:      merge({}, capture_params, _params),
-            session:     merge({}, capture_session, _session)
-          };
-          reporter.report(data, options);
-        });
+      var default_context = {
+        language: "JavaScript"
+      };
+      if (global.navigator && global.navigator.userAgent) {
+        default_context.userAgent = global.navigator.userAgent;
       }
+      if (global.location) {
+        default_context.url = String(global.location);
+      }
+
+      var exception_to_process = exception.error || exception;
+
+      // Transform the exception into a "standard" data format
+      processor.process(exception_to_process, function(data) {
+        // Decorate data-to-be-reported with client data and
+        // transport data to receiver
+        var options = {
+          context:     merge(default_context, _context, exception.context),
+          environment: merge({}, _environment, exception.environment),
+          params:      merge({}, _params, exception.params),
+          session:     merge({}, _session, exception.session)
+        };
+        reporter.report(data, options);
+      });
     } catch(_) {
       // Well, this is embarassing
+      // TODO: log exception
     }
   }
 
@@ -230,15 +238,15 @@ function Client(getProcessor, getReporter, extant_errors) {
 
 module.exports = Client;
 
-})()
+})(window)
 },{"./util/merge":6}],4:[function(require,module,exports){
 (function(global){var ReportBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, environment_name, processor_name) {
+function JsonpReporter(project_id, project_key, processor_name) {
   this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(environment_name, processor_name, error_data, options),
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
@@ -325,7 +333,8 @@ var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
 function ReportBuilder() {}
-ReportBuilder.build = function(environment_name, processor_name, error_data, options) {
+
+ReportBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -342,35 +351,25 @@ ReportBuilder.build = function(environment_name, processor_name, error_data, opt
     options = {};
   }
 
-  var custom_context_data     = options.context,
-      custom_environment_data = options.environment,
-      custom_session_data     = options.session,
-      custom_params_data      = options.params;
-
   var notifier_data = {
     name    : "Airbrake JS",
-    version : "0.2.1+" + processor_name,
+    version : "0.2.2+" + processor_name,
     url     : "http://airbrake.io"
   };
 
-  var context_data = merge(custom_context_data, {
-    language    : "JavaScript",
-    environment : environment_name
-  });
-
   // Build the mandatory pieces of the output payload
-  var output_data = {
+  var output = {
     notifier : notifier_data,
-    context  : context_data,
     errors   : [ error_data ]
   };
 
   // Add optional top-level keys to the output payload
-  if (custom_environment_data) { merge(output_data, { environment: custom_environment_data }); }
-  if (custom_session_data) { merge(output_data, { session: custom_session_data }); }
-  if (custom_params_data) { merge(output_data, { params: custom_params_data }); }
+  if (options.context) { merge(output, { context: options.context }); }
+  if (options.environment) { merge(output, { environment: options.environment }); }
+  if (options.session) { merge(output, { session: options.session }); }
+  if (options.params) { merge(output, { params: options.params }); }
 
-  return output_data;
+  return output;
 };
 
 module.exports = ReportBuilder;

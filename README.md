@@ -59,7 +59,7 @@ It's possible to annotate error reports with all sorts of useful information. Be
 
 * `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
 * `Airbrake.addContext(object)` Merges context information reported alongside all errors.
-* `Airbrake.addEnv(object)` Merges environment information about the application's environment.
+* `Airbrake.addEnvironment(object)` Merges environment information about the application's environment.
 * `Airbrake.addParams(object)` Merges params information reported alongside all errors.
 * `Airbrake.addSession(object)` Merges session information reported alongside all errors.
 
@@ -71,10 +71,10 @@ Additionally, much of this information can be added to captured errors at the ti
     } catch(er) {
       Airbrake.push({
         error: er,
-        context: { component: 'style' },
-        env:     { navigator_vendor: window.navigator.vendor },
+        context: { component: 'style', userId: currentUser.id, userName: currentUser.name },
+        environment: { navigator_vendor: window.navigator.vendor },
         params:  { search: document.location.search },
-        session: { username: active_user.username }
+        session: { sessionid: sessionid }
       });
     }
 
@@ -84,30 +84,6 @@ Additionally, much of this information can be added to captured errors at the ti
 
 For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
 
-## Changelog
-
-### v0.2.1
-
-- Fix params.
-
-### v0.2
-
-Rewrite. Use TraceKit to normalize and capture errors. JSONP error-reporting.
-
-
-### v0.1.2-JSON
-
-- New configuration parameter: `outputFormat`. Supported formats are XML and JSON.
-- Numerous improvements in logic of XML notification generator: `Util.substituteArr` was implemented; views were separated from logic (`REQUEST_VARIABLE_GROUP_XML`, `REQUEST_VARIABLE_XML`, `BACKTRACE_LINE_XML`).
-- Stacktrace.js updated to avoid issues in Opera 11+.
-- New tests, more comments, unused code removed.
-
-### v0.1.1
-
-- Public API improvement: getters and setters are generated automatically from inner JSON. e.g. `key` value can be set with `Airbrake.setKey(<key value>);` and the current value is available as `Airbrake.getKey();`.
-- New configuration parameter: `requestType`. Set it to 'GET' (`Airbrake.setRequestType('GET');`) to send <iframe> notification request; 'POST' is for XMLHttpRequest POST.
-- Basic Jasmine test are available in `tests/` directory.
-
 ## Credits
 
 Airbrake is maintained and funded by [airbrake.io](http://airbrake.io)
@@ -116,6 +92,6 @@ Thank you to all [the contributors](https://github.com/airbrake/airbrake-js/cont
 
 The names and logos for Airbrake are trademarks of Rackspace Hosting Inc.
 
-License
--------
+# License
+
 Airbrake is Copyright © 2008-2013 Rackspace Hosting Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
