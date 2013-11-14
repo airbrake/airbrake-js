@@ -11,10 +11,6 @@ var merge = require("./util/merge");
 function Client(getProcessor, getReporter, extant_errors) {
   var instance = this;
 
-  var _environment_name = "environment";
-  instance.setEnvironmentName = function(val) { _environment_name = val; };
-  instance.getEnvironmentName = function() { return _environment_name; };
-
   var _project_id, _key;
   instance.setProject = function(project_id, key) {
     _project_id = project_id;
@@ -26,9 +22,17 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getContext = function() { return _context; };
   instance.addContext = function(context) { merge(_context, context); };
 
-  var _env = {};
-  instance.getEnv = function() { return _env; };
-  instance.addEnv = function(env) { merge(_env, env); };
+  instance.setEnvironmentName = function(val) { _context.environment = val; };
+  instance.getEnvironmentName = function() {
+    if (_context.environment) {
+      return _context.environment;
+    }
+    return '';
+  };
+
+  var _environment = {};
+  instance.getEnvironment = function() { return _environment; };
+  instance.addEnvironment = function(environment) { merge(_environment, environment); };
 
   var _params = {};
   instance.getParams = function() { return _params; };
@@ -44,28 +48,33 @@ function Client(getProcessor, getReporter, extant_errors) {
       var processor = getProcessor && getProcessor(instance),
           reporter = processor && getReporter(instance);
 
-      var exception_to_process = exception.error   || exception,
-          capture_context      = exception.context || {},
-          capture_env          = exception.env     || {},
-          capture_params       = exception.params  || {},
-          capture_session      = exception.session || {};
-
-      if (processor && reporter) {
-        // Transform the exception into a "standard" data format
-        processor.process(exception_to_process, function(data) {
-          // Decorate data-to-be-reported with client data and
-          // transport data to receiver
-          var options = {
-            context:     merge({}, capture_context, _context),
-            environment: merge({}, capture_env, _env),
-            params:      merge({}, capture_params, _params),
-            session:     merge({}, capture_session, _session)
-          };
-          reporter.report(data, options);
-        });
+      var default_context = {
+        language: "JavaScript"
+      };
+      if (global.navigator && global.navigator.userAgent) {
+        default_context.userAgent = global.navigator.userAgent;
       }
+      if (global.location) {
+        default_context.url = String(global.location);
+      }
+
+      var exception_to_process = exception.error || exception;
+
+      // Transform the exception into a "standard" data format
+      processor.process(exception_to_process, function(data) {
+        // Decorate data-to-be-reported with client data and
+        // transport data to receiver
+        var options = {
+          context:     merge(default_context, _context, exception.context),
+          environment: merge({}, _environment, exception.environment),
+          params:      merge({}, _params, exception.params),
+          session:     merge({}, _session, exception.session)
+        };
+        reporter.report(data, options);
+      });
     } catch(_) {
       // Well, this is embarassing
+      // TODO: log exception
     }
   }
 
