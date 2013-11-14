@@ -6,21 +6,63 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 ## Setup
 
-Include the following Javascript snippet in your header.
+Include the following Javascript snippet.
+
+    window.Airbrake = [];
 
     <script>
-      window.Airbrake = [];
-      window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
-      window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
-    </script>
+    Airbrake.wrap = function(fn) {
+      return function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (exc) {
+          Airbrake.push({error: exc});
+          throw exc;
+        }
+      };
+    };
+
     <script defer src="https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js"
             data-airbrake-project-id="1234"
             data-airbrake-project-key="abcd"
             data-airbrake-project-environment-name="production"></script>
 
 
-This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint.
-It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
+This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint. It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
+
+You can also use following snippet to capture exceptions in jQuery event handlers and promises:
+
+    jQuery.fn.ready = Airbrake.wrap(jQuery.fn.ready);
+
+    var jQueryEventAdd = jQuery.event.add;
+    jQuery.event.add = function(elem, types, fn, data, selector) {
+      wrapper = Airbrake.wrap(fn);
+      // Set the guid of unique handler to the same of original handler, so it can be removed
+      wrapper.guid = fn.guid || (fn.guid = jQuery.guid++);
+      return jQueryEventAdd(elem, types, fn, data, selector);
+    };
+
+    jQuery.ajaxPrefilter(function(options) {
+      if (options.success) { options.success = Airbrake.wrap(options.success); }
+      if (options.error) { options.error = Airbrake.wrap(options.error); }
+      if (options.complete) { options.complete = Airbrake.wrap(options.complete); }
+    });
+
+    var Callbacks = jQuery.Callbacks;
+    jQuery.Callbacks = function(options) {
+      var cb = Callbacks(options),
+          cbAdd = cb.add;
+      cb.add = function() {
+        var fns = arguments;
+        jQuery.each(fns, function(i, fn) {
+          if (jQuery.isFunction(fn)) {
+            fns[i] = Airbrake.wrap(fn);
+          }
+        });
+        return cbAdd.apply(this, fns);
+      };
+      return cb;
+    };
 
 ## Basic Usage
 
