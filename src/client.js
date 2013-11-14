@@ -43,56 +43,52 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.addSession = function(session) { merge(_session, session); };
 
   function capture(exception) {
-    try {
-      // Get up-to-date Processor and Reporter for this exception
-      var processor = getProcessor && getProcessor(instance),
-          reporter = processor && getReporter(instance);
+    // Get up-to-date Processor and Reporter for this exception
+    var processor = getProcessor && getProcessor(instance),
+        reporter = processor && getReporter(instance);
 
-      var default_context = {
-        language: "JavaScript"
-      };
-      if (global.navigator && global.navigator.userAgent) {
-        default_context.userAgent = global.navigator.userAgent;
-      }
-      if (global.location) {
-        default_context.url = String(global.location);
-      }
-
-      var exception_to_process = exception.error || exception;
-
-      // Transform the exception into a "standard" data format
-      processor.process(exception_to_process, function(data) {
-        // Decorate data-to-be-reported with client data and
-        // transport data to receiver
-        var options = {
-          context:     merge(default_context, _context, exception.context),
-          environment: merge({}, _environment, exception.environment),
-          params:      merge({}, _params, exception.params),
-          session:     merge({}, _session, exception.session)
-        };
-        reporter.report(data, options);
-      });
-    } catch(_) {
-      // Well, this is embarassing
-      // TODO: log exception
+    var default_context = {
+      language: "JavaScript"
+    };
+    if (global.navigator && global.navigator.userAgent) {
+      default_context.userAgent = global.navigator.userAgent;
     }
+    if (global.location) {
+      default_context.url = String(global.location);
+    }
+
+    var exception_to_process = exception.error || exception;
+
+    // Transform the exception into a "standard" data format
+    processor.process(exception_to_process, function(data) {
+      // Decorate data-to-be-reported with client data and
+      // transport data to receiver
+      var options = {
+        context:     merge(default_context, _context, exception.context),
+        environment: merge({}, _environment, exception.environment),
+        params:      merge({}, _params, exception.params),
+        session:     merge({}, _session, exception.session)
+      };
+      reporter.report(data, options);
+    });
   }
 
-  instance.capture = capture;
   instance.push = capture;
 
-  instance.try = function(fn, as) {
-    try {
-      return fn.call(as);
-    } catch(er) {
-      instance.capture(er);
-    }
-  };
-  instance.wrap = function(fn, as) {
-    return function() {
-      return instance.try(fn, as);
+  if (global.Airbrake && global.Airbrake.wrap) {
+    instance.wrap = global.Airbrake.wrap;
+  } else {
+    instance.wrap = function(fn) {
+      return function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (exc) {
+          Airbrake.push({error: exc});
+          throw exc;
+        }
+      };
     };
-  };
+  }
 
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
