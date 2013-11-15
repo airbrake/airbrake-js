@@ -8,7 +8,7 @@
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
   var _environment_name = "environment";
@@ -89,9 +89,9 @@ function Client(getProcessor, getReporter, extant_errors) {
   // Client is not yet configured, defer pushing extant errors.
   setTimeout(function() {
     // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
+    if (shim) {
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
       }
     }
   });
