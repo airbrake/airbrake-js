@@ -86,15 +86,15 @@ function Client(getProcessor, getReporter, shim) {
     };
   };
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (shim) {
+  if (shim) {
+    // Client is not yet configured, defer pushing extant errors.
+    setTimeout(function() {
+      // Attempt to consume any errors already pushed to the extant Airbrake object
       for (var i = 0, len = shim.length; i < len; i++) {
         instance.push(shim[i]);
       }
-    }
-  });
+    });
+  }
 }
 
 module.exports = Client;
