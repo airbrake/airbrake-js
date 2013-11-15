@@ -8,7 +8,7 @@
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
   var _project_id, _key;
@@ -42,6 +42,10 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
+  var _custom_reporters = [];
+  instance.getReporters = function() { return _custom_reporters; };
+  instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
+
   function capture(exception) {
     try {
       // Get up-to-date Processor and Reporter for this exception
@@ -71,6 +75,12 @@ function Client(getProcessor, getReporter, extant_errors) {
           session:     merge({}, _session, exception.session)
         };
         reporter.report(data, options);
+
+        // Inform user-registered reporters
+        for (var i = _custom_reporters.length - 1; i >= 0; i--) {
+          try { _custom_reporters[i](data); } catch(_) {}
+        }
+
       });
     } catch(_) {
       // Well, this is embarassing
@@ -94,15 +104,20 @@ function Client(getProcessor, getReporter, extant_errors) {
     };
   };
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
-      }
+  if (shim) {
+    // Acquire client-supplied reporters from shim
+    if (shim.reporters) {
+      _custom_reporters = _custom_reporters.concat(shim.reporters);
     }
-  });
+
+    // Client is not yet configured, defer pushing extant errors.
+    setTimeout(function() {
+      // Attempt to consume any errors already pushed to the extant Airbrake object
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
+      }
+    });
+  }
 }
 
 module.exports = Client;
