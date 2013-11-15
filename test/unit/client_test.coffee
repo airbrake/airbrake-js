@@ -265,6 +265,16 @@ describe "Client", ->
           client.capture(error: exception, session: { username: 'jbr' })
           expect(reporter.report).to.have.been.calledWithMatch(session: { username: 'jbr' })
 
+        it "reports to custom reporter", ->
+          custom_reporter = sinon.spy()
+          processed_error = sinon.spy()
+          getReporter = -> { report: -> }
+          getProcessor = -> { process: (error, fn) -> fn(processed_error) }
+          client = new Client(getProcessor, getReporter)
+          client.addReporter(custom_reporter)
+          client.capture(error: exception)
+          expect(custom_reporter).to.have.been.calledWith(processed_error)
+
   describe "data supplied by shim", ->
     setTimeout = undefined
 
@@ -279,6 +289,14 @@ describe "Client", ->
       deferredFunction = setTimeout.lastCall.args[0]
       deferredFunction()
       expect(processor.process).to.have.been.calledWith("extant error")
+
+    it "acquires custom reporters from shim", ->
+      shim = []
+      shim.reporters = [ -> ]
+      getProcessor = -> {}
+      getReporter = -> { report: -> }
+      client = new Client(getProcessor, getReporter, shim)
+      expect(client.getReporters()).to.deep.equal(shim.reporters)
 
   describe "try", ->
     it "executes lambda", ->
