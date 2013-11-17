@@ -46,6 +46,8 @@ function Client(getProcessor, getReporter, shim) {
   instance.getReporters = function() { return _custom_reporters; };
   instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
+  function deferReport(fn, data) { setTimeout(function() { fn(data); }); }
+
   function capture(exception) {
     try {
       // Get up-to-date Processor and Reporter for this exception
@@ -77,8 +79,8 @@ function Client(getProcessor, getReporter, shim) {
         reporter.report(data, options);
 
         // Inform user-registered reporters
-        for (var i = _custom_reporters.length - 1; i >= 0; i--) {
-          try { _custom_reporters[i](data); } catch(_) {}
+        for (var i = 0, len = _custom_reporters.length; i < len; i++) {
+          deferReport(_custom_reporters[i], data);
         }
 
       });

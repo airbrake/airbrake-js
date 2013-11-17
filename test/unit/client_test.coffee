@@ -306,15 +306,21 @@ describe "Client", ->
             session2: "value2"
             session3: "capture_value3"
 
-        it "reports to custom reporter", ->
-          custom_reporter = sinon.spy()
-          processed_error = sinon.spy()
-          getReporter = -> { report: -> }
-          getProcessor = -> { process: (error, fn) -> fn(processed_error) }
-          client = new Client(getProcessor, getReporter)
-          client.addReporter(custom_reporter)
-          client.capture(error: exception)
-          expect(custom_reporter).to.have.been.calledWith(processed_error)
+        describe "custom reporters", ->
+          clock = undefined
+          beforeEach -> clock = sinon.useFakeTimers()
+          afterEach -> clock.restore()
+
+          it "reports to custom reporter", ->
+            custom_reporter = sinon.spy()
+            processed_error = sinon.spy()
+            getReporter = -> { report: -> }
+            getProcessor = -> { process: (error, fn) -> fn(processed_error) }
+            client = new Client(getProcessor, getReporter)
+            client.addReporter(custom_reporter)
+            client.capture(error: exception)
+            clock.tick()
+            expect(custom_reporter).to.have.been.calledWith(processed_error)
 
   describe "data supplied by shim", ->
     setTimeout = undefined
