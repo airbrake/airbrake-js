@@ -92,6 +92,19 @@ Additionally, much of this information can be added to captured errors at the ti
       });
     }
 
+### Custom reporters
+
+If you're interested in getting access to the information reported to Airbrake in your own code, you can register your
+own error reporter. Note that reporters added this way may be executed out-of-order.
+
+In this example, reported errors are also logged to the console.
+
+    <script>
+      Airbrake.addReporter(function(data, options) {
+        console.log(data);
+      });
+    </script>
+
 ## Help
 
 For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
