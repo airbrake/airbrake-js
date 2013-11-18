@@ -307,16 +307,18 @@ describe "Client", ->
       client = new Client(getProcessor, getReporter, shim)
       expect(client.getReporters()).to.deep.equal(shim.reporters)
 
-    it "reports to custom reporter", ->
+    it "reports processed error and options to custom reporter", ->
       custom_reporter = sinon.spy()
       processed_error = sinon.spy()
+      processed_options = sinon.match.typeOf("object")
       getReporter = -> { report: -> }
       getProcessor = -> { process: (error, fn) -> fn(processed_error) }
       client = new Client(getProcessor, getReporter)
       client.addReporter(custom_reporter)
       client.push(error: {})
       clock.tick()
-      expect(custom_reporter).to.have.been.calledWith(processed_error)
+      expect(custom_reporter).to.have.been.calledWith(processed_error, processed_options)
+
 
   describe "wrap", ->
     it "does not invoke lambda immediately", ->
