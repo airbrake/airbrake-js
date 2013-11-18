@@ -299,14 +299,6 @@ describe "Client", ->
       clock.tick()
       expect(processor.process).to.have.been.calledWith("extant error")
 
-    it "acquires custom reporters from shim", ->
-      shim = []
-      shim.reporters = [ -> ]
-      getProcessor = -> {}
-      getReporter = -> { report: -> }
-      client = new Client(getProcessor, getReporter, shim)
-      expect(client.getReporters()).to.deep.equal(shim.reporters)
-
     it "reports processed error and options to custom reporter", ->
       custom_reporter = sinon.spy()
       processed_error = sinon.spy()

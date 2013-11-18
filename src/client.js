@@ -101,11 +101,6 @@ function Client(getProcessor, getReporter, shim) {
   }
 
   if (shim) {
-    // Acquire client-supplied reporters from shim
-    if (shim.reporters) {
-      _custom_reporters = _custom_reporters.concat(shim.reporters);
-    }
-
     // Client is not yet configured, defer pushing extant errors.
     setTimeout(function() {
       // Attempt to consume any errors already pushed to the extant Airbrake object

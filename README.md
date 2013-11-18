@@ -10,8 +10,6 @@ Include the following Javascript snippet in your header.
 
     <script>
       window.Airbrake = [];
-      window.Airbrake.reporters = [];
-      window.Airbrake.addReporter = function(r) { window.Airbrake.reporters.push(r) };
       window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
       window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
     </script>
