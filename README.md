@@ -8,15 +8,42 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 Include the following Javascript snippet in your header.
 
-    <script>
-      window.Airbrake = [];
-      window.Airbrake.try = function(fn, as) { try { return fn.call(as); } catch(er) { window.Airbrake.push(er); } };
-      window.Airbrake.wrap = function(fn, as) { return function() { return Airbrake.try(fn, as); }; }
-    </script>
-    <script defer src="https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js"
-            data-airbrake-project-id="1234"
+    <script data-airbrake-project-id="1234"
             data-airbrake-project-key="abcd"
-            data-airbrake-project-environment-name="production"></script>
+            data-airbrake-project-environment-name="production">
+
+      (function(src) {
+
+      window.Airbrake = [];
+      window.Airbrake.wrap = function(fn) {
+        return function() {
+          try {
+            return fn.apply(this, arguments);
+          } catch (exc) {
+            Airbrake.push({error: exc});
+            throw exc;
+          }
+        };
+      };
+
+      function get() {
+        var script = document.createElement('script'),
+            sibling = document.getElementsByTagName('script')[0];
+
+        script.src = src;
+        sibling.parentNode.insertBefore(script, sibling);
+      }
+
+      if (window.addEventListener) {
+        window.addEventListener('load', get, false);
+      } else {
+        window.attachEvent('onload', get);
+      }
+
+      }(
+        'https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js'
+      ));
+    </script>
 
 
 This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint.
