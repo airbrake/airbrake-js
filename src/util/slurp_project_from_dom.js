@@ -1,5 +1,5 @@
-function ga(script, attribute_name) {
-  return script.getAttribute("data-airbrake-" + attribute_name);
+function ga(script, attr) {
+  return script.getAttribute("data-airbrake-" + attr);
 }
 
 module.exports = function(client) {
