@@ -14,9 +14,9 @@ module.exports = function(client) {
     script = scripts[i];
 
     project_id       = ga(script, "project-id");
-    project_key      = ga("project-key");
-    project_env_name = ga("project-environment-name");
-    onload           = ga("onload");
+    project_key      = ga(script, "project-key");
+    project_env_name = ga(script, "project-environment-name");
+    onload           = ga(script, "onload");
 
     if (project_id && project_key) {
       client.setProject(project_id, project_key);
