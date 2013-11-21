@@ -8,7 +8,7 @@
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
   var _project_id, _key;
@@ -42,6 +42,12 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
+  var _custom_reporters = [];
+  instance.getReporters = function() { return _custom_reporters; };
+  instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
+
+  function deferReport(fn, data, options) { setTimeout(function() { fn(data, options); }); }
+
   function capture(exception) {
     // Get up-to-date Processor and Reporter for this exception
     var processor = getProcessor && getProcessor(instance),
@@ -70,6 +76,10 @@ function Client(getProcessor, getReporter, extant_errors) {
         session:     merge({}, _session, exception.session)
       };
       reporter.report(data, options);
+
+      for (var i = 0, len = _custom_reporters.length; i < len; i++) {
+        deferReport(_custom_reporters[i], data, options);
+      }
     });
   }
 
@@ -90,15 +100,15 @@ function Client(getProcessor, getReporter, extant_errors) {
     };
   }
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
+  if (shim) {
+    // Client is not yet configured, defer pushing extant errors.
+    setTimeout(function() {
+      // Attempt to consume any errors already pushed to the extant Airbrake object
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
       }
-    }
-  });
+    });
+  }
 }
 
 module.exports = Client;

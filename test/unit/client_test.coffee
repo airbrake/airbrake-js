@@ -286,15 +286,30 @@ describe "Client", ->
             session2: "value2"
             session3: "push_value3"
 
-  it "processes extant errors", ->
-    setTimeout = sinon.spy(global, 'setTimeout')
-    processor = { process: sinon.spy() }
-    getProcessor = -> processor
-    getReporter = -> { report: -> }
-    client = new Client(getProcessor, getReporter, [ "extant error" ])
-    deferredFunction = setTimeout.lastCall.args[0]
-    deferredFunction()
-    expect(processor.process).to.have.been.calledWith("extant error")
+  describe "data supplied by shim", ->
+    clock = undefined
+    beforeEach -> clock = sinon.useFakeTimers()
+    afterEach -> clock.restore()
+
+    it "processes extant errors", ->
+      processor = { process: sinon.spy() }
+      getProcessor = -> processor
+      getReporter = -> { report: -> }
+      client = new Client(getProcessor, getReporter, [ "extant error" ])
+      clock.tick()
+      expect(processor.process).to.have.been.calledWith("extant error")
+
+    it "reports processed error and options to custom reporter", ->
+      custom_reporter = sinon.spy()
+      processed_error = sinon.spy()
+      processed_options = sinon.match.typeOf("object")
+      getReporter = -> { report: -> }
+      getProcessor = -> { process: (error, fn) -> fn(processed_error) }
+      client = new Client(getProcessor, getReporter)
+      client.addReporter(custom_reporter)
+      client.push(error: {})
+      clock.tick()
+      expect(custom_reporter).to.have.been.calledWith(processed_error, processed_options)
 
   describe "wrap", ->
     it "does not invoke lambda immediately", ->

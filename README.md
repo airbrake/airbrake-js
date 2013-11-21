@@ -82,6 +82,20 @@ If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferre
 
 ## Advanced Usage
 
+The notifier provides a few pieces of functionality to help reduce duplication when you report errors. In order to access this functionality, the full notifier needs to be loaded, not just the shim implelementation provided in the embed snippet.
+
+### Notifier `onload`
+
+Fortunately, it's easy to register code to be run when the notifier loads. In the embed snippet, simply add a `data-airbrake-onload` attribute and specify the name of the function to be executed when the notifier is ready.
+
+    <script data-airbrake-onload="initAirbrake">
+      function initAirbrake() {
+        Airbrake.addSession({ split_test: 10 });
+      }
+    </script>
+
+### Default Annotations
+
 It's possible to annotate error reports with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
 * `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
@@ -105,7 +119,18 @@ Additionally, much of this information can be added to captured errors at the ti
       });
     }
 
-## Global Error Handling
+### Custom reporters
+
+If you're interested in getting access to the information reported to Airbrake in your own code, you can register your
+own error reporter. Note that reporters added this way may be executed out-of-order.
+
+In this example, reported errors are also logged to the console.
+
+    <script>
+      Airbrake.addReporter(function(data, options) {
+        console.log(data);
+      });
+    </script>
 
 ## Help
 
