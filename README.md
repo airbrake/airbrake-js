@@ -51,12 +51,14 @@ It also provides a shim client capable of running code with error-capturing enab
 
 ## Basic Usage
 
-The simplest method for capturing errors is to run any code which may throw errors from within the client's `try` method.
+The simplest method for capturing errors is to wrap any code which may throw errors using the client's `wrap` method.
 
-    Airbrake.try(function() {
+    var wrapped = Airbrake.wrap(function() {
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     });
+
+    wrapped();
 
 Alternatively, you can report errors directly.
 
