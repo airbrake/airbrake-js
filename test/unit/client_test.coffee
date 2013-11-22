@@ -104,10 +104,6 @@ describe "Client", ->
 
       return error
 
-    it "is aliased as push", ->
-      client = new Client()
-      expect(client.push).to.equal(client.push)
-
     describe "with pushed calls to processor", ->
       it "processes with processor", ->
         processor = { process: sinon.spy() }
