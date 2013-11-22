@@ -104,6 +104,35 @@ describe "Client", ->
 
       return error
 
+    describe "catch", ->
+      it "omitted, rethrows after processing and reporting", ->
+        process = sinon.spy()
+        report = sinon.spy()
+        getProcessor = -> { process: process }
+        getReporter = -> { report: report }
+        client = new Client(getProcessor, getReporter)
+
+        work = -> client.push(error: exception)
+        expect(work).not.to.throw(exception)
+        expect(report).not.to.have.been.called
+        continueFromProcessor = process.lastCall.args[1]
+        expect(continueFromProcessor).to.throw(exception)
+        expect(report).to.have.been.called
+
+      it "included, does not rethrow after processing and reporting", ->
+        process = sinon.spy()
+        report = sinon.spy()
+        getProcessor = -> { process: process }
+        getReporter = -> { report: report }
+        client = new Client(getProcessor, getReporter)
+
+        work = -> client.push(error: exception, catch: true)
+        expect(work).not.to.throw(exception)
+        expect(report).not.to.have.been.called
+        continueFromProcessor = process.lastCall.args[1]
+        expect(continueFromProcessor).not.to.throw(exception)
+        expect(report).to.have.been.called
+
     describe "with pushed calls to processor", ->
       it "processes with processor", ->
         processor = { process: sinon.spy() }
@@ -112,7 +141,7 @@ describe "Client", ->
         getReporter = -> reporter
 
         client = new Client(getProcessor, getReporter)
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         expect(processor.process).to.have.been.called
 
@@ -123,7 +152,7 @@ describe "Client", ->
         getProcessor = -> processor
 
         client = new Client(getProcessor, getReporter)
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         # Reporter is not called until Processor invokes the
         # callback provided
@@ -146,7 +175,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addContext(context_key: "[custom_context]")
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         reported = reporter.report.lastCall.args[1]
         expect(reported.context.context_key).to.equal("[custom_context]")
@@ -159,7 +188,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addEnvironment(env_key: "[custom_env]")
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         reported = reporter.report.lastCall.args[1]
         expect(reported.environment.env_key).to.equal("[custom_env]")
@@ -172,7 +201,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addParams(params_key: "[custom_params]")
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         reported = reporter.report.lastCall.args[1]
         expect(reported.params.params_key).to.equal("[custom_params]")
@@ -185,7 +214,7 @@ describe "Client", ->
 
         client = new Client(getProcessor, getReporter)
         client.addSession(session_key: "[custom_session]")
-        client.push(exception)
+        client.push(error: exception, catch: true)
 
         reported = reporter.report.lastCall.args[1]
         expect(reported.session.session_key).to.equal("[custom_session]")
@@ -211,6 +240,7 @@ describe "Client", ->
           client.addContext(context1: "value1", context2: "value2")
           client.push
             error: exception
+            catch: true
             context:
               context1: "push_value1"
               context3: "push_value3"
@@ -232,6 +262,7 @@ describe "Client", ->
           client.addEnvironment(env1: "value1", env2: "value2")
           client.push
             error: exception
+            catch: true
             environment:
               env1: "push_value1"
               env3: "push_value3"
@@ -255,6 +286,7 @@ describe "Client", ->
             params:
               param1: "push_value1"
               param3: "push_value3"
+            catch: true
 
           reported = reporter.report.lastCall.args[1]
           expect(reported.params).to.deep.equal
@@ -272,6 +304,7 @@ describe "Client", ->
           client.addSession(session1: "value1", session2: "value2")
           client.push
             error: exception
+            catch: true
             session:
               session1: "push_value1"
               session3: "push_value3"
@@ -303,7 +336,7 @@ describe "Client", ->
       getProcessor = -> { process: (error, fn) -> fn(processed_error) }
       client = new Client(getProcessor, getReporter)
       client.addReporter(custom_reporter)
-      client.push(error: {})
+      client.push(error: {}, catch: true)
       clock.tick()
       expect(custom_reporter).to.have.been.calledWith(processed_error, processed_options)
 

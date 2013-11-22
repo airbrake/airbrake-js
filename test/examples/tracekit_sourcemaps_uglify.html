@@ -10,7 +10,7 @@
     <h2>Capture an exception and process it using Tracekit</h2>
     <code>
       <pre id="code">
-try { ErrorMaker(); } catch(er) { Airbrake.push(er); }
+Airbrake.wrap(function() { ErrorMaker(); })();
       </pre>
     </code>
     <button onclick="eval(document.getElementById('code').innerText)">

@@ -46,7 +46,14 @@ function Client(getProcessor, getReporter, shim) {
   instance.getReporters = function() { return _custom_reporters; };
   instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
-  function deferReport(fn, data, options) { setTimeout(function() { fn(data, options); }); }
+  // Defer a function call using setTimeout, forwards args
+  // defer(function(arg) { console.log('arg: ' + arg); }, 10); // arg: 10
+  function defer(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    setTimeout(function() {
+      fn.apply(null, args);
+    });
+  }
 
   function capture(exception) {
     // Get up-to-date Processor and Reporter for this exception
@@ -78,7 +85,11 @@ function Client(getProcessor, getReporter, shim) {
       reporter.report(data, options);
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        deferReport(_custom_reporters[i], data, options);
+        defer(_custom_reporters[i], data, options);
+      }
+
+      if (!exception.catch) {
+        throw exception_to_process;
       }
     });
   }
@@ -92,9 +103,8 @@ function Client(getProcessor, getReporter, shim) {
       return function() {
         try {
           return fn.apply(this, arguments);
-        } catch (exc) {
-          Airbrake.push({error: exc});
-          throw exc;
+        } catch (er) {
+          Airbrake.push({ error: er, rethrow: true });
         }
       };
     };
