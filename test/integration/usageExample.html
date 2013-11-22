@@ -4,35 +4,74 @@
         <meta charset="utf-8" />
         <title>usageExample</title>
 
-        <script type="text/javascript" src="../dist/airbrake-js.js"></script>
-
         <script>
-            window.onload = function(e) {
-                // window.Airbrake.setRequestType('GET');
-                window.Airbrake.setKey('111');
+          // This block of code will be called when the notifier is downloaded
+          // and ready to process errors. The utility functions are defined
+          // before the shim is declared and the notifier is downloaded in case
+          // a cached copy is available to run immediately.
+          function AirbrakeLoaded() {
+            Airbrake.addReporter(function(data, options) {
+              console.error("Reporting Airbrake error, data: %o options: %o", data, options);
+            });
 
-                window.Airbrake.setOutputFormat('XML');
+            Airbrake.addContext({
+              component: 'hello',
+              action: 'world'
+            });
 
-                window.Airbrake.setErrorDefaults({
-                    url : document.URL,
-                    component : "hello",
-                    action : "world"
-                });
-
-                var _funcRec = function(level) {
-                    if (level === 0) {
-                        (0)();
-                    } else {
-                        _funcRec(level - 1);
-                    }
-                };
-
-                try {
-                    _funcRec(0);
-                } catch (e) {
-                    window.Airbrake.capture(e);
+            // Force an error
+            (function() {
+              function _funcRec = function(level) {
+                if (level === 0) {
+                  (0)();
+                } else {
+                  _funcRec(level - 1);
                 }
+              }
+
+              var throwAndReport = Airbrake.wrap(_funcRec, 2);
+              throwAndReport();
+            }());
+          }
+        </script>
+
+        <script data-airbrake-project-id="1234"
+                data-airbrake-project-key="abcd"
+                data-airbrake-project-environment-name="production"
+                data-airbrake-onload="AirbrakeLoaded">
+
+          // This is the notifier shim and downloader
+          (function(src) {
+
+          window.Airbrake = [];
+          window.Airbrake.wrap = function(fn) {
+            return function() {
+              try {
+                return fn.apply(this, arguments);
+              } catch (er) {
+                Airbrake.push({error: er});
+                throw er;
+              }
             };
+          };
+
+          function get() {
+            var script = document.createElement('script'),
+                sibling = document.getElementsByTagName('script')[0];
+
+            script.src = src;
+            sibling.parentNode.insertBefore(script, sibling);
+          }
+
+          if (window.addEventListener) {
+            window.addEventListener('load', get, false);
+          } else {
+            window.attachEvent('onload', get);
+          }
+
+          }(
+            '../dist/airbrake-js.js'
+          ));
         </script>
     </head>
 
