@@ -19,9 +19,9 @@ Include the following Javascript snippet in your header.
         return function() {
           try {
             return fn.apply(this, arguments);
-          } catch (exc) {
-            Airbrake.push({error: exc});
-            throw exc;
+          } catch (er) {
+            Airbrake.push({error: er});
+            throw er;
           }
         };
       };
@@ -69,6 +69,7 @@ Alternatively, you can report errors directly.
       Airbrake.push({
         error: er
       });
+      throw er;
     }
 
 If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
@@ -119,6 +120,7 @@ Additionally, much of this information can be added to captured errors at the ti
         params:  { search: document.location.search },
         session: { sessionid: sessionid }
       });
+      throw er;
     }
 
 ### Custom reporters
