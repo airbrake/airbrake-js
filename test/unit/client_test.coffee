@@ -152,11 +152,12 @@ describe "Client", ->
         expect(reporter.report).to.have.been.calledWith(report)
 
     describe "custom data sent to reporter", ->
-     it "reports context", ->
+      writeThroughProcessor = { process: (data, fn) -> fn('write-through', data); }
+
+      it "reports context", ->
         reporter = { report: sinon.spy() }
-        processor = { process: (data, fn) -> fn('test', data) }
         getReporter = -> reporter
-        getProcessor = -> processor
+        getProcessor = -> writeThroughProcessor
 
         client = new Client(getProcessor, getReporter)
         client.addContext(context_key: "[custom_context]")
@@ -167,9 +168,8 @@ describe "Client", ->
 
       it "reports environment", ->
         reporter = { report: sinon.spy() }
-        processor = { process: (data, fn) -> fn('test', data) }
         getReporter = -> reporter
-        getProcessor = -> processor
+        getProcessor = -> writeThroughProcessor
 
         client = new Client(getProcessor, getReporter)
         client.addEnvironment(env_key: "[custom_env]")
@@ -180,9 +180,8 @@ describe "Client", ->
 
       it "reports params", ->
         reporter = { report: sinon.spy() }
-        processor = { process: (data, fn) -> fn('test', data) }
         getReporter = -> reporter
-        getProcessor = -> processor
+        getProcessor = -> writeThroughProcessor
 
         client = new Client(getProcessor, getReporter)
         client.addParams(params_key: "[custom_params]")
@@ -193,9 +192,8 @@ describe "Client", ->
 
       it "reports session", ->
         reporter = { report: sinon.spy() }
-        processor = { process: (data, fn) -> fn('test', data) }
         getReporter = -> reporter
-        getProcessor = -> processor
+        getProcessor = -> writeThroughProcessor
 
         client = new Client(getProcessor, getReporter)
         client.addSession(session_key: "[custom_session]")
@@ -217,9 +215,8 @@ describe "Client", ->
 
         it "reports custom context", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (data, fn) -> fn('test', data) }
           getReporter = -> reporter
-          getProcessor = -> processor
+          getProcessor = -> writeThroughProcessor
 
           client = new Client(getProcessor, getReporter)
           client.addContext(context1: "value1", context2: "value2")
@@ -238,9 +235,8 @@ describe "Client", ->
 
         it "reports custom environment", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (data, fn) -> fn('test', data) }
           getReporter = -> reporter
-          getProcessor = -> processor
+          getProcessor = -> writeThroughProcessor
 
           client = new Client(getProcessor, getReporter)
           client.addEnvironment(env1: "value1", env2: "value2")
@@ -258,9 +254,8 @@ describe "Client", ->
 
         it "reports custom params", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (data, fn) -> fn('test', data) }
           getReporter = -> reporter
-          getProcessor = -> processor
+          getProcessor = -> writeThroughProcessor
 
           client = new Client(getProcessor, getReporter)
           client.addParams(param1: "value1", param2: "value2")
@@ -278,9 +273,8 @@ describe "Client", ->
 
         it "reports custom session", ->
           reporter = { report: sinon.spy() }
-          processor = { process: (data, fn) -> fn('test', data) }
           getReporter = -> reporter
-          getProcessor = -> processor
+          getProcessor = -> writeThroughProcessor
 
           client = new Client(getProcessor, getReporter)
           client.addSession(session1: "value1", session2: "value2")
