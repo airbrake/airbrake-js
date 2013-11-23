@@ -46,7 +46,7 @@ describe("JSON data format tests.", function () {
         try {
             (0)();
         } catch (e) {
-            window.Airbrake.capture(e);
+            window.Airbrake.push({ error: e });
 
             _dataObj = JSON.parse(window.XMLHttpRequest.prototype.send.mostRecentCall.args[0]);
             _openMethod = window.XMLHttpRequest.prototype.open.mostRecentCall.args[0];
