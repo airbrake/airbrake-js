@@ -30,7 +30,7 @@
                 try {
                     _funcRec(0);
                 } catch (e) {
-                    window.Airbrake.capture(e);
+                    window.Airbrake.push({ error: e });
                 }
             };
         </script>

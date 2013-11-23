@@ -14,24 +14,11 @@ module.exports = function(grunt) {
     copy: {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
-    bower: {
-      dist: {
-        dest: 'tmp/components'
-      }
-    },
     browserify: {
       options: { transform: [ addPackageVars ] },
-      tracekit: {
-        src: ['tmp/src/main-tracekit.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit.js'
-      },
       fallback: {
         src: ['tmp/src/main-fallback.js'],
         dest: 'dist/<%= pkg.name %>-fallback.js'
-      },
-      'tracekit-sourcemap': {
-        src: ['tmp/src/main-tracekit-sourcemaps.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
       },
       'fallback-sourcemap': {
         src: ['tmp/src/main-fallback-sourcemaps.js'],
@@ -44,10 +31,8 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
-          'dist/<%= pkg.name %>-fallback-sourcemap.min.js':   ['dist/<%= pkg.name %>-fallback-sourcemap.js']
+          'dist/<%= pkg.name %>-fallback.min.js':           ['dist/<%= pkg.name %>-fallback.js'],
+          'dist/<%= pkg.name %>-fallback-sourcemap.min.js': ['dist/<%= pkg.name %>-fallback-sourcemap.js']
         }
       }
     },
@@ -94,14 +79,6 @@ module.exports = function(grunt) {
       }
     },
     jasmine: {
-      tracekit_processor: {
-        src: 'test/examples/dist/<%= pkg.name %>-tracekit.js',
-        options: {
-          keepRunner: false,
-          outfile: 'test/examples/tracekit_runner.html',
-          specs: 'test/integration/spec/**/*.js'
-        }
-      },
       fallback_processor: {
         src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
         options: {
@@ -114,7 +91,6 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-bower');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -130,7 +106,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
+  grunt.registerTask('build', ['copy', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 

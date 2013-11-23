@@ -17,14 +17,6 @@ The only requirement for development are npm and git. If these are already insta
 (airbrake-js) $ npm install --save-dev
 ````
 
-### Install bower components to ./components
-
-Some JavaScript modules, such as TraceKit, are distributed as [Bower](http://bower.io/) components.
-
-````
-(airbrake-js) $ ./node_modules/.bin/bower install
-````
-
 ### Start grunt watcher
 
 ````
@@ -36,7 +28,7 @@ Some JavaScript modules, such as TraceKit, are distributed as [Bower](http://bow
 ````
 Running "watch" task
 Waiting...OK
->> File "src/reporters/api_v3_reporter.js" changed.
+>> File "src/reporters/report_builder.js" changed.
 
 Running "mochacli:all" (mochacli) task
 ````
