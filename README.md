@@ -41,7 +41,7 @@ Include the following Javascript snippet in your header.
       }
 
       }(
-        'https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js'
+        'https://ssljscdn.airbrake.io/airbrake-js-fallback-sourcemap.min.js'
       ));
     </script>
 
