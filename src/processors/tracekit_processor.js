@@ -16,7 +16,7 @@ TraceKit.report.subscribe(function(tracekit_result, fn) {
     });
   }
 
-  fn({
+  fn('tracekit', {
     type: tracekit_result.name,
     message: tracekit_result.message,
     backtrace: backtrace

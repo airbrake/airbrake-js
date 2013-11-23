@@ -7,6 +7,7 @@
 // window.Airbrake is an instance of Client
 
 var merge = require("./util/merge");
+var ReportBuilder = require("./reporters/report_builder");
 
 function Client(getProcessor, getReporter, shim) {
   var instance = this;
@@ -66,7 +67,7 @@ function Client(getProcessor, getReporter, shim) {
     var exception_to_process = exception.error || exception;
 
     // Transform the exception into a "standard" data format
-    processor.process(exception_to_process, function(data) {
+    processor.process(exception_to_process, function(processor_name, data) {
       // Decorate data-to-be-reported with client data and
       // transport data to receiver
       var options = {
@@ -75,10 +76,16 @@ function Client(getProcessor, getReporter, shim) {
         params:      merge({}, _params, exception.params),
         session:     merge({}, _session, exception.session)
       };
-      reporter.report(data, options);
+
+      var report = ReportBuilder.build(processor_name, data, options);
+      reporter.report(report);
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        deferReport(_custom_reporters[i], data, options);
+        deferReport(_custom_reporters[i], report);
+      }
+
+      if (!exception.catch) {
+        throw exception_to_process;
       }
     });
   }

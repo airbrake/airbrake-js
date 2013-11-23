@@ -25,7 +25,7 @@ describe "SourcemapsProcessor", ->
 
     it "obtains sourcemap by url", ->
       parent_processor_result = { backtrace: [ { file: "min.js", line: 13, column: 12, function: "at module.exports" } ] }
-      parent_processor = { process: (error, fn) -> fn(parent_processor_result) }
+      parent_processor = { process: (error, fn) -> fn('write-through', parent_processor_result) }
 
       obtainer = { obtain: sinon.spy() }
       processor = new Processor(parent_processor, obtainer);
@@ -38,7 +38,7 @@ describe "SourcemapsProcessor", ->
 
     it "does not complete processing until source map is obtained", ->
       parent_processor_result = { backtrace: [ { file: 'min.js', line: 13, column: 12, function: 'at module.exports' } ] }
-      parent_processor = { process: (error, fn) -> fn(parent_processor_result) }
+      parent_processor = { process: (error, fn) -> fn('write-through', parent_processor_result) }
 
       obtainer = { obtain: sinon.spy() }
       processor = new Processor(parent_processor, obtainer);
@@ -61,4 +61,4 @@ describe "SourcemapsProcessor", ->
       # The parent result object backtrace is modified in-place
       # by the sourcemaps processor, so it's okay to expect the same
       # object here.
-      expect(processed).to.have.been.calledWith(parent_processor_result)
+      expect(processed).to.have.been.calledWith('write-through+sourcemaps', parent_processor_result)

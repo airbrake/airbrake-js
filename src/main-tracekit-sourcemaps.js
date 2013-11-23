@@ -19,7 +19,7 @@ function getReporter(client) {
       project_id         = project_id_and_key[0],
       project_key        = project_id_and_key[1];
 
-  return new Reporter(project_id, project_key, "fallback+sourcemaps");
+  return new Reporter(project_id, project_key);
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);

@@ -131,8 +131,8 @@ own error reporter. Note that reporters added this way may be executed out-of-or
 In this example, reported errors are also logged to the console.
 
     <script>
-      Airbrake.addReporter(function(data, options) {
-        console.log(data);
+      Airbrake.addReporter(function(report) {
+        console.log(report);
       });
     </script>
 

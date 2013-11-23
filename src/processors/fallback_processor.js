@@ -67,7 +67,7 @@ FallbackProcessor.prototype = {
     error = error || {};
     var stack = (error.stack || "").split("\n");
 
-    fn(processWithStack(error, stack));
+    fn('fallback', processWithStack(error, stack));
   }
 };
 
