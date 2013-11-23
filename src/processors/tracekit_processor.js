@@ -26,7 +26,11 @@ TraceKit.report.subscribe(function(tracekit_result, fn) {
 
 function TraceKitProcessor() {
   this.process = function(error, fn) {
-    TraceKit.report(error, fn);
+    try {
+      TraceKit.report(error, fn);
+    } catch(_) {
+      // throw is handled by client.push
+    }
   };
 }
 

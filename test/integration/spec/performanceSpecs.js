@@ -25,7 +25,7 @@ describe("Performance testing.", function () {
       try {
         (0)();
       } catch (e) {
-        window.Airbrake.capture(e);
+        window.Airbrake.push(e);
       }
     }
 
@@ -49,7 +49,7 @@ describe("Performance testing.", function () {
       try {
         _funcRec(_recCallsLevel);
       } catch (e) {
-        window.Airbrake.capture(e);
+        window.Airbrake.push(e);
       }
     }
 

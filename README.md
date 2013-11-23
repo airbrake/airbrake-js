@@ -20,8 +20,7 @@ Include the following Javascript snippet in your header.
           try {
             return fn.apply(this, arguments);
           } catch (er) {
-            Airbrake.push({error: er});
-            throw er;
+            Airbrake.push({ error: er });
           }
         };
       };
@@ -66,11 +65,15 @@ Alternatively, you can report errors directly.
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     } catch(er) {
-      Airbrake.push({
-        error: er
-      });
-      throw er;
+
+      // `push` will report the error, and then rethrow it
+      // after it has been reported.
+      // It will not be rethrown in this catch block,
+      // but when it is rethrown it will carry its original backtrace.
+      Airbrake.push({ error: er });
     }
+
+If you want to suppress rethrowing of reported errors by the notifier, include `catch: true` in the data payload.
 
 If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
 

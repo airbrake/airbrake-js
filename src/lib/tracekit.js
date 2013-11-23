@@ -1,1 +1,1 @@
-../../components/tracekit/tracekit.js
+../../components/traceKit/tracekit.js
