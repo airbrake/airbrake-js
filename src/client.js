@@ -47,7 +47,51 @@ function Client(getProcessor, getReporter, shim) {
   instance.getReporters = function() { return _custom_reporters; };
   instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
-  function deferReport(fn, data, options) { setTimeout(function() { fn(data, options); }); }
+  var _report_filters = [];
+  instance.addReportFilter = function(filter) { _report_filters.push(filter); };
+  instance.addErrorFilter = function(filter) {
+    instance.addReportFilter(function(report, done) {
+      var error = report.errors[0];
+      if (error) {
+        filter(report.errors[0], done);
+      } else {
+        done(false);
+      }
+    });
+  };
+  instance.addBacktraceFilter = function(filter) {
+    instance.addErrorFilter(function(error, done) {
+      var backtrace_lines = error.backtrace,
+          suppressAll     = false,
+          remaining       = backtrace_lines.length;
+
+      function lineChecked(suppressLine) {
+        remaining -= 1;
+
+        if (suppressLine && !suppressAll) {
+          suppressAll = true;
+          done(true);
+        }
+
+        if (0 === remaining && !suppressAll) {
+          done(false);
+        }
+      }
+
+      for (var i = 0, len = remaining; i < len; i++) {
+        filter(backtrace_lines[i], lineChecked);
+      }
+    });
+  };
+
+  // Defer a function call using setTimeout, forwards args
+  // defer(function(arg) { console.log('arg: ' + arg); }, 10); // arg: 10
+  function defer(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    setTimeout(function() {
+      fn.apply(null, args);
+    });
+  }
 
   function capture(exception) {
     // Get up-to-date Processor and Reporter for this exception
@@ -78,10 +122,21 @@ function Client(getProcessor, getReporter, shim) {
       };
 
       var report = ReportBuilder.build(processor_name, data, options);
-      reporter.report(report);
+
+      (function filter(remaining_filters) {
+        if (remaining_filters.length) {
+          remaining_filters[0](report, function(filter_out) {
+            if (!filter_out) {
+              filter(remaining_filters.slice(1));
+            }
+          });
+        } else {
+          reporter.report(report);
+        }
+      }(_report_filters));
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        deferReport(_custom_reporters[i], report);
+        defer(_custom_reporters[i], report);
       }
 
       if (!exception.catch) {

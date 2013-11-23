@@ -16,6 +16,9 @@ describe "Client", ->
   beforeEach -> build = sinon.spy(ReportBuilder, 'build')
   afterEach -> build.restore()
 
+  writeThroughProcessor = null
+  beforeEach -> writeThroughProcessor = { process: (data, fn) -> fn('write-through', data); }
+
   describe "environmentName", ->
     it "is \"\" by default", ->
       client = new Client()
@@ -103,6 +106,100 @@ describe "Client", ->
       client.addSession(key2: "[custom_session_key1_value2]")
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
+  describe 'filters', ->
+    backtrace_line = null
+    process      = null
+    report       = null
+    getProcessor = null
+    getReporter  = null
+    client       = null
+
+    beforeEach ->
+      backtrace_line = sinon.spy()
+      process        = sinon.spy((error) -> { backtrace: [ backtrace_line ] })
+      report         = sinon.spy()
+      getProcessor   = -> { process: process }
+      getReporter    = -> { report: report }
+      client         = new Client(getProcessor, getReporter)
+
+    describe 'addReportFilter', ->
+      it 'can prevent report', ->
+        filter = sinon.spy((report, done) -> done(true))
+        client.addReportFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor('test', {})
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(reported)
+        expect(report).not.to.have.been.called
+
+      it 'can allow report', ->
+        filter = sinon.spy((report, done) -> done(false))
+        client.addReportFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor('test', {})
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(reported)
+        expect(report).to.have.been.called
+
+    describe 'addErrorFilter', ->
+      it 'can prevent report', ->
+        filter = sinon.spy((error, done) -> done(true))
+        client.addErrorFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor('test', {})
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(reported.errors[0])
+        expect(report).not.to.have.been.called
+
+      it 'can allow report', ->
+        filter = sinon.spy((error, done) -> done(false))
+        client.addErrorFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor('test', {})
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(reported.errors[0])
+        expect(report).to.have.been.called
+
+    describe 'addBacktraceFilter', ->
+      it 'can prevent report', ->
+        filter = sinon.spy((line, done) -> done(true))
+        client.addBacktraceFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+
+        continueFromProcessor('test', { backtrace: [ backtrace_line ] })
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(backtrace_line)
+        expect(report).not.to.have.been.called
+
+      it 'can allow report', ->
+        filter = sinon.spy((line, done) -> done(false))
+        client.addBacktraceFilter(filter)
+
+        client.push(error: {}, catch: true)
+        continueFromProcessor = process.lastCall.args[1]
+
+        backtrace_line = sinon.spy()
+        continueFromProcessor('test', { backtrace: [ backtrace_line ] })
+
+        reported = build.lastCall.returnValue
+        expect(filter).to.have.been.calledWith(backtrace_line)
+        expect(report).to.have.been.called
+
   describe "push", ->
     exception = do ->
       error = undefined
@@ -152,8 +249,6 @@ describe "Client", ->
         expect(reporter.report).to.have.been.calledWith(report)
 
     describe "custom data sent to reporter", ->
-      writeThroughProcessor = { process: (data, fn) -> fn('write-through', data); }
-
       it "reports context", ->
         reporter = { report: sinon.spy() }
         getReporter = -> reporter
