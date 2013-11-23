@@ -2,7 +2,7 @@ var Client              = require("./client"),
     SourcemapsObtainer  = require("./util/sourcemaps_obtainer"),
     SourcemapsProcessor = require("./processors/sourcemaps_processor"),
     Processor           = require("./processors/tracekit_processor"),
-    Reporter            = require("./reporters/jsonp_reporter");
+    Reporter            = require("./reporters/hybrid_reporter");
 
 var client;
 
