@@ -107,7 +107,6 @@ describe "Client", ->
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
   describe 'filters', ->
-    backtrace_line = null
     process      = null
     report       = null
     getProcessor = null
@@ -115,8 +114,7 @@ describe "Client", ->
     client       = null
 
     beforeEach ->
-      backtrace_line = sinon.spy()
-      process        = sinon.spy((error) -> { backtrace: [ backtrace_line ] })
+      process        = sinon.spy((error) -> {})
       report         = sinon.spy()
       getProcessor   = -> { process: process }
       getReporter    = -> { report: report }
