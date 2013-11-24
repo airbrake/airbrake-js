@@ -91,8 +91,8 @@ function Client(getProcessor, getReporter, shim) {
 
       (function filter(remaining_filters) {
         if (remaining_filters.length) {
-          remaining_filters[0](report, function(filter_out) {
-            if (!filter_out) {
+          remaining_filters[0](report, function(allow) {
+            if (allow) {
               filter(remaining_filters.slice(1));
             }
           });

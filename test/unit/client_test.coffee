@@ -124,7 +124,7 @@ describe "Client", ->
 
     describe 'addFilter', ->
       it 'can prevent report', ->
-        filter = sinon.spy((report, done) -> done(true))
+        filter = sinon.spy((report, allow) -> allow(false))
         client.addFilter(filter)
 
         client.push(error: {}, catch: true)
@@ -136,7 +136,7 @@ describe "Client", ->
         expect(report).not.to.have.been.called
 
       it 'can allow report', ->
-        filter = sinon.spy((report, done) -> done(false))
+        filter = sinon.spy((report, allow) -> allow(true))
         client.addFilter(filter)
 
         client.push(error: {}, catch: true)

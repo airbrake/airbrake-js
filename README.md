@@ -127,37 +127,19 @@ Additionally, much of this information can be added to captured errors at the ti
 
 There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
 
-The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addReportFilter`, `addErrorFilter`, and `addBacktraceFilter`.
+The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addFilter`.
 
-Since very often you want to decide whether the error report should be suppressed based on information found at different depths within the report, these different functions are provided to allow writing simple filters that operate at these different depths without needing to dig into the error report manually.
+`addReportFilter` accepts the entire report to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `sessions` values submitted with the report, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
 
-`addReportFilter` accepts the entire report to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `sessions` values submitted with the report.
-
-`addErrorFilter` accepts the `errors[0]` section of the report, providing access to the error's `type`, and `message`, and `backtrace`.
-
-`addBacktraceFilter` accepts each line of an error report backtrace, providing access to the backtrace line's `file`, `line`, `column`, and `function`.
-
-In addition, each filter accepts a continuation to invoke with a boolean indicating whether the report should be suppressed or not.
-  * If the continuation is invoked with a truthy value, the report will be suppressed.
-  * If the continuation is invoked with a non-true value, the report will submitted.
+In addition, each filter accepts a continuation to invoke with a boolean indicating whether the report is admissible or not.
+  * If the continuation is invoked with a falsey value, the report will suppressed.
+  * If the continuation is invoked with a truthy value, the report is admissible for submission.
 
     // Here we suppress the report if the top-level `session` key
     // indicates the user is logged in as an admin
-    Airbrake.addReportFilter(function(report, done) {
+    Airbrake.addFilter(function(report, allow) {
       // Suppress reports from admin sessions
-      done(session.admin);
-    });
-
-    // Here we suppress the report if the error is of type `SyntaxError`
-    Airbrake.addErrorFilter(function(error, done) {
-      done('SyntaxError' === error.type);
-    });
-
-    // Here we suppress the report if any backtrace line in the report
-    // mentions `localhost`
-    Airbrake.addBacktraceFilter(function(line, done) {
-      // Suppress reports mentioning `localhost` as the source file
-      done(/localhost/.match(line.file));
+      allow(!session.admin);
     });
 
 ### Custom reporters
