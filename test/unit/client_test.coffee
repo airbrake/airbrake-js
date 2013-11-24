@@ -127,7 +127,7 @@ describe "Client", ->
         filter = sinon.spy((report, allow) -> allow(false))
         client.addFilter(filter)
 
-        client.push(error: {}, catch: true)
+        client.push(error: {})
         continueFromProcessor = process.lastCall.args[1]
         continueFromProcessor('test', {})
 
@@ -139,7 +139,7 @@ describe "Client", ->
         filter = sinon.spy((report, allow) -> allow(true))
         client.addFilter(filter)
 
-        client.push(error: {}, catch: true)
+        client.push(error: {})
         continueFromProcessor = process.lastCall.args[1]
         continueFromProcessor('test', {})
 
