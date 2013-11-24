@@ -122,10 +122,10 @@ describe "Client", ->
       getReporter    = -> { report: report }
       client         = new Client(getProcessor, getReporter)
 
-    describe 'addReportFilter', ->
+    describe 'addFilter', ->
       it 'can prevent report', ->
         filter = sinon.spy((report, done) -> done(true))
-        client.addReportFilter(filter)
+        client.addFilter(filter)
 
         client.push(error: {}, catch: true)
         continueFromProcessor = process.lastCall.args[1]
@@ -137,7 +137,7 @@ describe "Client", ->
 
       it 'can allow report', ->
         filter = sinon.spy((report, done) -> done(false))
-        client.addReportFilter(filter)
+        client.addFilter(filter)
 
         client.push(error: {}, catch: true)
         continueFromProcessor = process.lastCall.args[1]
@@ -145,59 +145,6 @@ describe "Client", ->
 
         reported = build.lastCall.returnValue
         expect(filter).to.have.been.calledWith(reported)
-        expect(report).to.have.been.called
-
-    describe 'addErrorFilter', ->
-      it 'can prevent report', ->
-        filter = sinon.spy((error, done) -> done(true))
-        client.addErrorFilter(filter)
-
-        client.push(error: {}, catch: true)
-        continueFromProcessor = process.lastCall.args[1]
-        continueFromProcessor('test', {})
-
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(reported.errors[0])
-        expect(report).not.to.have.been.called
-
-      it 'can allow report', ->
-        filter = sinon.spy((error, done) -> done(false))
-        client.addErrorFilter(filter)
-
-        client.push(error: {}, catch: true)
-        continueFromProcessor = process.lastCall.args[1]
-        continueFromProcessor('test', {})
-
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(reported.errors[0])
-        expect(report).to.have.been.called
-
-    describe 'addBacktraceFilter', ->
-      it 'can prevent report', ->
-        filter = sinon.spy((line, done) -> done(true))
-        client.addBacktraceFilter(filter)
-
-        client.push(error: {}, catch: true)
-        continueFromProcessor = process.lastCall.args[1]
-
-        continueFromProcessor('test', { backtrace: [ backtrace_line ] })
-
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(backtrace_line)
-        expect(report).not.to.have.been.called
-
-      it 'can allow report', ->
-        filter = sinon.spy((line, done) -> done(false))
-        client.addBacktraceFilter(filter)
-
-        client.push(error: {}, catch: true)
-        continueFromProcessor = process.lastCall.args[1]
-
-        backtrace_line = sinon.spy()
-        continueFromProcessor('test', { backtrace: [ backtrace_line ] })
-
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(backtrace_line)
         expect(report).to.have.been.called
 
   describe "push", ->

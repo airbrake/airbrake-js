@@ -48,41 +48,7 @@ function Client(getProcessor, getReporter, shim) {
   instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
   var _report_filters = [];
-  instance.addReportFilter = function(filter) { _report_filters.push(filter); };
-  instance.addErrorFilter = function(filter) {
-    instance.addReportFilter(function(report, done) {
-      var error = report.errors[0];
-      if (error) {
-        filter(report.errors[0], done);
-      } else {
-        done(false);
-      }
-    });
-  };
-  instance.addBacktraceFilter = function(filter) {
-    instance.addErrorFilter(function(error, done) {
-      var backtrace_lines = error.backtrace,
-          suppressAll     = false,
-          remaining       = backtrace_lines.length;
-
-      function lineChecked(suppressLine) {
-        remaining -= 1;
-
-        if (suppressLine && !suppressAll) {
-          suppressAll = true;
-          done(true);
-        }
-
-        if (0 === remaining && !suppressAll) {
-          done(false);
-        }
-      }
-
-      for (var i = 0, len = remaining; i < len; i++) {
-        filter(backtrace_lines[i], lineChecked);
-      }
-    });
-  };
+  instance.addFilter = function(filter) { _report_filters.push(filter); };
 
   // Defer a function call using setTimeout, forwards args
   // defer(function(arg) { console.log('arg: ' + arg); }, 10); // arg: 10
