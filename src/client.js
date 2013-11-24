@@ -138,10 +138,6 @@ function Client(getProcessor, getReporter, shim) {
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
         defer(_custom_reporters[i], report);
       }
-
-      if (!exception.catch) {
-        throw exception_to_process;
-      }
     });
   }
 
