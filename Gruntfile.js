@@ -45,7 +45,7 @@ module.exports = function(grunt) {
       dist: {
         files: {
           'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js']
+          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js'],
           'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
           'dist/<%= pkg.name %>-fallback-sourcemap.min.js':   ['dist/<%= pkg.name %>-fallback-sourcemap.js']
         }
