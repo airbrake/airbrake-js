@@ -5,7 +5,7 @@ expect     = chai.expect
 chai.use(sinon_chai)
 
 Client = require("../../src/client")
-ReportBuilder = require('../../src/reporters/report_builder')
+NoticeBuilder = require('../../src/reporters/notice_builder')
 
 describe "Client", ->
   clock = undefined
@@ -13,7 +13,7 @@ describe "Client", ->
   afterEach -> clock.restore()
 
   build = null
-  beforeEach -> build = sinon.spy(ReportBuilder, 'build')
+  beforeEach -> build = sinon.spy(NoticeBuilder, 'build')
   afterEach -> build.restore()
 
   writeThroughProcessor = null
@@ -171,7 +171,7 @@ describe "Client", ->
 
         expect(processor.process).to.have.been.called
 
-      it "reports ReportBuilder result to reporter", ->
+      it "reports NoticeBuilder result to reporter", ->
         processor = { process: sinon.spy() }
         reporter = { report: sinon.spy() }
         getReporter = -> reporter

@@ -7,7 +7,7 @@
 // window.Airbrake is an instance of Client
 
 var merge = require("./util/merge");
-var ReportBuilder = require("./reporters/report_builder");
+var NoticeBuilder = require("./reporters/notice_builder");
 
 function Client(getProcessor, getReporter, shim) {
   var instance = this;
@@ -87,22 +87,22 @@ function Client(getProcessor, getReporter, shim) {
         session:     merge({}, _session, exception.session)
       };
 
-      var report = ReportBuilder.build(processor_name, data, options);
+      var notice = NoticeBuilder.build(processor_name, data, options);
 
       (function filter(remaining_filters) {
         if (remaining_filters.length) {
-          remaining_filters[0](report, function(allow) {
+          remaining_filters[0](notice, function(allow) {
             if (allow) {
               filter(remaining_filters.slice(1));
             }
           });
         } else {
-          reporter.report(report);
+          reporter.report(notice);
         }
       }(_report_filters));
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        defer(_custom_reporters[i], report);
+        defer(_custom_reporters[i], notice);
       }
     });
   }

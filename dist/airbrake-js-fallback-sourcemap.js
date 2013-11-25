@@ -392,13 +392,13 @@ module.exports = SourcemapsProcessor;
 
 })()
 },{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
-(function(global){var ReportBuilder = require("../reporters/report_builder");
+(function(global){var NoticeBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
 
 function JsonpReporter(project_id, project_key, processor_name) {
   this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(processor_name, error_data, options),
+    var output_data = NoticeBuilder.build(processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
@@ -544,9 +544,9 @@ module.exports = B64;
 var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
-function ReportBuilder() {}
+function NoticeBuilder() {}
 
-ReportBuilder.build = function(processor_name, error_data, options) {
+NoticeBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -584,7 +584,7 @@ ReportBuilder.build = function(processor_name, error_data, options) {
   return output;
 };
 
-module.exports = ReportBuilder;
+module.exports = NoticeBuilder;
 
 },{"../util/merge":8}],10:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
@@ -1476,7 +1476,7 @@ path = normalizeArray(filter(path.split('/'), function(p) {
   if (path && trailingSlash) {
     path += '/';
   }
-  
+
   return (isAbsolute ? '/' : '') + path;
 };
 
