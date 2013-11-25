@@ -240,13 +240,13 @@ module.exports = Client;
 
 })(window)
 },{"./util/merge":6}],4:[function(require,module,exports){
-(function(global){var NoticeBuilder = require("../reporters/report_builder");
+(function(global){var ReportBuilder = require("../reporters/report_builder");
 
 var cb_count = 0;
 
 function JsonpReporter(project_id, project_key, processor_name) {
   this.report = function(error_data, options) {
-    var output_data = NoticeBuilder.build(processor_name, error_data, options),
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
         document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
@@ -332,9 +332,9 @@ module.exports = merge;
 var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
-function NoticeBuilder() {}
+function ReportBuilder() {}
 
-NoticeBuilder.build = function(processor_name, error_data, options) {
+ReportBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -372,7 +372,7 @@ NoticeBuilder.build = function(processor_name, error_data, options) {
   return output;
 };
 
-module.exports = NoticeBuilder;
+module.exports = ReportBuilder;
 
 },{"../util/merge":6}]},{},[1])
 ;
