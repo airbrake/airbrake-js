@@ -89,17 +89,16 @@ function Client(getProcessor, getReporter, shim) {
 
       var notice = NoticeBuilder.build(processor_name, data, options);
 
-      (function filter(remaining_filters) {
-        if (remaining_filters.length) {
-          remaining_filters[0](notice, function(allow) {
-            if (allow) {
-              filter(remaining_filters.slice(1));
-            }
-          });
+      (function filter(filters, left) {
+        if (left) {
+          left -= 1;
+          if (filters[left](notice)) {
+            filter(filters, left);
+          }
         } else {
           reporter.report(notice);
         }
-      }(_report_filters));
+      }(_report_filters, _report_filters.length));
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
         defer(_custom_reporters[i], notice);
