@@ -7,6 +7,7 @@
 // window.Airbrake is an instance of Client
 
 var merge = require("./util/merge");
+var NoticeBuilder = require("./reporters/notice_builder");
 
 function Client(getProcessor, getReporter, shim) {
   var instance = this;
@@ -46,7 +47,17 @@ function Client(getProcessor, getReporter, shim) {
   instance.getReporters = function() { return _custom_reporters; };
   instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
-  function deferReport(fn, data, options) { setTimeout(function() { fn(data, options); }); }
+  var _report_filters = [];
+  instance.addFilter = function(filter) { _report_filters.push(filter); };
+
+  // Defer a function call using setTimeout, forwards args
+  // defer(function(arg) { console.log('arg: ' + arg); }, 10); // arg: 10
+  function defer(fn) {
+    var args = Array.prototype.slice.call(arguments, 1);
+    setTimeout(function() {
+      fn.apply(null, args);
+    });
+  }
 
   function capture(exception) {
     // Get up-to-date Processor and Reporter for this exception
@@ -66,7 +77,7 @@ function Client(getProcessor, getReporter, shim) {
     var exception_to_process = exception.error || exception;
 
     // Transform the exception into a "standard" data format
-    processor.process(exception_to_process, function(data) {
+    processor.process(exception_to_process, function(processor_name, data) {
       // Decorate data-to-be-reported with client data and
       // transport data to receiver
       var options = {
@@ -75,10 +86,22 @@ function Client(getProcessor, getReporter, shim) {
         params:      merge({}, _params, exception.params),
         session:     merge({}, _session, exception.session)
       };
-      reporter.report(data, options);
+
+      var notice = NoticeBuilder.build(processor_name, data, options);
+
+      (function filter(filters, left) {
+        if (left) {
+          left -= 1;
+          if (filters[left](notice)) {
+            filter(filters, left);
+          }
+        } else {
+          reporter.report(notice);
+        }
+      }(_report_filters, _report_filters.length));
 
       for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        deferReport(_custom_reporters[i], data, options);
+        defer(_custom_reporters[i], notice);
       }
     });
   }

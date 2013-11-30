@@ -1,14 +1,11 @@
-var ReportBuilder = require("../reporters/report_builder");
-
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key, processor_name) {
-  this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(processor_name, error_data, options),
-        document    = global.document,
+function JsonpReporter(project_id, project_key) {
+  this.report = function(report) {
+    var document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
-        body        = JSON.stringify(output_data),
+        body        = JSON.stringify(report),
         cb_name     = "airbrake_cb_" + cb_count,
         prefix      = "https://api.airbrake.io",
         url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);

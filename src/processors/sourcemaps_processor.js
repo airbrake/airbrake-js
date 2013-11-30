@@ -29,7 +29,7 @@ function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
 function SourcemapsProcessor(preprocessor, obtainer) {
   this._source_maps = {};
 
-  function preprocessorComplete(preprocessor_result, source_maps, fn) {
+  function preprocessorComplete(name, preprocessor_result, source_maps, fn) {
     // Process the error through the native error handler
     var preprocessor_backtrace = preprocessor_result.backtrace;
 
@@ -69,7 +69,7 @@ function SourcemapsProcessor(preprocessor, obtainer) {
           backtrace_entry.column = original_position.column;
         }
       }
-      fn(preprocessor_result);
+      fn(name + '+sourcemaps', preprocessor_result);
     }
 
     // Begin obtaining the source maps
@@ -79,8 +79,8 @@ function SourcemapsProcessor(preprocessor, obtainer) {
   this.process = function(error, fn) {
     var source_maps = this._source_maps;
 
-    preprocessor.process(error, function(result) {
-      preprocessorComplete(result, source_maps, fn);
+    preprocessor.process(error, function(name, result) {
+      preprocessorComplete(name, result, source_maps, fn);
     });
   };
 }

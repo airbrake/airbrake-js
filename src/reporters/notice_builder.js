@@ -1,9 +1,9 @@
 var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
-function ReportBuilder() {}
+function NoticeBuilder() {}
 
-ReportBuilder.build = function(processor_name, error_data, options) {
+NoticeBuilder.build = function(processor_name, error_data, options) {
   // `error_data` should be of the format
   //   { type: String,
   //     message: String,
@@ -41,4 +41,4 @@ ReportBuilder.build = function(processor_name, error_data, options) {
   return output;
 };
 
-module.exports = ReportBuilder;
+module.exports = NoticeBuilder;

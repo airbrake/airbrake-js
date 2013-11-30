@@ -99,7 +99,7 @@ Fortunately, it's easy to register code to be run when the notifier loads. In th
 
 ### Default Annotations
 
-It's possible to annotate error reports with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
+It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
 * `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
 * `Airbrake.addContext(object)` Merges context information reported alongside all errors.
@@ -123,16 +123,37 @@ Additionally, much of this information can be added to captured errors at the ti
       throw er;
     }
 
+### Filtering errors
+
+There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
+
+The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addFilter`.
+
+`addFilter` accepts the entire error notice to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `sessions` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
+
+The return value of the filter function determines whether or not the error notice will be submitted.
+  * If a falsey value is returned, the notice is suppressed.
+  * If a truthy value is returned, the notice may be admissible for submission.
+
+An error notice must pass all provided filters to be submitted.
+
+    // Here we suppress the notice if the top-level `session` key
+    // indicates the user is logged in as an admin
+    Airbrake.addFilter(function(notice) {
+      // Suppress reports from admin sessions
+      return !notice.session.admin;
+    });
+
 ### Custom reporters
 
-If you're interested in getting access to the information reported to Airbrake in your own code, you can register your
+If you're interested in inspecting the information reported to Airbrake in your own code, you can register your
 own error reporter. Note that reporters added this way may be executed out-of-order.
 
 In this example, reported errors are also logged to the console.
 
     <script>
-      Airbrake.addReporter(function(data, options) {
-        console.log(data);
+      Airbrake.addReporter(function(notice) {
+        console.log(notice);
       });
     </script>
 
