@@ -25,17 +25,9 @@ module.exports = function(grunt) {
         src: ['tmp/src/main-tracekit.js'],
         dest: 'dist/<%= pkg.name %>-tracekit.js'
       },
-      fallback: {
-        src: ['tmp/src/main-fallback.js'],
-        dest: 'dist/<%= pkg.name %>-fallback.js'
-      },
       'tracekit-sourcemap': {
         src: ['tmp/src/main-tracekit-sourcemaps.js'],
         dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
-      },
-      'fallback-sourcemap': {
-        src: ['tmp/src/main-fallback-sourcemaps.js'],
-        dest: 'dist/<%= pkg.name %>-fallback-sourcemap.js'
       }
     },
     uglify: {

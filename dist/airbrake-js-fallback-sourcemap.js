@@ -3,7 +3,7 @@
     SourcemapsObtainer  = require("./util/sourcemaps_obtainer"),
     SourcemapsProcessor = require("./processors/sourcemaps_processor"),
     Processor           = require("./processors/fallback_processor"),
-    Reporter            = require("./reporters/jsonp_reporter");
+    Reporter            = require("./reporters/hybrid_reporter");
 
 var client;
 
@@ -30,7 +30,7 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./processors/fallback_processor":6,"./processors/sourcemaps_processor":4,"./reporters/jsonp_reporter":5,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],6:[function(require,module,exports){
+},{"./client":2,"./processors/fallback_processor":5,"./processors/sourcemaps_processor":4,"./reporters/hybrid_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],5:[function(require,module,exports){
 (function(){var match_message_file_line_column = /\s+([^\(]+)\s+\((.*):(\d+):(\d+)\)/;
 
 function recognizeFrame(string) {
@@ -111,23 +111,34 @@ module.exports = FallbackProcessor;
 
 })()
 },{}],7:[function(require,module,exports){
-(function(global){module.exports = function(client) {
+(function(global){function ga(script, attr) {
+  return script.getAttribute("data-airbrake-" + attr);
+}
+
+module.exports = function(client) {
   var scripts = global.document.getElementsByTagName("script"),
       i = 0, len = scripts.length, script,
       project_id,
       project_key,
-      project_environment_name;
+      project_env_name,
+      onload;
 
   for (; i < len; i++) {
     script = scripts[i];
-    project_id = script.getAttribute("data-airbrake-project-id");
-    project_key = script.getAttribute("data-airbrake-project-key");
-    project_environment_name = script.getAttribute("data-airbrake-project-environment-name");
+
+    project_id       = ga(script, "project-id");
+    project_key      = ga(script, "project-key");
+    project_env_name = ga(script, "project-environment-name");
+    onload           = ga(script, "onload");
+
     if (project_id && project_key) {
       client.setProject(project_id, project_key);
     }
-    if (project_environment_name) {
-      client.setEnvironmentName(project_environment_name);
+    if (project_env_name) {
+      client.setEnvironmentName(project_env_name);
+    }
+    if (onload) {
+      global[onload]();
     }
   }
 };
@@ -144,7 +155,7 @@ module.exports = FallbackProcessor;
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
   var _project_id, _key;
@@ -178,67 +189,69 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  function capture(exception) {
-    try {
-      // Get up-to-date Processor and Reporter for this exception
-      var processor = getProcessor && getProcessor(instance),
-          reporter = processor && getReporter(instance);
+  var _custom_reporters = [];
+  instance.getReporters = function() { return _custom_reporters; };
+  instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
 
-      var default_context = {
-        language: "JavaScript"
-      };
-      if (global.navigator && global.navigator.userAgent) {
-        default_context.userAgent = global.navigator.userAgent;
-      }
-      if (global.location) {
-        default_context.url = String(global.location);
-      }
+  function deferReport(fn, data, options) { setTimeout(function() { fn(data, options); }); }
 
-      var exception_to_process = exception.error || exception;
-
-      // Transform the exception into a "standard" data format
-      processor.process(exception_to_process, function(data) {
-        // Decorate data-to-be-reported with client data and
-        // transport data to receiver
-        var options = {
-          context:     merge(default_context, _context, exception.context),
-          environment: merge({}, _environment, exception.environment),
-          params:      merge({}, _params, exception.params),
-          session:     merge({}, _session, exception.session)
-        };
-        reporter.report(data, options);
-      });
-    } catch(_) {
-      // Well, this is embarassing
-      // TODO: log exception
-    }
-  }
-
-  instance.capture = capture;
-  instance.push = capture;
-
-  instance.try = function(fn, as) {
-    try {
-      return fn.call(as);
-    } catch(er) {
-      instance.capture(er);
-    }
-  };
-  instance.wrap = function(fn, as) {
-    return function() {
-      return instance.try(fn, as);
+  var processor = getProcessor(instance, function(data) {
+    // Decorate data-to-be-reported with client data and
+    // transport data to receiver
+    var options = {
+      context:     merge(default_context, _context, exception.context),
+      environment: merge({}, _environment, exception.environment),
+      params:      merge({}, _params, exception.params),
+      session:     merge({}, _session, exception.session)
     };
-  };
+    reporter.report(data, options);
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
-      }
+    for (var i = 0, len = _custom_reporters.length; i < len; i++) {
+      deferReport(_custom_reporters[i], data, options);
     }
   });
+  var reporter = getReporter(instance);
+
+  function capture(exception) {
+    var default_context = {
+      language: "JavaScript"
+    };
+    if (global.navigator && global.navigator.userAgent) {
+      default_context.userAgent = global.navigator.userAgent;
+    }
+    if (global.location) {
+      default_context.url = String(global.location);
+    }
+
+    processor.process(exception.error || exception);
+  }
+
+  instance.push = capture;
+
+  if (global.Airbrake && global.Airbrake.wrap) {
+    instance.wrap = global.Airbrake.wrap;
+  } else {
+    instance.wrap = function(fn) {
+      return function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (exc) {
+          Airbrake.push({error: exc});
+          throw exc;
+        }
+      };
+    };
+  }
+
+  if (shim) {
+    // Client is not yet configured, defer pushing extant errors.
+    setTimeout(function() {
+      // Attempt to consume any errors already pushed to the extant Airbrake object
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
+      }
+    });
+  }
 }
 
 module.exports = Client;
@@ -391,43 +404,18 @@ function SourcemapsProcessor(preprocessor, obtainer) {
 module.exports = SourcemapsProcessor;
 
 })()
-},{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
-(function(global){var ReportBuilder = require("../reporters/report_builder");
+},{"../lib/source-map/source-map-consumer":10}],6:[function(require,module,exports){
+var Reporter;
 
-var cb_count = 0;
-
-function JsonpReporter(project_id, project_key, processor_name) {
-  this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(processor_name, error_data, options),
-        document    = global.document,
-        head        = document.getElementsByTagName("head")[0],
-        script_tag  = document.createElement("script"),
-        body        = JSON.stringify(output_data),
-        cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io",
-        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
-
-
-    // Attach an anonymous function to the global namespace to consume the callback.
-    // This pevents syntax errors from trying to directly execute the JSON response.
-    global[cb_name] = function() { delete global[cb_name]; };
-    cb_count += 1;
-
-    function removeTag() { head.removeChild(script_tag); }
-
-    script_tag.src     = url;
-    script_tag.type    = "text/javascript";
-    script_tag.onload  = removeTag;
-    script_tag.onerror = removeTag;
-
-    head.appendChild(script_tag);
-  };
+if ('withCredentials' in new XMLHttpRequest()) {
+  Reporter = require('./xhr_reporter');
+} else {
+  Reporter = require('./jsonp_reporter');
 }
 
-module.exports = JsonpReporter;
+module.exports = Reporter;
 
-})(window)
-},{"../reporters/report_builder":11}],8:[function(require,module,exports){
+},{"./jsonp_reporter":12,"./xhr_reporter":11}],8:[function(require,module,exports){
 /* jshint -W084 */
 /*
  * Merge a number of objects into one.
@@ -541,6 +529,60 @@ var B64 = {
 module.exports = B64;
 
 },{}],11:[function(require,module,exports){
+(function(global){var ReportBuilder = require("../reporters/report_builder");
+
+function XhrReporter(project_id, project_key, processor_name) {
+  this.report = function(error_data, options) {
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
+        url         = "https://api.airbrake.io/api/v3/projects/" + project_id + "/notices?key=" + project_key,
+        request     = new global.XMLHttpRequest();
+
+    request.open("POST", url, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(output_data));
+  };
+}
+
+module.exports = XhrReporter;
+
+})(window)
+},{"../reporters/report_builder":13}],12:[function(require,module,exports){
+(function(global){var ReportBuilder = require("../reporters/report_builder");
+
+var cb_count = 0;
+
+function JsonpReporter(project_id, project_key, processor_name) {
+  this.report = function(error_data, options) {
+    var output_data = ReportBuilder.build(processor_name, error_data, options),
+        document    = global.document,
+        head        = document.getElementsByTagName("head")[0],
+        script_tag  = document.createElement("script"),
+        body        = JSON.stringify(output_data),
+        cb_name     = "airbrake_cb_" + cb_count,
+        prefix      = "https://api.airbrake.io",
+        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
+
+
+    // Attach an anonymous function to the global namespace to consume the callback.
+    // This pevents syntax errors from trying to directly execute the JSON response.
+    global[cb_name] = function() { delete global[cb_name]; };
+    cb_count += 1;
+
+    function removeTag() { head.removeChild(script_tag); }
+
+    script_tag.src     = url;
+    script_tag.type    = "text/javascript";
+    script_tag.onload  = removeTag;
+    script_tag.onerror = removeTag;
+
+    head.appendChild(script_tag);
+  };
+}
+
+module.exports = JsonpReporter;
+
+})(window)
+},{"../reporters/report_builder":13}],13:[function(require,module,exports){
 var merge = require("../util/merge");
 
 // Responsible for creating a payload consumable by the Airbrake v3 API
@@ -1029,7 +1071,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":14,"./base64-vlq":15,"./binary-search":13,"./util":12,"amdefine":16}],17:[function(require,module,exports){
+},{"./array-set":16,"./base64-vlq":17,"./binary-search":15,"./util":14,"amdefine":18}],19:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1083,7 +1125,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 (function(process,__filename){/** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.0.5 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
@@ -1385,7 +1427,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../../node_modules/amdefine/amdefine.js")
-},{"__browserify_process":17,"path":18}],18:[function(require,module,exports){
+},{"__browserify_process":19,"path":20}],20:[function(require,module,exports){
 (function(process){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -1565,7 +1607,7 @@ exports.relative = function(from, to) {
 exports.sep = '/';
 
 })(require("__browserify_process"))
-},{"__browserify_process":17}],12:[function(require,module,exports){
+},{"__browserify_process":19}],14:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -1772,7 +1814,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":16}],13:[function(require,module,exports){
+},{"amdefine":18}],15:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -1855,7 +1897,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":16}],14:[function(require,module,exports){
+},{"amdefine":18}],16:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -1954,7 +1996,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":12,"amdefine":16}],15:[function(require,module,exports){
+},{"./util":14,"amdefine":18}],17:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -2100,7 +2142,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":19,"amdefine":16}],19:[function(require,module,exports){
+},{"./base64":21,"amdefine":18}],21:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -2144,5 +2186,5 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":16}]},{},[1])
+},{"amdefine":18}]},{},[1])
 ;

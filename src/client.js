@@ -7,17 +7,18 @@
 // window.Airbrake is an instance of Client
 
 var merge = require("./util/merge");
-var NoticeBuilder = require("./reporters/notice_builder");
 
 function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
-  var _project_id, _key;
-  instance.setProject = function(project_id, key) {
-    _project_id = project_id;
-    _key = key;
+  var _project_id, _project_key;
+  instance.setProject = function(id, key) {
+    _project_id = id;
+    _project_key = key;
   };
-  instance.getProject = function() { return [ _project_id, _key ]; };
+  instance.getProject = function() {
+    return [_project_id, _project_key];
+  };
 
   var _context = {};
   instance.getContext = function() { return _context; };
@@ -43,29 +44,21 @@ function Client(getProcessor, getReporter, shim) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  var _custom_reporters = [];
-  instance.getReporters = function() { return _custom_reporters; };
-  instance.addReporter = function(reporter) { _custom_reporters.push(reporter); };
+  var _reporters = [];
+  instance.getReporters = function() { return _reporters; };
+  instance.addReporter = function(reporter) { _reporters.push(reporter); };
 
-  var _report_filters = [];
-  instance.addFilter = function(filter) { _report_filters.push(filter); };
+  var _filters = [];
+  instance.addFilter = function(filter) { _filters.push(filter); };
 
-  // Defer a function call using setTimeout, forwards args
-  // defer(function(arg) { console.log('arg: ' + arg); }, 10); // arg: 10
-  function defer(fn) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    setTimeout(function() {
-      fn.apply(null, args);
-    });
+  var _processor = getProcessor && getProcessor();
+  if (getReporter) {
+    instance.addReporter(getReporter());
   }
 
-  function capture(exception) {
-    // Get up-to-date Processor and Reporter for this exception
-    var processor = getProcessor && getProcessor(instance),
-        reporter = processor && getReporter(instance);
-
+  function capture(notice) {
     var default_context = {
-      language: "JavaScript"
+      language: 'JavaScript'
     };
     if (global.navigator && global.navigator.userAgent) {
       default_context.userAgent = global.navigator.userAgent;
@@ -74,34 +67,32 @@ function Client(getProcessor, getReporter, shim) {
       default_context.url = String(global.location);
     }
 
-    var exception_to_process = exception.error || exception;
+    _processor.process(notice.error || notice, function(processorName, error) {
+      var i, len;
 
-    // Transform the exception into a "standard" data format
-    processor.process(exception_to_process, function(processor_name, data) {
-      // Decorate data-to-be-reported with client data and
-      // transport data to receiver
-      var options = {
-        context:     merge(default_context, _context, exception.context),
-        environment: merge({}, _environment, exception.environment),
-        params:      merge({}, _params, exception.params),
-        session:     merge({}, _session, exception.session)
+      notice = {
+        notifier: {
+          name:    "Airbrake JS",
+          version: "<%= pkg.version %>+" + processorName,
+          url:     "https://github.com/airbrake/airbrake-js"
+        },
+        errors: [error],
+        context: merge(default_context, _context, notice.context),
+        environment: merge({}, _environment, notice.environment),
+        params: merge({}, _params, notice.params),
+        session: merge({}, _session, notice.session)
       };
 
-      var notice = NoticeBuilder.build(processor_name, data, options);
-
-      (function filter(filters, left) {
-        if (left) {
-          left -= 1;
-          if (filters[left](notice)) {
-            filter(filters, left);
-          }
-        } else {
-          reporter.report(notice);
+      for (i = 0, len = _filters.length; i < len; i++) {
+        var filter = _filters[i];
+        if (!filter(notice)) {
+          return;
         }
-      }(_report_filters, _report_filters.length));
+      }
 
-      for (var i = 0, len = _custom_reporters.length; i < len; i++) {
-        defer(_custom_reporters[i], notice);
+      for (i = 0, len = _reporters.length; i < len; i++) {
+        var reporter = _reporters[i];
+        reporter(notice, {projectId: _project_id, projectKey: _project_key});
       }
     });
   }
@@ -124,9 +115,8 @@ function Client(getProcessor, getReporter, shim) {
   }
 
   if (shim) {
-    // Client is not yet configured, defer pushing extant errors.
+    // Consume any errors already pushed to the shim.
     setTimeout(function() {
-      // Attempt to consume any errors already pushed to the extant Airbrake object
       for (var i = 0, len = shim.length; i < len; i++) {
         instance.push(shim[i]);
       }

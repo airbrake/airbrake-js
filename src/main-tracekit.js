@@ -1,20 +1,15 @@
-var Client = require("./client"),
-    Processor = require("./processors/tracekit_processor"),
-    Reporter  = require("./reporters/hybrid_reporter");
+var Client      = require("./client"),
+    Processor   = require("./processors/tracekit_processor"),
+    NewReporter = require("./reporters/hybrid_reporter");
 
 var client;
 
-function getProcessor(client) {
+function getProcessor() {
   return new Processor();
 }
 
-function getReporter(client) {
-  // Vars from client
-  var project_id_and_key = client.getProject(),
-      project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1];
-
-  return new Reporter(project_id, project_key);
+function getReporter() {
+  return NewReporter("tracekit");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);

@@ -1,31 +1,40 @@
 var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = false;
+TraceKit.collectWindowErrors = true;
 
-TraceKit.report.subscribe(function(tracekit_result, fn) {
-  var stack = tracekit_result.stack;
+function TraceKitProcessor(fn) {
+  var _fns = [];
 
-  var backtrace = [], i, frame;
-  for (i = stack.length - 1; i >= 0; i--) {
-    frame = stack[i];
-    backtrace.unshift({
-      file: frame.url,
-      line: parseInt(frame.line, 10),
-      column: parseInt(frame.column, 10),
-      "function": frame.func
+  TraceKit.report.subscribe(function(error, fn) {
+    var last_fn = _fns.pop();
+    if (!fn) {
+      fn = last_fn;
+    } else if (fn != last_fn) {
+      console.log("airbrake: precondition failed: fn != last_fn");
+      return;
+    }
+
+    var stack = error.stack;
+    var backtrace = [], i, frame;
+    for (i = stack.length - 1; i >= 0; i--) {
+      frame = stack[i];
+      backtrace.unshift({
+        file: frame.url,
+        line: parseInt(frame.line, 10),
+        column: parseInt(frame.column, 10),
+        "function": frame.func
+      });
+    }
+
+    fn('tracekit', {
+      type: error.name,
+      message: error.message,
+      backtrace: backtrace
     });
-  }
-
-  fn('tracekit', {
-    type: tracekit_result.name,
-    message: tracekit_result.message,
-    backtrace: backtrace
   });
 
-});
-
-function TraceKitProcessor() {
   this.process = function(error, fn) {
+    _fns.push(fn);
     TraceKit.report(error, fn);
   };
 }

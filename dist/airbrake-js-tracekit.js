@@ -1,21 +1,16 @@
 ;(function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
-(function(global){var Client = require("./client"),
-    Processor = require("./processors/tracekit_processor"),
-    Reporter  = require("./reporters/jsonp_reporter");
+(function(global){var Client      = require("./client"),
+    Processor   = require("./processors/tracekit_processor"),
+    NewReporter = require("./reporters/hybrid_reporter");
 
 var client;
 
-function getProcessor(client) {
+function getProcessor() {
   return new Processor();
 }
 
-function getReporter(client) {
-  // Vars from client
-  var project_id_and_key = client.getProject(),
-      project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1];
-
-  return new Reporter(project_id, project_key, "tracekit");
+function getReporter() {
+  return NewReporter("tracekit");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
@@ -25,24 +20,35 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./processors/tracekit_processor":3,"./reporters/jsonp_reporter":4,"./util/slurp_project_from_dom":5}],5:[function(require,module,exports){
-(function(global){module.exports = function(client) {
+},{"./client":2,"./processors/tracekit_processor":3,"./reporters/hybrid_reporter":4,"./util/slurp_project_from_dom":5}],5:[function(require,module,exports){
+(function(global){function ga(script, attr) {
+  return script.getAttribute("data-airbrake-" + attr);
+}
+
+module.exports = function(client) {
   var scripts = global.document.getElementsByTagName("script"),
       i = 0, len = scripts.length, script,
       project_id,
       project_key,
-      project_environment_name;
+      env_name,
+      onload;
 
   for (; i < len; i++) {
     script = scripts[i];
-    project_id = script.getAttribute("data-airbrake-project-id");
-    project_key = script.getAttribute("data-airbrake-project-key");
-    project_environment_name = script.getAttribute("data-airbrake-project-environment-name");
+
+    project_id       = ga(script, "project-id");
+    project_key      = ga(script, "project-key");
+    env_name = ga(script, "environment-name");
+    onload           = ga(script, "onload");
+
     if (project_id && project_key) {
       client.setProject(project_id, project_key);
     }
-    if (project_environment_name) {
-      client.setEnvironmentName(project_environment_name);
+    if (env_name) {
+      client.setEnvironmentName(env_name);
+    }
+    if (onload) {
+      global[onload]();
     }
   }
 };
@@ -59,15 +65,17 @@ require("./util/slurp_project_from_dom")(client);
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
-  var _project_id, _key;
-  instance.setProject = function(project_id, key) {
-    _project_id = project_id;
-    _key = key;
+  var _project_id, _project_key;
+  instance.setProject = function(id, key) {
+    _project_id = id;
+    _project_key = key;
   };
-  instance.getProject = function() { return [ _project_id, _key ]; };
+  instance.getProject = function() {
+    return [_project_id, _project_key];
+  };
 
   var _context = {};
   instance.getContext = function() { return _context; };
@@ -93,67 +101,84 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  function capture(exception) {
-    try {
-      // Get up-to-date Processor and Reporter for this exception
-      var processor = getProcessor && getProcessor(instance),
-          reporter = processor && getReporter(instance);
+  var _reporters = [];
+  instance.getReporters = function() { return _reporters; };
+  instance.addReporter = function(reporter) { _reporters.push(reporter); };
 
-      var default_context = {
-        language: "JavaScript"
-      };
-      if (global.navigator && global.navigator.userAgent) {
-        default_context.userAgent = global.navigator.userAgent;
-      }
-      if (global.location) {
-        default_context.url = String(global.location);
-      }
+  var _filters = [];
+  instance.addFilter = function(filter) { _filters.push(filter); };
 
-      var exception_to_process = exception.error || exception;
-
-      // Transform the exception into a "standard" data format
-      processor.process(exception_to_process, function(data) {
-        // Decorate data-to-be-reported with client data and
-        // transport data to receiver
-        var options = {
-          context:     merge(default_context, _context, exception.context),
-          environment: merge({}, _environment, exception.environment),
-          params:      merge({}, _params, exception.params),
-          session:     merge({}, _session, exception.session)
-        };
-        reporter.report(data, options);
-      });
-    } catch(_) {
-      // Well, this is embarassing
-      // TODO: log exception
-    }
+  var _processor = getProcessor && getProcessor();
+  if (getReporter) {
+    instance.addReporter(getReporter());
   }
 
-  instance.capture = capture;
+  function capture(notice) {
+    var default_context = {
+      language: 'JavaScript'
+    };
+    if (global.navigator && global.navigator.userAgent) {
+      default_context.userAgent = global.navigator.userAgent;
+    }
+    if (global.location) {
+      default_context.url = String(global.location);
+    }
+
+    _processor.process(notice.error || notice, function(processorName, error) {
+      var i, len;
+
+      notice = {
+        notifier: {
+          name:    "Airbrake JS",
+          version: "0.2.2+" + processorName,
+          url:     "https://github.com/airbrake/airbrake-js"
+        },
+        errors: [error],
+        context: merge(default_context, _context, notice.context),
+        environment: merge({}, _environment, notice.environment),
+        params: merge({}, _params, notice.params),
+        session: merge({}, _session, notice.session)
+      };
+
+      for (i = 0, len = _filters.length; i < len; i++) {
+        var filter = _filters[i];
+        if (!filter(notice)) {
+          return;
+        }
+      }
+
+      for (i = 0, len = _reporters.length; i < len; i++) {
+        var reporter = _reporters[i];
+        reporter(notice, {projectId: _project_id, projectKey: _project_key});
+      }
+    });
+  }
+
   instance.push = capture;
 
-  instance.try = function(fn, as) {
-    try {
-      return fn.call(as);
-    } catch(er) {
-      instance.capture(er);
-    }
-  };
-  instance.wrap = function(fn, as) {
-    return function() {
-      return instance.try(fn, as);
+  if (global.Airbrake && global.Airbrake.wrap) {
+    instance.wrap = global.Airbrake.wrap;
+  } else {
+    instance.wrap = function(fn) {
+      return function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (exc) {
+          Airbrake.push({error: exc});
+          throw exc;
+        }
+      };
     };
-  };
+  }
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
+  if (shim) {
+    // Consume any errors already pushed to the shim.
+    setTimeout(function() {
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
       }
-    }
-  });
+    });
+  }
 }
 
 module.exports = Client;
@@ -162,32 +187,41 @@ module.exports = Client;
 },{"./util/merge":6}],3:[function(require,module,exports){
 (function(){var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = false;
+TraceKit.collectWindowErrors = true;
 
-TraceKit.report.subscribe(function(tracekit_result, fn) {
-  var stack = tracekit_result.stack;
+function TraceKitProcessor(fn) {
+  var _fns = [];
 
-  var backtrace = [], i, frame;
-  for (i = stack.length - 1; i >= 0; i--) {
-    frame = stack[i];
-    backtrace.unshift({
-      file: frame.url,
-      line: parseInt(frame.line, 10),
-      column: parseInt(frame.column, 10),
-      "function": frame.func
+  TraceKit.report.subscribe(function(error, fn) {
+    var last_fn = _fns.pop();
+    if (!fn) {
+      fn = last_fn;
+    } else if (fn != last_fn) {
+      console.log("airbrake: precondition failed: fn != last_fn");
+      return;
+    }
+
+    var stack = error.stack;
+    var backtrace = [], i, frame;
+    for (i = stack.length - 1; i >= 0; i--) {
+      frame = stack[i];
+      backtrace.unshift({
+        file: frame.url,
+        line: parseInt(frame.line, 10),
+        column: parseInt(frame.column, 10),
+        "function": frame.func
+      });
+    }
+
+    fn('tracekit', {
+      type: error.name,
+      message: error.message,
+      backtrace: backtrace
     });
-  }
-
-  fn({
-    type: tracekit_result.name,
-    message: tracekit_result.message,
-    backtrace: backtrace
   });
 
-});
-
-function TraceKitProcessor() {
   this.process = function(error, fn) {
+    _fns.push(fn);
     TraceKit.report(error, fn);
   };
 }
@@ -196,42 +230,17 @@ module.exports = TraceKitProcessor;
 
 })()
 },{"../shims/tracekit_browserify_shim":7}],4:[function(require,module,exports){
-(function(global){var ReportBuilder = require("../reporters/report_builder");
+var Reporter;
 
-var cb_count = 0;
-
-function JsonpReporter(project_id, project_key, processor_name) {
-  this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(processor_name, error_data, options),
-        document    = global.document,
-        head        = document.getElementsByTagName("head")[0],
-        script_tag  = document.createElement("script"),
-        body        = JSON.stringify(output_data),
-        cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io",
-        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
-
-
-    // Attach an anonymous function to the global namespace to consume the callback.
-    // This pevents syntax errors from trying to directly execute the JSON response.
-    global[cb_name] = function() { delete global[cb_name]; };
-    cb_count += 1;
-
-    function removeTag() { head.removeChild(script_tag); }
-
-    script_tag.src     = url;
-    script_tag.type    = "text/javascript";
-    script_tag.onload  = removeTag;
-    script_tag.onerror = removeTag;
-
-    head.appendChild(script_tag);
-  };
+if ('withCredentials' in new XMLHttpRequest()) {
+  Reporter = require('./xhr_reporter');
+} else {
+  Reporter = require('./jsonp_reporter');
 }
 
-module.exports = JsonpReporter;
+module.exports = Reporter;
 
-})(window)
-},{"../reporters/report_builder":8}],6:[function(require,module,exports){
+},{"./jsonp_reporter":9,"./xhr_reporter":8}],6:[function(require,module,exports){
 /* jshint -W084 */
 /*
  * Merge a number of objects into one.
@@ -284,6 +293,54 @@ var merge = (function() {
 
 module.exports = merge;
 
+},{}],8:[function(require,module,exports){
+(function(global){function XhrReporter(processor_name) {
+  return function(notice, options) {
+    var url = "https://api.airbrake.io/api/v3/projects/" + options.projectId + "/notices?key=" + options.projectKey,
+        request = new global.XMLHttpRequest();
+
+    request.open("POST", url, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(notice));
+  };
+}
+
+module.exports = XhrReporter;
+
+})(window)
+},{}],9:[function(require,module,exports){
+(function(global){var cb_count = 0;
+
+function JsonpReporter(processor_name) {
+  return function(notice, options) {
+    var document    = global.document,
+        head        = document.getElementsByTagName("head")[0],
+        script_tag  = document.createElement("script"),
+        body        = JSON.stringify(notice),
+        cb_name     = "airbrake_cb_" + cb_count,
+        prefix      = "https://api.airbrake.io",
+        url         = prefix + "/api/v3/projects/" + options.projectId + "/create-notice?key=" + options.projectKey + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
+
+
+    // Attach an anonymous function to the global namespace to consume the callback.
+    // This pevents syntax errors from trying to directly execute the JSON response.
+    global[cb_name] = function() { delete global[cb_name]; };
+    cb_count += 1;
+
+    function removeTag() { head.removeChild(script_tag); }
+
+    script_tag.src     = url;
+    script_tag.type    = "text/javascript";
+    script_tag.onload  = removeTag;
+    script_tag.onerror = removeTag;
+
+    head.appendChild(script_tag);
+  };
+}
+
+module.exports = JsonpReporter;
+
+})(window)
 },{}],7:[function(require,module,exports){
 (function(global){// browserify shim for TraceKit bower module
 // Expose TraceKit to global namespace
@@ -293,53 +350,7 @@ require("../lib/tracekit");
 module.exports = global.TraceKit.noConflict();
 
 })(window)
-},{"../lib/tracekit":9}],8:[function(require,module,exports){
-var merge = require("../util/merge");
-
-// Responsible for creating a payload consumable by the Airbrake v3 API
-function ReportBuilder() {}
-
-ReportBuilder.build = function(processor_name, error_data, options) {
-  // `error_data` should be of the format
-  //   { type: String,
-  //     message: String,
-  //     backtrace: Array
-  //   }
-  //
-  // Each member of `error_data.backtrace` should be of the format
-  //   { file: String,
-  //     line: Number,
-  //     function: String
-  //   }
-
-  if (!options) {
-    options = {};
-  }
-
-  var notifier_data = {
-    name    : "Airbrake JS",
-    version : "0.2.2+" + processor_name,
-    url     : "http://airbrake.io"
-  };
-
-  // Build the mandatory pieces of the output payload
-  var output = {
-    notifier : notifier_data,
-    errors   : [ error_data ]
-  };
-
-  // Add optional top-level keys to the output payload
-  if (options.context) { merge(output, { context: options.context }); }
-  if (options.environment) { merge(output, { environment: options.environment }); }
-  if (options.session) { merge(output, { session: options.session }); }
-  if (options.params) { merge(output, { params: options.params }); }
-
-  return output;
-};
-
-module.exports = ReportBuilder;
-
-},{"../util/merge":6}],9:[function(require,module,exports){
+},{"../lib/tracekit":10}],10:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit
  MIT license

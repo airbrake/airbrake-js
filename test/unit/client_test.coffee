@@ -5,16 +5,11 @@ expect     = chai.expect
 chai.use(sinon_chai)
 
 Client = require("../../src/client")
-NoticeBuilder = require('../../src/reporters/notice_builder')
 
 describe "Client", ->
   clock = undefined
   beforeEach -> clock = sinon.useFakeTimers()
   afterEach -> clock.restore()
-
-  build = null
-  beforeEach -> build = sinon.spy(NoticeBuilder, 'build')
-  afterEach -> build.restore()
 
   writeThroughProcessor = null
   beforeEach -> writeThroughProcessor = { process: (data, fn) -> fn('write-through', data); }
@@ -107,43 +102,42 @@ describe "Client", ->
       expect(client.getSession().key1).to.equal("[custom_session_key1_value]")
 
   describe 'filters', ->
-    process      = null
-    report       = null
+    processor    = null
+    reporter     = null
     getProcessor = null
     getReporter  = null
     client       = null
 
     beforeEach ->
-      process        = sinon.spy((error) -> {})
-      report         = sinon.spy()
-      getProcessor   = -> { process: process }
-      getReporter    = -> { report: report }
+      processor      = sinon.spy((error) -> {})
+      reporter       = sinon.spy()
+      getProcessor   = -> { process: processor }
+      getReporter    = -> reporter
       client         = new Client(getProcessor, getReporter)
 
     describe 'addFilter', ->
       it 'can prevent report', ->
-        filter = sinon.spy((report) -> false)
+        filter = sinon.spy((notice) -> false)
         client.addFilter(filter)
 
         client.push(error: {})
-        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor = processor.lastCall.args[1]
         continueFromProcessor('test', {})
 
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(reported)
-        expect(report).not.to.have.been.called
+        expect(reporter).not.to.have.been.called
+        expect(filter).to.have.been.called
 
       it 'can allow report', ->
-        filter = sinon.spy((report) -> true)
+        filter = sinon.spy((notice) -> true)
         client.addFilter(filter)
 
         client.push(error: {})
-        continueFromProcessor = process.lastCall.args[1]
+        continueFromProcessor = processor.lastCall.args[1]
         continueFromProcessor('test', {})
 
-        reported = build.lastCall.returnValue
-        expect(filter).to.have.been.calledWith(reported)
-        expect(report).to.have.been.called
+        expect(reporter).to.have.been.called
+        notice = reporter.lastCall.args[0]
+        expect(filter).to.have.been.calledWith(notice)
 
   describe "push", ->
     exception = do ->
@@ -152,7 +146,6 @@ describe "Client", ->
         (0)()
       catch _err
         error = _err
-
       return error
 
     it "is aliased as push", ->
@@ -171,31 +164,9 @@ describe "Client", ->
 
         expect(processor.process).to.have.been.called
 
-      it "reports NoticeBuilder result to reporter", ->
-        processor = { process: sinon.spy() }
-        reporter = { report: sinon.spy() }
-        getReporter = -> reporter
-        getProcessor = -> processor
-
-        client = new Client(getProcessor, getReporter)
-        client.push(exception)
-
-        # Reporter is not called until Processor invokes the
-        # callback provided
-        expect(reporter.report).not.to.have.been.called
-
-        # The first argument passed the processor is the error to be handled
-        # The second is the continuation which invokes the reporter
-        continueFromProcessor = processor.process.lastCall.args[1]
-        processed_error = sinon.spy()
-        continueFromProcessor('test', processed_error)
-
-        report = build.lastCall.returnValue
-        expect(reporter.report).to.have.been.calledWith(report)
-
     describe "custom data sent to reporter", ->
       it "reports context", ->
-        reporter = { report: sinon.spy() }
+        reporter = sinon.spy()
         getReporter = -> reporter
         getProcessor = -> writeThroughProcessor
 
@@ -203,11 +174,11 @@ describe "Client", ->
         client.addContext(context_key: "[custom_context]")
         client.push(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.lastCall.args[0]
         expect(reported.context.context_key).to.equal("[custom_context]")
 
       it "reports environment", ->
-        reporter = { report: sinon.spy() }
+        reporter = sinon.spy()
         getReporter = -> reporter
         getProcessor = -> writeThroughProcessor
 
@@ -215,11 +186,11 @@ describe "Client", ->
         client.addEnvironment(env_key: "[custom_env]")
         client.push(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.lastCall.args[0]
         expect(reported.environment.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
-        reporter = { report: sinon.spy() }
+        reporter = sinon.spy()
         getReporter = -> reporter
         getProcessor = -> writeThroughProcessor
 
@@ -227,11 +198,11 @@ describe "Client", ->
         client.addParams(params_key: "[custom_params]")
         client.push(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.lastCall.args[0]
         expect(reported.params.params_key).to.equal("[custom_params]")
 
       it "reports session", ->
-        reporter = { report: sinon.spy() }
+        reporter = sinon.spy()
         getReporter = -> reporter
         getProcessor = -> writeThroughProcessor
 
@@ -239,12 +210,12 @@ describe "Client", ->
         client.addSession(session_key: "[custom_session]")
         client.push(exception)
 
-        reported = reporter.report.lastCall.args[0]
+        reported = reporter.lastCall.args[0]
         expect(reported.session.session_key).to.equal("[custom_session]")
 
       describe "wrapped error", ->
         it "unwraps and processes error", ->
-          reporter = { report: sinon.spy() }
+          reporter = sinon.spy()
           processor = { process: sinon.spy() }
           getReporter = -> reporter
           getProcessor = -> processor
@@ -254,7 +225,7 @@ describe "Client", ->
           expect(processor.process).to.have.been.calledWith(exception)
 
         it "reports custom context", ->
-          reporter = { report: sinon.spy() }
+          reporter = sinon.spy()
           getReporter = -> reporter
           getProcessor = -> writeThroughProcessor
 
@@ -266,7 +237,7 @@ describe "Client", ->
               context1: "push_value1"
               context3: "push_value3"
 
-          reported = reporter.report.lastCall.args[0]
+          reported = reporter.lastCall.args[0]
           expect(reported.context).to.deep.equal
             language: "JavaScript"
             context1: "push_value1"
@@ -274,7 +245,7 @@ describe "Client", ->
             context3: "push_value3"
 
         it "reports custom environment", ->
-          reporter = { report: sinon.spy() }
+          reporter = sinon.spy()
           getReporter = -> reporter
           getProcessor = -> writeThroughProcessor
 
@@ -286,14 +257,14 @@ describe "Client", ->
               env1: "push_value1"
               env3: "push_value3"
 
-          reported = reporter.report.lastCall.args[0]
+          reported = reporter.lastCall.args[0]
           expect(reported.environment).to.deep.equal
             env1: "push_value1"
             env2: "value2"
             env3: "push_value3"
 
         it "reports custom params", ->
-          reporter = { report: sinon.spy() }
+          reporter = sinon.spy()
           getReporter = -> reporter
           getProcessor = -> writeThroughProcessor
 
@@ -305,14 +276,15 @@ describe "Client", ->
               param1: "push_value1"
               param3: "push_value3"
 
-          reported = reporter.report.lastCall.args[0]
+          reported = reporter.lastCall.args[0]
           expect(reported.params).to.deep.equal
             param1: "push_value1"
             param2: "value2"
             param3: "push_value3"
 
         it "reports custom session", ->
-          reporter = { report: sinon.spy() }
+          reporter = sinon.spy()
+          processor = { process: (data, fn) -> fn(data) }
           getReporter = -> reporter
           getProcessor = -> writeThroughProcessor
 
@@ -324,7 +296,7 @@ describe "Client", ->
               session1: "push_value1"
               session3: "push_value3"
 
-          reported = reporter.report.lastCall.args[0]
+          reported = reporter.lastCall.args[0]
           expect(reported.session).to.deep.equal
             session1: "push_value1"
             session2: "value2"
@@ -338,6 +310,17 @@ describe "Client", ->
       client = new Client(getProcessor, getReporter, [ "extant error" ])
       clock.tick()
       expect(processor.process).to.have.been.calledWith("extant error")
+
+    it "reports processed error and options to custom reporter", ->
+      custom_reporter = sinon.spy()
+      processed_error = sinon.spy()
+      processed_options = sinon.match.typeOf("object")
+      getReporter = -> ->
+      getProcessor = -> { process: (error, fn) -> fn(processed_error) }
+      client = new Client(getProcessor, getReporter)
+      client.addReporter(custom_reporter)
+      client.push(error: {})
+      expect(custom_reporter).to.have.been.called
 
   describe "wrap", ->
     it "does not invoke lambda immediately", ->

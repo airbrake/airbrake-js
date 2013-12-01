@@ -3,24 +3,16 @@
     SourcemapsObtainer  = require("./util/sourcemaps_obtainer"),
     SourcemapsProcessor = require("./processors/sourcemaps_processor"),
     Processor           = require("./processors/tracekit_processor"),
-    Reporter            = require("./reporters/jsonp_reporter");
+    NewReporter         = require("./reporters/hybrid_reporter");
 
 var client;
 
-function getProcessor(client) {
-  var processor           = new Processor();
-  var sourcemaps_obtainer = new SourcemapsObtainer();
-
-  return new SourcemapsProcessor(processor, sourcemaps_obtainer);
+function getProcessor() {
+  return new SourcemapsProcessor(new Processor(), new SourcemapsObtainer());
 }
 
-function getReporter(client) {
-  // Vars from client
-  var project_id_and_key = client.getProject(),
-      project_id         = project_id_and_key[0],
-      project_key        = project_id_and_key[1];
-
-  return new Reporter(project_id, project_key, "fallback+sourcemaps");
+function getReporter() {
+  return NewReporter("fallback+sourcemaps");
 }
 
 client = new Client(getProcessor, getReporter, global.Airbrake);
@@ -30,24 +22,35 @@ global.Airbrake = client;
 require("./util/slurp_project_from_dom")(client);
 
 })(window)
-},{"./client":2,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/jsonp_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],7:[function(require,module,exports){
-(function(global){module.exports = function(client) {
+},{"./client":2,"./processors/sourcemaps_processor":4,"./processors/tracekit_processor":5,"./reporters/hybrid_reporter":6,"./util/slurp_project_from_dom":7,"./util/sourcemaps_obtainer":3}],7:[function(require,module,exports){
+(function(global){function ga(script, attr) {
+  return script.getAttribute("data-airbrake-" + attr);
+}
+
+module.exports = function(client) {
   var scripts = global.document.getElementsByTagName("script"),
       i = 0, len = scripts.length, script,
       project_id,
       project_key,
-      project_environment_name;
+      env_name,
+      onload;
 
   for (; i < len; i++) {
     script = scripts[i];
-    project_id = script.getAttribute("data-airbrake-project-id");
-    project_key = script.getAttribute("data-airbrake-project-key");
-    project_environment_name = script.getAttribute("data-airbrake-project-environment-name");
+
+    project_id       = ga(script, "project-id");
+    project_key      = ga(script, "project-key");
+    env_name = ga(script, "environment-name");
+    onload           = ga(script, "onload");
+
     if (project_id && project_key) {
       client.setProject(project_id, project_key);
     }
-    if (project_environment_name) {
-      client.setEnvironmentName(project_environment_name);
+    if (env_name) {
+      client.setEnvironmentName(env_name);
+    }
+    if (onload) {
+      global[onload]();
     }
   }
 };
@@ -64,15 +67,17 @@ require("./util/slurp_project_from_dom")(client);
 
 var merge = require("./util/merge");
 
-function Client(getProcessor, getReporter, extant_errors) {
+function Client(getProcessor, getReporter, shim) {
   var instance = this;
 
-  var _project_id, _key;
-  instance.setProject = function(project_id, key) {
-    _project_id = project_id;
-    _key = key;
+  var _project_id, _project_key;
+  instance.setProject = function(id, key) {
+    _project_id = id;
+    _project_key = key;
   };
-  instance.getProject = function() { return [ _project_id, _key ]; };
+  instance.getProject = function() {
+    return [_project_id, _project_key];
+  };
 
   var _context = {};
   instance.getContext = function() { return _context; };
@@ -98,67 +103,84 @@ function Client(getProcessor, getReporter, extant_errors) {
   instance.getSession = function() { return _session; };
   instance.addSession = function(session) { merge(_session, session); };
 
-  function capture(exception) {
-    try {
-      // Get up-to-date Processor and Reporter for this exception
-      var processor = getProcessor && getProcessor(instance),
-          reporter = processor && getReporter(instance);
+  var _reporters = [];
+  instance.getReporters = function() { return _reporters; };
+  instance.addReporter = function(reporter) { _reporters.push(reporter); };
 
-      var default_context = {
-        language: "JavaScript"
-      };
-      if (global.navigator && global.navigator.userAgent) {
-        default_context.userAgent = global.navigator.userAgent;
-      }
-      if (global.location) {
-        default_context.url = String(global.location);
-      }
+  var _filters = [];
+  instance.addFilter = function(filter) { _filters.push(filter); };
 
-      var exception_to_process = exception.error || exception;
-
-      // Transform the exception into a "standard" data format
-      processor.process(exception_to_process, function(data) {
-        // Decorate data-to-be-reported with client data and
-        // transport data to receiver
-        var options = {
-          context:     merge(default_context, _context, exception.context),
-          environment: merge({}, _environment, exception.environment),
-          params:      merge({}, _params, exception.params),
-          session:     merge({}, _session, exception.session)
-        };
-        reporter.report(data, options);
-      });
-    } catch(_) {
-      // Well, this is embarassing
-      // TODO: log exception
-    }
+  var _processor = getProcessor && getProcessor();
+  if (getReporter) {
+    instance.addReporter(getReporter());
   }
 
-  instance.capture = capture;
+  function capture(notice) {
+    var default_context = {
+      language: 'JavaScript'
+    };
+    if (global.navigator && global.navigator.userAgent) {
+      default_context.userAgent = global.navigator.userAgent;
+    }
+    if (global.location) {
+      default_context.url = String(global.location);
+    }
+
+    _processor.process(notice.error || notice, function(processorName, error) {
+      var i, len;
+
+      notice = {
+        notifier: {
+          name:    "Airbrake JS",
+          version: "0.2.2+" + processorName,
+          url:     "https://github.com/airbrake/airbrake-js"
+        },
+        errors: [error],
+        context: merge(default_context, _context, notice.context),
+        environment: merge({}, _environment, notice.environment),
+        params: merge({}, _params, notice.params),
+        session: merge({}, _session, notice.session)
+      };
+
+      for (i = 0, len = _filters.length; i < len; i++) {
+        var filter = _filters[i];
+        if (!filter(notice)) {
+          return;
+        }
+      }
+
+      for (i = 0, len = _reporters.length; i < len; i++) {
+        var reporter = _reporters[i];
+        reporter(notice, {projectId: _project_id, projectKey: _project_key});
+      }
+    });
+  }
+
   instance.push = capture;
 
-  instance.try = function(fn, as) {
-    try {
-      return fn.call(as);
-    } catch(er) {
-      instance.capture(er);
-    }
-  };
-  instance.wrap = function(fn, as) {
-    return function() {
-      return instance.try(fn, as);
+  if (global.Airbrake && global.Airbrake.wrap) {
+    instance.wrap = global.Airbrake.wrap;
+  } else {
+    instance.wrap = function(fn) {
+      return function() {
+        try {
+          return fn.apply(this, arguments);
+        } catch (exc) {
+          Airbrake.push({error: exc});
+          throw exc;
+        }
+      };
     };
-  };
+  }
 
-  // Client is not yet configured, defer pushing extant errors.
-  setTimeout(function() {
-    // Attempt to consume any errors already pushed to the extant Airbrake object
-    if (extant_errors) {
-      for (var i = 0, len = extant_errors.length; i < len; i++) {
-        instance.push(extant_errors[i]);
+  if (shim) {
+    // Consume any errors already pushed to the shim.
+    setTimeout(function() {
+      for (var i = 0, len = shim.length; i < len; i++) {
+        instance.push(shim[i]);
       }
-    }
-  });
+    });
+  }
 }
 
 module.exports = Client;
@@ -252,7 +274,7 @@ function obtainMany(backtrace_files, obtainer, source_maps, allObtained) {
 function SourcemapsProcessor(preprocessor, obtainer) {
   this._source_maps = {};
 
-  function preprocessorComplete(preprocessor_result, source_maps, fn) {
+  function preprocessorComplete(name, preprocessor_result, source_maps, fn) {
     // Process the error through the native error handler
     var preprocessor_backtrace = preprocessor_result.backtrace;
 
@@ -292,7 +314,7 @@ function SourcemapsProcessor(preprocessor, obtainer) {
           backtrace_entry.column = original_position.column;
         }
       }
-      fn(preprocessor_result);
+      fn(name + '+sourcemaps', preprocessor_result);
     }
 
     // Begin obtaining the source maps
@@ -302,8 +324,8 @@ function SourcemapsProcessor(preprocessor, obtainer) {
   this.process = function(error, fn) {
     var source_maps = this._source_maps;
 
-    preprocessor.process(error, function(result) {
-      preprocessorComplete(result, source_maps, fn);
+    preprocessor.process(error, function(name, result) {
+      preprocessorComplete(name, result, source_maps, fn);
     });
   };
 }
@@ -314,32 +336,41 @@ module.exports = SourcemapsProcessor;
 },{"../lib/source-map/source-map-consumer":10}],5:[function(require,module,exports){
 (function(){var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = false;
+TraceKit.collectWindowErrors = true;
 
-TraceKit.report.subscribe(function(tracekit_result, fn) {
-  var stack = tracekit_result.stack;
+function TraceKitProcessor(fn) {
+  var _fns = [];
 
-  var backtrace = [], i, frame;
-  for (i = stack.length - 1; i >= 0; i--) {
-    frame = stack[i];
-    backtrace.unshift({
-      file: frame.url,
-      line: parseInt(frame.line, 10),
-      column: parseInt(frame.column, 10),
-      "function": frame.func
+  TraceKit.report.subscribe(function(error, fn) {
+    var last_fn = _fns.pop();
+    if (!fn) {
+      fn = last_fn;
+    } else if (fn != last_fn) {
+      console.log("airbrake: precondition failed: fn != last_fn");
+      return;
+    }
+
+    var stack = error.stack;
+    var backtrace = [], i, frame;
+    for (i = stack.length - 1; i >= 0; i--) {
+      frame = stack[i];
+      backtrace.unshift({
+        file: frame.url,
+        line: parseInt(frame.line, 10),
+        column: parseInt(frame.column, 10),
+        "function": frame.func
+      });
+    }
+
+    fn('tracekit', {
+      type: error.name,
+      message: error.message,
+      backtrace: backtrace
     });
-  }
-
-  fn({
-    type: tracekit_result.name,
-    message: tracekit_result.message,
-    backtrace: backtrace
   });
 
-});
-
-function TraceKitProcessor() {
   this.process = function(error, fn) {
+    _fns.push(fn);
     TraceKit.report(error, fn);
   };
 }
@@ -348,42 +379,17 @@ module.exports = TraceKitProcessor;
 
 })()
 },{"../shims/tracekit_browserify_shim":11}],6:[function(require,module,exports){
-(function(global){var ReportBuilder = require("../reporters/report_builder");
+var Reporter;
 
-var cb_count = 0;
-
-function JsonpReporter(project_id, project_key, processor_name) {
-  this.report = function(error_data, options) {
-    var output_data = ReportBuilder.build(processor_name, error_data, options),
-        document    = global.document,
-        head        = document.getElementsByTagName("head")[0],
-        script_tag  = document.createElement("script"),
-        body        = JSON.stringify(output_data),
-        cb_name     = "airbrake_cb_" + cb_count,
-        prefix      = "https://api.airbrake.io",
-        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
-
-
-    // Attach an anonymous function to the global namespace to consume the callback.
-    // This pevents syntax errors from trying to directly execute the JSON response.
-    global[cb_name] = function() { delete global[cb_name]; };
-    cb_count += 1;
-
-    function removeTag() { head.removeChild(script_tag); }
-
-    script_tag.src     = url;
-    script_tag.type    = "text/javascript";
-    script_tag.onload  = removeTag;
-    script_tag.onerror = removeTag;
-
-    head.appendChild(script_tag);
-  };
+if ('withCredentials' in new XMLHttpRequest()) {
+  Reporter = require('./xhr_reporter');
+} else {
+  Reporter = require('./jsonp_reporter');
 }
 
-module.exports = JsonpReporter;
+module.exports = Reporter;
 
-})(window)
-},{"../reporters/report_builder":12}],8:[function(require,module,exports){
+},{"./jsonp_reporter":13,"./xhr_reporter":12}],8:[function(require,module,exports){
 /* jshint -W084 */
 /*
  * Merge a number of objects into one.
@@ -496,6 +502,54 @@ var B64 = {
 
 module.exports = B64;
 
+},{}],12:[function(require,module,exports){
+(function(global){function XhrReporter(processor_name) {
+  return function(notice, options) {
+    var url = "https://api.airbrake.io/api/v3/projects/" + options.projectId + "/notices?key=" + options.projectKey,
+        request = new global.XMLHttpRequest();
+
+    request.open("POST", url, true);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(notice));
+  };
+}
+
+module.exports = XhrReporter;
+
+})(window)
+},{}],13:[function(require,module,exports){
+(function(global){var cb_count = 0;
+
+function JsonpReporter(processor_name) {
+  return function(notice, options) {
+    var document    = global.document,
+        head        = document.getElementsByTagName("head")[0],
+        script_tag  = document.createElement("script"),
+        body        = JSON.stringify(notice),
+        cb_name     = "airbrake_cb_" + cb_count,
+        prefix      = "https://api.airbrake.io",
+        url         = prefix + "/api/v3/projects/" + options.projectId + "/create-notice?key=" + options.projectKey + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
+
+
+    // Attach an anonymous function to the global namespace to consume the callback.
+    // This pevents syntax errors from trying to directly execute the JSON response.
+    global[cb_name] = function() { delete global[cb_name]; };
+    cb_count += 1;
+
+    function removeTag() { head.removeChild(script_tag); }
+
+    script_tag.src     = url;
+    script_tag.type    = "text/javascript";
+    script_tag.onload  = removeTag;
+    script_tag.onerror = removeTag;
+
+    head.appendChild(script_tag);
+  };
+}
+
+module.exports = JsonpReporter;
+
+})(window)
 },{}],11:[function(require,module,exports){
 (function(global){// browserify shim for TraceKit bower module
 // Expose TraceKit to global namespace
@@ -505,53 +559,7 @@ require("../lib/tracekit");
 module.exports = global.TraceKit.noConflict();
 
 })(window)
-},{"../lib/tracekit":13}],12:[function(require,module,exports){
-var merge = require("../util/merge");
-
-// Responsible for creating a payload consumable by the Airbrake v3 API
-function ReportBuilder() {}
-
-ReportBuilder.build = function(processor_name, error_data, options) {
-  // `error_data` should be of the format
-  //   { type: String,
-  //     message: String,
-  //     backtrace: Array
-  //   }
-  //
-  // Each member of `error_data.backtrace` should be of the format
-  //   { file: String,
-  //     line: Number,
-  //     function: String
-  //   }
-
-  if (!options) {
-    options = {};
-  }
-
-  var notifier_data = {
-    name    : "Airbrake JS",
-    version : "0.2.2+" + processor_name,
-    url     : "http://airbrake.io"
-  };
-
-  // Build the mandatory pieces of the output payload
-  var output = {
-    notifier : notifier_data,
-    errors   : [ error_data ]
-  };
-
-  // Add optional top-level keys to the output payload
-  if (options.context) { merge(output, { context: options.context }); }
-  if (options.environment) { merge(output, { environment: options.environment }); }
-  if (options.session) { merge(output, { session: options.session }); }
-  if (options.params) { merge(output, { params: options.params }); }
-
-  return output;
-};
-
-module.exports = ReportBuilder;
-
-},{"../util/merge":8}],13:[function(require,module,exports){
+},{"../lib/tracekit":14}],14:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit
  MIT license
@@ -2111,7 +2119,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":16,"./base64-vlq":17,"./binary-search":15,"./util":14,"amdefine":18}],19:[function(require,module,exports){
+},{"./array-set":17,"./base64-vlq":18,"./binary-search":16,"./util":15,"amdefine":19}],20:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -2165,7 +2173,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 (function(process,__filename){/** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.0.5 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
@@ -2467,7 +2475,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../../node_modules/amdefine/amdefine.js")
-},{"__browserify_process":19,"path":20}],20:[function(require,module,exports){
+},{"__browserify_process":20,"path":21}],21:[function(require,module,exports){
 (function(process){function filter (xs, fn) {
     var res = [];
     for (var i = 0; i < xs.length; i++) {
@@ -2647,7 +2655,7 @@ exports.relative = function(from, to) {
 exports.sep = '/';
 
 })(require("__browserify_process"))
-},{"__browserify_process":19}],14:[function(require,module,exports){
+},{"__browserify_process":20}],15:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -2854,7 +2862,90 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":18}],16:[function(require,module,exports){
+},{"amdefine":19}],16:[function(require,module,exports){
+/* -*- Mode: js; js-indent-level: 2; -*- */
+/*
+ * Copyright 2011 Mozilla Foundation and contributors
+ * Licensed under the New BSD license. See LICENSE or:
+ * http://opensource.org/licenses/BSD-3-Clause
+ */
+if (typeof define !== 'function') {
+    var define = require('amdefine')(module, require);
+}
+define(function (require, exports, module) {
+
+  /**
+   * Recursive implementation of binary search.
+   *
+   * @param aLow Indices here and lower do not contain the needle.
+   * @param aHigh Indices here and higher do not contain the needle.
+   * @param aNeedle The element being searched for.
+   * @param aHaystack The non-empty array being searched.
+   * @param aCompare Function which takes two elements and returns -1, 0, or 1.
+   */
+  function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare) {
+    // This function terminates when one of the following is true:
+    //
+    //   1. We find the exact element we are looking for.
+    //
+    //   2. We did not find the exact element, but we can return the next
+    //      closest element that is less than that element.
+    //
+    //   3. We did not find the exact element, and there is no next-closest
+    //      element which is less than the one we are searching for, so we
+    //      return null.
+    var mid = Math.floor((aHigh - aLow) / 2) + aLow;
+    var cmp = aCompare(aNeedle, aHaystack[mid], true);
+    if (cmp === 0) {
+      // Found the element we are looking for.
+      return aHaystack[mid];
+    }
+    else if (cmp > 0) {
+      // aHaystack[mid] is greater than our needle.
+      if (aHigh - mid > 1) {
+        // The element is in the upper half.
+        return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare);
+      }
+      // We did not find an exact match, return the next closest one
+      // (termination case 2).
+      return aHaystack[mid];
+    }
+    else {
+      // aHaystack[mid] is less than our needle.
+      if (mid - aLow > 1) {
+        // The element is in the lower half.
+        return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare);
+      }
+      // The exact needle element was not found in this haystack. Determine if
+      // we are in termination case (2) or (3) and return the appropriate thing.
+      return aLow < 0
+        ? null
+        : aHaystack[aLow];
+    }
+  }
+
+  /**
+   * This is an implementation of binary search which will always try and return
+   * the next lowest value checked if there is no exact hit. This is because
+   * mappings between original and generated line/col pairs are single points,
+   * and there is an implicit region between each of them, so a miss just means
+   * that you aren't on the very start of a region.
+   *
+   * @param aNeedle The element you are looking for.
+   * @param aHaystack The array that is being searched.
+   * @param aCompare A function which takes the needle and an element in the
+   *     array and returns -1, 0, or 1 depending on whether the needle is less
+   *     than, equal to, or greater than the element, respectively.
+   */
+  exports.search = function search(aNeedle, aHaystack, aCompare) {
+    return aHaystack.length > 0
+      ? recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
+      : null;
+  };
+
+});
+
+},{"amdefine":19}],17:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -2953,7 +3044,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":14,"amdefine":18}],17:[function(require,module,exports){
+},{"./util":15,"amdefine":19}],18:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3099,90 +3190,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":21,"amdefine":18}],15:[function(require,module,exports){
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2011 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
-}
-define(function (require, exports, module) {
-
-  /**
-   * Recursive implementation of binary search.
-   *
-   * @param aLow Indices here and lower do not contain the needle.
-   * @param aHigh Indices here and higher do not contain the needle.
-   * @param aNeedle The element being searched for.
-   * @param aHaystack The non-empty array being searched.
-   * @param aCompare Function which takes two elements and returns -1, 0, or 1.
-   */
-  function recursiveSearch(aLow, aHigh, aNeedle, aHaystack, aCompare) {
-    // This function terminates when one of the following is true:
-    //
-    //   1. We find the exact element we are looking for.
-    //
-    //   2. We did not find the exact element, but we can return the next
-    //      closest element that is less than that element.
-    //
-    //   3. We did not find the exact element, and there is no next-closest
-    //      element which is less than the one we are searching for, so we
-    //      return null.
-    var mid = Math.floor((aHigh - aLow) / 2) + aLow;
-    var cmp = aCompare(aNeedle, aHaystack[mid], true);
-    if (cmp === 0) {
-      // Found the element we are looking for.
-      return aHaystack[mid];
-    }
-    else if (cmp > 0) {
-      // aHaystack[mid] is greater than our needle.
-      if (aHigh - mid > 1) {
-        // The element is in the upper half.
-        return recursiveSearch(mid, aHigh, aNeedle, aHaystack, aCompare);
-      }
-      // We did not find an exact match, return the next closest one
-      // (termination case 2).
-      return aHaystack[mid];
-    }
-    else {
-      // aHaystack[mid] is less than our needle.
-      if (mid - aLow > 1) {
-        // The element is in the lower half.
-        return recursiveSearch(aLow, mid, aNeedle, aHaystack, aCompare);
-      }
-      // The exact needle element was not found in this haystack. Determine if
-      // we are in termination case (2) or (3) and return the appropriate thing.
-      return aLow < 0
-        ? null
-        : aHaystack[aLow];
-    }
-  }
-
-  /**
-   * This is an implementation of binary search which will always try and return
-   * the next lowest value checked if there is no exact hit. This is because
-   * mappings between original and generated line/col pairs are single points,
-   * and there is an implicit region between each of them, so a miss just means
-   * that you aren't on the very start of a region.
-   *
-   * @param aNeedle The element you are looking for.
-   * @param aHaystack The array that is being searched.
-   * @param aCompare A function which takes the needle and an element in the
-   *     array and returns -1, 0, or 1 depending on whether the needle is less
-   *     than, equal to, or greater than the element, respectively.
-   */
-  exports.search = function search(aNeedle, aHaystack, aCompare) {
-    return aHaystack.length > 0
-      ? recursiveSearch(-1, aHaystack.length, aNeedle, aHaystack, aCompare)
-      : null;
-  };
-
-});
-
-},{"amdefine":18}],21:[function(require,module,exports){
+},{"./base64":22,"amdefine":19}],22:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -3226,5 +3234,5 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":18}]},{},[1])
+},{"amdefine":19}]},{},[1])
 ;

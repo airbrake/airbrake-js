@@ -1,14 +1,14 @@
 var cb_count = 0;
 
-function JsonpReporter(project_id, project_key) {
-  this.report = function(report) {
+function JsonpReporter(processor_name) {
+  return function(notice, options) {
     var document    = global.document,
         head        = document.getElementsByTagName("head")[0],
         script_tag  = document.createElement("script"),
-        body        = JSON.stringify(report),
+        body        = JSON.stringify(notice),
         cb_name     = "airbrake_cb_" + cb_count,
         prefix      = "https://api.airbrake.io",
-        url         = prefix + "/api/v3/projects/" + project_id + "/create-notice?key=" + project_key + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
+        url         = prefix + "/api/v3/projects/" + options.projectId + "/create-notice?key=" + options.projectKey + "&callback=" + cb_name + "&body=" + encodeURIComponent(body);
 
 
     // Attach an anonymous function to the global namespace to consume the callback.
