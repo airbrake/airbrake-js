@@ -193,6 +193,10 @@ function TraceKitProcessor(fn) {
   var _fns = [];
 
   TraceKit.report.subscribe(function(error, fn) {
+    if (_fns.length === 0) {
+      return;
+    }
+
     var last_fn = _fns.pop();
     if (!fn) {
       fn = last_fn;
