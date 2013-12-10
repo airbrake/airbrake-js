@@ -12,22 +12,29 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: pkg_data,
     copy: {
-      build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
+      build: { files: [{ expand: true, src: ['src/**/*.js'], dest: 'tmp/' }] }
     },
-    bower: {
-      dist: {
-        dest: 'tmp/components'
+    coffee: {
+      source: {
+        options: {
+          bare: false
+        },
+        cwd: '.',
+        expand: true,
+        src: ['src/**/*.coffee'],
+        dest: 'tmp/',
+        ext: '.js'
       }
     },
     browserify: {
       options: { transform: [ addPackageVars ] },
-      tracekit: {
-        src: ['tmp/src/main-tracekit.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit.js'
+      notifier: {
+        src: ['tmp/src/notifier.js'],
+        dest: 'dist/<%= pkg.name %>.js'
       },
-      'tracekit-sourcemap': {
-        src: ['tmp/src/main-tracekit-sourcemaps.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
+      notifier_source_map: {
+        src: ['tmp/src/notifier-source-map.js'],
+        dest: 'dist/<%= pkg.name %>-source-map.js'
       }
     },
     uglify: {
@@ -36,15 +43,13 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
-          'dist/<%= pkg.name %>-fallback-sourcemap.min.js':   ['dist/<%= pkg.name %>-fallback-sourcemap.js']
+          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js'],
+          'dist/<%= pkg.name %>-source-map.min.js': ['dist/<%= pkg.name %>-source-map.js']
         }
       }
     },
     jshint: {
-      files: ['gruntfile.js', 'src/**/*.js', '!src/lib/**/*.js'],
+      files: ['gruntfile.js'],
       options: {
         // options here to override JSHint defaults
         globals: {
@@ -56,7 +61,7 @@ module.exports = function(grunt) {
     },
     watch: {
       test_only: {
-        files: ['test/*.coffee', 'test/**/*.coffee'],
+        files: ['test/**/*.coffee'],
         tasks: ['test'],
         options: { interrupt: true }
       },
@@ -94,19 +99,11 @@ module.exports = function(grunt) {
           specs: 'test/integration/spec/**/*.js'
         }
       },
-      fallback_processor: {
-        src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
-        options: {
-          keepRunner: false,
-          outfile: 'test/examples/fallback_runner.html',
-          specs: 'test/integration/spec/**/*.js'
-        }
-      }
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-bower');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -122,7 +119,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
+  grunt.registerTask('build', ['copy', 'coffee', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 
