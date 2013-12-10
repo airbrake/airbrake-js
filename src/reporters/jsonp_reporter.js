@@ -16,7 +16,10 @@ function JsonpReporter(processor_name) {
     global[cb_name] = function() { delete global[cb_name]; };
     cb_count += 1;
 
-    function removeTag() { head.removeChild(script_tag); }
+    function removeTag() {
+      head.removeChild(script_tag);
+      delete global[cb_name];
+    }
 
     script_tag.src     = url;
     script_tag.type    = "text/javascript";
@@ -26,5 +29,7 @@ function JsonpReporter(processor_name) {
     head.appendChild(script_tag);
   };
 }
+
+JsonpReporter.resetCb = function() { cb_count = 0; };
 
 module.exports = JsonpReporter;
