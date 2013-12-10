@@ -37,9 +37,7 @@ module.exports = function(grunt) {
       dist: {
         files: {
           'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
-          'dist/<%= pkg.name %>-fallback-sourcemap.min.js':   ['dist/<%= pkg.name %>-fallback-sourcemap.js']
+          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js']
         }
       }
     },
@@ -91,14 +89,6 @@ module.exports = function(grunt) {
         options: {
           keepRunner: false,
           outfile: 'test/examples/tracekit_runner.html',
-          specs: 'test/integration/spec/**/*.js'
-        }
-      },
-      fallback_processor: {
-        src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
-        options: {
-          keepRunner: false,
-          outfile: 'test/examples/fallback_runner.html',
           specs: 'test/integration/spec/**/*.js'
         }
       }
