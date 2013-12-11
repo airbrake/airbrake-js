@@ -7,7 +7,7 @@ module.exports = function(client) {
       i = 0, len = scripts.length, script,
       project_id,
       project_key,
-      project_env_name,
+      env_name,
       onload;
 
   for (; i < len; i++) {
@@ -15,14 +15,14 @@ module.exports = function(client) {
 
     project_id       = ga(script, "project-id");
     project_key      = ga(script, "project-key");
-    project_env_name = ga(script, "project-environment-name");
+    env_name = ga(script, "environment-name");
     onload           = ga(script, "onload");
 
     if (project_id && project_key) {
       client.setProject(project_id, project_key);
     }
-    if (project_env_name) {
-      client.setEnvironmentName(project_env_name);
+    if (env_name) {
+      client.setEnvironmentName(env_name);
     }
     if (onload) {
       global[onload]();

@@ -1,32 +1,44 @@
 var TraceKit = require("../shims/tracekit_browserify_shim");
-TraceKit.remoteFetching = true;
-TraceKit.collectWindowErrors = false;
+TraceKit.remoteFetching = false;
+TraceKit.collectWindowErrors = true;
 
-TraceKit.report.subscribe(function(tracekit_result, fn) {
-  var stack = tracekit_result.stack;
+function TraceKitProcessor(defaultCb) {
+  var _calls = [];
 
-  var backtrace = [], i, frame;
-  for (i = stack.length - 1; i >= 0; i--) {
-    frame = stack[i];
-    backtrace.unshift({
-      file: frame.url,
-      line: parseInt(frame.line, 10),
-      column: parseInt(frame.column, 10),
-      "function": frame.func
+  TraceKit.report.subscribe(function(errorInfo, cb) {
+    var lastCall = _calls.pop();
+    if (lastCall === undefined) {
+      cb = defaultCb;
+    } else if (cb === undefined) {
+      // Errors from onerror handler have undefined callback.
+      cb = lastCall.cb;
+    } else if (cb !== lastCall.cb) {
+      _calls.push(lastCall);
+      cb = defaultCb;
+    }
+
+    var stack = errorInfo.stack;
+    var backtrace = [], i, frame;
+    for (i = 0; i < stack.length; i++) {
+      frame = stack[i];
+      backtrace.push({
+        "function": frame.func === '?' ? '' : frame.func,
+        file: frame.url,
+        line: parseInt(frame.line, 10),
+        column: parseInt(frame.column, 10)
+      });
+    }
+
+    cb('tracekit', {
+      type: errorInfo.name || '',
+      message: errorInfo.message || String(lastCall.error),
+      backtrace: backtrace
     });
-  }
-
-  fn('tracekit', {
-    type: tracekit_result.name,
-    message: tracekit_result.message,
-    backtrace: backtrace
   });
 
-});
-
-function TraceKitProcessor() {
-  this.process = function(error, fn) {
-    TraceKit.report(error, fn);
+  this.process = function(error, cb) {
+    _calls.push({error: error, cb: cb});
+    TraceKit.report(error, cb);
   };
 }
 

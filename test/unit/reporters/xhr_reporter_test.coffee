@@ -21,5 +21,6 @@ describe "XhrReporter", ->
   describe "report", ->
     it "opens async POST to url", ->
       spy = sinon.spy(global.XMLHttpRequest.prototype, 'open')
-      new Reporter("[project_key]", "[project_key]").report({})
-      expect(spy).to.have.been.calledWith("POST", "https://api.airbrake.io/api/v3/projects/[project_key]/notices?key=[project_key]", true)
+      fn = Reporter("")
+      fn({}, {projectId: '[project_id]', projectKey: '[project_key]'})
+      expect(spy).to.have.been.calledWith("POST", "https://api.airbrake.io/api/v3/projects/[project_id]/notices?key=[project_key]", true)
