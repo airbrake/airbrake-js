@@ -28,7 +28,7 @@ function TraceKitProcessor() {
         file: frame.url,
         line: parseInt(frame.line, 10),
         column: parseInt(frame.column, 10),
-        "function": frame.func
+        "function": frame.func === '?' ? '' : frame.func
       });
     }
 
