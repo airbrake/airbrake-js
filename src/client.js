@@ -108,7 +108,6 @@ function Client(getProcessor, getReporter, shim) {
           return fn.apply(this, arguments);
         } catch (exc) {
           Airbrake.push({error: exc});
-          throw exc;
         }
       };
     };

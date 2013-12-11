@@ -165,7 +165,6 @@ function Client(getProcessor, getReporter, shim) {
           return fn.apply(this, arguments);
         } catch (exc) {
           Airbrake.push({error: exc});
-          throw exc;
         }
       };
     };
@@ -189,27 +188,29 @@ module.exports = Client;
 TraceKit.remoteFetching = true;
 TraceKit.collectWindowErrors = true;
 
-function TraceKitProcessor(fn) {
-  var _fns = [];
+function TraceKitProcessor() {
+  var _calls = [];
 
-  TraceKit.report.subscribe(function(error, fn) {
-    if (_fns.length === 0) {
+  TraceKit.report.subscribe(function(errorInfo, cb) {
+    var lastCall = _calls.pop();
+    if (lastCall === undefined) {
+      return;
+    } else if (cb === undefined) {
+      // Errors from onerror handler have undefined callback.
+      cb = lastCall.cb;
+    } else if (cb !== lastCall.cb) {
+      // This error was not reported through Airbrake notifier.
+      // Ignore it.
+      _calls.push(lastCall);
+      console.debug('airbrake: ignore error', errorInfo);
       return;
     }
 
-    var last_fn = _fns.pop();
-    if (!fn) {
-      fn = last_fn;
-    } else if (fn != last_fn) {
-      console.log("airbrake: precondition failed: fn != last_fn");
-      return;
-    }
-
-    var stack = error.stack;
+    var stack = errorInfo.stack;
     var backtrace = [], i, frame;
-    for (i = stack.length - 1; i >= 0; i--) {
+    for (i = 0; i < stack.length; i++) {
       frame = stack[i];
-      backtrace.unshift({
+      backtrace.push({
         file: frame.url,
         line: parseInt(frame.line, 10),
         column: parseInt(frame.column, 10),
@@ -217,16 +218,16 @@ function TraceKitProcessor(fn) {
       });
     }
 
-    fn('tracekit', {
-      type: error.name,
-      message: error.message,
+    cb('tracekit', {
+      type: errorInfo.name || '',
+      message: errorInfo.message || String(lastCall.error),
       backtrace: backtrace
     });
   });
 
-  this.process = function(error, fn) {
-    _fns.push(fn);
-    TraceKit.report(error, fn);
+  this.process = function(error, cb) {
+    _calls.push({error: error, cb: cb});
+    TraceKit.report(error, cb);
   };
 }
 
@@ -348,13 +349,13 @@ module.exports = JsonpReporter;
 },{}],7:[function(require,module,exports){
 (function(global){// browserify shim for TraceKit bower module
 // Expose TraceKit to global namespace
-require("../lib/tracekit");
+require("../lib/traceKit/tracekit");
 
 // Capture reference and remove from global namespace
 module.exports = global.TraceKit.noConflict();
 
 })(window)
-},{"../lib/tracekit":10}],10:[function(require,module,exports){
+},{"../lib/traceKit/tracekit":10}],10:[function(require,module,exports){
 (function(){/*
  TraceKit - Cross brower stack traces - github.com/occ/TraceKit
  MIT license

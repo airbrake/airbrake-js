@@ -15,8 +15,10 @@ module.exports = function(grunt) {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
     bower: {
-      dist: {
-        dest: 'tmp/components'
+      install: {
+        options: {
+          targetDir: 'tmp/src/lib'
+        }
       }
     },
     browserify: {
@@ -37,9 +39,7 @@ module.exports = function(grunt) {
       dist: {
         files: {
           'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js'],
-          'dist/<%= pkg.name %>-fallback.min.js':             ['dist/<%= pkg.name %>-fallback.js'],
-          'dist/<%= pkg.name %>-fallback-sourcemap.min.js':   ['dist/<%= pkg.name %>-fallback-sourcemap.js']
+          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js']
         }
       }
     },
@@ -94,19 +94,11 @@ module.exports = function(grunt) {
           specs: 'test/integration/spec/**/*.js'
         }
       },
-      fallback_processor: {
-        src: 'test/examples/dist/<%= pkg.name %>-fallback.js',
-        options: {
-          keepRunner: false,
-          outfile: 'test/examples/fallback_runner.html',
-          specs: 'test/integration/spec/**/*.js'
-        }
-      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-bower');
+  grunt.loadNpmTasks('grunt-bower-task');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
