@@ -2,22 +2,19 @@ var TraceKit = require("../shims/tracekit_browserify_shim");
 TraceKit.remoteFetching = false;
 TraceKit.collectWindowErrors = true;
 
-function TraceKitProcessor() {
+function TraceKitProcessor(defaultCb) {
   var _calls = [];
 
   TraceKit.report.subscribe(function(errorInfo, cb) {
     var lastCall = _calls.pop();
     if (lastCall === undefined) {
-      return;
+      cb = defaultCb;
     } else if (cb === undefined) {
       // Errors from onerror handler have undefined callback.
       cb = lastCall.cb;
     } else if (cb !== lastCall.cb) {
-      // This error was not reported through Airbrake notifier.
-      // Ignore it.
       _calls.push(lastCall);
-      console.debug('airbrake: ignore error', errorInfo);
-      return;
+      cb = defaultCb;
     }
 
     var stack = errorInfo.stack;
@@ -25,10 +22,10 @@ function TraceKitProcessor() {
     for (i = 0; i < stack.length; i++) {
       frame = stack[i];
       backtrace.push({
+        "function": frame.func === '?' ? '' : frame.func,
         file: frame.url,
         line: parseInt(frame.line, 10),
-        column: parseInt(frame.column, 10),
-        "function": frame.func === '?' ? '' : frame.func
+        column: parseInt(frame.column, 10)
       });
     }
 

@@ -4,8 +4,8 @@ var Client      = require("./client"),
 
 var client;
 
-function getProcessor() {
-  return new Processor();
+function getProcessor(defaultCb) {
+  return new Processor(defaultCb);
 }
 
 function getReporter() {
