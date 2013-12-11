@@ -51,12 +51,7 @@ function Client(getProcessor, getReporter, shim) {
   var _filters = [];
   instance.addFilter = function(filter) { _filters.push(filter); };
 
-  var _processor = getProcessor && getProcessor();
-  if (getReporter) {
-    instance.addReporter(getReporter());
-  }
-
-  function capture(notice) {
+  function createProcessorCb(notice) {
     var default_context = {
       language: 'JavaScript'
     };
@@ -67,7 +62,7 @@ function Client(getProcessor, getReporter, shim) {
       default_context.url = String(global.location);
     }
 
-    _processor.process(notice.error || notice, function(processorName, error) {
+    return function(processorName, error) {
       var i, len;
 
       notice = {
@@ -94,7 +89,16 @@ function Client(getProcessor, getReporter, shim) {
         var reporter = _reporters[i];
         reporter(notice, {projectId: _project_id, projectKey: _project_key});
       }
-    });
+    };
+  }
+
+  var _processor = getProcessor && getProcessor(createProcessorCb({}));
+  if (getReporter) {
+    instance.addReporter(getReporter());
+  }
+
+  function capture(notice) {
+    _processor.process(notice.error || notice, createProcessorCb(notice));
   }
 
   instance.push = capture;
@@ -108,7 +112,6 @@ function Client(getProcessor, getReporter, shim) {
           return fn.apply(this, arguments);
         } catch (exc) {
           Airbrake.push({error: exc});
-          throw exc;
         }
       };
     };

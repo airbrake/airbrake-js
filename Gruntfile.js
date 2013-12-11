@@ -15,8 +15,10 @@ module.exports = function(grunt) {
       build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
     },
     bower: {
-      dist: {
-        dest: 'tmp/components'
+      install: {
+        options: {
+          targetDir: 'tmp/src/lib'
+        }
       }
     },
     browserify: {
@@ -96,7 +98,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-bower');
+  grunt.loadNpmTasks('grunt-bower-task');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
