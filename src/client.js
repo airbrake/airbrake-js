@@ -90,7 +90,7 @@ function Client(getProcessor, getReporter, shim) {
         reporter(notice, {projectId: _project_id, projectKey: _project_key});
       }
     };
-  };
+  }
 
   var _processor = getProcessor && getProcessor(createProcessorCb({}));
   if (getReporter) {
@@ -99,7 +99,7 @@ function Client(getProcessor, getReporter, shim) {
 
   function capture(notice) {
     _processor.process(notice.error || notice, createProcessorCb(notice));
-  };
+  }
 
   instance.push = capture;
 
