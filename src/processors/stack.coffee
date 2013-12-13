@@ -1,7 +1,7 @@
 processor = (e, cb) ->
   if e.getErrorInfo?
-    return cb(e.getErrorInfo())
-   return cb(parseStack(e, e.stack))
+    return cb('stack', e.getErrorInfo())
+   return cb('stack', parseStack(e, e.stack))
 
 
 funcName = (name) ->
@@ -16,7 +16,7 @@ parseStack = (e, stack) ->
   # Chrome.
   funcFileLineColumnRe = /// ^
     \s{4}at\s
-    (\w+)\s   # function
+    (\S+)\s   # function
     \(
       (.+):   # file
       (\d+):  # line
@@ -26,7 +26,7 @@ parseStack = (e, stack) ->
 
   # Firefox.
   funcFileLineRe = /// ^
-    (\w+)?@ # function
+    (\S+)?@ # function
     (.+):   # file
     (\d+)   # line
   $ ///
@@ -41,7 +41,7 @@ parseStack = (e, stack) ->
 
   # Chrome.
   typeMessageRe = /// ^
-    \w+:\s # type
+    \S+:\s # type
     .+     # message
   $ ///
 
@@ -87,7 +87,7 @@ parseStack = (e, stack) ->
 
   return {
     'type': e.name or typeof e
-    'message': String(e)
+    'message': e.message or String(e)
     'backtrace': backtrace
   }
 

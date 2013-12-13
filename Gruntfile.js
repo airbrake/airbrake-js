@@ -11,10 +11,12 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: pkg_data,
+    copy: {
+      build: { files: [{ expand: true, src: ['src/**/*.js'], dest: 'tmp/' }] }
+    },
     coffee: {
       source: {
         options: {
-          sourceMap: true,
           bare: false
         },
         cwd: '.',
@@ -26,9 +28,13 @@ module.exports = function(grunt) {
     },
     browserify: {
       options: { transform: [ addPackageVars ] },
-      tracekit: {
+      notifier: {
         src: ['tmp/src/notifier.js'],
         dest: 'dist/<%= pkg.name %>.js'
+      },
+      notifier_source_map: {
+        src: ['tmp/src/notifier-source-map.js'],
+        dest: 'dist/<%= pkg.name %>-source-map.js'
       }
     },
     uglify: {
@@ -37,12 +43,13 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js']
+          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js'],
+          'dist/<%= pkg.name %>-source-map.min.js': ['dist/<%= pkg.name %>-source-map.js']
         }
       }
     },
     jshint: {
-      files: ['gruntfile.js', 'src/**/*.js', '!src/lib/**/*.js'],
+      files: ['gruntfile.js'],
       options: {
         // options here to override JSHint defaults
         globals: {
@@ -54,7 +61,7 @@ module.exports = function(grunt) {
     },
     watch: {
       test_only: {
-        files: ['test/*.coffee', 'test/**/*.coffee'],
+        files: ['test/**/*.coffee'],
         tasks: ['test'],
         options: { interrupt: true }
       },
@@ -112,7 +119,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['coffee', 'browserify']);
+  grunt.registerTask('build', ['copy', 'coffee', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 

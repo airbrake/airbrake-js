@@ -1,14 +1,15 @@
 class WindowError extends Error
-  constructor: (@_message, @_file, @_line) ->
+  constructor: (@message, @fileName, @lineNumber) ->
+    @name = 'WindowError'
 
   getErrorInfo: ->
     return {
-      type: 'WindowError'
-      message: @_message
+      type: @name
+      message: @message
       backtrace: [{
         function: ''
-        file: @_file
-        line: @_line
+        file: @fileName
+        line: @lineNumber
         column: 0
       }]
     }

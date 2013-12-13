@@ -23,7 +23,8 @@ class Client
     @_reporters = []
     @_filters = []
 
-    @addReporter(reporter)
+    if reporter
+      @addReporter(reporter)
 
   setProject: (id, key) ->
     @_projectId = id
@@ -57,25 +58,24 @@ class Client
     if global.location
       defContext.url = String(global.location)
 
-    client = this
-    @_processor notice.error || notice, (errInfo) ->
+    @_processor notice.error || notice, (name, errInfo) =>
       notice =
         notifier:
-          name: 'Airbrake JS'
+          name: 'Airbrake JS ' + name
           version: '<%= pkg.version %>'
           url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
-        context: merge(defContext, client._context, notice.context)
-        params: merge({}, client._params, notice.params)
-        environment: merge({}, client._env, notice.environment)
-        session: merge({}, client._session, notice.session)
+        context: merge(defContext, @_context, notice.context)
+        params: merge({}, @_params, notice.params)
+        environment: merge({}, @_env, notice.environment)
+        session: merge({}, @_session, notice.session)
 
-      for filterFn in client._filters
+      for filterFn in @_filters
         if not filterFn(notice)
           return
 
-      for reporterFn in client._reporters
-        reporterFn(notice, {projectId: client._projectId, projectKey: client._projectKey})
+      for reporterFn in @_reporters
+        reporterFn(notice, {projectId: @_projectId, projectKey: @_projectKey})
 
       return
 
@@ -86,6 +86,5 @@ class Client
       catch exc
         Airbrake.push exc
         throw exc
-
 
 module.exports = Client
