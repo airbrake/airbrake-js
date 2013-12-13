@@ -11,25 +11,24 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: pkg_data,
-    copy: {
-      build: { files: [{ expand: true, src: ['src/**'], dest: 'tmp/' }] }
-    },
-    bower: {
-      install: {
+    coffee: {
+      source: {
         options: {
-          targetDir: 'tmp/src/lib'
-        }
+          sourceMap: true,
+          bare: false
+        },
+        cwd: '.',
+        expand: true,
+        src: ['src/**/*.coffee'],
+        dest: 'tmp/',
+        ext: '.js'
       }
     },
     browserify: {
       options: { transform: [ addPackageVars ] },
       tracekit: {
-        src: ['tmp/src/main-tracekit.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit.js'
-      },
-      'tracekit-sourcemap': {
-        src: ['tmp/src/main-tracekit-sourcemaps.js'],
-        dest: 'dist/<%= pkg.name %>-tracekit-sourcemap.js'
+        src: ['tmp/src/notifier.js'],
+        dest: 'dist/<%= pkg.name %>.js'
       }
     },
     uglify: {
@@ -38,8 +37,7 @@ module.exports = function(grunt) {
       },
       dist: {
         files: {
-          'dist/<%= pkg.name %>-tracekit.min.js':             ['dist/<%= pkg.name %>-tracekit.js'],
-          'dist/<%= pkg.name %>-tracekit-sourcemap.min.js':   ['dist/<%= pkg.name %>-tracekit-sourcemap.js']
+          'dist/<%= pkg.name %>.min.js': ['dist/<%= pkg.name %>.js']
         }
       }
     },
@@ -97,8 +95,8 @@ module.exports = function(grunt) {
     }
   });
 
+  grunt.loadNpmTasks('grunt-contrib-coffee');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-bower-task');
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-template');
   grunt.loadNpmTasks('grunt-contrib-uglify');
@@ -114,7 +112,7 @@ module.exports = function(grunt) {
   // Running the `serve` command starts up a webserver
   grunt.registerTask('serve', ['connect']);
 
-  grunt.registerTask('build', ['copy', 'bower', 'browserify']);
+  grunt.registerTask('build', ['coffee', 'browserify']);
   grunt.registerTask('minify', ['uglify']);
   grunt.registerTask('default', ['build', 'minify']);
 
