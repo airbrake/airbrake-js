@@ -14,90 +14,6 @@ describe "Client", ->
   writeThroughProcessor = null
   beforeEach -> writeThroughProcessor = (data, fn) -> fn('write-through', data)
 
-  describe "environmentName", ->
-    it "can be set and read", ->
-      client = new Client()
-      client.setEnvironmentName("[custom_environment]")
-      expect(client._context.environment).to.equal("[custom_environment]")
-
-  it "can set and read `project`", ->
-    client = new Client()
-    client.setProject("[custom_project_id]", "[custom_project_key]")
-    expect(client._projectId).to.equal("[custom_project_id]")
-    expect(client._projectKey).to.equal("[custom_project_key]")
-
-  describe "addContext", ->
-    it "can be set and read", ->
-      client = new Client()
-      client.addContext(key1: "[custom_context_key1_value]")
-      expect(client._context.key1).to.equal("[custom_context_key1_value]")
-
-    it "overrides previously set key", ->
-      client = new Client()
-      client.addContext(key1: "[custom_context_key1_value]")
-      client.addContext(key1: "[custom_context_key1_value2]")
-      expect(client._context.key1).to.equal("[custom_context_key1_value2]")
-
-    it "preserves unspecified keys", ->
-      client = new Client()
-      client.addContext(key1: "[custom_context_key1_value]")
-      client.addContext(key2: "[custom_context_key1_value2]")
-      expect(client._context.key1).to.equal("[custom_context_key1_value]")
-
-  describe "addEnvironment", ->
-    it "can be set and read", ->
-      client = new Client()
-      client.addEnvironment(key1: "[custom_env_key1_value]")
-      expect(client._env.key1).to.equal("[custom_env_key1_value]")
-
-    it "overrides previously set key", ->
-      client = new Client()
-      client.addEnvironment(key1: "[custom_env_key1_value]")
-      client.addEnvironment(key1: "[custom_env_key1_value2]")
-      expect(client._env.key1).to.equal("[custom_env_key1_value2]")
-
-    it "preserves unspecified keys", ->
-      client = new Client()
-      client.addEnvironment(key1: "[custom_env_key1_value]")
-      client.addEnvironment(key2: "[custom_env_key1_value2]")
-      expect(client._env.key1).to.equal("[custom_env_key1_value]")
-
-  describe "addParams", ->
-    it "can be set and read", ->
-      client = new Client()
-      client.addParams(key1: "[custom_params_key1_value]")
-      expect(client._params.key1).to.equal("[custom_params_key1_value]")
-
-    it "overrides previously set key", ->
-      client = new Client()
-      client.addParams(key1: "[custom_params_key1_value]")
-      client.addParams(key1: "[custom_params_key1_value2]")
-      expect(client._params.key1).to.equal("[custom_params_key1_value2]")
-
-    it "preserves unspecified keys", ->
-      client = new Client()
-      client.addParams(key1: "[custom_params_key1_value]")
-      client.addParams(key2: "[custom_params_key1_value2]")
-      expect(client._params.key1).to.equal("[custom_params_key1_value]")
-
-  describe "addSession", ->
-    it "can be set and read", ->
-      client = new Client()
-      client.addSession(key1: "[custom_session_key1_value]")
-      expect(client._session.key1).to.equal("[custom_session_key1_value]")
-
-    it "overrides previously set key", ->
-      client = new Client()
-      client.addSession(key1: "[custom_session_key1_value]")
-      client.addSession(key1: "[custom_session_key1_value2]")
-      expect(client._session.key1).to.equal("[custom_session_key1_value2]")
-
-    it "preserves unspecified keys", ->
-      client = new Client()
-      client.addSession(key1: "[custom_session_key1_value]")
-      client.addSession(key2: "[custom_session_key1_value2]")
-      expect(client._session.key1).to.equal("[custom_session_key1_value]")
-
   describe 'filters', ->
     processor    = null
     reporter     = null
@@ -143,19 +59,30 @@ describe "Client", ->
         error = _err
       return error
 
-    it "is aliased as push", ->
-      client = new Client()
-      expect(client.push).to.equal(client.push)
-
-    describe "with pushed calls to processor", ->
-      it "processes with processor", ->
-        processor = sinon.spy()
+    describe "with error", ->
+      it "processor is called", ->
         reporter = sinon.spy()
+        processor = sinon.spy()
 
         client = new Client(processor, reporter)
         client.push(exception)
 
         expect(processor).to.have.been.called
+
+      it "reporter is called with valid options", ->
+        reporter = sinon.spy()
+        processor = (err, cb) -> cb('', {})
+
+        client = new Client(processor, reporter)
+        client.setProject(999, "custom_project_key")
+        client.push(exception)
+
+        expect(reporter).to.have.been.called
+        opts = reporter.lastCall.args[1]
+        expect(opts).to.deep.equal({
+          projectId: 999
+          projectKey: "custom_project_key"
+        })
 
     describe "custom data sent to reporter", ->
       it "reports context", ->
@@ -167,6 +94,16 @@ describe "Client", ->
 
         reported = reporter.lastCall.args[0]
         expect(reported.context.context_key).to.equal("[custom_context]")
+
+      it "reports environment name", ->
+        reporter = sinon.spy()
+
+        client = new Client(writeThroughProcessor, reporter)
+        client.setEnvironmentName("[custom_env_name]")
+        client.push(exception)
+
+        reported = reporter.lastCall.args[0]
+        expect(reported.context.environment).to.equal("[custom_env_name]")
 
       it "reports environment", ->
         reporter = sinon.spy()
@@ -224,6 +161,21 @@ describe "Client", ->
             context1: "push_value1"
             context2: "value2"
             context3: "push_value3"
+
+        it "reports custom environment name", ->
+          reporter = sinon.spy()
+
+          client = new Client(writeThroughProcessor, reporter)
+          client.setEnvironmentName("env1")
+          client.push
+            error: exception
+            context:
+              environment: "push_env1"
+
+          reported = reporter.lastCall.args[0]
+          expect(reported.context).to.deep.equal
+            language: "JavaScript"
+            environment: "push_env1"
 
         it "reports custom environment", ->
           reporter = sinon.spy()
