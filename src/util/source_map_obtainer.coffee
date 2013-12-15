@@ -1,7 +1,7 @@
 decodeBase64 = require('./base64_decode').decode;
 
 sourceMapUrlRe = /\/\/(?:@|#) sourceMappingURL=(.+)/
-dataUriRe = /^data:application\/json;base64,(.*)$/
+dataUriRe = /data:application\/json;base64,(.*)/
 
 
 xhr = (url, cb) ->
