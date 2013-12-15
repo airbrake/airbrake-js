@@ -51,24 +51,24 @@ class Client
   addFilter: (filter) ->
     @_filters.push(filter)
 
-  push: (notice) ->
+  push: (err) ->
     defContext = language: 'JavaScript'
     if global.navigator?.userAgent
       defContext.userAgent = global.navigator.userAgent
     if global.location
       defContext.url = String(global.location)
 
-    @_processor notice.error || notice, (name, errInfo) =>
+    @_processor err.error or err, (name, errInfo) =>
       notice =
         notifier:
           name: 'Airbrake JS ' + name
           version: '<%= pkg.version %>'
           url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
-        context: merge(defContext, @_context, notice.context)
-        params: merge({}, @_params, notice.params)
-        environment: merge({}, @_env, notice.environment)
-        session: merge({}, @_session, notice.session)
+        context: merge(defContext, @_context, err.context)
+        params: merge({}, @_params, err.params)
+        environment: merge({}, @_env, err.environment)
+        session: merge({}, @_session, err.session)
 
       for filterFn in @_filters
         if not filterFn(notice)
