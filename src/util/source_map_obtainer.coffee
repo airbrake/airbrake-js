@@ -1,7 +1,7 @@
 decodeBase64 = require('./base64_decode').decode;
 
-sourceMapUrlRe = /\/\/(?:@|#) sourceMappingURL=(.+)$/
-dataUriRe = /data:application\/json;base64,(.*)/
+sourceMapUrlRe = /\/\/(?:@|#) sourceMappingURL=(.+)/
+dataUriRe = /^data:application\/json;base64,(.*)$/
 
 
 xhr = (url, cb) ->
@@ -19,28 +19,30 @@ xhr = (url, cb) ->
 class SourceMapObtainer
   obtain: (url, cb) ->
     xhr url, (body) =>
-      url = @_sourceMapUrl(body)
-      if url
-        sourceMap = @_dataUri(url)
-        if sourceMap
-          cb(sourceMap)
-        else
-          xhr url, (sourceMap) -> cb(sourceMap)
+      smUrl = @_sourceMapUrl(body)
+
+      if smUrl == ''
+        smUrl = url.replace(/\.[a-z]+$/, '.map')
       else
-        cb()
+        sourceMap = @_dataUri(smUrl)
+        if sourceMap != ''
+          cb(sourceMap)
+          return
+
+      xhr smUrl, (sourceMap) ->
+        cb(sourceMap)
 
   # Extract the source maps url (if any) from a corpus of text.
   _sourceMapUrl: (body) ->
     m = body.match(sourceMapUrlRe)
-    if m
-      return m[1]
+    return m[1] if m
+    return ''
 
   # Convert a base64 data-uri to a (hopefully) JSON string.
   _dataUri: (url) ->
     m = url.match(dataUriRe)
-    if m
-      return decodeBase64(m[1])
-
+    return decodeBase64(m[1]) if m
+    return ''
 
 
 module.exports = SourceMapObtainer
