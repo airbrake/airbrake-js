@@ -1,3 +1,5 @@
+# https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
+
 processor = (e, cb) ->
   if e.getErrorInfo?
     return cb('stack', e.getErrorInfo())
@@ -5,6 +7,8 @@ processor = (e, cb) ->
 
 
 funcName = (name) ->
+  if (ind = name.lastIndexOf('/')) >= 0
+    name = name[ind+1..]
   if (ind = name.lastIndexOf('.')) >= 0
     name = name[ind+1..]
   return name
@@ -12,6 +16,18 @@ funcName = (name) ->
 
 parseStack = (e, stack) ->
   lines = stack.split('\n')
+
+  # Chrome.
+  funcAliasFileLineColumnRe = /// ^
+    \s{4}at\s
+    (\S+)\s         # function
+    \[as\s(\S+)\]\s # alias
+    \(
+      (.+):         # file
+      (\d+):        # line
+      (\d+)         # column
+    \)
+  $ ///
 
   # Chrome.
   funcFileLineColumnRe = /// ^
@@ -26,9 +42,9 @@ parseStack = (e, stack) ->
 
   # Firefox.
   funcFileLineRe = /// ^
-    (\S+)?@ # function
-    (.+):   # file
-    (\d+)   # line
+    (\S*)@ # function
+    (.+):  # file
+    (\d+)  # line
   $ ///
 
   # Chrome.
@@ -46,8 +62,18 @@ parseStack = (e, stack) ->
   $ ///
 
   backtrace = []
-  for line in lines
+  for line, i in lines
     if line == '' then continue
+
+    m = line.match(funcAliasFileLineColumnRe)
+    if m
+      backtrace.push({
+        function: funcName(m[1])
+        file: m[3]
+        line: parseInt(m[4])
+        column: parseInt(m[5])
+      })
+      continue
 
     m = line.match(funcFileLineColumnRe)
     if m
@@ -71,11 +97,15 @@ parseStack = (e, stack) ->
 
     m = line.match(funcFileLineRe)
     if m
+      if i == 0
+        column = e.columnNumber or 0
+      else
+        column = -1
       backtrace.push({
-        function: m[1]
+        function: funcName(m[1])
         file: m[2]
         line: parseInt(m[3], 10)
-        column: 0
+        column: column
       })
       continue
 
