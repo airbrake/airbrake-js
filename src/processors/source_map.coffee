@@ -3,8 +3,8 @@
 # then translates the output to file/line pairs as indicated by
 # the sourcemaps it obtains
 
-SourceMapConsumer = require('../lib/source-map/source-map-consumer').SourceMapConsumer
-SourceMapObtainer  = require('../util/source_map_obtainer')
+SourceMapConsumer = require('../lib/source-map/source-map-consumer.coffee').SourceMapConsumer
+SourceMapObtainer  = require('../util/source_map_obtainer.coffee')
 
 
 consumers = {}

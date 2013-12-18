@@ -1,14 +1,14 @@
-Client = require './client'
-processor = require './processors/stack'
-reporter = require './reporters/hybrid'
-WindowError = require './util/window_error'
+Client = require './client.coffee'
+processor = require './processors/stack.coffee'
+reporter = require './reporters/hybrid.coffee'
+WindowError = require './util/window_error.coffee'
 
 
 client = new Client processor, reporter
 client.WindowError = WindowError
 
 # Read configuration from DOM.
-require("./util/slurp_config_from_dom")(client)
+require("./util/slurp_config_from_dom.coffee")(client)
 
 shim = global.Airbrake
 if shim?

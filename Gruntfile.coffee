@@ -30,19 +30,25 @@ module.exports = (grunt) ->
 
     browserify:
       options:
-        transform: [addPackageVars]
+        transform: ['coffeeify']
 
       tracekit:
-        src: ["tmp/src/notifier.js"]
+        src: ["src/notifier.coffee"]
         dest: "dist/<%= pkg.name %>.js"
 
     uglify:
       options:
-        banner: "/*! <%= pkg.name %> <%= grunt.template.today(\"dd-mm-yyyy\") %> */\n"
+        sourceMap: 'dist/<%= pkg.name %>.min.map'
+        sourceMapPrefix: 1
 
       dist:
-        files:
-          "dist/<%= pkg.name %>.min.js": ["dist/<%= pkg.name %>.js"]
+        files: [{
+          expand: true
+          cwd: 'dist/'
+          src: '<%= pkg.name %>.js'
+          dest: 'dist'
+          ext: '.min.js'
+        }]
 
     watch:
       test_only:
@@ -86,7 +92,7 @@ module.exports = (grunt) ->
 
   # Running the `serve` command starts up a webserver
   grunt.registerTask "serve", ["connect"]
-  grunt.registerTask "build", ["coffee", "browserify"]
+  grunt.registerTask "build", ["browserify"]
   grunt.registerTask "minify", ["uglify"]
   grunt.registerTask "default", ["build", "minify"]
 
