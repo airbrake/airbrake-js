@@ -52,7 +52,10 @@ class Client
     @_filters.push(filter)
 
   push: (err) ->
-    defContext = language: 'JavaScript'
+    defContext = {
+      language: 'JavaScript'
+      sourceMapEnabled: true
+    }
     if global.navigator?.userAgent
       defContext.userAgent = global.navigator.userAgent
     if global.location
