@@ -44,25 +44,15 @@ module.exports = (grunt) ->
         files:
           "dist/<%= pkg.name %>.min.js": ["dist/<%= pkg.name %>.js"]
 
-    jshint:
-      files: ["gruntfile.js", "src/**/*.js", "!src/lib/**/*.js"]
-      options:
-
-        # options here to override JSHint defaults
-        globals:
-          console: true
-          module: true
-          document: true
-
     watch:
       test_only:
-        files: ["test/*.coffee", "test/**/*.coffee"]
+        files: ["test/**/*.coffee"]
         tasks: ["test"]
         options:
           interrupt: true
 
       build_and_test:
-        files: ["<%= jshint.files %>"]
+        files: ["test/**/*.coffee"]
         tasks: ["build", "test"]
         options:
           interrupt: true
