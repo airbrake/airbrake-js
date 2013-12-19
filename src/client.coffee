@@ -85,9 +85,10 @@ class Client
   wrap: (fn) ->
     return ->
       try
-        return fn.apply this, arguments
+        return fn.apply(this, arguments)
       catch exc
-        Airbrake.push exc
+        args = Array.prototype.slice.call(arguments)
+        Airbrake.push({error: exc, params: {arguments: args}})
         throw exc
 
 module.exports = Client
