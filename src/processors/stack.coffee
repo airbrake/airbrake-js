@@ -6,14 +6,6 @@ processor = (e, cb) ->
    return cb('stack', parseStack(e, e.stack))
 
 
-funcName = (name) ->
-  if (ind = name.lastIndexOf('/')) >= 0
-    name = name[ind+1..]
-  if (ind = name.lastIndexOf('.')) >= 0
-    name = name[ind+1..]
-  return name
-
-
 parseStack = (e, stack) ->
   lines = stack.split('\n')
 
@@ -68,7 +60,7 @@ parseStack = (e, stack) ->
     m = line.match(funcAliasFileLineColumnRe)
     if m
       backtrace.push({
-        function: funcName(m[1])
+        function: m[1]
         file: m[3]
         line: parseInt(m[4])
         column: parseInt(m[5])
@@ -78,7 +70,7 @@ parseStack = (e, stack) ->
     m = line.match(funcFileLineColumnRe)
     if m
       backtrace.push({
-        function: funcName(m[1])
+        function: m[1]
         file: m[2]
         line: parseInt(m[3])
         column: parseInt(m[4])
@@ -102,7 +94,7 @@ parseStack = (e, stack) ->
       else
         column = -1
       backtrace.push({
-        function: funcName(m[1])
+        function: m[1]
         file: m[2]
         line: parseInt(m[3], 10)
         column: column
