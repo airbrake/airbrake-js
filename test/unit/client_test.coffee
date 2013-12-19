@@ -158,6 +158,7 @@ describe "Client", ->
           reported = reporter.lastCall.args[0]
           expect(reported.context).to.deep.equal
             language: "JavaScript"
+            sourceMapEnabled: true
             context1: "push_value1"
             context2: "value2"
             context3: "push_value3"
@@ -175,6 +176,7 @@ describe "Client", ->
           reported = reporter.lastCall.args[0]
           expect(reported.context).to.deep.equal
             language: "JavaScript"
+            sourceMapEnabled: true
             environment: "push_env1"
 
         it "reports custom environment", ->

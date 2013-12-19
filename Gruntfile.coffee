@@ -88,7 +88,7 @@ module.exports = (grunt) ->
           specs: "test/integration/spec/**/*.js"
 
   require("load-grunt-tasks") grunt
-  grunt.registerTask "test", ["mochacli", "jshint"]
+  grunt.registerTask "test", ["mochacli"]
 
   # Running the `serve` command starts up a webserver
   grunt.registerTask "serve", ["connect"]
