@@ -34,18 +34,18 @@ module.exports = (grunt) ->
 
       tracekit:
         src: ["src/notifier.coffee"]
-        dest: "dist/<%= pkg.name %>.js"
+        dest: "dist/airbrake.js"
 
     uglify:
       options:
-        sourceMap: 'dist/<%= pkg.name %>.min.map'
+        sourceMap: 'dist/airbrake.min.map'
         sourceMapPrefix: 1
 
       dist:
         files: [{
           expand: true
           cwd: 'dist/'
-          src: '<%= pkg.name %>.js'
+          src: 'airbrake.js'
           dest: 'dist'
           ext: '.min.js'
         }]
