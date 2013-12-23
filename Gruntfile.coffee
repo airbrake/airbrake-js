@@ -16,17 +16,6 @@ module.exports = (grunt) ->
 
   grunt.initConfig
     pkg: pkg_data
-    coffee:
-      source:
-        options:
-          sourceMap: true
-          bare: false
-
-        cwd: "."
-        expand: true
-        src: ["src/**/*.coffee"]
-        dest: "tmp/"
-        ext: ".js"
 
     browserify:
       options:
@@ -39,6 +28,7 @@ module.exports = (grunt) ->
     uglify:
       options:
         sourceMap: 'dist/airbrake.min.map'
+        sourceMappingURL: 'airbrake.min.map'
         sourceMapPrefix: 1
 
       dist:
