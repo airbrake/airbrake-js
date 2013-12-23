@@ -89,6 +89,6 @@ class Client
       catch exc
         args = Array.prototype.slice.call(arguments)
         Airbrake.push({error: exc, params: {arguments: args}})
-        throw exc
+
 
 module.exports = Client
