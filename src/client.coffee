@@ -83,12 +83,13 @@ class Client
       return
 
   wrap: (fn) ->
-    return ->
+    airbrakeWrap = ->
       try
         return fn.apply(this, arguments)
       catch exc
         args = Array.prototype.slice.call(arguments)
         Airbrake.push({error: exc, params: {arguments: args}})
+    return airbrakeWrap
 
 
 module.exports = Client
