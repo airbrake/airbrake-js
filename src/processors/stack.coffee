@@ -1,57 +1,56 @@
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
 
 processor = (e, cb) ->
-  if e.getErrorInfo?
-    return cb('stack', e.getErrorInfo())
-   return cb('stack', parseStack(e, e.stack))
+  return cb('stack', parseStack(e))
 
+
+# Chrome.
+funcAliasFileLineColumnRe = /// ^
+  \s{4}at\s
+  (\S+)\s         # function
+  \[as\s(\S+)\]\s # alias
+  \(
+    (.+):         # file
+    (\d+):        # line
+    (\d+)         # column
+  \)
+$ ///
+
+# Chrome.
+funcFileLineColumnRe = /// ^
+  \s{4}at\s
+  (\S+)\s   # function
+  \(
+    (.+):   # file
+    (\d+):  # line
+    (\d+)   # column
+  \)
+$ ///
+
+# Firefox.
+funcFileLineRe = /// ^
+  (\S*)@ # function
+  (.+):  # file
+  (\d+)  # line
+$ ///
+
+# Chrome.
+fileLineColumnRe = /// ^
+  \s{4}at\s
+  (.+):     # file
+  (\d+):    # line
+  (\d+)     # column
+$ ///
+
+# Chrome.
+typeMessageRe = /// ^
+  \S+:\s # type
+  .+     # message
+$ ///
 
 parseStack = (e, stack) ->
+  stack = e.stack or ''
   lines = stack.split('\n')
-
-  # Chrome.
-  funcAliasFileLineColumnRe = /// ^
-    \s{4}at\s
-    (\S+)\s         # function
-    \[as\s(\S+)\]\s # alias
-    \(
-      (.+):         # file
-      (\d+):        # line
-      (\d+)         # column
-    \)
-  $ ///
-
-  # Chrome.
-  funcFileLineColumnRe = /// ^
-    \s{4}at\s
-    (\S+)\s   # function
-    \(
-      (.+):   # file
-      (\d+):  # line
-      (\d+)   # column
-    \)
-  $ ///
-
-  # Firefox.
-  funcFileLineRe = /// ^
-    (\S*)@ # function
-    (.+):  # file
-    (\d+)  # line
-  $ ///
-
-  # Chrome.
-  fileLineColumnRe = /// ^
-    \s{4}at\s
-    (.+):     # file
-    (\d+):    # line
-    (\d+)     # column
-  $ ///
-
-  # Chrome.
-  typeMessageRe = /// ^
-    \S+:\s # type
-    .+     # message
-  $ ///
 
   backtrace = []
   for line, i in lines
@@ -106,6 +105,14 @@ parseStack = (e, stack) ->
       continue
 
     console.debug("airbrake: can't parse", line)
+
+  if backtrace.length == 0 and (e.fileName or e.lineNumber or e.columnNumber)
+    backtrace.push({
+      function: ''
+      file: e.fileName
+      line: parseInt(e.lineNumber, 10)
+      column: parseInt(e.columnNumber, 10)
+    })
 
   return {
     'type': e.name or typeof e

@@ -1,11 +1,9 @@
-Client = require './client.coffee'
-processor = require './processors/stack.coffee'
-reporter = require './reporters/hybrid.coffee'
-WindowError = require './util/window_error.coffee'
+Client = require('./client.coffee')
+processor = require('./processors/stack.coffee')
+reporter = require('./reporters/hybrid.coffee')
 
 
 client = new Client processor, reporter
-client.WindowError = WindowError
 
 # Read configuration from DOM.
 require("./util/slurp_config_from_dom.coffee")(client)

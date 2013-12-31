@@ -1,3 +1,6 @@
+jsonify = require('../util/jsonify.coffee')
+
+
 cbCount = 0
 
 report = (notice, opts) ->
@@ -7,7 +10,7 @@ report = (notice, opts) ->
   global[cbName] = ->
     delete global[cbName]
 
-  payload = encodeURIComponent(JSON.stringify(notice))
+  payload = encodeURIComponent(jsonify(notice))
   url = "https://api.airbrake.io/api/v3/projects/#{opts.projectId}/create-notice?key=#{opts.projectKey}&callback=#{cbName}&body=#{payload}"
 
   document = global.document
