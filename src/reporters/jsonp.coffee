@@ -7,7 +7,9 @@ report = (notice, opts) ->
   cbCount++
 
   cbName = "airbrakeCb" + String(cbCount)
-  global[cbName] = ->
+  global[cbName] = (resp) ->
+    if console?.debug?
+      console.debug("airbrake: error #%d was reported: %s", resp.id, resp.url)
     delete global[cbName]
 
   payload = encodeURIComponent(jsonify(notice))

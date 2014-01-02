@@ -9,6 +9,10 @@ report = (notice, opts) ->
   req.open('POST', url, true)
   req.setRequestHeader('Content-Type', 'application/json')
   req.send(payload)
+  req.onreadystatechange = ->
+    if req.readyState == 4 and req.status == 201 and console?.debug?
+      resp = JSON.parse(req.responseText)
+      console.debug("airbrake: error #%d was reported: %s", resp.id, resp.url)
 
 
 module.exports = report
