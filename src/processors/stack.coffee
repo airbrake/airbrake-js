@@ -114,9 +114,20 @@ parseStack = (e, stack) ->
       column: parseInt(e.columnNumber, 10)
     })
 
+  if e.message?
+    msg = e.message
+  else
+    msg = String(e)
+
+  if e.name?
+    type = e.name
+    msg = type + ': ' + msg
+  else
+    type = ''
+
   return {
-    'type': e.name or typeof e
-    'message': e.message or String(e)
+    'type': type
+    'message': msg
     'backtrace': backtrace
   }
 
