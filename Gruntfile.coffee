@@ -1,29 +1,31 @@
 module.exports = (grunt) ->
 
-  # Interpolates pkg variables into files during browserification
+  # Interpolates pkg variables into files during browserification.
   addPackageVars = (file) ->
+    through = require('through')
+
     write = (buf) ->
-      data += grunt.template.process(buf,
-        pkg: pkg_data
-      )
+      data += grunt.template.process(buf, {pkg: pkgData})
+
     end = ->
-      @queue data
-      @queue null
-    through = require("through")
-    data = ""
-    through write, end
-  pkg_data = grunt.file.readJSON("package.json")
+      @queue(data)
+      @queue(null)
+
+    data = ''
+    through(write, end)
+
+  pkgData = grunt.file.readJSON('package.json')
 
   grunt.initConfig
-    pkg: pkg_data
+    pkg: pkgData
 
     browserify:
       options:
-        transform: ['coffeeify']
+        transform: ['coffeeify', addPackageVars]
 
       tracekit:
-        src: ["src/notifier.coffee"]
-        dest: "dist/airbrake.js"
+        src: ['src/notifier.coffee']
+        dest: 'dist/airbrake.js'
 
     uglify:
       options:

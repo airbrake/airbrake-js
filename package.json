@@ -1,18 +1,15 @@
 {
   "name": "airbrake-js",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Notify Airbrake on JavaScript exceptions",
   "main": "Gruntfile.js",
   "directories": {
     "doc": "doc",
     "test": "tests"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
-    "url": "git://github.com/duncanbeevers/airbrake-js.git"
+    "url": "git://github.com/airbrake/airbrake-js.git"
   },
   "keywords": [
     "exception",
