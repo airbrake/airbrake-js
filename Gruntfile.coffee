@@ -23,7 +23,7 @@ module.exports = (grunt) ->
       options:
         transform: ['coffeeify', addPackageVars]
 
-      tracekit:
+      stack:
         src: ['src/notifier.coffee']
         dest: 'dist/airbrake.js'
 
@@ -71,23 +71,15 @@ module.exports = (grunt) ->
         bail: true
         reporter: "spec"
 
-    jasmine:
-      tracekit_processor:
-        src: "test/examples/dist/<%= pkg.name %>-tracekit.js"
-        options:
-          keepRunner: false
-          outfile: "test/examples/tracekit_runner.html"
-          specs: "test/integration/spec/**/*.js"
-
   require("load-grunt-tasks") grunt
-  grunt.registerTask "test", ["mochacli"]
+  grunt.registerTask("test", ["mochacli"])
 
-  # Running the `serve` command starts up a webserver
-  grunt.registerTask "serve", ["connect"]
-  grunt.registerTask "build", ["browserify"]
-  grunt.registerTask "minify", ["uglify"]
-  grunt.registerTask "default", ["build", "minify"]
+  # Running the `serve` command starts up a webserver.
+  grunt.registerTask("serve", ["connect"])
+  grunt.registerTask("build", ["browserify"])
+  grunt.registerTask("minify", ["uglify"])
+  grunt.registerTask("default", ["build", "minify"])
 
-  # Push distribution libraries to CDN
-  # Build and publish distribution site
-  grunt.registerTask "publish", []
+  # Push distribution libraries to CDN.
+  # Build and publish distribution site.
+  grunt.registerTask("publish", [])
