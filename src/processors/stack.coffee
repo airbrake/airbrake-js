@@ -91,7 +91,7 @@ parseStack = (e, stack) ->
       if i == 0
         column = e.columnNumber or 0
       else
-        column = -1
+        column = 0
       backtrace.push({
         function: m[1]
         file: m[2]
