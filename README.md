@@ -6,48 +6,20 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 ## Setup
 
-Include the following Javascript snippet in your header.
+Airbrake JavaScript notifier consists of 2 parts:
 
-    <script data-airbrake-project-id="1234"
-            data-airbrake-project-key="abcd"
-            data-airbrake-project-environment-name="production">
+- Notifier shim that collects exceptions until notifier is loaded. You are supposed to host it with your JavaScript files and modify as needed, e.g. add integration with framework of your choice.
+- Notifier itself loaded from our CDN.
 
-      (function(src) {
+Typical notifier setup looks like:
 
-      window.Airbrake = [];
-      window.Airbrake.wrap = function(fn) {
-        return function() {
-          try {
-            return fn.apply(this, arguments);
-          } catch (er) {
-            Airbrake.push({error: er});
-            throw er;
-          }
-        };
-      };
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="airbrake-shim.js" data-airbrake-project-id="FIXME" data-airbrake-project-key="FIXME" data-airbrake-environment="production"></script>
+    <script src="app.js"></script>
 
-      function get() {
-        var script = document.createElement('script'),
-            sibling = document.getElementsByTagName('script')[0];
+Note that notifier shim is loaded after jQuery but before application code. This way can setup integration with jQuery and shim is immediately available to be used in your code.
 
-        script.src = src;
-        sibling.parentNode.insertBefore(script, sibling);
-      }
-
-      if (window.addEventListener) {
-        window.addEventListener('load', get, false);
-      } else {
-        window.attachEvent('onload', get);
-      }
-
-      }(
-        'https://ssljscdn.airbrake.io/airbrake-js-tracekit-sourcemap.min.js'
-      ));
-    </script>
-
-
-This snippet asynchronously downloads the Airbrake notifier and configures it to report errors to your project endpoint.
-It also provides a shim client capable of running code with error-capturing enabled, and gathering those errors up until the full notifier is downloaded and bootstrapped.
+Look at [examples](https://github.com/airbrake/airbrake-js/tree/master/examples) for the notifier shim integrated with jQuery.
 
 ## Basic Usage
 
@@ -65,23 +37,10 @@ Alternatively, you can report errors directly.
     try {
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
-    } catch(er) {
-      Airbrake.push({
-        error: er
-      });
-      throw er;
+    } catch(err) {
+      Airbrake.push(err);
+      throw err;
     }
-
-If you're working with [jQuery Deferreds](http://api.jquery.com/category/deferred-object/) it makes sense to hook into the `fail` handler. This example reports errors thrown from within [`$.ajax`](http://api.jquery.com/jQuery.ajax/).
-
-    $.ajax("/operation").done(function(data) {
-      console.log("Success, got data: %o", data);
-    }).fail(function(jqXhr, textStatus, er) {
-      if (er)
-        Airbrake.push({
-          error: er
-        });
-    });
 
 ## Advanced Usage
 
@@ -93,7 +52,7 @@ Fortunately, it's easy to register code to be run when the notifier loads. In th
 
     <script data-airbrake-onload="initAirbrake">
       function initAirbrake() {
-        Airbrake.addSession({ split_test: 10 });
+        Airbrake.addSession({split_test: 10});
       }
     </script>
 
@@ -112,15 +71,15 @@ Additionally, much of this information can be added to captured errors at the ti
     try {
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
-    } catch(er) {
+    } catch(err) {
       Airbrake.push({
-        error: er,
+        error: err,
         context: { component: 'style', userId: currentUser.id, userName: currentUser.name },
         environment: { navigator_vendor: window.navigator.vendor },
         params:  { search: document.location.search },
         session: { sessionid: sessionid }
       });
-      throw er;
+      throw err;
     }
 
 ### Filtering errors
