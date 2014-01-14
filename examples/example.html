@@ -1,23 +1,21 @@
-<!doctype>
 <html>
-  <head>
-    <title>Inline event handlers handling</title>
-    <script>window.Airbrake = [];</script>
-    <script defer
-            src="./dist/airbrake-js.js"
-            data-airbrake-project-id="FIXME"
-            data-airbrake-project-key="FIXME"></script>
-    <script src="./js/error.js"></script>
-  </head>
-  <body>
-    <h2>Capture an exception, report error lines translated via remote source map</h2>
-    <code>
-      <pre id="code">
-Airbrake.wrap(function() { ErrorMaker(); })();
-      </pre>
-    </code>
-    <button onclick="eval(document.getElementById('code').innerText)">
-      New Error
-    </button>
-  </body>
+
+<head>
+<title>Airbrake JS notifier example</title>
+</head>
+
+<body>
+
+<p><button id="try_catch_btn">Try and catch</button></p>
+
+<p><button id="jquery_event_btn">Uncatched exception in jQuery event handler</button></p>
+
+<p><button id="jquery_promise_btn">Uncatched exception in jQuery promise handler</button></p>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="airbrake-shim.js" data-airbrake-project-id="92860" data-airbrake-project-key="195e087fb4a7033922f966cda5f4eb07"></script>
+<script src="core.js"></script>
+
+</body>
+
 </html>
