@@ -1,5 +1,10 @@
+(function(window) {
+
+// Airbrake shim that stores exceptions until Airbrake notifier is loaded.
 window.Airbrake = [];
 
+// Wraps passed function and returns new function that catches and
+// reports unhandled exceptions.
 Airbrake.wrap = function(fn) {
   var airbrakeWrap = function() {
     try {
@@ -12,6 +17,7 @@ Airbrake.wrap = function(fn) {
   return airbrakeWrap;
 }
 
+// Reports unhandled exceptions.
 window.onerror = function(message, file, line) {
   Airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
 }
@@ -23,23 +29,26 @@ var loadAirbrakeNotifier = function() {
   sibling.parentNode.insertBefore(script, sibling);
 }
 
+// Asynchronously loads Airbrake notifier.
 if (window.addEventListener) {
   window.addEventListener('load', loadAirbrakeNotifier, false);
 } else {
   window.attachEvent('onload', loadAirbrakeNotifier);
 }
 
-var jQueryEventAdd = jQuery.event.add;
+// Reports exceptions thrown in jQuery event handlers.
+var jqEventAdd = jQuery.event.add;
 jQuery.event.add = function(elem, types, fn, data, selector) {
   var wrapper = Airbrake.wrap(fn);
   // Set the guid of unique handler to the same of original handler, so it can be removed
   wrapper.guid = fn.guid || (fn.guid = jQuery.guid++);
-  return jQueryEventAdd(elem, types, wrapper, data, selector);
+  return jqEventAdd(elem, types, wrapper, data, selector);
 }
 
-var Callbacks = jQuery.Callbacks;
+// Reports exceptions thrown in jQuery callbacks.
+var jqCallbacks = jQuery.Callbacks;
 jQuery.Callbacks = function(options) {
-  var cb = Callbacks(options),
+  var cb = jqCallbacks(options),
       cbAdd = cb.add;
   cb.add = function() {
     var fns = arguments;
@@ -52,3 +61,11 @@ jQuery.Callbacks = function(options) {
   }
   return cb;
 }
+
+// Reports exceptions thrown in jQuery ready callbacks.
+var jqReady = jQuery.fn.ready;
+jQuery.fn.ready = function(fn) {
+  return jqReady(Airbrake.wrap(fn));
+}
+
+})(window);

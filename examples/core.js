@@ -5,23 +5,25 @@ function throwError(msg) {
 $(function() {
   $("#try_catch_btn").click(function() {
     try {
-      throwError("catched exception");
+      throwError("try and catch exception");
     } catch (err) {
       Airbrake.push({error: err, params: {arguments: arguments}});
     }
   });
 
   $("#jquery_event_btn").click(function() {
-    throwError("uncatched exception in event handler");
+    throwError("unhandled exception in the event handler");
   });
 
   $("#jquery_promise_btn").click(function() {
     var deferred = jQuery.Deferred();
     deferred.always(function() {
-      throwError("uncatched exception in promise handler");
+      throwError("unhandled exception in the promise handler");
     });
     deferred.resolve();
   });
+
+  throwError("unhandled exception when DOM is ready");
 });
 
-throwError("uncatched exception before DOM is ready");
+throwError("unhandled exception before DOM is ready");
