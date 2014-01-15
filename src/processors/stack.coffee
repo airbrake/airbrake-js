@@ -120,12 +120,12 @@ parseStack = (e, stack) ->
       column: 0,
     })
 
-  if backtrace.length == 0 and (e.fileName or e.lineNumber or e.columnNumber)
+  if backtrace.length == 0 and (e.fileName? or e.lineNumber? or e.columnNumber?)
     backtrace.push({
-      function: ''
-      file: e.fileName
-      line: parseInt(e.lineNumber, 10)
-      column: parseInt(e.columnNumber, 10)
+      function: '',
+      file: e.fileName or '',
+      line: parseInt(e.lineNumber, 10) or 0,
+      column: parseInt(e.columnNumber, 10) or 0,
     })
 
   if e.message?

@@ -3,7 +3,7 @@ processor = require('./processors/stack.coffee')
 reporter = require('./reporters/hybrid.coffee')
 
 
-client = new Client processor, reporter
+client = new Client(processor, reporter)
 
 # Read configuration from DOM.
 require("./util/slurp_config_from_dom.coffee")(client)
