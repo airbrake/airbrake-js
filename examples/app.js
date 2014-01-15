@@ -11,6 +11,14 @@ $(function() {
     }
   });
 
+  $("#try_catch_string_btn").click(function() {
+    try {
+      throw "try and catch string";
+    } catch (err) {
+      Airbrake.push({error: err, params: {arguments: arguments}});
+    }
+  });
+
   $("#jquery_event_btn").click(function() {
     throwError("unhandled exception in the event handler");
   });
