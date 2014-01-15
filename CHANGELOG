@@ -5,6 +5,7 @@
 - Add support for data-airbrake-onload.
 - Add support for custom processors.
 - Add support for filters.
+- Enable backend support for source maps.
 
 # v0.2.2
 
