@@ -14,7 +14,7 @@ Airbrake JavaScript notifier consists of 2 parts:
 Typical notifier setup looks like:
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="airbrake-shim.js" data-airbrake-project-id="FIXME" data-airbrake-project-key="FIXME" data-airbrake-environment="production"></script>
+    <script src="airbrake-shim.js" data-airbrake-project-id="FIXME" data-airbrake-project-key="FIXME" data-airbrake-environment-name="production"></script>
     <script src="app.js"></script>
 
 Note that notifier shim is loaded after jQuery but before application code. This way can setup integration with jQuery and shim is immediately available to be used in your code.
