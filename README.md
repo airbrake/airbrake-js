@@ -21,6 +21,8 @@ Note that notifier shim is loaded after jQuery but before application code. This
 
 Look at [examples](https://github.com/airbrake/airbrake-js/tree/master/examples) for the notifier shim integrated with jQuery.
 
+Note that the above example reflects a typical setup in a project using jQuery, however jQuery is not a dependency for Airbrake-JS. Airbrake-JS has no dependencies.
+
 ## Basic Usage
 
 The simplest method for capturing errors is to wrap any code which may throw errors using the client's `wrap` method.
