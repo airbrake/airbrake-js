@@ -4,11 +4,12 @@ reporter = require('./reporters/hybrid.coffee')
 
 
 client = new Client(processor, reporter)
+shim = global.Airbrake
+global.Airbrake = client
 
 # Read configuration from DOM.
 require("./util/slurp_config_from_dom.coffee")(client)
 
-shim = global.Airbrake
 if shim?
   if shim.wrap?
     client.wrap = shim.wrap
@@ -16,6 +17,3 @@ if shim?
   # Consume any errors already pushed to the shim.
   for err in shim
     client.push(err)
-
-
-global.Airbrake = client
