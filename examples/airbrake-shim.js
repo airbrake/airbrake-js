@@ -6,7 +6,7 @@ window.Airbrake = [];
 // Wraps passed function and returns new function that catches and
 // reports unhandled exceptions.
 Airbrake.wrap = function(fn) {
-  var airbrakeWrap = function() {
+  var airbrakeWrapper = function() {
     try {
       return fn.apply(this, arguments);
     } catch (exc) {
@@ -14,7 +14,10 @@ Airbrake.wrap = function(fn) {
       Airbrake.push({error: exc, params: {arguments: args}});
     }
   }
-  return airbrakeWrap;
+  if (fn.guid) {
+    airbrakeWrapper.guid = fn.guid;
+  }
+  return airbrakeWrapper;
 }
 
 // Reports unhandled exceptions.
@@ -38,11 +41,19 @@ if (window.addEventListener) {
 
 // Reports exceptions thrown in jQuery event handlers.
 var jqEventAdd = jQuery.event.add;
-jQuery.event.add = function(elem, types, fn, data, selector) {
-  var wrapper = Airbrake.wrap(fn);
-  // Set the guid of unique handler to the same of original handler, so it can be removed
-  wrapper.guid = fn.guid || (fn.guid = jQuery.guid++);
-  return jqEventAdd(elem, types, wrapper, data, selector);
+jQuery.event.add = function(elem, types, handler, data, selector) {
+  if (handler.handler) {
+    if (!handler.handler.guid) {
+      handler.handler.guid = jQuery.guid++;
+    }
+    handler.handler = Airbrake.wrap(handler.handler);
+  } else {
+    if (!handler.guid) {
+      handler.guid = jQuery.guid++;
+    }
+    handler = Airbrake.wrap(handler);
+  }
+  return jqEventAdd(elem, types, handler, data, selector);
 }
 
 // Reports exceptions thrown in jQuery callbacks.

@@ -3,11 +3,13 @@ function throwError(msg) {
 }
 
 $(function() {
-  $("#try_catch_btn").click(function() {
-    try {
-      throwError("try and catch exception");
-    } catch (err) {
-      Airbrake.push({error: err, params: {arguments: arguments}});
+  $("#try_catch_btn").click({
+    handler: function() {
+      try {
+        throwError("try and catch exception");
+      } catch (err) {
+        Airbrake.push({error: err, params: {arguments: arguments}});
+      }
     }
   });
 
