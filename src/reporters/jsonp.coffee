@@ -18,11 +18,10 @@ report = (notice, opts) ->
   head = document.getElementsByTagName('head')[0]
   script = document.createElement('script')
   script.src = url
-  removeScript -> head.removeChild(script)
-  script.onload = removeTag
-  script.onerror = removeTag
-
-  head.appendChild(script_tag);
+  removeScript = -> head.removeChild(script)
+  script.onload = removeScript
+  script.onerror = removeScript
+  head.appendChild(script)
 
 
 module.exports = report
