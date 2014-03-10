@@ -28,6 +28,7 @@
     "coffee-script": "~1.6.3",
     "chai": "~1.8.1",
     "sinon": "~1.7.3",
-    "sinon-chai": "~2.4.0"
+    "sinon-chai": "~2.4.0",
+    "grunt-contrib-connect": "^0.7.0"
   }
 }
