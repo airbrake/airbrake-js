@@ -59,7 +59,6 @@ module.exports = (grunt) ->
       server:
         options:
           port: 9001
-          base: 'examples'
           keepalive: true
 
       integration_test:
