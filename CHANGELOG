@@ -1,3 +1,8 @@
+# v0.3.2
+
+- Fix JSONP reporter (#76).
+- Fix console usage.
+
 # v0.3.1
 
 - Fix data-airbrake-onload.
