@@ -112,7 +112,7 @@ parseStack = (e, stack) ->
     if m
       continue
 
-    console.debug("airbrake: can't parse", line)
+    console?.debug?("airbrake: can't parse", line)
     backtrace.push({
       function: '',
       file: line,
