@@ -44,18 +44,24 @@ module.exports = (grunt) ->
 
     watch:
       test_only:
-        files: ["test/**/*.coffee"]
-        tasks: ["test"]
+        files: ['test/**/*.coffee']
+        tasks: ['test']
         options:
           interrupt: true
 
       build_and_test:
-        files: ["test/**/*.coffee"]
-        tasks: ["build", "test"]
+        files: ['test/**/*.coffee']
+        tasks: ['build', 'test']
         options:
           interrupt: true
 
     connect:
+      server:
+        options:
+          port: 9001
+          base: 'examples'
+          keepalive: true
+
       integration_test:
         options:
           hostname: "*"
