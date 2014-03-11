@@ -1,3 +1,4 @@
+require("./util/compat.coffee")
 Client = require('./client.coffee')
 processor = require('./processors/stack.coffee')
 reporter = require('./reporters/hybrid.coffee')

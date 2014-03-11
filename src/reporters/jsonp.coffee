@@ -9,7 +9,10 @@ report = (notice, opts) ->
   cbName = "airbrakeCb" + String(cbCount)
   global[cbName] = (resp) ->
     console?.debug?("airbrake: error #%s was reported: %s", resp.id, resp.url)
-    delete global[cbName]
+    try
+      delete global[cbName]
+    catch _ # IE
+      global[cbName] = undefined
 
   payload = encodeURIComponent(jsonifyNotice(notice))
   url = "https://api.airbrake.io/api/v3/projects/#{opts.projectId}/create-notice?key=#{opts.projectKey}&callback=#{cbName}&body=#{payload}"

@@ -4,19 +4,24 @@ truncate = (src, n=1000, depth=4) ->
   seen = []
 
   fn = (src, dd=0) ->
-    return src if typeof src != 'object'
+    if typeof src != 'object'
+      return src
 
-    return '[Circular]' if seen.indexOf(src) >= 0
+    if seen.indexOf(src) >= 0
+      return '[Circular]'
     seen.push(src)
 
-    return '[Circular]' if dd >= depth
+    if dd >= depth
+      return '[Circular]'
 
     dst = {}
     for key of src
-      if src.hasOwnProperty(key)
+      if global.hasOwnProperty(src, key)
         nn++
-        break if nn >= n
+        if nn >= n
+          break
         dst[key] = fn(src[key], dd+1)
+
     return dst
 
   return fn(src)
