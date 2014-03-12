@@ -91,6 +91,12 @@ Instead of exception you can pass error object constructed manually. For example
       Airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
     }
 
+### Source map
+
+In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, [airbrake.min.js](https://ssljscdn.airbrake.io/0.3/airbrake.min.js) has following line:
+
+    //# sourceMappingURL=airbrake.min.map
+
 ### Filtering errors
 
 There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
