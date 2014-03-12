@@ -25,16 +25,7 @@ Note that the above example reflects a typical setup in a project using jQuery, 
 
 ## Basic Usage
 
-The simplest method for capturing errors is to wrap any code which may throw errors using the client's `wrap` method.
-
-    var wrapped = Airbrake.wrap(function() {
-      // This will throw if the document has no head tag
-      document.head.insertBefore(document.createElement("style"));
-    });
-
-    wrapped();
-
-Alternatively, you can report errors directly.
+The simplest method is to report errors directly:
 
     try {
       // This will throw if the document has no head tag
@@ -43,6 +34,14 @@ Alternatively, you can report errors directly.
       Airbrake.push(err);
       throw err;
     }
+
+Alternatively you can wrap any code which may throw errors using the client's `wrap` method:
+
+    var wrapped = Airbrake.wrap(function() {
+      // This will throw if the document has no head tag
+      document.head.insertBefore(document.createElement("style"));
+    });
+    wrapped();
 
 ## Advanced Usage
 
@@ -82,6 +81,14 @@ Additionally, much of this information can be added to captured errors at the ti
         session: { sessionid: sessionid }
       });
       throw err;
+    }
+
+### Error object
+
+Instead of exception you can pass error object constructed manually. For example, `window.onerror` handler can look like:
+
+    window.onerror = function(message, file, line) {
+      Airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
     }
 
 ### Filtering errors
