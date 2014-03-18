@@ -1,3 +1,7 @@
+# v0.3.4
+
+- add Airbrake.onload hook.
+
 # v0.3.3
 
 - IE8 compatibility.

@@ -52,10 +52,16 @@ The notifier provides a few pieces of functionality to help reduce duplication w
 Fortunately, it's easy to register code to be run when the notifier loads. In the embed snippet, simply add a `data-airbrake-onload` attribute and specify the name of the function to be executed when the notifier is ready.
 
     <script data-airbrake-onload="initAirbrake">
-      function initAirbrake() {
-        Airbrake.addSession({split_test: 10});
+      function initAirbrake(client) {
+        client.addSession({split_test: 10});
       }
     </script>
+
+An alternative way is to add onload property to the Airbrake shim:
+
+    Airbrake.onload = function(client) {
+      client.setProject(projectId, projectKey);
+    }
 
 ### Default Annotations
 
