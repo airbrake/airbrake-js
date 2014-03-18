@@ -15,6 +15,9 @@ if shim?
   if shim.wrap?
     client.wrap = shim.wrap
 
+  if shim.onload?
+    shim.onload(client)
+
   # Consume any errors already pushed to the shim.
   for err in shim
     client.push(err)
