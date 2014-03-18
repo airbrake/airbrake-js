@@ -14,6 +14,10 @@ Airbrake.wrap = (fn) ->
     airbrakeWrapper.guid = fn.guid
   return airbrakeWrapper
 
+# Registers console reporter when notifier is ready.
+Airbrake.onload = ->
+  Airbrake.addReporter(Airbrake.consoleReporter)
+
 # Reports unhandled exceptions.
 window.onerror = (message, file, line) ->
   Airbrake.push({error: {message: message, fileName: file, lineNumber: line}})

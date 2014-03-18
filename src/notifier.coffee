@@ -5,6 +5,8 @@ reporter = require('./reporters/hybrid.coffee')
 
 
 client = new Client(processor, reporter)
+client.consoleReporter = require('./reporters/console.coffee')
+
 shim = global.Airbrake
 global.Airbrake = client
 

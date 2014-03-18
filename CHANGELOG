@@ -1,6 +1,7 @@
 # v0.3.4
 
 - add Airbrake.onload hook.
+- add consoleReporter.
 
 # v0.3.3
 
