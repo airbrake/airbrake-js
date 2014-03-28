@@ -1,6 +1,5 @@
 truncate = (src, n=1000, depth=4) ->
   nn = 0
-  dd = 0
   seen = []
 
   fn = (src, dd=0) ->
@@ -16,7 +15,7 @@ truncate = (src, n=1000, depth=4) ->
 
     dst = {}
     for key of src
-      if global.hasOwnProperty(src, key)
+      if Object.prototype.hasOwnProperty.call(src, key)
         nn++
         if nn >= n
           break

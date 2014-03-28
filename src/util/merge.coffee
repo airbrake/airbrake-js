@@ -3,7 +3,7 @@ merge = ->
   dst = objs.shift() or {}
   for obj in objs
     for key of obj
-      if obj.hasOwnProperty(key)
+      if Object.prototype.hasOwnProperty.call(obj, key)
         dst[key] = obj[key]
   return dst
 

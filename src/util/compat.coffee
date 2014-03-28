@@ -5,6 +5,3 @@ if not Array.prototype.indexOf
       if this[i] == obj
         return i
     return -1
-
-
-global.hasOwnProperty = global.hasOwnProperty or Object.prototype.hasOwnProperty

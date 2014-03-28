@@ -33,7 +33,7 @@ window.onerror = function(message, file, line) {
 var loadAirbrakeNotifier = function() {
   var script = document.createElement('script'),
       sibling = document.getElementsByTagName('script')[0];
-  script.src = 'https://ssljscdn.airbrake.io/0.3.4/airbrake.min.js';
+  script.src = 'https://ssljscdn.airbrake.io/0.3/airbrake.min.js';
   script.async = true;
   sibling.parentNode.insertBefore(script, sibling);
 }
