@@ -11,7 +11,7 @@ truncate = (src, n=1000, depth=4) ->
     seen.push(src)
 
     if dd >= depth
-      return '[Circular]'
+      return '[Truncated]'
 
     dst = {}
     for key of src
@@ -19,7 +19,12 @@ truncate = (src, n=1000, depth=4) ->
         nn++
         if nn >= n
           break
-        dst[key] = fn(src[key], dd+1)
+        # Ignore browser specific exceptions trying to read key (#79).
+        try
+          val = src[key]
+        catch
+          continue
+        dst[key] = fn(val, dd+1)
 
     return dst
 
