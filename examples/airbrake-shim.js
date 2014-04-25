@@ -26,8 +26,17 @@ Airbrake.onload = function() {
 }
 
 // Reports unhandled exceptions.
-window.onerror = function(message, file, line) {
-  Airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
+window.onerror = function(message, file, line, column, error) {
+  if (error) {
+    Airbrake.push({error: error});
+  } else {
+    Airbrake.push({error: {
+      message: message,
+      fileName: file,
+      lineNumber: line,
+      columnNumber: column || 0
+    }});
+  }
 }
 
 var loadAirbrakeNotifier = function() {
