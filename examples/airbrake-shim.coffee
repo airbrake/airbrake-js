@@ -19,8 +19,16 @@ Airbrake.onload = ->
   Airbrake.addReporter(Airbrake.consoleReporter)
 
 # Reports unhandled exceptions.
-window.onerror = (message, file, line) ->
-  Airbrake.push({error: {message: message, fileName: file, lineNumber: line}})
+window.onerror = (message, file, line, column, error) ->
+  if error
+    Airbrake.push({error: error})
+  else
+    Airbrake.push({error: {
+      message: message,
+      fileName: file,
+      lineNumber: line,
+      columnNumber: column or 0,
+    }})
 
 loadAirbrakeNotifier = ->
   script = document.createElement('script')
