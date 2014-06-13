@@ -56,21 +56,29 @@ funcFileLineRe = /// ^
   (\d+) # line
 $ ///
 
+# Firefox >= 30.
+funcFileLineColumnRe2 = /// ^
+  (.*)@  # function
+  (.+):  # file
+  (\d+): # line
+  (\d+)  # column
+$ ///
+
 parseStack = (e, stack) ->
   stack = e.stack or ''
   lines = stack.split('\n')
 
   backtrace = []
   for line, i in lines
-    continue if line == ''
+    if line == '' then continue
 
     m = line.match(funcAliasFileLineColumnRe)
     if m
       backtrace.push({
         function: m[1],
         file: m[3] or '',
-        line: m[4] and parseInt(m[4]) or 0,
-        column: m[5] and parseInt(m[5]) or 0,
+        line: m[4] and parseInt(m[4], 10) or 0,
+        column: m[5] and parseInt(m[5], 10) or 0,
       })
       continue
 
@@ -79,8 +87,18 @@ parseStack = (e, stack) ->
       backtrace.push({
         function: m[1],
         file: m[2] or '',
-        line: m[3] and parseInt(m[3]) or 0,
-        column: m[4] and parseInt(m[4]) or 0,
+        line: m[3] and parseInt(m[3], 10) or 0,
+        column: m[4] and parseInt(m[4], 10) or 0,
+      })
+      continue
+
+    m = line.match(funcFileLineColumnRe2)
+    if m
+      backtrace.push({
+        function: m[1],
+        file: m[2],
+        line: parseInt(m[3], 10),
+        column: parseInt(m[4], 10),
       })
       continue
 
