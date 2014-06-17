@@ -30,5 +30,8 @@
     "sinon": "~1.7.3",
     "sinon-chai": "~2.4.0",
     "grunt-contrib-connect": "^0.7.0"
+  },
+  "scripts": {
+    "test": "grunt test"
   }
 }
