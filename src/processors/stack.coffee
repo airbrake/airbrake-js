@@ -1,142 +1,132 @@
 # https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error/Stack
+# https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi
+# http://msdn.microsoft.com/en-us/library/ie/hh699850%28v=vs.94%29.aspx
+# http://ie.microsoft.com/testdrive/Browser/ExploreErrorStack/
 
-processor = (e, cb) ->
-  return cb('stack', parseStack(e))
+rules = [
+  {
+    name: 'v8',
+    re: /// ^
+      \s*
+      at\s
+      (.+?)\s       # function
+      \(
+        (?:
+          (?:
+            (.+):  # file
+            (\d+): # line
+            (\d+)  # column
+          )
+          |
+          (.+)
+        )
+      \)
+    $ ///,
+    fn: (m) ->
+      return {
+        function: m[1],
+        file: m[2] or m[5],
+        line: m[3] and parseInt(m[3], 10) or 0,
+        column: m[4] and parseInt(m[4], 10) or 0,
+      }
+  },
 
+  {
+    name: 'firefox30',
+    re: /// ^
+      (.*)@  # function
+      (.+):  # file
+      (\d+): # line
+      (\d+)  # column
+    $ ///,
+    fn: (m) ->
+      return {
+        function: m[1],
+        file: m[2],
+        line: parseInt(m[3], 10),
+        column: parseInt(m[4], 10),
+      }
+  }
 
-# Chrome.
-funcAliasFileLineColumnRe = /// ^
-  \s{4}at\s
-  (.+)\s          # function
-  \[as\s(\S+)\]\s # alias
-  \(
-    (?:
-      (?:
-        (.+):     # file
-        (\d+):    # line
-        (\d+)     # column
-      )|native
-    )
-  \)
-$ ///
+  {
+    name: 'firefox14',
+    re: /// ^
+      (.*)@ # function
+      (.+): # file
+      (\d+) # line
+    $ ///,
+    fn: (m, i, e) ->
+      if i == 0
+        column = e.columnNumber or 0
+      else
+        column = 0
+      return {
+        function: m[1],
+        file: m[2],
+        line: parseInt(m[3], 10),
+        column: column,
+      }
+  },
 
-# Chrome.
-funcFileLineColumnRe = /// ^
-  \s{4}at\s
-  (.+)\s       # function
-  \(
-    (?:
-      (?:
-        (.+):  # file
-        (\d+): # line
-        (\d+)  # column
-      )|native
-    )
-  \)
-$ ///
+  # TODO: which browsers generate such stack?
+  {
+    name: 'todo',
+    re: /// ^
+      \s+at\s
+      (.+):     # file
+      (\d+):    # line
+      (\d+)     # column
+    $ ///,
+    fn: (m) ->
+      return {
+        function: '',
+        file: m[1],
+        line: parseInt(m[2], 10),
+        column: parseInt(m[3], 10),
+      }
+  },
 
-# Chrome.
-fileLineColumnRe = /// ^
-  \s{4}at\s
-  (.+):     # file
-  (\d+):    # line
-  (\d+)     # column
-$ ///
+  {
+    name: 'default',
+    re: /.+/,
+    fn: (m) ->
+      console?.debug?("airbrake: can't parse", m[0])
+      return {
+        function: m[0],
+        file: '',
+        line: 0,
+        column: 0,
+      }
+  }
+]
 
-# Chrome.
 typeMessageRe = /// ^
   \S+:\s # type
   .+     # message
 $ ///
 
-# Firefox.
-funcFileLineRe = /// ^
-  (.*)@ # function
-  (.+): # file
-  (\d+) # line
-$ ///
-
-# Firefox >= 30.
-funcFileLineColumnRe2 = /// ^
-  (.*)@  # function
-  (.+):  # file
-  (\d+): # line
-  (\d+)  # column
-$ ///
-
-parseStack = (e, stack) ->
+processor = (e, cb) ->
+  processorName = ''
   stack = e.stack or ''
   lines = stack.split('\n')
 
   backtrace = []
   for line, i in lines
-    if line == '' then continue
-
-    m = line.match(funcAliasFileLineColumnRe)
-    if m
-      backtrace.push({
-        function: m[1],
-        file: m[3] or '',
-        line: m[4] and parseInt(m[4], 10) or 0,
-        column: m[5] and parseInt(m[5], 10) or 0,
-      })
+    if line == ''
       continue
 
-    m = line.match(funcFileLineColumnRe)
-    if m
-      backtrace.push({
-        function: m[1],
-        file: m[2] or '',
-        line: m[3] and parseInt(m[3], 10) or 0,
-        column: m[4] and parseInt(m[4], 10) or 0,
-      })
-      continue
+    for rule in rules
+      m = line.match(rule.re)
+      if not m
+        continue
 
-    m = line.match(funcFileLineColumnRe2)
-    if m
-      backtrace.push({
-        function: m[1],
-        file: m[2],
-        line: parseInt(m[3], 10),
-        column: parseInt(m[4], 10),
-      })
-      continue
+      processorName = rule.name
+      backtrace.push(rule.fn(m, i, e))
 
-    m = line.match(fileLineColumnRe)
-    if m
-      backtrace.push({
-        function: '',
-        file: m[1],
-        line: parseInt(m[2], 10),
-        column: parseInt(m[3], 10),
-      })
-      continue
+      break
 
-    m = line.match(funcFileLineRe)
-    if m
-      if i == 0
-        column = e.columnNumber or 0
-      else
-        column = 0
-      backtrace.push({
-        function: m[1],
-        file: m[2],
-        line: parseInt(m[3], 10),
-        column: column,
-      })
-      continue
-
-    m = line.match(typeMessageRe)
-    if m
-      continue
-
-    console?.debug?("airbrake: can't parse", line)
-    backtrace.push({
-      function: '',
-      file: line,
-      line: 0,
-      column: 0,
-    })
+  if processorName == 'v8' and backtrace.length > 0 and backtrace[0].function.match(typeMessageRe)
+    backtrace = backtrace[1..]
 
   if backtrace.length == 0 and (e.fileName? or e.lineNumber? or e.columnNumber?)
     backtrace.push({
@@ -157,11 +147,11 @@ parseStack = (e, stack) ->
   else
     type = ''
 
-  return {
+  return cb(processorName, {
     'type': type,
     'message': msg,
     'backtrace': backtrace,
-  }
+  })
 
 
 module.exports = processor
