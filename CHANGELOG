@@ -1,3 +1,7 @@
+# v0.3.6
+
+- Add Firefox >= 30 support (#87).
+
 # v0.3.5
 
 - Fix jsonify_notice (#77).

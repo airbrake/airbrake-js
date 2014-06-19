@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Notify Airbrake on JavaScript exceptions",
   "main": "Gruntfile.coffee",
   "repository": {
