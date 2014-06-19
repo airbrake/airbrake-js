@@ -44,32 +44,39 @@ else
   window.attachEvent('onload', loadAirbrakeNotifier)
 
 # Reports exceptions thrown in jQuery event handlers.
-jqEventAdd = jQuery.event.add
-jQuery.event.add = (elem, types, handler, data, selector) ->
-  if handler.handler
-    if not handler.handler.guid
-      handler.handler.guid = jQuery.guid++
-    handler.handler = Airbrake.wrap(handler.handler)
-  else
-    if not handler.guid
-      handler.guid = jQuery.guid++
-    handler = Airbrake.wrap(handler)
-  return jqEventAdd(elem, types, handler, data, selector)
+if window.jQuery
+  setupJQ()
+else
+  console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
 
-# Reports exceptions thrown in jQuery callbacks.
-jqCallbacks = jQuery.Callbacks
-jQuery.Callbacks = (options) ->
-  cb = jqCallbacks(options)
-  cbAdd = cb.add
-  cb.add = ->
-    fns = arguments
-    jQuery.each fns, (i, fn) ->
-      if jQuery.isFunction(fn)
-        fns[i] = Airbrake.wrap(fn)
-    return cbAdd.apply(this, fns)
-  return cb
+setupJQ = ->
+  # Reports exceptions thrown in jQuery event handlers.
+  jqEventAdd = jQuery.event.add
+  jQuery.event.add = (elem, types, handler, data, selector) ->
+    if handler.handler
+      if not handler.handler.guid
+        handler.handler.guid = jQuery.guid++
+      handler.handler = Airbrake.wrap(handler.handler)
+    else
+      if not handler.guid
+        handler.guid = jQuery.guid++
+      handler = Airbrake.wrap(handler)
+    return jqEventAdd(elem, types, handler, data, selector)
 
-# Reports exceptions thrown in jQuery ready callbacks.
-jqReady = jQuery.fn.ready
-jQuery.fn.ready = (fn) ->
-  return jqReady(Airbrake.wrap(fn))
+  # Reports exceptions thrown in jQuery callbacks.
+  jqCallbacks = jQuery.Callbacks
+  jQuery.Callbacks = (options) ->
+    cb = jqCallbacks(options)
+    cbAdd = cb.add
+    cb.add = ->
+      fns = arguments
+      jQuery.each fns, (i, fn) ->
+        if jQuery.isFunction(fn)
+          fns[i] = Airbrake.wrap(fn)
+      return cbAdd.apply(this, fns)
+    return cb
+
+  # Reports exceptions thrown in jQuery ready callbacks.
+  jqReady = jQuery.fn.ready
+  jQuery.fn.ready = (fn) ->
+    return jqReady(Airbrake.wrap(fn))
