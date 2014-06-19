@@ -1,4 +1,4 @@
-# Airbrake-JS
+# Airbrake-JS [![Build Status](https://circleci.com/gh/airbrake/airbrake-js.png?circle-token=3c561e089366ed8e0c9ec396a69f9665c1331581)](https://circleci.com/gh/airbrake/airbrake-js)
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
