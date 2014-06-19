@@ -83,14 +83,14 @@ rules = [
       }
   },
 
-  # TODO: which browsers generate such stack?
   {
-    name: 'todo',
+    name: 'v8-short',
     re: /// ^
-      \s+at\s
-      (.+):     # file
-      (\d+):    # line
-      (\d+)     # column
+      \s*
+      at\s
+      (.+):  # file
+      (\d+): # line
+      (\d+)  # column
     $ ///,
     fn: (m) ->
       return {

@@ -64,7 +64,7 @@ class Client
     @_processor err.error or err, (name, errInfo) =>
       notice =
         notifier:
-          name: 'Airbrake JS ' + name
+          name: 'airbrake-js-' + name
           version: '<%= pkg.version %>'
           url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
