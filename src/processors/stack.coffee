@@ -40,9 +40,24 @@ rules = [
       (\d+)  # column
     $ ///,
     fn: (m) ->
+      func = m[1]
+      file = m[2]
+
+      # Handle "location line \d+ > eval"
+      evaledRe = ///^
+        (\S+)                    # file
+        \s(line\s\d+\s>\seval.*) # hint
+      $///
+      if mm = file.match(evaledRe)
+        if func.length > 0
+          func = func + ' ' + mm[2]
+        else
+          func = mm[2]
+        file = mm[1]
+
       return {
-        function: m[1],
-        file: m[2],
+        function: func,
+        file: file,
         line: parseInt(m[3], 10),
         column: parseInt(m[4], 10),
       }

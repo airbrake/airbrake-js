@@ -80,14 +80,14 @@ describe "stack processor", ->
       backtrace = cb.lastCall.args[1].backtrace
       wanted = [
         {
-          "function": "",
-          "file": "file:///C:/example.html line 7 > eval line 1 > eval",
+          "function": "line 7 > eval line 1 > eval",
+          "file": "file:///C:/example.html",
           "line": 1,
           "column": 1
         },
         {
-          "function": "",
-          "file": "file:///C:/example.html line 7 > eval",
+          "function": "line 7 > eval",
+          "file": "file:///C:/example.html",
           "line": 1,
           "column": 1
         },
