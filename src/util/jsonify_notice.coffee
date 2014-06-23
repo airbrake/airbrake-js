@@ -1,41 +1,20 @@
-truncate = (src, n=1000, depth=4) ->
-  nn = 0
-  seen = []
-
-  fn = (src, dd=0) ->
-    if typeof src != 'object'
-      return src
-
-    if seen.indexOf(src) >= 0
-      return '[Circular]'
-    seen.push(src)
-
-    if dd >= depth
-      return '[Truncated]'
-
-    dst = {}
-    for key of src
-      if Object.prototype.hasOwnProperty.call(src, key)
-        nn++
-        if nn >= n
-          break
-        # Ignore browser specific exceptions trying to read key (#79).
-        try
-          val = src[key]
-        catch
-          continue
-        dst[key] = fn(val, dd+1)
-
-    return dst
-
-  return fn(src)
+truncate = require('./truncate.coffee')
 
 
-jsonify = (notice) ->
-  notice.params = truncate(notice.params)
-  notice.environment = truncate(notice.environment)
-  notice.session = truncate(notice.session)
+truncateObj = (obj) ->
+  dst = {}
+  for key of obj
+    dst[key] = truncate(obj[key])
+  return dst
+
+
+# jsonifyNotice truncates each value in params, environment and
+# session separately and then serializes notice in JSON.
+jsonifyNotice = (notice) ->
+  notice.params = truncateObj(notice.params)
+  notice.environment = truncateObj(notice.environment)
+  notice.session = truncateObj(notice.session)
   return JSON.stringify(notice)
 
 
-module.exports = jsonify
+module.exports = jsonifyNotice
