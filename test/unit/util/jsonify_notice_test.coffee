@@ -1,15 +1,20 @@
-expect = require("chai").expect
-sinon = require("sinon")
+expect = require('chai').expect
+sinon = require('sinon')
 
-jsonify = require("../../../src/util/jsonify_notice.coffee")
+jsonifyNotice = require('../../../src/util/jsonify_notice.coffee')
 
-describe "jsonify_notice", ->
-  notice = {
-    params: {param1: 'value1'},
-    environment: {env1: 'value1'},
-    session: {session1: 'value1'},
-  }
 
-  it "preserves params, environment and session", ->
-    json = jsonify(notice)
-    expect(json).to.equal('{"params":{"param1":"value1"},"environment":{"env1":"value1"},"session":{"session1":"value1"}}')
+describe 'jsonify_notice', ->
+  context 'when called with notice', ->
+    obj = {
+      params: { arguments: [] },
+      environment: { env1: 'value1' },
+      session: { session1: 'value1' },
+    }
+    json = null
+
+    beforeEach ->
+      json = jsonifyNotice(obj)
+
+    it 'produces valid JSON', ->
+      expect(JSON.parse(json)).to.deep.equal(obj)

@@ -105,7 +105,6 @@ rules = [
     name: 'default',
     re: /.+/,
     fn: (m) ->
-      console?.debug?("airbrake: can't parse", m[0])
       return {
         function: m[0],
         file: '',
@@ -140,7 +139,9 @@ processor = (e, cb) ->
 
       break
 
-  if processorName == 'v8' and backtrace.length > 0 and backtrace[0].function.match(typeMessageRe)
+  if processorName in ['v8', 'v8-short'] and
+     backtrace.length > 0 and
+     backtrace[0].function.match(typeMessageRe)
     backtrace = backtrace[1..]
 
   if backtrace.length == 0 and (e.fileName? or e.lineNumber? or e.columnNumber?)
