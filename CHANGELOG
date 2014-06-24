@@ -1,3 +1,7 @@
+# v0.3.7
+
+- Improve serializing objects with circular references.
+
 # v0.3.6
 
 - Add Firefox >= 30 support (#87).
