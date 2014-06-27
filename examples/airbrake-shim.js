@@ -55,6 +55,12 @@ if (window.addEventListener) {
 }
 
 // Reports exceptions thrown in jQuery event handlers.
+if (!window.jQuery) {
+  console.warn("jQuery not found on the page.  " +
+    "You should remove jQuery integration code from airbrake-shim, or ensure that airbrake-shim is loaded after jQuery");
+  return;
+}
+
 var jqEventAdd = jQuery.event.add;
 jQuery.event.add = function(elem, types, handler, data, selector) {
   if (handler.handler) {
