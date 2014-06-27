@@ -55,43 +55,51 @@ if (window.addEventListener) {
 }
 
 // Reports exceptions thrown in jQuery event handlers.
-var jqEventAdd = jQuery.event.add;
-jQuery.event.add = function(elem, types, handler, data, selector) {
-  if (handler.handler) {
-    if (!handler.handler.guid) {
-      handler.handler.guid = jQuery.guid++;
-    }
-    handler.handler = Airbrake.wrap(handler.handler);
-  } else {
-    if (!handler.guid) {
-      handler.guid = jQuery.guid++;
-    }
-    handler = Airbrake.wrap(handler);
-  }
-  return jqEventAdd(elem, types, handler, data, selector);
+if (window.jQuery) {
+  setupJQ();
+} else {
+  console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
 }
 
-// Reports exceptions thrown in jQuery callbacks.
-var jqCallbacks = jQuery.Callbacks;
-jQuery.Callbacks = function(options) {
-  var cb = jqCallbacks(options),
-      cbAdd = cb.add;
-  cb.add = function() {
-    var fns = arguments;
-    jQuery.each(fns, function(i, fn) {
-      if (jQuery.isFunction(fn)) {
-        fns[i] = Airbrake.wrap(fn);
+var setupJQ = function() {
+  var jqEventAdd = jQuery.event.add;
+  jQuery.event.add = function(elem, types, handler, data, selector) {
+    if (handler.handler) {
+      if (!handler.handler.guid) {
+        handler.handler.guid = jQuery.guid++;
       }
-    });
-    return cbAdd.apply(this, fns);
+      handler.handler = Airbrake.wrap(handler.handler);
+    } else {
+      if (!handler.guid) {
+        handler.guid = jQuery.guid++;
+      }
+      handler = Airbrake.wrap(handler);
+    }
+    return jqEventAdd(elem, types, handler, data, selector);
   }
-  return cb;
-}
 
-// Reports exceptions thrown in jQuery ready callbacks.
-var jqReady = jQuery.fn.ready;
-jQuery.fn.ready = function(fn) {
-  return jqReady(Airbrake.wrap(fn));
+  // Reports exceptions thrown in jQuery callbacks.
+  var jqCallbacks = jQuery.Callbacks;
+  jQuery.Callbacks = function(options) {
+    var cb = jqCallbacks(options),
+        cbAdd = cb.add;
+    cb.add = function() {
+      var fns = arguments;
+      jQuery.each(fns, function(i, fn) {
+        if (jQuery.isFunction(fn)) {
+          fns[i] = Airbrake.wrap(fn);
+        }
+      });
+      return cbAdd.apply(this, fns);
+    }
+    return cb;
+  }
+
+  // Reports exceptions thrown in jQuery ready callbacks.
+  var jqReady = jQuery.fn.ready;
+  jQuery.fn.ready = function(fn) {
+    return jqReady(Airbrake.wrap(fn));
+  }
 }
 
 })(window);
