@@ -47,13 +47,6 @@ var loadAirbrakeNotifier = function() {
   sibling.parentNode.insertBefore(script, sibling);
 }
 
-// Asynchronously loads Airbrake notifier.
-if (window.addEventListener) {
-  window.addEventListener('load', loadAirbrakeNotifier, false);
-} else {
-  window.attachEvent('onload', loadAirbrakeNotifier);
-}
-
 var setupJQ = function() {
   var jqEventAdd = jQuery.event.add;
   jQuery.event.add = function(elem, types, handler, data, selector) {
@@ -93,6 +86,13 @@ var setupJQ = function() {
   jQuery.fn.ready = function(fn) {
     return jqReady(Airbrake.wrap(fn));
   }
+}
+
+// Asynchronously loads Airbrake notifier.
+if (window.addEventListener) {
+  window.addEventListener('load', loadAirbrakeNotifier, false);
+} else {
+  window.attachEvent('onload', loadAirbrakeNotifier);
 }
 
 // Reports exceptions thrown in jQuery event handlers.

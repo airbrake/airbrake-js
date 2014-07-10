@@ -37,18 +37,6 @@ loadAirbrakeNotifier = ->
   script.async = true
   sibling.parentNode.insertBefore(script, sibling)
 
-# Asynchronously loads Airbrake notifier.
-if window.addEventListener
-  window.addEventListener('load', loadAirbrakeNotifier, false)
-else
-  window.attachEvent('onload', loadAirbrakeNotifier)
-
-# Reports exceptions thrown in jQuery event handlers.
-if window.jQuery
-  setupJQ()
-else
-  console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
-
 setupJQ = ->
   # Reports exceptions thrown in jQuery event handlers.
   jqEventAdd = jQuery.event.add
@@ -80,3 +68,15 @@ setupJQ = ->
   jqReady = jQuery.fn.ready
   jQuery.fn.ready = (fn) ->
     return jqReady(Airbrake.wrap(fn))
+
+# Asynchronously loads Airbrake notifier.
+if window.addEventListener
+  window.addEventListener('load', loadAirbrakeNotifier, false)
+else
+  window.attachEvent('onload', loadAirbrakeNotifier)
+
+# Reports exceptions thrown in jQuery event handlers.
+if window.jQuery
+  setupJQ()
+else
+  console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
