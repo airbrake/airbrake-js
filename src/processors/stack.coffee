@@ -120,7 +120,7 @@ typeMessageRe = /// ^
 $ ///
 
 processor = (e, cb) ->
-  processorName = ''
+  processorName = 'nostack'
   stack = e.stack or ''
   lines = stack.split('\n')
 
@@ -161,7 +161,18 @@ processor = (e, cb) ->
     type = e.name
     msg = type + ': ' + msg
   else
-    type = ''
+    # Extract type from messages like "Uncaught Exception: message.".
+    uncaughtExcRe = ///^
+      Uncaught\s
+      (.+?)      # type
+      :\s
+      .+         # message
+    $///
+    m = msg.match(uncaughtExcRe)
+    if m
+      type = m[1]
+    else
+      type = ''
 
   return cb(processorName, {
     'type': type,
