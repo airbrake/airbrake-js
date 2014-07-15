@@ -444,3 +444,22 @@ describe "stack processor", ->
         }
       ]
       expect(backtrace).to.deep.equal(wanted)
+
+  context "when called with message only", ->
+    cb = null
+
+    beforeEach ->
+      e = 'Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.'
+      cb = sinon.spy()
+      processor(e, cb)
+
+    it "receives nostack processor name", ->
+      expect(cb).to.have.been.called
+      name = cb.lastCall.args[0]
+      expect(name).to.equal("nostack")
+
+    it "receives error message and extracted error type", ->
+      expect(cb).to.have.been.called
+      err = cb.lastCall.args[1]
+      expect(err.type).to.equal("SecurityError")
+      expect(err.message).to.equal('Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
