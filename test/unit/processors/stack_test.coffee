@@ -463,3 +463,68 @@ describe "stack processor", ->
       err = cb.lastCall.args[1]
       expect(err.type).to.equal("SecurityError")
       expect(err.message).to.equal('Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
+
+  context "when called with a standard ErrorEvent", ->
+    cb = null
+    e = null
+
+    beforeEach ->
+      e = {
+        message: 'Uncaught Error: Example error'
+        filename: 'http://example.com/example.js'
+        lineno: 10
+        column: 4
+      }
+      cb = sinon.spy()
+      processor(e, cb)
+
+    it "receives nostack processor name", ->
+      expect(cb).to.have.been.called
+      name = cb.lastCall.args[0]
+      expect(name).to.equal("nostack")
+
+    it "receives correct backtrace", ->
+      expect(cb).to.have.been.called
+      backtrace = cb.lastCall.args[1].backtrace
+      wanted = [
+        {
+          "function": "",
+          "file": e.filename,
+          "line": e.lineno,
+          "column": e.column
+        }
+      ]
+      expect(backtrace).to.deep.equal(wanted)
+
+  context "when called with a non-standard ErrorEvent (Chrome)", ->
+    cb = null
+    e = null
+
+    beforeEach ->
+      e = {
+        message: 'Uncaught Error: Example error'
+        filename: 'http://example.com/example.js'
+        lineno: 10
+        colno: 4
+      }
+      cb = sinon.spy()
+      processor(e, cb)
+
+    it "receives nostack processor name", ->
+      expect(cb).to.have.been.called
+      name = cb.lastCall.args[0]
+      expect(name).to.equal("nostack")
+
+    it "receives correct backtrace", ->
+      expect(cb).to.have.been.called
+      backtrace = cb.lastCall.args[1].backtrace
+      wanted = [
+        {
+          "function": "",
+          "file": e.filename,
+          "line": e.lineno,
+          "column": e.colno
+        }
+      ]
+      expect(backtrace).to.deep.equal(wanted)
+
