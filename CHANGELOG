@@ -1,3 +1,11 @@
+# v0.3.9
+
+- Add support for ErrorEvent interface.
+
+# v0.3.8
+
+- Handle uncaught exception messages.
+
 # v0.3.7
 
 - Improve serializing objects with circular references.
