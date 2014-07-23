@@ -152,6 +152,15 @@ processor = (e, cb) ->
       column: parseInt(e.columnNumber, 10) or 0,
     })
 
+  # ErrorEvent: https://developer.mozilla.org/en-US/docs/Web/API/ErrorEvent
+  if backtrace.length == 0 and (e.filename? or e.lineno? or e.column? or e.colno?)
+    backtrace.push({
+      function: '',
+      file: e.filename or '',
+      line: parseInt(e.lineno, 10) or 0,
+      column: parseInt(e.column or e.colno, 10) or 0,
+    })
+
   if e.message?
     msg = e.message
   else
