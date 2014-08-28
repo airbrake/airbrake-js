@@ -27,6 +27,11 @@ Airbrake.onload = function() {
 
 // Reports unhandled exceptions.
 window.onerror = function(message, file, line, column, error) {
+  if (message === 'Script error.') {
+    // Ignore.
+    return;
+  }
+
   if (error) {
     Airbrake.push({error: error});
   } else {

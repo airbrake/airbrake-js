@@ -20,6 +20,10 @@ Airbrake.onload = ->
 
 # Reports unhandled exceptions.
 window.onerror = (message, file, line, column, error) ->
+  if message == 'Script error.'
+    # Ignore.
+    return
+
   if error
     Airbrake.push({error: error})
   else
