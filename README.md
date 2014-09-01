@@ -45,7 +45,7 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 ## Advanced Usage
 
-The notifier provides a few pieces of functionality to help reduce duplication when you report errors. In order to access this functionality, the full notifier needs to be loaded, not just the shim implelementation provided in the embed snippet.
+The notifier provides a few pieces of functionality to help reduce duplication when you report errors. In order to access this functionality, the full notifier needs to be loaded, not just the shim implementation provided in the embed snippet.
 
 ### Notifier `onload`
 
