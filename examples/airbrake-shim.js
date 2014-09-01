@@ -20,6 +20,19 @@ Airbrake.wrap = function(fn) {
   return airbrakeWrapper;
 }
 
+var wrapArguments = function(fn) {
+  var airbrakeWrapper = function() {
+    var i;
+    for (i = 0; i < arguments.length; i++) {
+      if (typeof arguments[i] === 'function') {
+        arguments[i] = Airbrake.wrap(arguments[i]);
+      }
+    }
+    return fn.apply(this, arguments);
+  }
+  return airbrakeWrapper;
+}
+
 // Registers console reporter when notifier is ready.
 Airbrake.onload = function() {
   Airbrake.addReporter(Airbrake.consoleReporter);
@@ -75,13 +88,7 @@ var setupJQ = function() {
     var cb = jqCallbacks(options),
         cbAdd = cb.add;
     cb.add = function() {
-      var fns = arguments;
-      jQuery.each(fns, function(i, fn) {
-        if (jQuery.isFunction(fn)) {
-          fns[i] = Airbrake.wrap(fn);
-        }
-      });
-      return cbAdd.apply(this, fns);
+      return cbAdd.apply(this, wrapArguments(arguments));
     }
     return cb;
   }
@@ -95,8 +102,14 @@ var setupJQ = function() {
 
 // Asynchronously loads Airbrake notifier.
 if (window.addEventListener) {
+  window.addEventListener = wrapArguments(window.addEventListener);
+  document.addEventListener = wrapArguments(document.addEventListener);
+
   window.addEventListener('load', loadAirbrakeNotifier, false);
 } else {
+  window.attachEvent = wrapArguments(window.attachEvent);
+  document.attachEvent = wrapArguments(document.attachEvent);
+
   window.attachEvent('onload', loadAirbrakeNotifier);
 }
 
