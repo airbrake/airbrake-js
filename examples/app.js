@@ -2,6 +2,10 @@ function throwError(msg) {
   throw new Error(msg);
 }
 
+window.addEventListener('load', function() {
+  throwError("unhandled exception in event listener");
+});
+
 $(function() {
   $("#try_catch_btn").click({
     handler: function() {
