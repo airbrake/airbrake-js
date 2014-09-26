@@ -4,14 +4,23 @@ window.Airbrake = []
 # Wraps passed function and returns new function that catches and
 # reports unhandled exceptions.
 Airbrake.wrap = (fn) ->
+  if fn.__airbrake__
+    return fn
+
   airbrakeWrapper = ->
     try
       return fn.apply(this, arguments)
     catch exc
       args = Array.prototype.slice.call(arguments)
       Airbrake.push({error: exc, params: {arguments: args}})
-  if fn.guid
-    airbrakeWrapper.guid = fn.guid
+
+  for prop of fn
+    if fn.hasOwnProperty(prop)
+      airbrakeWrapper[prop] = fn[prop]
+
+  airbrakeWrapper.__airbrake__ = true
+  airbrakeWrapper.__inner__ = fn
+
   return airbrakeWrapper
 
 # Registers console reporter when notifier is ready.

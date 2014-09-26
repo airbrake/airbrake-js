@@ -6,17 +6,30 @@ window.Airbrake = [];
 // Wraps passed function and returns new function that catches and
 // reports unhandled exceptions.
 Airbrake.wrap = function(fn) {
+  if (fn.__airbrake__) {
+    return fn;
+  }
+
   var airbrakeWrapper = function() {
     try {
       return fn.apply(this, arguments);
     } catch (exc) {
+      var args;
       args = Array.prototype.slice.call(arguments);
       Airbrake.push({error: exc, params: {arguments: args}});
     }
   }
-  if (fn.guid) {
-    airbrakeWrapper.guid = fn.guid;
+
+  var prop;
+  for (prop in fn) {
+    if (fn.hasOwnProperty(prop)) {
+      airbrakeWrapper[prop] = fn[prop];
+    }
   }
+
+  airbrakeWrapper.__airbrake__ = true;
+  airbrakeWrapper.__inner__ = fn;
+
   return airbrakeWrapper;
 }
 
