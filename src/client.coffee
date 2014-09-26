@@ -83,13 +83,27 @@ class Client
       return
 
   wrap: (fn) ->
-    airbrakeWrap = ->
+    if fn.__airbrake__
+      return fn
+
+    self = this
+
+    airbrakeWrapper = ->
       try
         return fn.apply(this, arguments)
       catch exc
         args = Array.prototype.slice.call(arguments)
-        Airbrake.push({error: exc, params: {arguments: args}})
-    return airbrakeWrap
+        self.push({error: exc, params: {arguments: args}})
+        return null
+
+    for prop of fn
+      if fn.hasOwnProperty(prop)
+        airbrakeWrapper[prop] = fn[prop]
+
+    airbrakeWrapper.__airbrake__ = true
+    airbrakeWrapper.__inner__ = fn
+
+    return airbrakeWrapper
 
 
 module.exports = Client

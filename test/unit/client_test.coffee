@@ -1,10 +1,56 @@
-chai       = require("chai")
-sinon      = require("sinon")
+chai = require("chai")
+sinon = require("sinon")
 sinon_chai = require("sinon-chai")
-expect     = chai.expect
+expect = chai.expect
 chai.use(sinon_chai)
 
 Client = require("../../src/client")
+
+
+testWrap = (client) ->
+  describe "wrap", ->
+    it "does not invoke function immediately", ->
+      fn = sinon.spy()
+      client.wrap(fn)
+      expect(fn).not.to.have.been.called
+
+    it "creates wrapper that invokes function with passed args", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      wrapper("hello", "world")
+      expect(fn).to.have.been.called
+      expect(fn.lastCall.args).to.deep.equal(["hello", "world"])
+
+    it "sets __airbrake__ and __inner__ properties", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      expect(wrapper.__airbrake__).to.equal(true)
+      expect(wrapper.__inner__).to.equal(fn)
+
+    it "copies function properties", ->
+      fn = sinon.spy()
+      fn.prop = "hello"
+      wrapper = client.wrap(fn)
+      expect(wrapper.prop).to.equal("hello")
+
+    it "reports throwed exception", ->
+      client.push = sinon.spy()
+      exc = new Error("test")
+      fn = ->
+        throw exc
+      wrapper = client.wrap(fn)
+      wrapper()
+      expect(client.push).to.have.been.called
+      expect(client.push.lastCall.args).to.deep.equal([{error: exc, params: {arguments: []}}])
+
+
+describe "JS shim", ->
+  testWrap(require("../../examples/airbrake-shim.js").Airbrake)
+
+
+describe "Coffee shim", ->
+  testWrap(require("../../examples/airbrake-shim.coffee").Airbrake)
+
 
 describe "Client", ->
   clock = undefined
@@ -239,9 +285,4 @@ describe "Client", ->
       client.push(error: {})
       expect(custom_reporter).to.have.been.called
 
-  describe "wrap", ->
-    it "does not invoke lambda immediately", ->
-      client = new Client()
-      lambda = sinon.spy()
-      client.wrap(lambda)
-      expect(lambda).not.to.have.been.called
+  testWrap(new Client())
