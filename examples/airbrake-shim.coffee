@@ -18,12 +18,12 @@ global.Airbrake.wrap = (fn) ->
       global.Airbrake.push({error: exc, params: {arguments: args}})
       return null
 
+  airbrakeWrapper.__airbrake__ = true
+  airbrakeWrapper.__inner__ = fn
+
   for prop of fn
     if fn.hasOwnProperty(prop)
       airbrakeWrapper[prop] = fn[prop]
-
-  airbrakeWrapper.__airbrake__ = true
-  airbrakeWrapper.__inner__ = fn
 
   return airbrakeWrapper
 

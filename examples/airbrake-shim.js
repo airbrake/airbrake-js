@@ -21,15 +21,15 @@ global.Airbrake.wrap = function(fn) {
     }
   }
 
+  airbrakeWrapper.__airbrake__ = true;
+  airbrakeWrapper.__inner__ = fn;
+
   var prop;
   for (prop in fn) {
     if (fn.hasOwnProperty(prop)) {
       airbrakeWrapper[prop] = fn[prop];
     }
   }
-
-  airbrakeWrapper.__airbrake__ = true;
-  airbrakeWrapper.__inner__ = fn;
 
   return airbrakeWrapper;
 }
