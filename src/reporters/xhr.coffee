@@ -2,7 +2,7 @@ jsonifyNotice = require('../util/jsonify_notice.coffee')
 
 
 report = (notice, opts) ->
-  url = "https://api.airbrake.io/api/v3/projects/#{opts.projectId}/notices?key=#{opts.projectKey}"
+  url = "#{opts.host}/api/v3/projects/#{opts.projectId}/notices?key=#{opts.projectKey}"
   payload = jsonifyNotice(notice)
 
   req = new global.XMLHttpRequest()

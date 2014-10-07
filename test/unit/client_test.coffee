@@ -81,8 +81,18 @@ describe "Client", ->
         opts = reporter.lastCall.args[1]
         expect(opts).to.deep.equal({
           projectId: 999
-          projectKey: "custom_project_key"
+          projectKey: "custom_project_key",
+          host: "https://api.airbrake.io"
         })
+      it "reporter is called with custom host", ->
+        reporter = sinon.spy()
+
+        client = new Client(writeThroughProcessor, reporter)
+        client.setHost("https://custom.domain.com")
+        client.push(exception)
+
+        reported = reporter.lastCall.args[1]
+        expect(reported.host).to.equal("https://custom.domain.com")
 
     describe "custom data sent to reporter", ->
       it "reports context", ->

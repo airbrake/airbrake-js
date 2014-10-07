@@ -14,6 +14,8 @@ class Client
     @_projectId = 0
     @_projectKey = ''
 
+    @_host = 'https://api.airbrake.io'
+
     @_context = {}
     @_params = {}
     @_env = {}
@@ -29,6 +31,9 @@ class Client
   setProject: (id, key) ->
     @_projectId = id
     @_projectKey = key
+
+  setHost: (host) ->
+    @_host = host
 
   addContext: (context) ->
     merge(@_context, context)
@@ -78,7 +83,7 @@ class Client
           return
 
       for reporterFn in @_reporters
-        reporterFn(notice, {projectId: @_projectId, projectKey: @_projectKey})
+        reporterFn(notice, {projectId: @_projectId, projectKey: @_projectKey, host: @_host})
 
       return
 
