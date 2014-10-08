@@ -15,6 +15,10 @@ module.exports = (client) ->
     if envName
       client.setEnvironmentName(envName)
 
+    host = attr(script, 'host')
+    if host
+      client.setHost(host)
+
     onload = attr(script, 'onload')
     if onload
       global[onload](client)
