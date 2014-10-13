@@ -1,33 +1,46 @@
+# this == window
+global = this
+
 # Airbrake shim that stores exceptions until Airbrake notifier is loaded.
-window.Airbrake = []
+global.Airbrake = []
 
 # Wraps passed function and returns new function that catches and
 # reports unhandled exceptions.
-Airbrake.wrap = (fn) ->
+global.Airbrake.wrap = (fn) ->
+  if fn.__airbrake__
+    return fn
+
   airbrakeWrapper = ->
     try
       return fn.apply(this, arguments)
     catch exc
       args = Array.prototype.slice.call(arguments)
-      Airbrake.push({error: exc, params: {arguments: args}})
-  if fn.guid
-    airbrakeWrapper.guid = fn.guid
+      global.Airbrake.push({error: exc, params: {arguments: args}})
+      return null
+
+  airbrakeWrapper.__airbrake__ = true
+  airbrakeWrapper.__inner__ = fn
+
+  for prop of fn
+    if fn.hasOwnProperty(prop)
+      airbrakeWrapper[prop] = fn[prop]
+
   return airbrakeWrapper
 
 # Registers console reporter when notifier is ready.
-Airbrake.onload = ->
-  Airbrake.addReporter(Airbrake.consoleReporter)
+global.Airbrake.onload = ->
+  global.Airbrake.addReporter(global.Airbrake.consoleReporter)
 
 # Reports unhandled exceptions.
-window.onerror = (message, file, line, column, error) ->
+global.onerror = (message, file, line, column, error) ->
   if message == 'Script error.'
     # Ignore.
     return
 
   if error
-    Airbrake.push({error: error})
+    global.Airbrake.push({error: error})
   else
-    Airbrake.push({error: {
+    global.Airbrake.push({error: {
       message: message,
       fileName: file,
       lineNumber: line,
@@ -48,11 +61,11 @@ setupJQ = ->
     if handler.handler
       if not handler.handler.guid
         handler.handler.guid = jQuery.guid++
-      handler.handler = Airbrake.wrap(handler.handler)
+      handler.handler = global.Airbrake.wrap(handler.handler)
     else
       if not handler.guid
         handler.guid = jQuery.guid++
-      handler = Airbrake.wrap(handler)
+      handler = global.Airbrake.wrap(handler)
     return jqEventAdd(elem, types, handler, data, selector)
 
   # Reports exceptions thrown in jQuery callbacks.
@@ -64,23 +77,23 @@ setupJQ = ->
       fns = arguments
       jQuery.each fns, (i, fn) ->
         if jQuery.isFunction(fn)
-          fns[i] = Airbrake.wrap(fn)
+          fns[i] = global.Airbrake.wrap(fn)
       return cbAdd.apply(this, fns)
     return cb
 
   # Reports exceptions thrown in jQuery ready callbacks.
   jqReady = jQuery.fn.ready
   jQuery.fn.ready = (fn) ->
-    return jqReady(Airbrake.wrap(fn))
+    return jqReady(global.Airbrake.wrap(fn))
 
-# Asynchronously loads Airbrake notifier.
-if window.addEventListener
-  window.addEventListener('load', loadAirbrakeNotifier, false)
-else
-  window.attachEvent('onload', loadAirbrakeNotifier)
+# Asynchronously loads global.Airbrake notifier.
+if global.addEventListener
+  global.addEventListener('load', loadAirbrakeNotifier, false)
+else if global.attachEvent
+  global.attachEvent('onload', loadAirbrakeNotifier)
 
 # Reports exceptions thrown in jQuery event handlers.
-if window.jQuery
+if global.jQuery
   setupJQ()
 else
   console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');

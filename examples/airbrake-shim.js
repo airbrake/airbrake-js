@@ -1,41 +1,55 @@
-(function(window) {
-
+// global === window
+(function(global) {
 // Airbrake shim that stores exceptions until Airbrake notifier is loaded.
-window.Airbrake = [];
+global.Airbrake = [];
 
 // Wraps passed function and returns new function that catches and
 // reports unhandled exceptions.
-Airbrake.wrap = function(fn) {
+global.Airbrake.wrap = function(fn) {
+  if (fn.__airbrake__) {
+    return fn;
+  }
+
   var airbrakeWrapper = function() {
     try {
       return fn.apply(this, arguments);
     } catch (exc) {
+      var args;
       args = Array.prototype.slice.call(arguments);
-      Airbrake.push({error: exc, params: {arguments: args}});
+      global.Airbrake.push({error: exc, params: {arguments: args}});
+      return null;
     }
   }
-  if (fn.guid) {
-    airbrakeWrapper.guid = fn.guid;
+
+  airbrakeWrapper.__airbrake__ = true;
+  airbrakeWrapper.__inner__ = fn;
+
+  var prop;
+  for (prop in fn) {
+    if (fn.hasOwnProperty(prop)) {
+      airbrakeWrapper[prop] = fn[prop];
+    }
   }
+
   return airbrakeWrapper;
 }
 
 // Registers console reporter when notifier is ready.
-Airbrake.onload = function() {
+global.Airbrake.onload = function() {
   Airbrake.addReporter(Airbrake.consoleReporter);
 }
 
 // Reports unhandled exceptions.
-window.onerror = function(message, file, line, column, error) {
+global.onerror = function(message, file, line, column, error) {
   if (message === 'Script error.') {
     // Ignore.
     return;
   }
 
   if (error) {
-    Airbrake.push({error: error});
+    global.Airbrake.push({error: error});
   } else {
-    Airbrake.push({error: {
+    global.Airbrake.push({error: {
       message: message,
       fileName: file,
       lineNumber: line,
@@ -59,12 +73,12 @@ var setupJQ = function() {
       if (!handler.handler.guid) {
         handler.handler.guid = jQuery.guid++;
       }
-      handler.handler = Airbrake.wrap(handler.handler);
+      handler.handler = global.Airbrake.wrap(handler.handler);
     } else {
       if (!handler.guid) {
         handler.guid = jQuery.guid++;
       }
-      handler = Airbrake.wrap(handler);
+      handler = global.Airbrake.wrap(handler);
     }
     return jqEventAdd(elem, types, handler, data, selector);
   }
@@ -78,7 +92,7 @@ var setupJQ = function() {
       var fns = arguments;
       jQuery.each(fns, function(i, fn) {
         if (jQuery.isFunction(fn)) {
-          fns[i] = Airbrake.wrap(fn);
+          fns[i] = global.Airbrake.wrap(fn);
         }
       });
       return cbAdd.apply(this, fns);
@@ -89,22 +103,22 @@ var setupJQ = function() {
   // Reports exceptions thrown in jQuery ready callbacks.
   var jqReady = jQuery.fn.ready;
   jQuery.fn.ready = function(fn) {
-    return jqReady(Airbrake.wrap(fn));
+    return jqReady(global.Airbrake.wrap(fn));
   }
 }
 
 // Asynchronously loads Airbrake notifier.
-if (window.addEventListener) {
-  window.addEventListener('load', loadAirbrakeNotifier, false);
-} else {
-  window.attachEvent('onload', loadAirbrakeNotifier);
+if (global.addEventListener) {
+  global.addEventListener('load', loadAirbrakeNotifier, false);
+} else if (global.attachEvent) {
+  global.attachEvent('onload', loadAirbrakeNotifier);
 }
 
 // Reports exceptions thrown in jQuery event handlers.
-if (window.jQuery) {
+if (global.jQuery) {
   setupJQ();
 } else {
   console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
 }
 
-})(window);
+})(this);
