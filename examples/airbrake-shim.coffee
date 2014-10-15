@@ -96,4 +96,4 @@ else if global.attachEvent
 if global.jQuery
   setupJQ()
 else
-  console.warn('airbrake: jQuery not found; skipping jQuery instrumentation.');
+  console.warn('airbrake-js: jQuery not found; skipping jQuery instrumentation.');
