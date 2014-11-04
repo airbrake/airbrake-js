@@ -74,6 +74,10 @@ module.exports = (grunt) ->
         bail: true
         reporter: 'spec'
 
+    bump:
+      options:
+        updateConfigs: ['pkg']
+
   require('load-grunt-tasks') grunt
   grunt.registerTask('test', ['mochacli'])
 
