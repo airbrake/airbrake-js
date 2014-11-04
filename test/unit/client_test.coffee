@@ -39,9 +39,19 @@ testWrap = (client) ->
       fn = ->
         throw exc
       wrapper = client.wrap(fn)
-      wrapper()
+      wrapper("hello", "world")
       expect(client.push).to.have.been.called
-      expect(client.push.lastCall.args).to.deep.equal([{error: exc, params: {arguments: []}}])
+      expect(client.push.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
+
+    it "wraps arguments", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      arg1 = ->
+      wrapper(arg1)
+      expect(fn).to.have.been.called
+      arg1Wrapper = fn.lastCall.args[0]
+      expect(arg1Wrapper.__airbrake__).to.equal(true)
+      expect(arg1Wrapper.__inner__).to.equal(arg1)
 
 
 describe "JS shim", ->
