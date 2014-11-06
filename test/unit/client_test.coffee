@@ -55,11 +55,11 @@ testWrap = (client) ->
 
 
 describe "JS shim", ->
-  testWrap(require("../../examples/airbrake-shim.js").Airbrake)
+  testWrap(require("../../airbrake-shim.js").Airbrake)
 
 
 describe "Coffee shim", ->
-  testWrap(require("../../examples/airbrake-shim.coffee").Airbrake)
+  testWrap(require("../../airbrake-shim.coffee").Airbrake)
 
 
 describe "Client", ->

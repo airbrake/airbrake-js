@@ -70,8 +70,13 @@ var loadAirbrakeNotifier = function() {
 var wrapArguments = function(args) {
   var i;
   for (i = 0; i < args.length; i++) {
-    if (typeof args[i] === 'function') {
-      args[i] = global.Airbrake.wrap(args[i]);
+    var arg = args[i],
+        type = typeof arg;
+    if (type === 'function') {
+      args[i] = global.Airbrake.wrap(arg);
+    } else if (arg && arg.length && type !== 'string') {
+      // Wrap recursively.
+      args[i] = wrapArguments(arg);
     }
   }
   return args;
@@ -114,14 +119,8 @@ var setupJQ = function() {
 
 // Asynchronously loads Airbrake notifier.
 if (global.addEventListener) {
-  window.addEventListener = global.Airbrake.wrap(window.addEventListener);
-  document.addEventListener = global.Airbrake.wrap(document.addEventListener);
-
   global.addEventListener('load', loadAirbrakeNotifier, false);
 } else if (global.attachEvent) {
-  window.attachEvent = global.Airbrake.wrap(window.attachEvent);
-  document.attachEvent = global.Airbrake.wrap(document.attachEvent);
-
   global.attachEvent('onload', loadAirbrakeNotifier);
 }
 

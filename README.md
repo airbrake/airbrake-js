@@ -23,8 +23,6 @@ Alternatively you can set project id and API key using:
 
     Airbrake.setProject(PROJECT_ID, PROJECT_KEY);
 
-Look at [examples](https://github.com/airbrake/airbrake-js/tree/master/examples) for the notifier shim integrated with jQuery.
-
 Note that the above example reflects a typical setup in a project using jQuery, however jQuery is not a dependency for Airbrake-JS. Airbrake-JS has no dependencies.
 
 ## Basic Usage
