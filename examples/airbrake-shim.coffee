@@ -11,8 +11,9 @@ global.Airbrake.wrap = (fn) ->
     return fn
 
   airbrakeWrapper = ->
+    args = wrapArguments(arguments)
     try
-      return fn.apply(this, arguments)
+      return fn.apply(this, args)
     catch exc
       args = Array.prototype.slice.call(arguments)
       global.Airbrake.push({error: exc, params: {arguments: args}})
@@ -54,6 +55,12 @@ loadAirbrakeNotifier = ->
   script.async = true
   sibling.parentNode.insertBefore(script, sibling)
 
+wrapArguments = (args) ->
+  for arg, i in args
+    if typeof arg == 'function'
+      args[i] = global.Airbrake.wrap(arg)
+  return args
+
 setupJQ = ->
   # Reports exceptions thrown in jQuery event handlers.
   jqEventAdd = jQuery.event.add
@@ -74,11 +81,7 @@ setupJQ = ->
     cb = jqCallbacks(options)
     cbAdd = cb.add
     cb.add = ->
-      fns = arguments
-      jQuery.each fns, (i, fn) ->
-        if jQuery.isFunction(fn)
-          fns[i] = global.Airbrake.wrap(fn)
-      return cbAdd.apply(this, fns)
+      return cbAdd.apply(this, wrapArguments(arguments))
     return cb
 
   # Reports exceptions thrown in jQuery ready callbacks.
@@ -88,8 +91,14 @@ setupJQ = ->
 
 # Asynchronously loads global.Airbrake notifier.
 if global.addEventListener
+  window.addEventListener = global.Airbrake.wrap(window.addEventListener)
+  document.addEventListener = global.Airbrake.wrap(document.addEventListener)
+
   global.addEventListener('load', loadAirbrakeNotifier, false)
 else if global.attachEvent
+  window.attachEvent = global.Airbrake.wrap(window.attachEvent)
+  document.attachEvent = global.Airbrake.wrap(document.attachEvent)
+
   global.attachEvent('onload', loadAirbrakeNotifier)
 
 # Reports exceptions thrown in jQuery event handlers.

@@ -11,10 +11,11 @@ global.Airbrake.wrap = function(fn) {
   }
 
   var airbrakeWrapper = function() {
+    var args;
+    args = wrapArguments(arguments);
     try {
-      return fn.apply(this, arguments);
+      return fn.apply(this, args);
     } catch (exc) {
-      var args;
       args = Array.prototype.slice.call(arguments);
       global.Airbrake.push({error: exc, params: {arguments: args}});
       return null;
@@ -66,6 +67,16 @@ var loadAirbrakeNotifier = function() {
   sibling.parentNode.insertBefore(script, sibling);
 }
 
+var wrapArguments = function(args) {
+  var i;
+  for (i = 0; i < args.length; i++) {
+    if (typeof args[i] === 'function') {
+      args[i] = global.Airbrake.wrap(args[i]);
+    }
+  }
+  return args;
+}
+
 var setupJQ = function() {
   var jqEventAdd = jQuery.event.add;
   jQuery.event.add = function(elem, types, handler, data, selector) {
@@ -89,13 +100,7 @@ var setupJQ = function() {
     var cb = jqCallbacks(options),
         cbAdd = cb.add;
     cb.add = function() {
-      var fns = arguments;
-      jQuery.each(fns, function(i, fn) {
-        if (jQuery.isFunction(fn)) {
-          fns[i] = global.Airbrake.wrap(fn);
-        }
-      });
-      return cbAdd.apply(this, fns);
+      return cbAdd.apply(this, wrapArguments(arguments));
     }
     return cb;
   }
@@ -109,8 +114,14 @@ var setupJQ = function() {
 
 // Asynchronously loads Airbrake notifier.
 if (global.addEventListener) {
+  window.addEventListener = global.Airbrake.wrap(window.addEventListener);
+  document.addEventListener = global.Airbrake.wrap(document.addEventListener);
+
   global.addEventListener('load', loadAirbrakeNotifier, false);
 } else if (global.attachEvent) {
+  window.attachEvent = global.Airbrake.wrap(window.attachEvent);
+  document.attachEvent = global.Airbrake.wrap(document.attachEvent);
+
   global.attachEvent('onload', loadAirbrakeNotifier);
 }
 

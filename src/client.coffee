@@ -87,6 +87,13 @@ class Client
 
       return
 
+
+  _wrapArguments: (args) ->
+    for arg, i in args
+      if typeof arg == 'function'
+        args[i] = @wrap(arg)
+    return args
+
   wrap: (fn) ->
     if fn.__airbrake__
       return fn
@@ -94,8 +101,9 @@ class Client
     self = this
 
     airbrakeWrapper = ->
+      args = self._wrapArguments(arguments)
       try
-        return fn.apply(this, arguments)
+        return fn.apply(this, args)
       catch exc
         args = Array.prototype.slice.call(arguments)
         self.push({error: exc, params: {arguments: args}})
