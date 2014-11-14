@@ -1,4 +1,4 @@
-# this == window
+# this == global
 global = this
 
 # Airbrake shim that stores exceptions until Airbrake notifier is loaded.
@@ -57,8 +57,12 @@ loadAirbrakeNotifier = ->
 
 wrapArguments = (args) ->
   for arg, i in args
-    if typeof arg == 'function'
+    type = typeof arg
+    if type == 'function'
       args[i] = global.Airbrake.wrap(arg)
+    else if arg && arg.length && type != 'string'
+      # Wrap recursively.
+      args[i] = wrapArguments(arg)
   return args
 
 setupJQ = ->
@@ -91,14 +95,8 @@ setupJQ = ->
 
 # Asynchronously loads global.Airbrake notifier.
 if global.addEventListener
-  window.addEventListener = global.Airbrake.wrap(window.addEventListener)
-  document.addEventListener = global.Airbrake.wrap(document.addEventListener)
-
   global.addEventListener('load', loadAirbrakeNotifier, false)
 else if global.attachEvent
-  window.attachEvent = global.Airbrake.wrap(window.attachEvent)
-  document.attachEvent = global.Airbrake.wrap(document.attachEvent)
-
   global.attachEvent('onload', loadAirbrakeNotifier)
 
 # Reports exceptions thrown in jQuery event handlers.

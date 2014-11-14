@@ -42,13 +42,13 @@ module.exports = (grunt) ->
 
     watch:
       test_only:
-        files: ['test/**/*.coffee']
+        files: ['test/unit/*.coffee']
         tasks: ['test']
         options:
           interrupt: true
 
       build_and_test:
-        files: ['test/**/*.coffee']
+        files: ['test/unit/*.coffee']
         tasks: ['build', 'test']
         options:
           interrupt: true
@@ -67,10 +67,10 @@ module.exports = (grunt) ->
           keepalive: true
 
     mochacli:
-      all: ['test/**/*.coffee']
+      all: ['test/unit/*.coffee']
       options:
         compilers: ['coffee:coffee-script']
-        files: 'test/**/*.coffee'
+        files: 'test/unit/*.coffee'
         bail: true
         reporter: 'spec'
 
