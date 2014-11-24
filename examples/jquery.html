@@ -1,0 +1,25 @@
+<html>
+
+<head>
+<title>Airbrake JS notifier example</title>
+</head>
+
+<body>
+
+<p><button id="btn">Click me</button></p>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+<script src="../airbrake-shim.js" data-airbrake-project-id="PROJECT_ID" data-airbrake-project-key="PROJECT_KEY"></script>
+<script data-airbrake-onload="initAirbrake">
+function initAirbrake() {
+  Airbrake.addFilter(function(notice) {
+    console.log(notice);
+    return true;
+  });
+}
+</script>
+<script src="app.js"></script>
+
+</body>
+
+</html>
