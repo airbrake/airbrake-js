@@ -1,4 +1,4 @@
-# this == global
+# this == window
 global = this
 
 # Airbrake shim that stores exceptions until Airbrake notifier is loaded.
