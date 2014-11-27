@@ -75,7 +75,7 @@ Client = (function() {
       notice = {
         notifier: {
           name: 'airbrake-js-' + name,
-          version: '0.3.9',
+          version: '0.3.10',
           url: 'https://github.com/airbrake/airbrake-js'
         },
         errors: [errInfo],
@@ -103,6 +103,17 @@ Client = (function() {
     });
   };
 
+  Client.prototype._wrapArguments = function(args) {
+    var arg, i, _i, _len;
+    for (i = _i = 0, _len = args.length; _i < _len; i = ++_i) {
+      arg = args[i];
+      if (typeof arg === 'function') {
+        args[i] = this.wrap(arg);
+      }
+    }
+    return args;
+  };
+
   Client.prototype.wrap = function(fn) {
     var airbrakeWrapper, prop, self;
     if (fn.__airbrake__) {
@@ -111,8 +122,9 @@ Client = (function() {
     self = this;
     airbrakeWrapper = function() {
       var args, exc;
+      args = self._wrapArguments(arguments);
       try {
-        return fn.apply(this, arguments);
+        return fn.apply(this, args);
       } catch (_error) {
         exc = _error;
         args = Array.prototype.slice.call(arguments);
@@ -460,20 +472,40 @@ var jsonifyNotice, truncate, truncateObj;
 
 truncate = require('./truncate.coffee');
 
-truncateObj = function(obj) {
+truncateObj = function(obj, n) {
   var dst, key;
+  if (n == null) {
+    n = 1000;
+  }
   dst = {};
   for (key in obj) {
-    dst[key] = truncate(obj[key]);
+    dst[key] = truncate(obj[key], n = n);
   }
   return dst;
 };
 
-jsonifyNotice = function(notice) {
-  notice.params = truncateObj(notice.params);
-  notice.environment = truncateObj(notice.environment);
-  notice.session = truncateObj(notice.session);
-  return JSON.stringify(notice);
+jsonifyNotice = function(notice, n, maxLength) {
+  var s;
+  if (n == null) {
+    n = 1000;
+  }
+  if (maxLength == null) {
+    maxLength = 64000;
+  }
+  while (true) {
+    notice.params = truncateObj(notice.params, n = n);
+    notice.environment = truncateObj(notice.environment, n = n);
+    notice.session = truncateObj(notice.session, n = n);
+    s = JSON.stringify(notice);
+    if (s.length < maxLength) {
+      return s;
+    }
+    if (n === 0) {
+      break;
+    }
+    n = Math.floor(n / 2);
+  }
+  throw new Error("cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
 };
 
 module.exports = jsonifyNotice;
@@ -571,6 +603,10 @@ truncate = function(value, n, depth) {
     if (dd == null) {
       dd = 0;
     }
+    nn++;
+    if (nn > n) {
+      return '[Truncated]';
+    }
     if (value === null || value === void 0) {
       return value;
     }
@@ -591,16 +627,22 @@ truncate = function(value, n, depth) {
     if (seen.indexOf(value) >= 0) {
       return "[Circular " + (getPath(value)) + "]";
     }
-    if (dd >= depth) {
+    dd++;
+    if (dd > depth) {
       return '[Truncated]';
     }
     keys.push(key);
     seen.push(value);
+    nn--;
     if (Object.prototype.toString.apply(value) === '[object Array]') {
       dst = [];
       for (i = _i = 0, _len = value.length; _i < _len; i = ++_i) {
         el = value[i];
-        dst.push(fn(el, key = i, dd + 1));
+        nn++;
+        if (nn >= n) {
+          break;
+        }
+        dst.push(fn(el, key = i, dd));
       }
       return dst;
     }
@@ -618,7 +660,7 @@ truncate = function(value, n, depth) {
       } catch (_error) {
         continue;
       }
-      dst[key] = fn(val, key = key, dd + 1);
+      dst[key] = fn(val, key = key, dd);
     }
     return dst;
   };
