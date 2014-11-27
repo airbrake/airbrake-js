@@ -1,20 +1,32 @@
 truncate = require('./truncate.coffee')
 
 
-truncateObj = (obj) ->
+# truncateObj truncates each key in the object separately, which is
+# useful for handling circular references.
+truncateObj = (obj, n=1000) ->
   dst = {}
   for key of obj
-    dst[key] = truncate(obj[key])
+    dst[key] = truncate(obj[key], n=n)
   return dst
 
 
-# jsonifyNotice truncates each value in params, environment and
-# session separately and then serializes notice in JSON.
-jsonifyNotice = (notice) ->
-  notice.params = truncateObj(notice.params)
-  notice.environment = truncateObj(notice.environment)
-  notice.session = truncateObj(notice.session)
-  return JSON.stringify(notice)
+# jsonifyNotice serializes notice to JSON and truncates params,
+# environment and session keys.
+jsonifyNotice = (notice, n=1000, maxLength=64000) ->
+  while true
+    notice.params = truncateObj(notice.params, n=n)
+    notice.environment = truncateObj(notice.environment, n=n)
+    notice.session = truncateObj(notice.session, n=n)
+
+    s = JSON.stringify(notice)
+    if s.length < maxLength
+      return s
+
+    if n == 0
+      break
+    n = Math.floor(n/2)
+
+  throw new Error("cannot jsonify notice (length=#{s.length} maxLength=#{maxLength})")
 
 
 module.exports = jsonifyNotice
