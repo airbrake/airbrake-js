@@ -1,3 +1,8 @@
+# v0.3.10
+
+- Limit maximum notice size to 64kb (#115).
+- Improve function arguments wrapping (#106).
+
 # v0.3.9
 
 - Add support for ErrorEvent interface.
