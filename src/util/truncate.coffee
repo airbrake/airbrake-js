@@ -13,6 +13,10 @@ truncate = (value, n=1000, depth=5) ->
     return '~' + path.join('.')
 
   fn = (value, key='', dd=0) ->
+    nn++
+    if nn > n
+      return '[Truncated]'
+
     if value == null or value == undefined
       return value
 
@@ -34,16 +38,22 @@ truncate = (value, n=1000, depth=5) ->
     if seen.indexOf(value) >= 0
       return "[Circular #{getPath(value)}]"
 
-    if dd >= depth
+    # At this point value can be either array or object. Check maximum depth.
+    dd++
+    if dd > depth
       return '[Truncated]'
 
     keys.push(key)
     seen.push(value)
+    nn-- # nn was increased above for primitives.
 
     if Object.prototype.toString.apply(value) == '[object Array]'
       dst = []
       for el, i in value
-        dst.push(fn(el, key=i, dd+1))
+        nn++
+        if nn >= n
+          break
+        dst.push(fn(el, key=i, dd))
       return dst
 
     dst = {}
@@ -61,7 +71,7 @@ truncate = (value, n=1000, depth=5) ->
       catch
         continue
 
-      dst[key] = fn(val, key=key, dd+1)
+      dst[key] = fn(val, key=key, dd)
 
     return dst
 

@@ -17,14 +17,16 @@ describe 'truncate', ->
       infinity: Infinity,
       nan: NaN,
       ln2: Math.LN2,
-      str: "hello world",
-      strObj: new String("hello world"),
-      arr: ["foo", "bar"],
-      obj: {"foo": "bar"},
+      str: 'hello world',
+      strObj: new String('hello world'),
+      arr: ['foo', 'bar'],
+      obj: {'foo': 'bar'},
       date: new Date(),
       func: Math.sin,
+      func2: new Function('x', 'y', 'return x * y'),
       re: /s/,
     }
+
     truncated = null
 
     beforeEach ->
@@ -45,9 +47,9 @@ describe 'truncate', ->
 
     it 'produces object with resolved circular references', ->
       expect(truncated).to.deep.equal({
-        "foo": "bar",
-        "circularRef": "[Circular ~]",
-        "circularList": [ "[Circular ~]", "[Circular ~]" ]
+        'foo': 'bar',
+        'circularRef': '[Circular ~]',
+        'circularList': [ '[Circular ~]', '[Circular ~]' ]
       })
 
   context 'when called with object with complex circular references', ->
@@ -67,21 +69,21 @@ describe 'truncate', ->
 
     it 'produces object with resolved circular references', ->
       expect(truncated).to.deep.equal({
-        "list": [
+        'list': [
           {
-            "x": 1,
-            "a": "[Circular ~.list.0]"
+            'x': 1,
+            'a': '[Circular ~.list.0]'
           },
           {
-            "x": 2,
-            "a": "[Circular ~.list.0]"
+            'x': 2,
+            'a': '[Circular ~.list.0]'
           },
           {
-            "a": "[Circular ~.list.0]",
-            "b": "[Circular ~.list.1]"
+            'a': '[Circular ~.list.0]',
+            'b': '[Circular ~.list.1]'
           }
         ],
-        "obj": "[Circular ~]"
+        'obj': '[Circular ~]'
       })
 
   context 'when called with deeply nested objects', ->
@@ -99,16 +101,16 @@ describe 'truncate', ->
 
     it 'produces truncated object', ->
       expect(truncated).to.deep.equal({
-        "value": 0,
-        "obj": {
-          "value": 1,
-          "obj": {
-            "value": 2,
-            "obj": {
-              "value": 3,
-              "obj": {
-                "value": 4,
-                "obj": "[Truncated]"
+        'value': 0,
+        'obj': {
+          'value': 1,
+          'obj': {
+            'value': 2,
+            'obj': {
+              'value': 3,
+              'obj': {
+                'value': 4,
+                'obj': '[Truncated]'
               }
             }
           }
