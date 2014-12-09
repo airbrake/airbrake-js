@@ -70,10 +70,10 @@ An alternative way is to add onload property to the Airbrake shim:
 It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
 * `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
-* `Airbrake.addContext(object)` Merges context information reported alongside all errors.
 * `Airbrake.addEnvironment(object)` Merges environment information about the application's environment.
 * `Airbrake.addParams(object)` Merges params information reported alongside all errors.
 * `Airbrake.addSession(object)` Merges session information reported alongside all errors.
+* `Airbrake.addContext(object)` Merges context information reported alongside all errors. This hash is reserved for notifiers and Airbrake backend will ignore unknown keys.
 
 Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
 
