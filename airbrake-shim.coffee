@@ -48,7 +48,7 @@ global.onerror = (message, file, line, column, error) ->
       columnNumber: column or 0,
     }})
 
-loadAirbrakeNotifier = ->
+global.loadAirbrakeNotifier = ->
   script = document.createElement('script')
   sibling = document.getElementsByTagName('script')[0]
   script.src = 'https://ssljscdn.airbrake.io/0.3/airbrake.min.js'
@@ -95,9 +95,9 @@ setupJQ = ->
 
 # Asynchronously loads global.Airbrake notifier.
 if global.addEventListener
-  global.addEventListener('load', loadAirbrakeNotifier, false)
+  global.addEventListener('load', global.loadAirbrakeNotifier, false)
 else if global.attachEvent
-  global.attachEvent('onload', loadAirbrakeNotifier)
+  global.attachEvent('onload', global.loadAirbrakeNotifier)
 
 # Reports exceptions thrown in jQuery event handlers.
 if global.jQuery

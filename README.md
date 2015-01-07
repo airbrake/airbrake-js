@@ -25,6 +25,20 @@ Alternatively you can set project id and API key using:
 
 Note that the above example reflects a typical setup in a project using jQuery, however jQuery is not a dependency for Airbrake-JS. Airbrake-JS has no dependencies.
 
+### Serving The Notifier By Yourself
+
+If you prefer to serve the main script (the notifier) yourself, you need to disable loading it from the CDN:
+
+    <script src="airbrake-shim.js"></script>
+    <script>
+        if (window.removeEventListener) {
+          window.removeEventListener('load', window.loadAirbrakeNotifier, false);
+        } else if (window.detachEvent) {
+          window.detachEvent('onload', window.loadAirbrakeNotifier);
+        }
+    </script>
+    <script src="airbrake.js"></script>
+
 ## Basic Usage
 
 The simplest method is to report errors directly:
