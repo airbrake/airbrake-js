@@ -1,3 +1,11 @@
+getAttr = (obj, attr) ->
+  # Ignore browser specific exceptions trying to read attribute (#79).
+  try
+    return obj[attr]
+  catch exc
+    return undefined
+
+
 truncate = (value, n=1000, depth=5) ->
   nn = 0
   keys = []
@@ -7,7 +15,7 @@ truncate = (value, n=1000, depth=5) ->
     index = seen.indexOf(value)
     path = [keys[index]]
     for i in [index..0]
-      if seen[i] and seen[i][ path[0] ] == value
+      if seen[i] and getAttr(seen[i], path[0]) == value
         value = seen[i]
         path.unshift(keys[i])
     return '~' + path.join('.')
@@ -65,13 +73,9 @@ truncate = (value, n=1000, depth=5) ->
       if nn >= n
         break
 
-      # Ignore browser specific exceptions trying to read key (#79).
-      try
-        val = value[key]
-      catch
-        continue
-
-      dst[key] = fn(val, key=key, dd)
+      val = getAttr(value, key)
+      if val != undefined
+        dst[key] = fn(val, key=key, dd)
 
     return dst
 
