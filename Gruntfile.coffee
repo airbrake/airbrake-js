@@ -78,6 +78,11 @@ module.exports = (grunt) ->
       options:
         updateConfigs: ['pkg']
 
+    karma:
+      unit:
+        configFile: 'karma.conf.coffee'
+
+
   require('load-grunt-tasks') grunt
   grunt.registerTask('test', ['mochacli'])
 

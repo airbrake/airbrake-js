@@ -139,6 +139,18 @@ In this example, reported errors are also logged to the console.
       });
     </script>
 
+## Testing
+
+### Unit tests
+
+     grunt test
+
+### Karma tests
+
+Change `airbrake-shim.js` to load local copy of the notifier: `script.src = '/base/airbrake.js';`. Then:
+
+    grunt karma
+
 ## Help
 
 For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).

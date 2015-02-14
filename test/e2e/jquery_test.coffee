@@ -15,6 +15,7 @@ describe 'jQuery onload instrumentation', ->
 #    xhr.restore() # TODO: fix
 
   it 'catches exception', ->
+    expect(requests.length).to.equal(1)
     req = requests[0]
     expect(req.method).to.equal('POST')
     expect(req.url).to.equal('https://api.airbrake.io/api/v3/projects/0/notices?key=')
@@ -41,6 +42,7 @@ describe 'jQuery promise instrumentation', ->
 #    xhr.restore() # TODO: fix
 
   it 'catches exception', ->
+    expect(requests.length).to.equal(1)
     req = requests[0]
     expect(req.method).to.equal('POST')
     expect(req.url).to.equal('https://api.airbrake.io/api/v3/projects/0/notices?key=')
@@ -61,13 +63,14 @@ describe "jQuery handlers instrumentation", ->
     fixture.base = 'test/e2e/fixtures'
     fixture.load('jquery_btn_click.html')
 
+    $(fixture.el).find('#btn').click()
+
   afterEach ->
 #    xhr.restore() # TODO: fix
     fixture.cleanup()
 
   it 'catches exception', ->
-    $(fixture.el).find('#btn').click()
-
+    expect(requests.length).to.equal(1)
     req = requests[0]
     expect(req.method).to.equal('POST')
     expect(req.url).to.equal('https://api.airbrake.io/api/v3/projects/0/notices?key=')
@@ -91,12 +94,13 @@ describe "jQuery handlers instrumentation 2", ->
       handler: ->
         throw new Error('click test exception')
 
+    btn.click()
+
   afterEach ->
 #    xhr.restore() # TODO: fix
 
   it 'catches exception', ->
-    btn.click()
-
+    expect(requests.length).to.equal(1)
     req = requests[0]
     expect(req.method).to.equal('POST')
     expect(req.url).to.equal('https://api.airbrake.io/api/v3/projects/0/notices?key=')
