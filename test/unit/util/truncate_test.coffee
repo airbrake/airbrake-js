@@ -8,7 +8,6 @@ describe 'truncate', ->
   context 'when called with plain object', ->
     obj = {
       null: null,
-      undefined: undefined,
       bool: true,
       boolObj: new Boolean(true),
       int: 1,
