@@ -1,5 +1,6 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var Client, merge;
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function (global){
+var Client, merge;
 
 merge = require('./util/merge.coffee');
 
@@ -58,8 +59,7 @@ Client = (function() {
   };
 
   Client.prototype.push = function(err) {
-    var defContext, _ref,
-      _this = this;
+    var defContext, _ref;
     defContext = {
       language: 'JavaScript',
       sourceMapEnabled: true
@@ -70,37 +70,39 @@ Client = (function() {
     if (global.location) {
       defContext.url = String(global.location);
     }
-    return this._processor(err.error || err, function(name, errInfo) {
-      var filterFn, notice, reporterFn, _i, _j, _len, _len1, _ref1, _ref2;
-      notice = {
-        notifier: {
-          name: 'airbrake-js-' + name,
-          version: '0.3.10',
-          url: 'https://github.com/airbrake/airbrake-js'
-        },
-        errors: [errInfo],
-        context: merge(defContext, _this._context, err.context),
-        params: merge({}, _this._params, err.params),
-        environment: merge({}, _this._env, err.environment),
-        session: merge({}, _this._session, err.session)
-      };
-      _ref1 = _this._filters;
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        filterFn = _ref1[_i];
-        if (!filterFn(notice)) {
-          return;
+    return this._processor(err.error || err, (function(_this) {
+      return function(name, errInfo) {
+        var filterFn, notice, reporterFn, _i, _j, _len, _len1, _ref1, _ref2;
+        notice = {
+          notifier: {
+            name: 'airbrake-js-' + name,
+            version: '0.3.10',
+            url: 'https://github.com/airbrake/airbrake-js'
+          },
+          errors: [errInfo],
+          context: merge(defContext, _this._context, err.context),
+          params: merge({}, _this._params, err.params),
+          environment: merge({}, _this._env, err.environment),
+          session: merge({}, _this._session, err.session)
+        };
+        _ref1 = _this._filters;
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          filterFn = _ref1[_i];
+          if (!filterFn(notice)) {
+            return;
+          }
         }
-      }
-      _ref2 = _this._reporters;
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        reporterFn = _ref2[_j];
-        reporterFn(notice, {
-          projectId: _this._projectId,
-          projectKey: _this._projectKey,
-          host: _this._host
-        });
-      }
-    });
+        _ref2 = _this._reporters;
+        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+          reporterFn = _ref2[_j];
+          reporterFn(notice, {
+            projectId: _this._projectId,
+            projectKey: _this._projectKey,
+            host: _this._host
+          });
+        }
+      };
+    })(this));
   };
 
   Client.prototype._wrapArguments = function(args) {
@@ -154,8 +156,11 @@ Client = (function() {
 module.exports = Client;
 
 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./util/merge.coffee":10}],2:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var Client, client, err, processor, reporter, shim, _i, _len;
+(function (global){
+var Client, client, err, processor, reporter, shim, _i, _len;
 
 require("./util/compat.coffee");
 
@@ -189,6 +194,8 @@ if (shim != null) {
 }
 
 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./client.coffee":1,"./processors/stack.coffee":3,"./reporters/console.coffee":4,"./reporters/hybrid.coffee":5,"./util/compat.coffee":8,"./util/slurp_config_from_dom.coffee":11}],3:[function(require,module,exports){
 var processor, rules, typeMessageRe;
 
@@ -339,13 +346,14 @@ processor = function(e, cb) {
 module.exports = processor;
 
 
+
 },{}],4:[function(require,module,exports){
 var formatError, report;
 
 formatError = function(err) {
   var rec, s, _i, _len, _ref;
   s = "";
-  s += "" + err.message + "\n";
+  s += err.message + "\n";
   _ref = err.backtrace;
   for (_i = 0, _len = _ref.length; _i < _len; _i++) {
     rec = _ref[_i];
@@ -377,6 +385,7 @@ report = function(notice) {
 module.exports = report;
 
 
+
 },{}],5:[function(require,module,exports){
 if ('withCredentials' in new XMLHttpRequest()) {
   module.exports = require('./xhr.coffee');
@@ -385,8 +394,10 @@ if ('withCredentials' in new XMLHttpRequest()) {
 }
 
 
+
 },{"./jsonp.coffee":6,"./xhr.coffee":7}],6:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var cbCount, jsonifyNotice, report;
+(function (global){
+var cbCount, jsonifyNotice, report;
 
 jsonifyNotice = require('../util/jsonify_notice.coffee');
 
@@ -411,7 +422,7 @@ report = function(notice, opts) {
     }
   };
   payload = encodeURIComponent(jsonifyNotice(notice));
-  url = "" + opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
+  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
   document = global.document;
   head = document.getElementsByTagName('head')[0];
   script = document.createElement('script');
@@ -427,14 +438,17 @@ report = function(notice, opts) {
 module.exports = report;
 
 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../util/jsonify_notice.coffee":9}],7:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var jsonifyNotice, report;
+(function (global){
+var jsonifyNotice, report;
 
 jsonifyNotice = require('../util/jsonify_notice.coffee');
 
 report = function(notice, opts) {
   var payload, req, url;
-  url = "" + opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+  url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
   payload = jsonifyNotice(notice);
   req = new global.XMLHttpRequest();
   req.open('POST', url, true);
@@ -452,6 +466,8 @@ report = function(notice, opts) {
 module.exports = report;
 
 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../util/jsonify_notice.coffee":9}],8:[function(require,module,exports){
 if (!Array.prototype.indexOf) {
   Array.prototype.indexOf = function(obj, start) {
@@ -465,6 +481,7 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
+
 
 
 },{}],9:[function(require,module,exports){
@@ -511,6 +528,7 @@ jsonifyNotice = function(notice, n, maxLength) {
 module.exports = jsonifyNotice;
 
 
+
 },{"./truncate.coffee":12}],10:[function(require,module,exports){
 var merge;
 
@@ -532,8 +550,10 @@ merge = function() {
 module.exports = merge;
 
 
+
 },{}],11:[function(require,module,exports){
-var global=typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {};var attr;
+(function (global){
+var attr;
 
 attr = function(script, attrName) {
   return script.getAttribute("data-airbrake-" + attrName);
@@ -569,8 +589,20 @@ module.exports = function(client) {
 };
 
 
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],12:[function(require,module,exports){
-var truncate;
+var getAttr, truncate;
+
+getAttr = function(obj, attr) {
+  var exc;
+  try {
+    return obj[attr];
+  } catch (_error) {
+    exc = _error;
+    return void 0;
+  }
+};
 
 truncate = function(value, n, depth) {
   var fn, getPath, keys, nn, seen;
@@ -588,7 +620,7 @@ truncate = function(value, n, depth) {
     index = seen.indexOf(value);
     path = [keys[index]];
     for (i = _i = index; index <= 0 ? _i <= 0 : _i >= 0; i = index <= 0 ? ++_i : --_i) {
-      if (seen[i] && seen[i][path[0]] === value) {
+      if (seen[i] && getAttr(seen[i], path[0]) === value) {
         value = seen[i];
         path.unshift(keys[i]);
       }
@@ -655,12 +687,10 @@ truncate = function(value, n, depth) {
       if (nn >= n) {
         break;
       }
-      try {
-        val = value[key];
-      } catch (_error) {
-        continue;
+      val = getAttr(value, key);
+      if (val !== void 0) {
+        dst[key] = fn(val, key = key, dd);
       }
-      dst[key] = fn(val, key = key, dd);
     }
     return dst;
   };
@@ -670,4 +700,5 @@ truncate = function(value, n, depth) {
 module.exports = truncate;
 
 
-},{}]},{},[2])
+
+},{}]},{},[2]);
