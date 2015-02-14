@@ -1,20 +1,19 @@
 module.exports = (grunt) ->
+  pkgData = grunt.file.readJSON('package.json')
 
   # Interpolates pkg variables into files during browserification.
   addPackageVars = (file) ->
     through = require('through')
 
     write = (buf) ->
-      data += grunt.template.process(buf, {pkg: pkgData})
+      data += grunt.template.process(String(buf), {pkg: pkgData})
 
     end = ->
       @queue(data)
       @queue(null)
 
     data = ''
-    through(write, end)
-
-  pkgData = grunt.file.readJSON('package.json')
+    return through(write, end)
 
   grunt.initConfig
     pkg: pkgData
@@ -29,9 +28,7 @@ module.exports = (grunt) ->
 
     uglify:
       options:
-        sourceMap: 'airbrake.min.map'
-        sourceMappingURL: 'airbrake.min.map'
-        sourceMapPrefix: 1
+        sourceMap: true
 
       dist:
         files: [{
