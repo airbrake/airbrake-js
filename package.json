@@ -48,6 +48,7 @@
   "files": [
     "airbrake.js",
     "airbrake.min.js",
+    "airbrake.min.js.map",
     "LICENSE"
   ],
   "scripts": {
