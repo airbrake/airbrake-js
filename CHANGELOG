@@ -1,3 +1,11 @@
+# v0.3.12
+
+- Improve exception message when notice can't be converted to JSON.
+
+# v0.3.11
+
+- Catch exceptions trying to access "private" attributes (#123).
+
 # v0.3.10
 
 - Limit maximum notice size to 64kb (#115).
