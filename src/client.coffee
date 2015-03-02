@@ -58,7 +58,7 @@ class Client
 
   push: (err) ->
     defContext = {
-      language: 'JavaScript'
+      language: 'JavaScript',
       sourceMapEnabled: true
     }
     if global.navigator?.userAgent

@@ -115,3 +115,12 @@ describe 'truncate', ->
           }
         }
       })
+
+  context 'when called with n=0', ->
+    truncated = null
+
+    beforeEach ->
+      truncated = truncate({foo: 'bar'}, 0)
+
+    it 'produces [Truncated]', ->
+      expect(truncated).to.equal('[Truncated]')
