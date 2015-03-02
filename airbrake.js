@@ -59,12 +59,12 @@ Client = (function() {
   };
 
   Client.prototype.push = function(err) {
-    var defContext, _ref;
+    var defContext, ref;
     defContext = {
       language: 'JavaScript',
       sourceMapEnabled: true
     };
-    if ((_ref = global.navigator) != null ? _ref.userAgent : void 0) {
+    if ((ref = global.navigator) != null ? ref.userAgent : void 0) {
       defContext.userAgent = global.navigator.userAgent;
     }
     if (global.location) {
@@ -72,11 +72,11 @@ Client = (function() {
     }
     return this._processor(err.error || err, (function(_this) {
       return function(name, errInfo) {
-        var filterFn, notice, reporterFn, _i, _j, _len, _len1, _ref1, _ref2;
+        var filterFn, j, k, len, len1, notice, ref1, ref2, reporterFn;
         notice = {
           notifier: {
             name: 'airbrake-js-' + name,
-            version: '0.3.11',
+            version: '0.3.12',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
@@ -85,16 +85,16 @@ Client = (function() {
           environment: merge({}, _this._env, err.environment),
           session: merge({}, _this._session, err.session)
         };
-        _ref1 = _this._filters;
-        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-          filterFn = _ref1[_i];
+        ref1 = _this._filters;
+        for (j = 0, len = ref1.length; j < len; j++) {
+          filterFn = ref1[j];
           if (!filterFn(notice)) {
             return;
           }
         }
-        _ref2 = _this._reporters;
-        for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-          reporterFn = _ref2[_j];
+        ref2 = _this._reporters;
+        for (k = 0, len1 = ref2.length; k < len1; k++) {
+          reporterFn = ref2[k];
           reporterFn(notice, {
             projectId: _this._projectId,
             projectKey: _this._projectKey,
@@ -106,8 +106,8 @@ Client = (function() {
   };
 
   Client.prototype._wrapArguments = function(args) {
-    var arg, i, _i, _len;
-    for (i = _i = 0, _len = args.length; _i < _len; i = ++_i) {
+    var arg, i, j, len;
+    for (i = j = 0, len = args.length; j < len; i = ++j) {
       arg = args[i];
       if (typeof arg === 'function') {
         args[i] = this.wrap(arg);
@@ -160,9 +160,9 @@ module.exports = Client;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./util/merge.coffee":10}],2:[function(require,module,exports){
 (function (global){
-var Client, client, err, processor, reporter, shim, _i, _len;
+var Client, client, err, i, len, processor, reporter, shim;
 
-require("./util/compat.coffee");
+require('./util/compat.coffee');
 
 Client = require('./client.coffee');
 
@@ -187,8 +187,8 @@ if (shim != null) {
   if (shim.onload != null) {
     shim.onload(client);
   }
-  for (_i = 0, _len = shim.length; _i < _len; _i++) {
-    err = shim[_i];
+  for (i = 0, len = shim.length; i < len; i++) {
+    err = shim[i];
     client.push(err);
   }
 }
@@ -279,18 +279,18 @@ rules = [
 typeMessageRe = /^\S+:\s.+$/;
 
 processor = function(e, cb) {
-  var backtrace, i, line, lines, m, msg, processorName, rule, stack, type, uncaughtExcRe, _i, _j, _len, _len1;
+  var backtrace, i, j, k, len, len1, line, lines, m, msg, processorName, rule, stack, type, uncaughtExcRe;
   processorName = 'nostack';
   stack = e.stack || '';
   lines = stack.split('\n');
   backtrace = [];
-  for (i = _i = 0, _len = lines.length; _i < _len; i = ++_i) {
+  for (i = j = 0, len = lines.length; j < len; i = ++j) {
     line = lines[i];
     if (line === '') {
       continue;
     }
-    for (_j = 0, _len1 = rules.length; _j < _len1; _j++) {
-      rule = rules[_j];
+    for (k = 0, len1 = rules.length; k < len1; k++) {
+      rule = rules[k];
       m = line.match(rule.re);
       if (!m) {
         continue;
@@ -351,12 +351,12 @@ module.exports = processor;
 var formatError, report;
 
 formatError = function(err) {
-  var rec, s, _i, _len, _ref;
+  var i, len, rec, ref, s;
   s = "";
   s += err.message + "\n";
-  _ref = err.backtrace;
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    rec = _ref[_i];
+  ref = err.backtrace;
+  for (i = 0, len = ref.length; i < len; i++) {
+    rec = ref[i];
     if (rec["function"] !== '') {
       s += " at " + rec["function"];
     }
@@ -372,14 +372,14 @@ formatError = function(err) {
 };
 
 report = function(notice) {
-  var err, _i, _len, _ref, _results;
-  _ref = notice.errors;
-  _results = [];
-  for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-    err = _ref[_i];
-    _results.push(typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(formatError(err)) : void 0 : void 0);
+  var err, i, len, ref, results;
+  ref = notice.errors;
+  results = [];
+  for (i = 0, len = ref.length; i < len; i++) {
+    err = ref[i];
+    results.push(typeof console !== "undefined" && console !== null ? typeof console.log === "function" ? console.log(formatError(err)) : void 0 : void 0);
   }
-  return _results;
+  return results;
 };
 
 module.exports = report;
@@ -471,9 +471,9 @@ module.exports = report;
 },{"../util/jsonify_notice.coffee":9}],8:[function(require,module,exports){
 if (!Array.prototype.indexOf) {
   Array.prototype.indexOf = function(obj, start) {
-    var i, _i, _ref;
+    var i, j, ref, ref1;
     start = start || 0;
-    for (i = _i = start, _ref = this.length; start <= _ref ? _i < _ref : _i > _ref; i = start <= _ref ? ++_i : --_i) {
+    for (i = j = ref = start, ref1 = this.length; ref <= ref1 ? j < ref1 : j > ref1; i = ref <= ref1 ? ++j : --j) {
       if (this[i] === obj) {
         return i;
       }
@@ -502,7 +502,7 @@ truncateObj = function(obj, n) {
 };
 
 jsonifyNotice = function(notice, n, maxLength) {
-  var s;
+  var err, s;
   if (n == null) {
     n = 1000;
   }
@@ -522,7 +522,11 @@ jsonifyNotice = function(notice, n, maxLength) {
     }
     n = Math.floor(n / 2);
   }
-  throw new Error("cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
+  err = new Error("airbrake-js: cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
+  err.params = {
+    json: s.slice(0, +Math.floor(n / 2) + 1 || 9e9) + '...'
+  };
+  throw err;
 };
 
 module.exports = jsonifyNotice;
@@ -533,11 +537,11 @@ module.exports = jsonifyNotice;
 var merge;
 
 merge = function() {
-  var dst, key, obj, objs, _i, _len;
+  var dst, i, key, len, obj, objs;
   objs = Array.prototype.slice.call(arguments);
   dst = objs.shift() || {};
-  for (_i = 0, _len = objs.length; _i < _len; _i++) {
-    obj = objs[_i];
+  for (i = 0, len = objs.length; i < len; i++) {
+    obj = objs[i];
     for (key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
         dst[key] = obj[key];
@@ -560,11 +564,11 @@ attr = function(script, attrName) {
 };
 
 module.exports = function(client) {
-  var envName, host, onload, projectId, projectKey, script, scripts, _i, _len, _results;
+  var envName, host, i, len, onload, projectId, projectKey, results, script, scripts;
   scripts = global.document.getElementsByTagName('script');
-  _results = [];
-  for (_i = 0, _len = scripts.length; _i < _len; _i++) {
-    script = scripts[_i];
+  results = [];
+  for (i = 0, len = scripts.length; i < len; i++) {
+    script = scripts[i];
     projectId = attr(script, 'project-id');
     projectKey = attr(script, 'project-key');
     if (projectId && projectKey) {
@@ -580,12 +584,12 @@ module.exports = function(client) {
     }
     onload = attr(script, 'onload');
     if (onload) {
-      _results.push(global[onload](client));
+      results.push(global[onload](client));
     } else {
-      _results.push(void 0);
+      results.push(void 0);
     }
   }
-  return _results;
+  return results;
 };
 
 
@@ -616,10 +620,10 @@ truncate = function(value, n, depth) {
   keys = [];
   seen = [];
   getPath = function(value) {
-    var i, index, path, _i;
+    var i, index, j, path, ref;
     index = seen.indexOf(value);
     path = [keys[index]];
-    for (i = _i = index; index <= 0 ? _i <= 0 : _i >= 0; i = index <= 0 ? ++_i : --_i) {
+    for (i = j = ref = index; ref <= 0 ? j <= 0 : j >= 0; i = ref <= 0 ? ++j : --j) {
       if (seen[i] && getAttr(seen[i], path[0]) === value) {
         value = seen[i];
         path.unshift(keys[i]);
@@ -628,7 +632,7 @@ truncate = function(value, n, depth) {
     return '~' + path.join('.');
   };
   fn = function(value, key, dd) {
-    var dst, el, i, val, _i, _len;
+    var dst, el, i, j, len, val;
     if (key == null) {
       key = '';
     }
@@ -668,7 +672,7 @@ truncate = function(value, n, depth) {
     nn--;
     if (Object.prototype.toString.apply(value) === '[object Array]') {
       dst = [];
-      for (i = _i = 0, _len = value.length; _i < _len; i = ++_i) {
+      for (i = j = 0, len = value.length; j < len; i = ++j) {
         el = value[i];
         nn++;
         if (nn >= n) {
