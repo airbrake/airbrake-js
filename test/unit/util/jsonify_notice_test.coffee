@@ -36,7 +36,6 @@ describe 'jsonify_notice', ->
       expect(json.length).to.be.below(maxLength)
 
   context 'when called with one huge string', ->
-    obj = null
     json = null
     maxLength = 30000
 
@@ -48,3 +47,25 @@ describe 'jsonify_notice', ->
 
     it 'limits json size', ->
       expect(json.length).to.be.below(maxLength)
+
+  context 'when called with huge error message', ->
+    fn = null
+    maxLength = 30000
+
+    beforeEach ->
+      obj = {
+        errors: [{
+          message: Array(100000).join('x')
+        }],
+      }
+      fn = ->
+        jsonifyNotice(obj, 1000, maxLength)
+
+    it 'throws an exception', ->
+      expect(fn).to.throw('airbrake-js: cannot jsonify notice (length=100068 maxLength=30000)')
+
+    it 'throws an exception with `json` property', ->
+      try
+        fn()
+      catch err
+        expect(err.params.json).to.be.defined

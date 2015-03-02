@@ -26,7 +26,11 @@ jsonifyNotice = (notice, n=1000, maxLength=64000) ->
       break
     n = Math.floor(n/2)
 
-  throw new Error("cannot jsonify notice (length=#{s.length} maxLength=#{maxLength})")
+  err = new Error("airbrake-js: cannot jsonify notice (length=#{s.length} maxLength=#{maxLength})")
+  err.params = {
+    json: s[..Math.floor(n/2)] + '...',
+  }
+  throw err
 
 
 module.exports = jsonifyNotice
