@@ -1,4 +1,4 @@
-truncate = require('./truncate.coffee')
+truncate = require('./truncate')
 
 
 # truncateObj truncates each key in the object separately, which is

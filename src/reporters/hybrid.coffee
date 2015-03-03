@@ -1,4 +1,4 @@
 if 'withCredentials' of new XMLHttpRequest()
-  module.exports = require('./xhr.coffee')
+  module.exports = require('./xhr')
 else
-  module.exports = require('./jsonp.coffee')
+  module.exports = require('./jsonp')

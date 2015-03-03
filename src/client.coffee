@@ -6,7 +6,7 @@
 #
 # window.Airbrake is an instance of Client.
 
-merge = require './util/merge.coffee'
+merge = require('./util/merge')
 
 
 class Client

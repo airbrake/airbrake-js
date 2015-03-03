@@ -20,6 +20,8 @@ module.exports = (grunt) ->
 
     browserify:
       options:
+        browserifyOptions:
+          extensions: ['.coffee']
         transform: ['coffeeify', addPackageVars]
 
       stack:

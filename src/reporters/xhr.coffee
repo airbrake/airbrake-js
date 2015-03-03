@@ -1,4 +1,4 @@
-jsonifyNotice = require('../util/jsonify_notice.coffee')
+jsonifyNotice = require('../util/jsonify_notice')
 
 
 report = (notice, opts) ->
