@@ -1,12 +1,5 @@
-# The Client is the entry point to interacting with the Airbrake JS library.
-# It stores configuration information and handles exceptions provided to it.
-#
-# It generates a Processor and a Reporter for each exception and uses them
-# to transform an exception into data, and then to transport that data.
-#
-# window.Airbrake is an instance of Client.
-
-merge = require('./util/merge')
+require('./internal/compat')
+merge = require('./internal/merge')
 
 
 class Client

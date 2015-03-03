@@ -1,7 +1,7 @@
 expect = require('chai').expect
 sinon = require('sinon')
 
-truncate = require('../../../src/util/truncate.coffee')
+truncate = require('../../../src/internal/truncate')
 
 
 describe 'truncate', ->

@@ -54,18 +54,6 @@ testWrap = (client) ->
       expect(arg1Wrapper.__inner__).to.equal(arg1)
 
 
-describe "JS shim", ->
-  testWrap(require("../../airbrake-shim.js").Airbrake)
-
-
-describe "Coffee shim", ->
-  testWrap(require("../../airbrake-shim.coffee").Airbrake)
-
-
-writeThroughProcessor = (data, fn) ->
-  fn('write-through', data)
-
-
 describe "Client", ->
   clock = undefined
 
