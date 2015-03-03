@@ -62,26 +62,30 @@ describe "Coffee shim", ->
   testWrap(require("../../airbrake-shim.coffee").Airbrake)
 
 
+writeThroughProcessor = (data, fn) ->
+  fn('write-through', data)
+
+
 describe "Client", ->
   clock = undefined
-  beforeEach -> clock = sinon.useFakeTimers()
-  afterEach -> clock.restore()
 
-  writeThroughProcessor = null
-  beforeEach -> writeThroughProcessor = (data, fn) -> fn('write-through', data)
+  beforeEach ->
+    clock = sinon.useFakeTimers()
+
+  afterEach ->
+    clock.restore()
+
+  processor = null
+  reporter = null
+  client = null
+
+  beforeEach ->
+    processor = sinon.spy (data, cb) ->
+      cb(data)
+    reporter = sinon.spy()
+    client = new Client(processor: processor, reporter: reporter)
 
   describe 'filters', ->
-    processor    = null
-    reporter     = null
-    getProcessor = null
-    getReporter  = null
-    client       = null
-
-    beforeEach ->
-      processor      = sinon.spy()
-      reporter       = sinon.spy()
-      client         = new Client(processor, reporter)
-
     describe 'addFilter', ->
       it 'can prevent report', ->
         filter = sinon.spy((notice) -> false)
@@ -117,19 +121,11 @@ describe "Client", ->
 
     describe "with error", ->
       it "processor is called", ->
-        reporter = sinon.spy()
-        processor = sinon.spy()
-
-        client = new Client(processor, reporter)
         client.push(exception)
 
         expect(processor).to.have.been.called
 
       it "reporter is called with valid options", ->
-        reporter = sinon.spy()
-        processor = (err, cb) -> cb('', {})
-
-        client = new Client(processor, reporter)
         client.setProject(999, "custom_project_key")
         client.push(exception)
 
@@ -140,10 +136,8 @@ describe "Client", ->
           projectKey: "custom_project_key",
           host: "https://api.airbrake.io"
         })
-      it "reporter is called with custom host", ->
-        reporter = sinon.spy()
 
-        client = new Client(writeThroughProcessor, reporter)
+      it "reporter is called with custom host", ->
         client.setHost("https://custom.domain.com")
         client.push(exception)
 
@@ -152,9 +146,6 @@ describe "Client", ->
 
     describe "custom data sent to reporter", ->
       it "reports context", ->
-        reporter = sinon.spy()
-
-        client = new Client(writeThroughProcessor, reporter)
         client.addContext(context_key: "[custom_context]")
         client.push(exception)
 
@@ -162,9 +153,6 @@ describe "Client", ->
         expect(reported.context.context_key).to.equal("[custom_context]")
 
       it "reports environment name", ->
-        reporter = sinon.spy()
-
-        client = new Client(writeThroughProcessor, reporter)
         client.setEnvironmentName("[custom_env_name]")
         client.push(exception)
 
@@ -172,9 +160,6 @@ describe "Client", ->
         expect(reported.context.environment).to.equal("[custom_env_name]")
 
       it "reports environment", ->
-        reporter = sinon.spy()
-
-        client = new Client(writeThroughProcessor, reporter)
         client.addEnvironment(env_key: "[custom_env]")
         client.push(exception)
 
@@ -182,9 +167,6 @@ describe "Client", ->
         expect(reported.environment.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
-        reporter = sinon.spy()
-
-        client = new Client(writeThroughProcessor, reporter)
         client.addParams(params_key: "[custom_params]")
         client.push(exception)
 
@@ -192,9 +174,6 @@ describe "Client", ->
         expect(reported.params.params_key).to.equal("[custom_params]")
 
       it "reports session", ->
-        reporter = sinon.spy()
-
-        client = new Client(writeThroughProcessor, reporter)
         client.addSession(session_key: "[custom_session]")
         client.push(exception)
 
@@ -203,17 +182,10 @@ describe "Client", ->
 
       describe "wrapped error", ->
         it "unwraps and processes error", ->
-          reporter = sinon.spy()
-          processor = sinon.spy()
-
-          client = new Client(processor, reporter)
           client.push(error: exception)
           expect(processor).to.have.been.calledWith(exception)
 
         it "reports custom context", ->
-          reporter = sinon.spy()
-
-          client = new Client(writeThroughProcessor, reporter)
           client.addContext(context1: "value1", context2: "value2")
           client.push
             error: exception
@@ -230,9 +202,6 @@ describe "Client", ->
             context3: "push_value3"
 
         it "reports custom environment name", ->
-          reporter = sinon.spy()
-
-          client = new Client(writeThroughProcessor, reporter)
           client.setEnvironmentName("env1")
           client.push
             error: exception
@@ -246,9 +215,6 @@ describe "Client", ->
             environment: "push_env1"
 
         it "reports custom environment", ->
-          reporter = sinon.spy()
-
-          client = new Client(writeThroughProcessor, reporter)
           client.addEnvironment(env1: "value1", env2: "value2")
           client.push
             error: exception
@@ -263,9 +229,6 @@ describe "Client", ->
             env3: "push_value3"
 
         it "reports custom params", ->
-          reporter = sinon.spy()
-
-          client = new Client(writeThroughProcessor, reporter)
           client.addParams(param1: "value1", param2: "value2")
           client.push
             error: exception
@@ -280,9 +243,6 @@ describe "Client", ->
             param3: "push_value3"
 
         it "reports custom session", ->
-          reporter = sinon.spy()
-
-          client = new Client(writeThroughProcessor, reporter)
           client.addSession(session1: "value1", session2: "value2")
           client.push
             error: exception
@@ -296,13 +256,11 @@ describe "Client", ->
             session2: "value2"
             session3: "push_value3"
 
-  describe "data supplied by shim", ->
-    it "reports processed error and options to custom reporter", ->
+  describe "custom reporter", ->
+    it "is called on error", ->
       custom_reporter = sinon.spy()
-      processor = (err, cb) -> cb()
-      client = new Client(processor, null)
       client.addReporter(custom_reporter)
       client.push(error: {})
       expect(custom_reporter).to.have.been.called
 
-  testWrap(new Client())
+  testWrap(new Client(processor: null, reporter: null))

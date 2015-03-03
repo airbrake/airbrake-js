@@ -10,7 +10,7 @@ merge = require('./util/merge')
 
 
 class Client
-  constructor: (processor, reporter) ->
+  constructor: (opts={}) ->
     @_projectId = 0
     @_projectKey = ''
 
@@ -21,11 +21,22 @@ class Client
     @_env = {}
     @_session = {}
 
-    @_processor = processor
+    @_processor = null
     @_reporters = []
     @_filters = []
 
-    if reporter
+    if opts.processor != undefined
+      @_processor = opts.processor
+    else
+      @_processor = require('./processors/stack')
+
+    if opts.reporter != undefined
+      @addReporter(opts.reporter)
+    else
+      if 'withCredentials' of new global.XMLHttpRequest()
+        reporter = require('./reporters/xhr')
+      else
+        reporter = require('./reporters/jsonp')
       @addReporter(reporter)
 
   setProject: (id, key) ->

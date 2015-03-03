@@ -1,10 +1,8 @@
 require('./util/compat')
 Client = require('./client')
-processor = require('./processors/stack')
-reporter = require('./reporters/hybrid')
 
 
-client = new Client(processor, reporter)
+client = new Client()
 client.consoleReporter = require('./reporters/console')
 
 shim = global.Airbrake
