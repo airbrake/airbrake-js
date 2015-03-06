@@ -128,7 +128,7 @@ if (global.addEventListener) {
 if (global.jQuery) {
   setupJQ();
 } else {
-  if (console) {
+  if (global.console) {
     console.warn('airbrake-js: jQuery not found; skipping jQuery instrumentation.');
   }
 }
