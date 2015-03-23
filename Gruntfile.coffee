@@ -29,7 +29,7 @@ module.exports = (grunt) ->
             standalone: 'airbrake-js'
 
         src: ['src/client.coffee']
-        dest: 'dist/client.js'
+        dest: 'dist/airbrakeJs.js'
 
       instrumentation_jquery:
         options:
