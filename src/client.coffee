@@ -4,8 +4,8 @@ merge = require('./internal/merge')
 
 class Client
   constructor: (opts={}) ->
-    @_projectId = 0
-    @_projectKey = ''
+    @_projectId = opts.projectId || 0
+    @_projectKey = opts.projectKey || ''
 
     @_host = 'https://api.airbrake.io'
 
