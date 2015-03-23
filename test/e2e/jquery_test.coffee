@@ -1,11 +1,11 @@
-define ['airbrakeJs', 'instrumentation/jquery'], (airbrakeJs, instrumentJq) ->
+define ['client', 'instrumentation/jquery'], (Client, instrumentJq) ->
   describe 'requirejs', ->
     it 'works', ->
-      expect(airbrakeJs).to.be.defined
+      expect(Client).to.be.defined
       expect(instrumentJq).to.be.defined
 
   beforeEach ->
-    instrumentJq(new airbrakeJs())
+    instrumentJq(new Client())
 
   describe 'jQuery onload instrumentation', ->
     xhr = null

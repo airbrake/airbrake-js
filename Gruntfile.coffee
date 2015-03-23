@@ -26,10 +26,10 @@ module.exports = (grunt) ->
         options:
           browserifyOptions:
             extensions: ['.coffee']
-            standalone: 'airbrake-js'
+            standalone: 'airbrake-js.client'
 
         src: ['src/client.coffee']
-        dest: 'dist/airbrakeJs.js'
+        dest: 'dist/client.js'
 
       instrumentation_jquery:
         options:
