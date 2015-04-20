@@ -4,26 +4,17 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 <img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
 
+## Installation
+
+```
+npm install airbrake-js
+```
+
 ## Setup
 
-Airbrake JavaScript notifier consists of 2 parts:
-
-- Notifier shim that collects exceptions until notifier is loaded. You are supposed to host it with your JavaScript files and modify as needed, e.g. add integration with framework of your choice.
-- Notifier itself loaded from our CDN.
-
-Typical notifier setup looks like:
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    <script src="airbrake-shim.js" data-airbrake-project-id="FIXME" data-airbrake-project-key="FIXME" data-airbrake-environment-name="production"></script>
-    <script src="app.js"></script>
-
-Note that notifier shim is loaded after jQuery but before application code. This way can setup integration with jQuery and shim is immediately available to be used in your code.
-
-Alternatively you can set project id and API key using:
-
-    Airbrake.setProject(PROJECT_ID, PROJECT_KEY);
-
-Note that the above example reflects a typical setup in a project using jQuery, however jQuery is not a dependency for Airbrake-JS. Airbrake-JS has no dependencies.
+Notifier uses [standalone browserify build](http://www.forbeslindesay.co.uk/post/46324645400/standalone-browserify-builds) and can be used with:
+- [RequireJS](examples/requirejs/app.js).
+- [Global/Window](examples/legacy/app.js).
 
 ## Basic Usage
 
@@ -33,13 +24,13 @@ The simplest method is to report errors directly:
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     } catch(err) {
-      Airbrake.push(err);
+      airbrake.push(err);
       throw err;
     }
 
 Alternatively you can wrap any code which may throw errors using the client's `wrap` method:
 
-    var wrapped = Airbrake.wrap(function() {
+    var wrapped = airbrake.wrap(function() {
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     });
@@ -49,31 +40,15 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 The notifier provides a few pieces of functionality to help reduce duplication when you report errors. In order to access this functionality, the full notifier needs to be loaded, not just the shim implementation provided in the embed snippet.
 
-### Notifier `onload`
-
-Fortunately, it's easy to register code to be run when the notifier loads. In the embed snippet, simply add a `data-airbrake-onload` attribute and specify the name of the function to be executed when the notifier is ready.
-
-    <script data-airbrake-onload="initAirbrake">
-      function initAirbrake(client) {
-        client.addSession({split_test: 10});
-      }
-    </script>
-
-An alternative way is to add onload property to the Airbrake shim:
-
-    Airbrake.onload = function(client) {
-      client.setProject(projectId, projectKey);
-    }
-
 ### Default Annotations
 
 It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
-* `Airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
-* `Airbrake.addEnvironment(object)` Merges environment information about the application's environment.
-* `Airbrake.addParams(object)` Merges params information reported alongside all errors.
-* `Airbrake.addSession(object)` Merges session information reported alongside all errors.
-* `Airbrake.addContext(object)` Merges context information reported alongside all errors. This hash is reserved for notifiers and Airbrake backend will ignore unknown keys.
+* `airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
+* `airbrake.addEnvironment(object)` Merges environment information about the application's environment.
+* `airbrake.addParams(object)` Merges params information reported alongside all errors.
+* `airbrake.addSession(object)` Merges session information reported alongside all errors.
+* `airbrake.addContext(object)` Merges context information reported alongside all errors. This hash is reserved for notifiers and Airbrake backend will ignore unknown keys.
 
 Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
 
@@ -81,7 +56,7 @@ Additionally, much of this information can be added to captured errors at the ti
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     } catch(err) {
-      Airbrake.push({
+      airbrake.push({
         error: err,
         context: { component: 'style', userId: currentUser.id, userName: currentUser.name },
         environment: { navigator_vendor: window.navigator.vendor },
@@ -96,7 +71,7 @@ Additionally, much of this information can be added to captured errors at the ti
 Instead of exception you can pass error object constructed manually. For example, `window.onerror` handler can look like:
 
     window.onerror = function(message, file, line) {
-      Airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
+      airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
     }
 
 ### Source map
@@ -121,7 +96,7 @@ An error notice must pass all provided filters to be submitted.
 
     // Here we suppress the notice if the top-level `session` key
     // indicates the user is logged in as an admin
-    Airbrake.addFilter(function(notice) {
+    airbrake.addFilter(function(notice) {
       // Suppress reports from admin sessions
       return !notice.session.admin;
     });
@@ -134,7 +109,7 @@ own error reporter. Note that reporters added this way may be executed out-of-or
 In this example, reported errors are also logged to the console.
 
     <script>
-      Airbrake.addReporter(function(notice) {
+      airbrake.addReporter(function(notice) {
         console.log(notice);
       });
     </script>
@@ -147,13 +122,7 @@ In this example, reported errors are also logged to the console.
 
 ### Karma tests
 
-Change `airbrake-shim.js` to load local copy of the notifier: `script.src = '/base/airbrake.js';`. Then:
-
     grunt karma
-
-## Help
-
-For help with using Airbrake and this notifier visit [our support site](http://help.airbrake.io).
 
 ## Credits
 
