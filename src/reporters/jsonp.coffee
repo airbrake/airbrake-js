@@ -3,11 +3,13 @@ jsonifyNotice = require('../internal/jsonify_notice')
 
 cbCount = 0
 
-report = (notice, opts) ->
+report = (notice, opts, promise) ->
   cbCount++
 
   cbName = "airbrakeCb" + String(cbCount)
   global[cbName] = (resp) ->
+    notice.id = resp.id
+    promise.resolve(notice)
     console?.debug?("airbrake-js: error #%s was reported: %s", resp.id, resp.url)
     try
       delete global[cbName]

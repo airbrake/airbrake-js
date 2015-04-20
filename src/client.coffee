@@ -1,5 +1,6 @@
 require('./internal/compat')
 merge = require('./internal/merge')
+Promise = require('./internal/promise')
 
 
 class Client
@@ -70,10 +71,12 @@ class Client
     if global.location
       defContext.url = String(global.location)
 
-    @_processor err.error or err, (name, errInfo) =>
+    promise = new Promise()
+
+    @_processor err.error or err, (processorName, errInfo) =>
       notice =
         notifier:
-          name: 'airbrake-js-' + name
+          name: 'airbrake-js-' + processorName
           version: '<%= pkg.version %>'
           url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
@@ -86,10 +89,13 @@ class Client
         if not filterFn(notice)
           return
 
+      opts = {projectId: @_projectId, projectKey: @_projectKey, host: @_host}
       for reporterFn in @_reporters
-        reporterFn(notice, {projectId: @_projectId, projectKey: @_projectKey, host: @_host})
+        reporterFn(notice, opts, promise)
 
       return
+
+    return promise
 
 
   _wrapArguments: (args) ->
