@@ -76,7 +76,7 @@ Instead of exception you can pass error object constructed manually. For example
 
 ### Source map
 
-In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, [airbrake.min.js](https://ssljscdn.airbrake.io/0.3/airbrake.min.js) has following line:
+In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has following line:
 
     //# sourceMappingURL=airbrake.min.map
 
