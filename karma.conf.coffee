@@ -5,10 +5,11 @@ module.exports = (config) ->
     plugins: ['karma-*']
     files: [
       {pattern: 'test/e2e/main_test.coffee'},
+
+      {pattern: 'dist/**/*.js', included: false},
+
       {pattern: 'test/e2e/*.coffee', included: false},
       {pattern: 'test/e2e/fixtures/*'},
-      {pattern: 'airbrake-shim.js'},
-      {pattern: 'airbrake.js', included: false},
     ]
     browsers: ['Chrome']
     autoWatch: true

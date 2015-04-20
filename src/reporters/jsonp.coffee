@@ -1,4 +1,4 @@
-jsonifyNotice = require('../util/jsonify_notice.coffee')
+jsonifyNotice = require('../internal/jsonify_notice')
 
 
 cbCount = 0
@@ -8,7 +8,7 @@ report = (notice, opts) ->
 
   cbName = "airbrakeCb" + String(cbCount)
   global[cbName] = (resp) ->
-    console?.debug?("airbrake: error #%s was reported: %s", resp.id, resp.url)
+    console?.debug?("airbrake-js: error #%s was reported: %s", resp.id, resp.url)
     try
       delete global[cbName]
     catch _ # IE

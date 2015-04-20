@@ -22,20 +22,23 @@ module.exports = (grunt) ->
       options:
         transform: ['coffeeify', addPackageVars]
 
-      stack:
-        src: ['src/notifier.coffee']
-        dest: 'airbrake.js'
+      client:
+        options:
+          browserifyOptions:
+            extensions: ['.coffee']
+            standalone: 'airbrake-js.Client'
 
-    uglify:
-      options:
-        sourceMap: true
+        src: ['src/client.coffee']
+        dest: 'dist/client.js'
 
-      dist:
-        files: [{
-          expand: true
-          src: 'airbrake.js'
-          ext: '.min.js'
-        }]
+      instrumentation_jquery:
+        options:
+          browserifyOptions:
+            extensions: ['.coffee']
+            standalone: 'airbrake-js.instrumentation.jquery'
+
+        src: ['src/instrumentation/jquery.coffee']
+        dest: 'dist/instrumentation/jquery.js'
 
     watch:
       test_only:
@@ -86,8 +89,7 @@ module.exports = (grunt) ->
   # Running the `serve` command starts up a webserver.
   grunt.registerTask('serve', ['connect'])
   grunt.registerTask('build', ['browserify'])
-  grunt.registerTask('minify', ['uglify'])
-  grunt.registerTask('default', ['build', 'minify'])
+  grunt.registerTask('default', ['build'])
 
   # Push distribution libraries to CDN.
   # Build and publish distribution site.

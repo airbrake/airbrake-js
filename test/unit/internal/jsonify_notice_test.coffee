@@ -1,7 +1,7 @@
 expect = require('chai').expect
 sinon = require('sinon')
 
-jsonifyNotice = require('../../../src/util/jsonify_notice.coffee')
+jsonifyNotice = require('../../../src/internal/jsonify_notice')
 
 
 describe 'jsonify_notice', ->

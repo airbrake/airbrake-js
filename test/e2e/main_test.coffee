@@ -1,14 +1,13 @@
 tests = []
-
 for file of window.__karma__.files
   if window.__karma__.files.hasOwnProperty(file)
-    if /test\.js/.test(file)
+    if /test\.js$/.test(file)
       tests.push(file)
 
 
 requirejs.config({
   # Karma serves files from '/base'
-  baseUrl: '',
+  baseUrl: '/base/dist',
 
   # ask Require.js to load these files (all our tests)
   deps: tests,

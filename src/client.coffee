@@ -1,18 +1,11 @@
-# The Client is the entry point to interacting with the Airbrake JS library.
-# It stores configuration information and handles exceptions provided to it.
-#
-# It generates a Processor and a Reporter for each exception and uses them
-# to transform an exception into data, and then to transport that data.
-#
-# window.Airbrake is an instance of Client.
-
-merge = require './util/merge.coffee'
+require('./internal/compat')
+merge = require('./internal/merge')
 
 
 class Client
-  constructor: (processor, reporter) ->
-    @_projectId = 0
-    @_projectKey = ''
+  constructor: (opts={}) ->
+    @_projectId = opts.projectId || 0
+    @_projectKey = opts.projectKey || ''
 
     @_host = 'https://api.airbrake.io'
 
@@ -21,11 +14,22 @@ class Client
     @_env = {}
     @_session = {}
 
-    @_processor = processor
+    @_processor = null
     @_reporters = []
     @_filters = []
 
-    if reporter
+    if opts.processor != undefined
+      @_processor = opts.processor
+    else
+      @_processor = require('./processors/stack')
+
+    if opts.reporter != undefined
+      @addReporter(opts.reporter)
+    else
+      if 'withCredentials' of new global.XMLHttpRequest()
+        reporter = require('./reporters/xhr')
+      else
+        reporter = require('./reporters/jsonp')
       @addReporter(reporter)
 
   setProject: (id, key) ->

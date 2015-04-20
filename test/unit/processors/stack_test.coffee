@@ -528,3 +528,31 @@ describe "stack processor", ->
       ]
       expect(backtrace).to.deep.equal(wanted)
 
+  context "when called with a string", ->
+    cb = null
+    e = null
+
+    beforeEach ->
+      cb = sinon.spy()
+      e = "hello"
+      processor(e, cb)
+
+    it "receives nostack processor name", ->
+      expect(cb).to.have.been.called
+      name = cb.lastCall.args[0]
+      expect(name).to.equal("nostack")
+
+    it "receives empty error type", ->
+      expect(cb).to.have.been.called
+      type = cb.lastCall.args[1].type
+      expect(type).to.equal("")
+
+    it "receives the string as error message", ->
+      expect(cb).to.have.been.called
+      message = cb.lastCall.args[1].message
+      expect(message).to.equal(e)
+
+    it "receives empty backtrace", ->
+      expect(cb).to.have.been.called
+      backtrace = cb.lastCall.args[1].backtrace
+      expect(backtrace).to.deep.equal([])
