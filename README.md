@@ -18,6 +18,10 @@ Notifier uses [standalone browserify build](http://www.forbeslindesay.co.uk/post
 
 ## Basic Usage
 
+First you need to initialize notifier with project id and API key taken from [Airbrake.io](https://airbrake.io):
+
+    var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
+
 The simplest method is to report errors directly:
 
     try {
@@ -30,11 +34,14 @@ The simplest method is to report errors directly:
 
 Alternatively you can wrap any code which may throw errors using the client's `wrap` method:
 
-    var wrapped = airbrake.wrap(function() {
-      // This will throw if the document has no head tag
+    var startApp = function() {
+      // This will throw if the document has no head tag.
       document.head.insertBefore(document.createElement("style"));
-    });
-    wrapped();
+    }
+    startApp = airbrake.wrap(startApp);
+
+    // Any exceptions thrown in startApp will be reported to Airbrake.
+    startApp();
 
 ## Advanced Usage
 
@@ -42,24 +49,23 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
 
-* `airbrake.setEnvironmentName(string)` Sets the environment name displayed alongside an error report.
-* `airbrake.addEnvironment(object)` Merges environment information about the application's environment.
-* `airbrake.addParams(object)` Merges params information reported alongside all errors.
-* `airbrake.addSession(object)` Merges session information reported alongside all errors.
-* `airbrake.addContext(object)` Merges context information reported alongside all errors. This hash is reserved for notifiers and Airbrake backend will ignore unknown keys.
+* `airbrake.setEnvironmentName(string)` sets the environment name, e.g. production or staging.
+* `airbrake.addEnvironment(object)` adds environment information reported alongside all errors.
+* `airbrake.addParams(object)` adds params information reported alongside all errors.
+* `airbrake.addSession(object)` adds session information reported alongside all errors.
+* `airbrake.addContext(object)` adds context information reported alongside all errors. This hash is reserved for notifier and Airbrake backend will ignore unknown keys.
 
 Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
 
     try {
-      // This will throw if the document has no head tag
-      document.head.insertBefore(document.createElement("style"));
-    } catch(err) {
+      startApp();
+    } catch (err) {
       airbrake.push({
-        error: err,
-        context: { component: 'style', userId: currentUser.id, userName: currentUser.name },
-        environment: { navigator_vendor: window.navigator.vendor },
-        params:  { search: document.location.search },
-        session: { sessionid: sessionid }
+        error:       err,
+        environment: { env1: 'value1' },
+        params:      { param1: 'param1' },
+        session:     { param2: 'param2' },
+        context:     { component: 'boostrap' }
       });
       throw err;
     }
@@ -84,7 +90,7 @@ There may be some errors thrown in your application that you're not interested i
 
 The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addFilter`.
 
-`addFilter` accepts the entire error notice to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `sessions` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
+`addFilter` accepts the entire error notice to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `session` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
 
 The return value of the filter function determines whether or not the error notice will be submitted.
   * If a falsey value is returned, the notice is suppressed.
@@ -101,8 +107,7 @@ An error notice must pass all provided filters to be submitted.
 
 ### Custom reporters
 
-If you're interested in inspecting the information reported to Airbrake in your own code, you can register your
-own error reporter. Note that reporters added this way may be executed out-of-order.
+If you're interested in inspecting the information reported to Airbrake in your own code, you can register your own error reporter. Note that reporters added this way may be executed out-of-order.
 
 In this example, reported errors are also logged to the console.
 
