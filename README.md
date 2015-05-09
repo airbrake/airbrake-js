@@ -38,8 +38,6 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 ## Advanced Usage
 
-The notifier provides a few pieces of functionality to help reduce duplication when you report errors. In order to access this functionality, the full notifier needs to be loaded, not just the shim implementation provided in the embed snippet.
-
 ### Default Annotations
 
 It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
