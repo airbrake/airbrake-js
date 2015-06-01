@@ -593,3 +593,16 @@ describe 'stack processor', ->
       expect(cb).to.have.been.called
       backtrace = cb.lastCall.args[1].backtrace
       expect(backtrace).to.deep.equal([])
+
+  context 'when called with empty name', ->
+    cb = null
+
+    beforeEach ->
+      cb = sinon.spy()
+      e = {name: '', message: 'message'}
+      processor(e, cb)
+
+    it 'receives correct error message', ->
+      expect(cb).to.have.been.called
+      message = cb.lastCall.args[1].message
+      expect(message).to.equal('message')
