@@ -183,7 +183,7 @@ processor = (e, cb) ->
   else
     msg = String(e)
 
-  if e.name?
+  if e.name? and e.name != ''
     type = e.name
     msg = type + ': ' + msg
   else
