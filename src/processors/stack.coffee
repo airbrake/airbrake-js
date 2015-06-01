@@ -102,6 +102,23 @@ rules = [
   },
 
   {
+    name: 'phantomjs',
+    re: /// ^
+      \s*
+      at\s
+      (.+): # file
+      (\d+) # line
+    $ ///,
+    fn: (m) ->
+      return {
+        function: '',
+        file: m[1],
+        line: parseInt(m[2], 10),
+        column: 0,
+      }
+  },
+
+  {
     name: 'default',
     re: /.+/,
     fn: (m) ->
