@@ -117,15 +117,25 @@ In this example, reported errors are also logged to the console.
       });
     </script>
 
-## Testing
+## Developing
 
-### Unit tests
+Install dependencies:
 
-     grunt test
+```
+npm install
+```
 
-### Karma tests
+Run unit tests:
 
-    grunt karma
+```
+grunt test
+```
+
+Run integration tests:
+
+```
+grunt karma
+```
 
 ## Credits
 
