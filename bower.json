@@ -6,9 +6,12 @@
     "Exceptional"
   ],
   "description": "Notify Airbrake on JavaScript exceptions",
-  "main": [
-    "dist/client.js",
-    "dist/instrumentation/jquery.js"
+  "main": "dist/client.js",
+  "ignore": [
+    "test/**",
+    "*.coffee",
+    "package.json",
+    ".gitignore"
   ],
   "moduleType": [
     "amd",
