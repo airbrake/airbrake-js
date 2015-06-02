@@ -6,8 +6,16 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 ## Installation
 
+Using npm:
+
 ```
 npm install airbrake-js
+```
+
+or using Bower:
+
+```
+bower install airbrake-js-client
 ```
 
 ## Setup
