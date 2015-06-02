@@ -1,0 +1,24 @@
+{
+  "name": "airbrake-js-client",
+  "version": "4.0.0",
+  "homepage": "https://github.com/airbrake/airbrake-js",
+  "authors": [
+    "Exceptional"
+  ],
+  "description": "Notify Airbrake on JavaScript exceptions",
+  "main": [
+    "dist/client.js",
+    "dist/instrumentation/jquery.js"
+  ],
+  "moduleType": [
+    "amd",
+    "globals"
+  ],
+  "keywords": [
+    "exception",
+    "error",
+    "airbrake",
+    "exceptional"
+  ],
+  "license": "MIT"
+}
