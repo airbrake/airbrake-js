@@ -94,7 +94,7 @@ Client = (function() {
         notice = {
           notifier: {
             name: 'airbrake-js-' + name,
-            version: '0.4.0-alpha.2',
+            version: '0.4.2',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
@@ -442,6 +442,17 @@ rules = [
       };
     }
   }, {
+    name: 'phantomjs',
+    re: /^\s*at\s(.+):(\d+)$/,
+    fn: function(m) {
+      return {
+        "function": '',
+        file: m[1],
+        line: parseInt(m[2], 10),
+        column: 0
+      };
+    }
+  }, {
     name: 'default',
     re: /.+/,
     fn: function(m) {
@@ -503,7 +514,7 @@ processor = function(e, cb) {
   } else {
     msg = String(e);
   }
-  if (e.name != null) {
+  if ((e.name != null) && e.name !== '') {
     type = e.name;
     msg = type + ': ' + msg;
   } else {
@@ -579,15 +590,14 @@ jsonifyNotice = require('../internal/jsonify_notice');
 
 report = function(notice, opts) {
   var payload, req, url;
-  url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
   payload = jsonifyNotice(notice);
   req = new global.XMLHttpRequest();
   req.open('POST', url, true);
-  req.setRequestHeader('Content-Type', 'application/json');
   req.send(payload);
   return req.onreadystatechange = function() {
     var resp;
-    if (req.readyState === 4 && req.status === 201 && ((typeof console !== "undefined" && console !== null ? console.debug : void 0) != null)) {
+    if (req.readyState === 4 && req.status === 200 && ((typeof console !== "undefined" && console !== null ? console.debug : void 0) != null)) {
       resp = JSON.parse(req.responseText);
       return console.debug("airbrake: error #%s was reported: %s", resp.id, resp.url);
     }
