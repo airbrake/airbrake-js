@@ -18,6 +18,14 @@ module.exports = (grunt) ->
   grunt.initConfig
     pkg: pkgData
 
+    coffee:
+      src:
+        expand: true
+        cwd: 'src/'
+        src: ['**/*.coffee']
+        dest: 'lib/'
+        ext: '.js'
+
     browserify:
       options:
         transform: ['coffeeify', addPackageVars]
@@ -88,7 +96,7 @@ module.exports = (grunt) ->
 
   # Running the `serve` command starts up a webserver.
   grunt.registerTask('serve', ['connect'])
-  grunt.registerTask('build', ['browserify'])
+  grunt.registerTask('build', ['coffee', 'browserify'])
   grunt.registerTask('default', ['build'])
 
   # Push distribution libraries to CDN.
