@@ -20,9 +20,11 @@ bower install airbrake-js-client
 
 ## Setup
 
-Notifier uses [standalone browserify build](http://www.forbeslindesay.co.uk/post/46324645400/standalone-browserify-builds) and can be used with:
+Notifier is built using [standalone browserify build](http://www.forbeslindesay.co.uk/post/46324645400/standalone-browserify-builds) and can be used with:
 - [RequireJS](examples/requirejs/app.js).
 - [Global/Window](examples/legacy/app.js).
+
+We also include full source code with the package, so you can use [Browserify](examples/browserify/app.js) too.
 
 ## Basic Usage
 
