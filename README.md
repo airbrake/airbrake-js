@@ -92,6 +92,8 @@ In order to enable source map support you have to specify path to the source map
 
     //# sourceMappingURL=airbrake.min.map
 
+*Please note* that Airbrake backend downloads source map file in order to process backtrace. This means that source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
+
 ### Filtering errors
 
 There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
