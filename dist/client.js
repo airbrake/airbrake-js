@@ -1,10 +1,12 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.airbrakeJs || (g.airbrakeJs = {})).Client = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 (function (global){
-var Client, merge;
+var Client, Promise, merge;
 
 require('./internal/compat');
 
 merge = require('./internal/merge');
+
+Promise = require('./internal/promise');
 
 Client = (function() {
   function Client(opts) {
@@ -77,7 +79,7 @@ Client = (function() {
   };
 
   Client.prototype.push = function(err) {
-    var defContext, ref;
+    var defContext, promise, ref;
     defContext = {
       language: 'JavaScript',
       sourceMapEnabled: true
@@ -88,13 +90,14 @@ Client = (function() {
     if (global.location) {
       defContext.url = String(global.location);
     }
-    return this._processor(err.error || err, (function(_this) {
-      return function(name, errInfo) {
-        var filterFn, j, k, len, len1, notice, ref1, ref2, reporterFn;
+    promise = new Promise();
+    this._processor(err.error || err, (function(_this) {
+      return function(processorName, errInfo) {
+        var filterFn, j, k, len, len1, notice, opts, ref1, ref2, reporterFn;
         notice = {
           notifier: {
-            name: 'airbrake-js-' + name,
-            version: '0.5.0',
+            name: 'airbrake-js-' + processorName,
+            version: '0.5.1',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
@@ -110,17 +113,19 @@ Client = (function() {
             return;
           }
         }
+        opts = {
+          projectId: _this._projectId,
+          projectKey: _this._projectKey,
+          host: _this._host
+        };
         ref2 = _this._reporters;
         for (k = 0, len1 = ref2.length; k < len1; k++) {
           reporterFn = ref2[k];
-          reporterFn(notice, {
-            projectId: _this._projectId,
-            projectKey: _this._projectKey,
-            host: _this._host
-          });
+          reporterFn(notice, opts, promise);
         }
       };
     })(this));
+    return promise;
   };
 
   Client.prototype._wrapArguments = function(args) {
@@ -176,7 +181,7 @@ module.exports = Client;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./internal/compat":2,"./internal/merge":4,"./processors/stack":6,"./reporters/jsonp":7,"./reporters/xhr":8}],2:[function(require,module,exports){
+},{"./internal/compat":2,"./internal/merge":4,"./internal/promise":5,"./processors/stack":7,"./reporters/jsonp":8,"./reporters/xhr":9}],2:[function(require,module,exports){
 var base;
 
 if ((base = Array.prototype).indexOf == null) {
@@ -243,7 +248,7 @@ module.exports = jsonifyNotice;
 
 
 
-},{"./truncate":5}],4:[function(require,module,exports){
+},{"./truncate":6}],4:[function(require,module,exports){
 var merge;
 
 merge = function() {
@@ -266,6 +271,83 @@ module.exports = merge;
 
 
 },{}],5:[function(require,module,exports){
+var Promise;
+
+Promise = (function() {
+  function Promise(executor) {
+    var reject, resolve;
+    this._onResolved = [];
+    this._onRejected = [];
+    resolve = (function(_this) {
+      return function() {
+        return _this.resolve.apply(_this, arguments);
+      };
+    })(this);
+    reject = (function(_this) {
+      return function() {
+        return _this.reject.apply(_this, arguments);
+      };
+    })(this);
+    if (executor != null) {
+      executor(resolve, reject);
+    }
+  }
+
+  Promise.prototype.then = function(onResolved, onRejected) {
+    if (onResolved) {
+      if (this._resolvedWith != null) {
+        onResolved(this._resolvedWith);
+      }
+      this._onResolved.push(onResolved);
+    }
+    if (onRejected) {
+      if (this._rejectedWith != null) {
+        onRejected(this._resolvedWith);
+      }
+      this._onRejected.push(onRejected);
+    }
+    return this;
+  };
+
+  Promise.prototype["catch"] = function(onRejected) {
+    if (this._rejectedWith != null) {
+      onRejected(this._rejectedWith);
+    }
+    this._onRejected.push(onRejected);
+    return this;
+  };
+
+  Promise.prototype.resolve = function() {
+    var fn, i, len, ref;
+    this._resolvedWith = arguments;
+    ref = this._onResolved;
+    for (i = 0, len = ref.length; i < len; i++) {
+      fn = ref[i];
+      fn.apply(this, this._resolvedWith);
+    }
+    return this;
+  };
+
+  Promise.prototype.reject = function() {
+    var fn, i, len, ref;
+    this._rejectedWith = arguments;
+    ref = this._onRejected;
+    for (i = 0, len = ref.length; i < len; i++) {
+      fn = ref[i];
+      fn.apply(this, this._rejectedWith);
+    }
+    return this;
+  };
+
+  return Promise;
+
+})();
+
+module.exports = Promise;
+
+
+
+},{}],6:[function(require,module,exports){
 var getAttr, truncate;
 
 getAttr = function(obj, attr) {
@@ -375,7 +457,7 @@ module.exports = truncate;
 
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var processor, rules, typeMessageRe;
 
 rules = [
@@ -537,7 +619,7 @@ module.exports = processor;
 
 
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 (function (global){
 var cbCount, jsonifyNotice, report;
 
@@ -545,17 +627,14 @@ jsonifyNotice = require('../internal/jsonify_notice');
 
 cbCount = 0;
 
-report = function(notice, opts) {
+report = function(notice, opts, promise) {
   var cbName, document, head, payload, removeScript, script, url;
   cbCount++;
   cbName = "airbrakeCb" + String(cbCount);
   global[cbName] = function(resp) {
     var _;
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.debug === "function") {
-        console.debug("airbrake-js: error #%s was reported: %s", resp.id, resp.url);
-      }
-    }
+    notice.id = resp.id;
+    promise.resolve(notice);
     try {
       return delete global[cbName];
     } catch (_error) {
@@ -582,13 +661,13 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":3}],8:[function(require,module,exports){
+},{"../internal/jsonify_notice":3}],9:[function(require,module,exports){
 (function (global){
 var jsonifyNotice, report;
 
 jsonifyNotice = require('../internal/jsonify_notice');
 
-report = function(notice, opts) {
+report = function(notice, opts, promise) {
   var payload, req, url;
   url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
   payload = jsonifyNotice(notice);
@@ -597,9 +676,10 @@ report = function(notice, opts) {
   req.send(payload);
   return req.onreadystatechange = function() {
     var resp;
-    if (req.readyState === 4 && req.status === 200 && ((typeof console !== "undefined" && console !== null ? console.debug : void 0) != null)) {
+    if (req.readyState === 4 && req.status === 200) {
       resp = JSON.parse(req.responseText);
-      return console.debug("airbrake: error #%s was reported: %s", resp.id, resp.url);
+      notice.id = resp.id;
+      return promise.resolve(notice);
     }
   };
 };
