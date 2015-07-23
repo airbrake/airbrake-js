@@ -70,7 +70,8 @@ describe "Client", ->
   beforeEach ->
     processor = sinon.spy (data, cb) ->
       cb(data)
-    reporter = sinon.spy()
+    reporter = sinon.spy (_, __, promise) ->
+      promise.resolve({id: 1})
     client = new Client(processor: processor, reporter: reporter)
 
   describe 'filters', ->
@@ -106,6 +107,12 @@ describe "Client", ->
       catch _err
         error = _err
       return error
+
+    it "returns promise and resolves it", ->
+      promise = client.push(exception)
+      onResolved = sinon.spy()
+      promise.then(onResolved)
+      expect(onResolved).to.have.been.called
 
     describe "with error", ->
       it "processor is called", ->
