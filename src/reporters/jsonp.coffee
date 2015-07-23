@@ -10,7 +10,6 @@ report = (notice, opts, promise) ->
   global[cbName] = (resp) ->
     notice.id = resp.id
     promise.resolve(notice)
-    console?.debug?("airbrake-js: error #%s was reported: %s", resp.id, resp.url)
     try
       delete global[cbName]
     catch _ # IE

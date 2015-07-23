@@ -1,5 +1,5 @@
 var AirbrakeClient = require('airbrake-js'),
-    instrumentJquery = require('airbrake-js/lib/instrumentation/jquery.js');
+    instrumentJQuery = require('airbrake-js/lib/instrumentation/jquery.js');
 
 var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
 if (window.jQuery) {
@@ -9,5 +9,8 @@ if (window.jQuery) {
 try {
   throw new Error('hello from airbrake-js');
 } catch (err) {
-  airbrake.push(err);
+  promise = airbrake.push(err);
+  promise.then(function(notice) {
+    console.log("notice id", notice.id);
+  });
 }
