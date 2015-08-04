@@ -10,11 +10,6 @@ class Client
 
     @_host = 'https://api.airbrake.io'
 
-    @_context = {}
-    @_params = {}
-    @_env = {}
-    @_session = {}
-
     @_processor = null
     @_reporters = []
     @_filters = []
@@ -40,20 +35,41 @@ class Client
   setHost: (host) ->
     @_host = host
 
+  # Deprecated. Use addFilter.
   addContext: (context) ->
-    merge(@_context, context)
+    console?.warn?('airbrake: addContext is deprecated, please use addFilter')
+    @addFilter (notice) ->
+      notice.context = merge({}, context, notice.context)
+      return notice
 
+  # Deprecated. Use addFilter.
   setEnvironmentName: (envName) ->
-    @_context.environment = envName
+    console?.warn?('airbrake: setEnvironmentName is deprecated, please use addFilter')
+    @addFilter (notice) ->
+      if not notice.context.environment?
+        notice.context.environment = envName
+      return notice
 
+  # Deprecated. Use addFilter.
   addParams: (params) ->
-    merge(@_params, params)
+    console?.warn?('airbrake: addParams is deprecated, please use addFilter')
+    @addFilter (notice) ->
+      notice.params = merge({}, params, notice.params)
+      return notice
 
+  # Deprecated. Use addFilter.
   addEnvironment: (env) ->
-    merge(@_env, env)
+    console?.warn?('airbrake: addEnvironment is deprecated, please use addFilter')
+    @addFilter (notice) ->
+      notice.environment = merge({}, env, notice.environment)
+      return notice
 
+  # Deprecated. Use addFilter.
   addSession: (session) ->
-    merge(@_session, session)
+    console?.warn?('airbrake: addSession is deprecated, please use addFilter')
+    @addFilter (notice) ->
+      notice.session = merge({}, session, notice.session)
+      return notice
 
   addReporter: (reporter) ->
     @_reporters.push(reporter)
@@ -61,7 +77,7 @@ class Client
   addFilter: (filter) ->
     @_filters.push(filter)
 
-  push: (err) ->
+  notify: (err) ->
     defContext = {
       language: 'JavaScript',
       sourceMapEnabled: true
@@ -80,14 +96,20 @@ class Client
           version: '<%= pkg.version %>'
           url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
-        context: merge(defContext, @_context, err.context)
-        params: merge({}, @_params, err.params)
-        environment: merge({}, @_env, err.environment)
-        session: merge({}, @_session, err.session)
+        context: merge(defContext, err.context)
+        params: err.params or {}
+        environment: err.environment or {}
+        session: err.session or {}
 
       for filterFn in @_filters
-        if not filterFn(notice)
+        n = filterFn(notice)
+        if n == null or n == false
           return
+        # TODO: remove this check in new major version.
+        if n.notifier? and n.errors? # Check if this is a notice.
+          notice = n
+        else
+          console?.warn?('airbrake: filter must return notice or null to ignore the notice')
 
       opts = {projectId: @_projectId, projectKey: @_projectKey, host: @_host}
       for reporterFn in @_reporters
@@ -97,6 +119,10 @@ class Client
 
     return promise
 
+  # Deprecated. Use notify instead.
+  push: (err) ->
+    console?.warn?('airbrake: push is deprecated, please use notify')
+    @notify(err)
 
   _wrapArguments: (args) ->
     for arg, i in args
@@ -116,7 +142,7 @@ class Client
         return fn.apply(this, args)
       catch exc
         args = Array.prototype.slice.call(arguments)
-        self.push({error: exc, params: {arguments: args}})
+        self.notify({error: exc, params: {arguments: args}})
         return null
 
     for prop of fn
