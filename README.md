@@ -38,7 +38,7 @@ The simplest method is to report errors directly:
       // This will throw if the document has no head tag
       document.head.insertBefore(document.createElement("style"));
     } catch(err) {
-      airbrake.push(err);
+      airbrake.notify(err);
       throw err;
     }
 
@@ -55,37 +55,64 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 ## Advanced Usage
 
-### Default Annotations
+### Notice Annotations
 
-It's possible to annotate error notices with all sorts of useful information. Below, the various top-level interface methods are listed, along with their effects.
-
-* `airbrake.setEnvironmentName(string)` sets the environment name, e.g. production or staging.
-* `airbrake.addEnvironment(object)` adds environment information reported alongside all errors.
-* `airbrake.addParams(object)` adds params information reported alongside all errors.
-* `airbrake.addSession(object)` adds session information reported alongside all errors.
-* `airbrake.addContext(object)` adds context information reported alongside all errors. This hash is reserved for notifier and Airbrake backend will ignore unknown keys.
-
-Additionally, much of this information can be added to captured errors at the time they're captured by supplying it in the object being reported.
+It's possible to annotate error notices with all sorts of useful information at the time they're captured by supplying it in the object being reported.
 
     try {
       startApp();
     } catch (err) {
-      airbrake.push({
+      airbrake.notify({
         error:       err,
-        environment: { env1: 'value1' },
-        params:      { param1: 'param1' },
-        session:     { param2: 'param2' },
-        context:     { component: 'boostrap' }
+        context:     { component: 'bootstrap' }
+        environment: { env1: 'value' },
+        params:      { param1: 'value' },
+        session:     { session1: 'value' },
       });
       throw err;
     }
+
+### Filtering errors
+
+There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
+
+The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addFilter`.
+
+`addFilter` accepts the entire [error notice](https://airbrake.io/docs/#create-notice-v3) to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `session` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
+
+The return value of the filter function determines whether or not the error notice will be submitted.
+  * If null value is returned, the notice is ignored.
+  * Otherwise returned notice will be submitted.
+
+An error notice must pass all provided filters to be submitted.
+
+In the following example all errors triggered by admins will be ignored:
+
+```js
+airbrake.addFilter(function(notice) {
+  if (notice.sessions.admin) {
+    // Ignore errors from admin sessions.
+    return null;
+  }
+  return notice;
+});
+```
+
+Filters can be also used to modify notice payload, e.g. to set environment and application version:
+
+```js
+airbrake.addFilter(function(notice) {
+  notice.context.environment = 'production';
+  notice.context.version = '1.2.3';
+});
+```
 
 ### Error object
 
 Instead of exception you can pass error object constructed manually. For example, `window.onerror` handler can look like:
 
     window.onerror = function(message, file, line) {
-      airbrake.push({error: {message: message, fileName: file, lineNumber: line}});
+      airbrake.notify({error: {message: message, fileName: file, lineNumber: line}});
     }
 
 ### Source map
@@ -95,27 +122,6 @@ In order to enable source map support you have to specify path to the source map
     //# sourceMappingURL=airbrake.min.map
 
 *Please note* that Airbrake backend downloads source map file in order to process backtrace. This means that source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
-
-### Filtering errors
-
-There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
-
-The Airbrake notifier makes it simple to ignore this chaff while still processing legitimate errors. Add filters to the notifier by providing filter functions to `addFilter`.
-
-`addFilter` accepts the entire error notice to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `session` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
-
-The return value of the filter function determines whether or not the error notice will be submitted.
-  * If a falsey value is returned, the notice is suppressed.
-  * If a truthy value is returned, the notice may be admissible for submission.
-
-An error notice must pass all provided filters to be submitted.
-
-    // Here we suppress the notice if the top-level `session` key
-    // indicates the user is logged in as an admin
-    airbrake.addFilter(function(notice) {
-      // Suppress reports from admin sessions
-      return !notice.session.admin;
-    });
 
 ### Custom reporters
 
