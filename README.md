@@ -30,7 +30,7 @@ We also include full source code with the package, so you can use [Browserify](e
 
 First you need to initialize notifier with project id and API key taken from [Airbrake.io](https://airbrake.io):
 
-    var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
+    var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
 
 The simplest method is to report errors directly:
 
