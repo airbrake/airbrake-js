@@ -17,10 +17,6 @@ Client = (function() {
     this._projectId = opts.projectId || 0;
     this._projectKey = opts.projectKey || '';
     this._host = 'https://api.airbrake.io';
-    this._context = {};
-    this._params = {};
-    this._env = {};
-    this._session = {};
     this._processor = null;
     this._reporters = [];
     this._filters = [];
@@ -51,23 +47,65 @@ Client = (function() {
   };
 
   Client.prototype.addContext = function(context) {
-    return merge(this._context, context);
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: addContext is deprecated, please use addFilter');
+      }
+    }
+    return this.addFilter(function(notice) {
+      notice.context = merge({}, context, notice.context);
+      return notice;
+    });
   };
 
   Client.prototype.setEnvironmentName = function(envName) {
-    return this._context.environment = envName;
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: setEnvironmentName is deprecated, please use addFilter');
+      }
+    }
+    return this.addFilter(function(notice) {
+      if (notice.context.environment == null) {
+        notice.context.environment = envName;
+      }
+      return notice;
+    });
   };
 
   Client.prototype.addParams = function(params) {
-    return merge(this._params, params);
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: addParams is deprecated, please use addFilter');
+      }
+    }
+    return this.addFilter(function(notice) {
+      notice.params = merge({}, params, notice.params);
+      return notice;
+    });
   };
 
   Client.prototype.addEnvironment = function(env) {
-    return merge(this._env, env);
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: addEnvironment is deprecated, please use addFilter');
+      }
+    }
+    return this.addFilter(function(notice) {
+      notice.environment = merge({}, env, notice.environment);
+      return notice;
+    });
   };
 
   Client.prototype.addSession = function(session) {
-    return merge(this._session, session);
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: addSession is deprecated, please use addFilter');
+      }
+    }
+    return this.addFilter(function(notice) {
+      notice.session = merge({}, session, notice.session);
+      return notice;
+    });
   };
 
   Client.prototype.addReporter = function(reporter) {
@@ -78,7 +116,7 @@ Client = (function() {
     return this._filters.push(filter);
   };
 
-  Client.prototype.push = function(err) {
+  Client.prototype.notify = function(err) {
     var defContext, promise, ref;
     defContext = {
       language: 'JavaScript',
@@ -93,24 +131,34 @@ Client = (function() {
     promise = new Promise();
     this._processor(err.error || err, (function(_this) {
       return function(processorName, errInfo) {
-        var filterFn, j, k, len, len1, notice, opts, ref1, ref2, reporterFn;
+        var filterFn, j, k, len, len1, n, notice, opts, ref1, ref2, reporterFn;
         notice = {
           notifier: {
             name: 'airbrake-js-' + processorName,
-            version: '0.5.1',
+            version: '0.5.2',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
-          context: merge(defContext, _this._context, err.context),
-          params: merge({}, _this._params, err.params),
-          environment: merge({}, _this._env, err.environment),
-          session: merge({}, _this._session, err.session)
+          context: merge(defContext, err.context),
+          params: err.params || {},
+          environment: err.environment || {},
+          session: err.session || {}
         };
         ref1 = _this._filters;
         for (j = 0, len = ref1.length; j < len; j++) {
           filterFn = ref1[j];
-          if (!filterFn(notice)) {
+          n = filterFn(notice);
+          if (n === null || n === false) {
             return;
+          }
+          if ((n.notifier != null) && (n.errors != null)) {
+            notice = n;
+          } else {
+            if (typeof console !== "undefined" && console !== null) {
+              if (typeof console.warn === "function") {
+                console.warn('airbrake: filter must return notice or null to ignore the notice');
+              }
+            }
           }
         }
         opts = {
@@ -126,6 +174,15 @@ Client = (function() {
       };
     })(this));
     return promise;
+  };
+
+  Client.prototype.push = function(err) {
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn('airbrake: push is deprecated, please use notify');
+      }
+    }
+    return this.notify(err);
   };
 
   Client.prototype._wrapArguments = function(args) {
@@ -153,7 +210,7 @@ Client = (function() {
       } catch (_error) {
         exc = _error;
         args = Array.prototype.slice.call(arguments);
-        self.push({
+        self.notify({
           error: exc,
           params: {
             "arguments": args
