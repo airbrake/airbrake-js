@@ -104,6 +104,7 @@ Filters can be also used to modify notice payload, e.g. to set environment and a
 airbrake.addFilter(function(notice) {
   notice.context.environment = 'production';
   notice.context.version = '1.2.3';
+  return notice;
 });
 ```
 
