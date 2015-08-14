@@ -187,8 +187,8 @@ Airbrake is maintained and funded by [airbrake.io](http://airbrake.io)
 
 Thank you to all [the contributors](https://github.com/airbrake/airbrake-js/contributors).
 
-The names and logos for Airbrake are trademarks of Rackspace Hosting Inc.
+The names and logos for Airbrake are trademarks of Airbrake Technologies Inc.
 
 # License
 
-Airbrake is Copyright © 2008-2013 Rackspace Hosting Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
+Airbrake is Copyright © 2008-2015 Airbrake Technologies Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
