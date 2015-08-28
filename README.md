@@ -157,7 +157,7 @@ mod.factory('$exceptionHandler', function ($log, config) {
     $log.error(exception);
     exception.params = {cause: cause};
     airbrake.notify(exception);
-  });
+  };
 });
 ```
 
