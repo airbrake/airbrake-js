@@ -86,6 +86,8 @@ class Client
       defContext.userAgent = global.navigator.userAgent
     if global.location
       defContext.url = String(global.location)
+      # Set root directory to group errors on different subdomains together.
+      defContext.rootDirectory = global.location.protocol + '//' + global.location.host
 
     promise = new Promise()
 
