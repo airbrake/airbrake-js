@@ -256,6 +256,25 @@ describe "Client", ->
             session2: "value2"
             session3: "notify_value3"
 
+    describe 'with location', ->
+      notice = null
+
+      beforeEach ->
+        global.location = {
+          protocol: 'http:',
+          host: 'subdomain.domain.com',
+          toString: -> 'http://subdomain.domain.com/path',
+        }
+        client.notify(exception)
+        expect(reporter).to.have.been.called
+        notice = reporter.lastCall.args[0]
+
+      it 'reports context.url', ->
+        expect(notice.context.url).to.equal('http://subdomain.domain.com/path')
+
+      it 'reports context.rootDirectory', ->
+        expect(notice.context.rootDirectory).to.equal('http://subdomain.domain.com')
+
   describe "custom reporter", ->
     it "is called on error", ->
       custom_reporter = sinon.spy()
