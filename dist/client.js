@@ -127,6 +127,7 @@ Client = (function() {
     }
     if (global.location) {
       defContext.url = String(global.location);
+      defContext.rootDirectory = global.location.protocol + '//' + global.location.host;
     }
     promise = new Promise();
     this._processor(err.error || err, (function(_this) {
@@ -135,7 +136,7 @@ Client = (function() {
         notice = {
           notifier: {
             name: 'airbrake-js-' + processorName,
-            version: '0.5.2',
+            version: '0.5.3',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
