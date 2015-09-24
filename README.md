@@ -155,7 +155,7 @@ mod.factory('$exceptionHandler', function ($log, config) {
 
   return function (exception, cause) {
     $log.error(exception);
-    exception.params = {cause: cause};
+    exception.params = {angular_cause: cause};
     airbrake.notify(exception);
   };
 });
