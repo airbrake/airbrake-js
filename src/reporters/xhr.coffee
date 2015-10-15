@@ -7,6 +7,8 @@ report = (notice, opts, promise) ->
 
   req = new global.XMLHttpRequest()
   req.open('POST', url, true)
+  if opts.contentType
+    req.setRequestHeader 'Content-Type', opts.contentType
   req.send(payload)
   req.onreadystatechange = ->
     if req.readyState == 4 and req.status == 200

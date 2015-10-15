@@ -731,6 +731,9 @@ report = function(notice, opts, promise) {
   payload = jsonifyNotice(notice);
   req = new global.XMLHttpRequest();
   req.open('POST', url, true);
+  if (opts.contentType) {
+    req.setRequestHeader('Content-Type', opts.contentType);
+  }
   req.send(payload);
   return req.onreadystatechange = function() {
     var resp;
