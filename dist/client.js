@@ -16,10 +16,11 @@ Client = (function() {
     }
     this._projectId = opts.projectId || 0;
     this._projectKey = opts.projectKey || '';
-    this._host = 'https://api.airbrake.io';
+    this._host = opts.host || 'https://api.airbrake.io';
     this._processor = null;
     this._reporters = [];
     this._filters = [];
+    this._contentType = opts.contentType;
     if (opts.processor !== void 0) {
       this._processor = opts.processor;
     } else {
@@ -44,6 +45,10 @@ Client = (function() {
 
   Client.prototype.setHost = function(host) {
     return this._host = host;
+  };
+
+  Client.prototype.setContentType = function(contentType) {
+    return this._contentType = contentType;
   };
 
   Client.prototype.addContext = function(context) {
@@ -165,7 +170,8 @@ Client = (function() {
         opts = {
           projectId: _this._projectId,
           projectKey: _this._projectKey,
-          host: _this._host
+          host: _this._host,
+          contentType: _this._contentType
         };
         ref2 = _this._reporters;
         for (k = 0, len1 = ref2.length; k < len1; k++) {
