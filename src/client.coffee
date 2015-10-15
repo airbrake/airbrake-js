@@ -13,6 +13,7 @@ class Client
     @_processor = null
     @_reporters = []
     @_filters = []
+    @_contentType = opts.contentType
 
     if opts.processor != undefined
       @_processor = opts.processor
@@ -34,6 +35,9 @@ class Client
 
   setHost: (host) ->
     @_host = host
+
+  setContentType: (contentType) ->
+    @_contentType = contentType
 
   # Deprecated. Use addFilter.
   addContext: (context) ->
@@ -113,7 +117,7 @@ class Client
         else
           console?.warn?('airbrake: filter must return notice or null to ignore the notice')
 
-      opts = {projectId: @_projectId, projectKey: @_projectKey, host: @_host}
+      opts = {projectId: @_projectId, projectKey: @_projectKey, host: @_host, contentType: @_contentType}
       for reporterFn in @_reporters
         reporterFn(notice, opts, promise)
 
