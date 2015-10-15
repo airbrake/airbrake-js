@@ -8,7 +8,7 @@ class Client
     @_projectId = opts.projectId || 0
     @_projectKey = opts.projectKey || ''
 
-    @_host = 'https://api.airbrake.io'
+    @_host = opts.host || 'https://api.airbrake.io'
 
     @_processor = null
     @_reporters = []
