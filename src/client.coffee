@@ -28,6 +28,8 @@ class Client
         reporter = require('./reporters/jsonp')
       @addReporter(reporter)
 
+    @addFilter(require('./internal/default_filter'))
+
   setProject: (id, key) ->
     @_projectId = id
     @_projectKey = key

@@ -69,14 +69,14 @@ describe "Client", ->
 
   beforeEach ->
     processor = sinon.spy (data, cb) ->
-      cb(data)
+      cb('test-processor', data)
     reporter = sinon.spy (_, __, promise) ->
       promise.resolve({id: 1})
     client = new Client(processor: processor, reporter: reporter)
 
   describe 'filter', ->
-    it 'returns false to ignore notice', ->
-      filter = sinon.spy (notice) -> false
+    it 'returns null to ignore notice', ->
+      filter = sinon.spy (notice) -> null
       client.addFilter(filter)
 
       client.notify({})
@@ -103,6 +103,12 @@ describe "Client", ->
       expect(filter).to.have.been.called
       notice = reporter.lastCall.args[0]
       expect(notice.context.environment).to.equal('production')
+
+  describe '"Script error" message', ->
+    it 'is filtered', ->
+      client.notify(error: {message: 'Script error'})
+
+      expect(reporter).to.not.have.been.called
 
   describe "notify", ->
     exception = do ->
