@@ -23,9 +23,9 @@ class Client
       @addReporter(opts.reporter)
     else
       if 'withCredentials' of new global.XMLHttpRequest()
-        reporter = require('./reporters/xhr')
+        reporter = 'compat'
       else
-        reporter = require('./reporters/jsonp')
+        reporter = 'jsonp'
       @addReporter(reporter)
 
   setProject: (id, key) ->
@@ -72,6 +72,8 @@ class Client
       return notice
 
   addReporter: (reporter) ->
+    if reporter in ['compat', 'xhr', 'jsonp']
+      reporter = require("./reporters/#{reporter}")
     @_reporters.push(reporter)
 
   addFilter: (filter) ->

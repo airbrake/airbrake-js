@@ -1,7 +1,7 @@
 expect = require('chai').expect
 sinon = require('sinon')
 
-reporter = require('../../../src/reporters/xhr')
+reporter = require('../../../src/reporters/compat')
 
 
 MockXhr = ->
@@ -33,7 +33,7 @@ describe 'XhrReporter', ->
       })
       expect(spy).to.have.been.calledWith(
         'POST',
-        'https://api.airbrake.io/api/v3/projects/[project_id]/notices?key=[project_key]',
+        'https://api.airbrake.io/api/v3/projects/[project_id]/create-notice?key=[project_key]',
         true,
       )
 
@@ -46,6 +46,6 @@ describe 'XhrReporter', ->
       })
       expect(spy).to.have.been.calledWith(
         'POST',
-        'https://custom.domain.com/api/v3/projects/[project_id]/notices?key=[project_key]',
+        'https://custom.domain.com/api/v3/projects/[project_id]/create-notice?key=[project_key]',
         true,
       )

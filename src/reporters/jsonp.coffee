@@ -6,7 +6,7 @@ cbCount = 0
 report = (notice, opts, promise) ->
   cbCount++
 
-  cbName = "airbrakeCb" + String(cbCount)
+  cbName = 'airbrakeCb' + String(cbCount)
   global[cbName] = (resp) ->
     notice.id = resp.id
     promise.resolve(notice)

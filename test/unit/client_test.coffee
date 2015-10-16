@@ -7,53 +7,6 @@ chai.use(sinon_chai)
 Client = require("../../src/client")
 
 
-testWrap = (client) ->
-  describe "wrap", ->
-    it "does not invoke function immediately", ->
-      fn = sinon.spy()
-      client.wrap(fn)
-      expect(fn).not.to.have.been.called
-
-    it "creates wrapper that invokes function with passed args", ->
-      fn = sinon.spy()
-      wrapper = client.wrap(fn)
-      wrapper("hello", "world")
-      expect(fn).to.have.been.called
-      expect(fn.lastCall.args).to.deep.equal(["hello", "world"])
-
-    it "sets __airbrake__ and __inner__ properties", ->
-      fn = sinon.spy()
-      wrapper = client.wrap(fn)
-      expect(wrapper.__airbrake__).to.equal(true)
-      expect(wrapper.__inner__).to.equal(fn)
-
-    it "copies function properties", ->
-      fn = sinon.spy()
-      fn.prop = "hello"
-      wrapper = client.wrap(fn)
-      expect(wrapper.prop).to.equal("hello")
-
-    it "reports throwed exception", ->
-      client.notify = sinon.spy()
-      exc = new Error("test")
-      fn = ->
-        throw exc
-      wrapper = client.wrap(fn)
-      wrapper("hello", "world")
-      expect(client.notify).to.have.been.called
-      expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
-
-    it "wraps arguments", ->
-      fn = sinon.spy()
-      wrapper = client.wrap(fn)
-      arg1 = ->
-      wrapper(arg1)
-      expect(fn).to.have.been.called
-      arg1Wrapper = fn.lastCall.args[0]
-      expect(arg1Wrapper.__airbrake__).to.equal(true)
-      expect(arg1Wrapper.__inner__).to.equal(arg1)
-
-
 describe "Client", ->
   clock = undefined
 
@@ -275,6 +228,22 @@ describe "Client", ->
       it 'reports context.rootDirectory', ->
         expect(notice.context.rootDirectory).to.equal('http://subdomain.domain.com')
 
+  describe 'addReporter', ->
+    it 'supports xhr reporter', ->
+      client.addReporter('xhr')
+      reporter = client._reporters.pop()
+      expect(reporter).to.equal(require('../../src/reporters/xhr'))
+
+    it 'supports compat reporter', ->
+      client.addReporter('compat')
+      reporter = client._reporters.pop()
+      expect(reporter).to.equal(require('../../src/reporters/compat'))
+
+    it 'supports jsonp reporter', ->
+      client.addReporter('jsonp')
+      reporter = client._reporters.pop()
+      expect(reporter).to.equal(require('../../src/reporters/jsonp'))
+
   describe "custom reporter", ->
     it "is called on error", ->
       custom_reporter = sinon.spy()
@@ -282,4 +251,47 @@ describe "Client", ->
       client.notify(error: {})
       expect(custom_reporter).to.have.been.called
 
-  testWrap(new Client(processor: null, reporter: null))
+  describe "wrap", ->
+    it "does not invoke function immediately", ->
+      fn = sinon.spy()
+      client.wrap(fn)
+      expect(fn).not.to.have.been.called
+
+    it "creates wrapper that invokes function with passed args", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      wrapper("hello", "world")
+      expect(fn).to.have.been.called
+      expect(fn.lastCall.args).to.deep.equal(["hello", "world"])
+
+    it "sets __airbrake__ and __inner__ properties", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      expect(wrapper.__airbrake__).to.equal(true)
+      expect(wrapper.__inner__).to.equal(fn)
+
+    it "copies function properties", ->
+      fn = sinon.spy()
+      fn.prop = "hello"
+      wrapper = client.wrap(fn)
+      expect(wrapper.prop).to.equal("hello")
+
+    it "reports throwed exception", ->
+      client.notify = sinon.spy()
+      exc = new Error("test")
+      fn = ->
+        throw exc
+      wrapper = client.wrap(fn)
+      wrapper("hello", "world")
+      expect(client.notify).to.have.been.called
+      expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
+
+    it "wraps arguments", ->
+      fn = sinon.spy()
+      wrapper = client.wrap(fn)
+      arg1 = ->
+      wrapper(arg1)
+      expect(fn).to.have.been.called
+      arg1Wrapper = fn.lastCall.args[0]
+      expect(arg1Wrapper.__airbrake__).to.equal(true)
+      expect(arg1Wrapper.__inner__).to.equal(arg1)
