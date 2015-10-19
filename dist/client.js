@@ -16,7 +16,7 @@ Client = (function() {
     }
     this._projectId = opts.projectId || 0;
     this._projectKey = opts.projectKey || '';
-    this._host = 'https://api.airbrake.io';
+    this._host = opts.host || 'https://api.airbrake.io';
     this._processor = null;
     this._reporters = [];
     this._filters = [];
@@ -29,12 +29,13 @@ Client = (function() {
       this.addReporter(opts.reporter);
     } else {
       if ('withCredentials' in new global.XMLHttpRequest()) {
-        reporter = require('./reporters/xhr');
+        reporter = 'compat';
       } else {
-        reporter = require('./reporters/jsonp');
+        reporter = 'jsonp';
       }
       this.addReporter(reporter);
     }
+    this.addFilter(require('./internal/default_filter'));
   }
 
   Client.prototype.setProject = function(id, key) {
@@ -109,6 +110,16 @@ Client = (function() {
   };
 
   Client.prototype.addReporter = function(reporter) {
+    switch (reporter) {
+      case 'compat':
+        reporter = require('./reporters/compat');
+        break;
+      case 'xhr':
+        reporter = require('./reporters/xhr');
+        break;
+      case 'jsonp':
+        reporter = require('./reporters/jsonp');
+    }
     return this._reporters.push(reporter);
   };
 
@@ -136,7 +147,7 @@ Client = (function() {
         notice = {
           notifier: {
             name: 'airbrake-js-' + processorName,
-            version: '0.5.3',
+            version: '0.5.4',
             url: 'https://github.com/airbrake/airbrake-js'
           },
           errors: [errInfo],
@@ -239,7 +250,7 @@ module.exports = Client;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./internal/compat":2,"./internal/merge":4,"./internal/promise":5,"./processors/stack":7,"./reporters/jsonp":8,"./reporters/xhr":9}],2:[function(require,module,exports){
+},{"./internal/compat":2,"./internal/default_filter":3,"./internal/merge":5,"./internal/promise":6,"./processors/stack":8,"./reporters/compat":9,"./reporters/jsonp":10,"./reporters/xhr":11}],2:[function(require,module,exports){
 var base;
 
 if ((base = Array.prototype).indexOf == null) {
@@ -258,6 +269,25 @@ if ((base = Array.prototype).indexOf == null) {
 
 
 },{}],3:[function(require,module,exports){
+var IGNORED_MESSAGES, filter,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+IGNORED_MESSAGES = ['Script error', 'Script error.'];
+
+filter = function(notice) {
+  var msg;
+  msg = notice.errors[0].message;
+  if (indexOf.call(IGNORED_MESSAGES, msg) >= 0) {
+    return null;
+  }
+  return notice;
+};
+
+module.exports = filter;
+
+
+
+},{}],4:[function(require,module,exports){
 var jsonifyNotice, truncate, truncateObj;
 
 truncate = require('./truncate');
@@ -306,7 +336,7 @@ module.exports = jsonifyNotice;
 
 
 
-},{"./truncate":6}],4:[function(require,module,exports){
+},{"./truncate":7}],5:[function(require,module,exports){
 var merge;
 
 merge = function() {
@@ -328,7 +358,7 @@ module.exports = merge;
 
 
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Promise;
 
 Promise = (function() {
@@ -405,7 +435,7 @@ module.exports = Promise;
 
 
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var getAttr, truncate;
 
 getAttr = function(obj, attr) {
@@ -515,7 +545,7 @@ module.exports = truncate;
 
 
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var processor, rules, typeMessageRe;
 
 rules = [
@@ -677,7 +707,35 @@ module.exports = processor;
 
 
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+(function (global){
+var jsonifyNotice, report;
+
+jsonifyNotice = require('../internal/jsonify_notice');
+
+report = function(notice, opts, promise) {
+  var payload, req, url;
+  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
+  payload = jsonifyNotice(notice);
+  req = new global.XMLHttpRequest();
+  req.open('POST', url, true);
+  req.send(payload);
+  return req.onreadystatechange = function() {
+    var resp;
+    if (req.readyState === 4 && req.status === 200) {
+      resp = JSON.parse(req.responseText);
+      notice.id = resp.id;
+      return promise.resolve(notice);
+    }
+  };
+};
+
+module.exports = report;
+
+
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../internal/jsonify_notice":4}],10:[function(require,module,exports){
 (function (global){
 var cbCount, jsonifyNotice, report;
 
@@ -688,7 +746,7 @@ cbCount = 0;
 report = function(notice, opts, promise) {
   var cbName, document, head, payload, removeScript, script, url;
   cbCount++;
-  cbName = "airbrakeCb" + String(cbCount);
+  cbName = 'airbrakeCb' + String(cbCount);
   global[cbName] = function(resp) {
     var _;
     notice.id = resp.id;
@@ -719,7 +777,7 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":3}],9:[function(require,module,exports){
+},{"../internal/jsonify_notice":4}],11:[function(require,module,exports){
 (function (global){
 var jsonifyNotice, report;
 
@@ -727,14 +785,15 @@ jsonifyNotice = require('../internal/jsonify_notice');
 
 report = function(notice, opts, promise) {
   var payload, req, url;
-  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
+  url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
   payload = jsonifyNotice(notice);
   req = new global.XMLHttpRequest();
   req.open('POST', url, true);
+  req.setRequestHeader('Content-Type', 'application/json');
   req.send(payload);
   return req.onreadystatechange = function() {
     var resp;
-    if (req.readyState === 4 && req.status === 200) {
+    if (req.readyState === 4 && req.status === 201) {
       resp = JSON.parse(req.responseText);
       notice.id = resp.id;
       return promise.resolve(notice);
@@ -747,5 +806,5 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":3}]},{},[1])(1)
+},{"../internal/jsonify_notice":4}]},{},[1])(1)
 });

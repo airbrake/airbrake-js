@@ -74,8 +74,13 @@ class Client
       return notice
 
   addReporter: (reporter) ->
-    if reporter in ['compat', 'xhr', 'jsonp']
-      reporter = require("./reporters/#{reporter}")
+    switch reporter
+      when 'compat'
+        reporter = require('./reporters/compat')
+      when 'xhr'
+        reporter = require('./reporters/xhr')
+      when 'jsonp'
+        reporter = require('./reporters/jsonp')
     @_reporters.push(reporter)
 
   addFilter: (filter) ->
