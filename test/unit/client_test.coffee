@@ -27,6 +27,10 @@ describe "Client", ->
       promise.resolve({id: 1})
     client = new Client(processor: processor, reporter: reporter)
 
+  describe 'window.onerror', ->
+    it 'is setup', ->
+      expect(global.onerror).to.equal(client.onerror)
+
   describe 'filter', ->
     it 'returns null to ignore notice', ->
       filter = sinon.spy (notice) -> null

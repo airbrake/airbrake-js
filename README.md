@@ -132,25 +132,11 @@ In this example, reported errors are also logged to the console.
 
 ### window.onerror
 
-In order to report uncatched errors you can setup [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler:
+By default notifier setups [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using following code:
 
 ```js
 var airbrake = new airbrakeJs.Client(...);
-
-window.onerror = function(message, file, line, column, error) {
-  if (error) { // Modern browsers.
-    airbrake.notify(error);
-  } else {
-    airbrake.notify({
-      error: {
-        message: message,
-        fileName: file,
-        lineNumber: line,
-        columnNumber: column || 0
-      }
-    });
-  }
-}
+window.onerror = airbrake.onerror;
 ```
 
 ### Angular

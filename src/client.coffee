@@ -3,6 +3,21 @@ merge = require('./internal/merge')
 Promise = require('./internal/promise')
 
 
+# Creates window.onerror handler for notifier. See
+# https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
+makeOnErrorHandler = (notifier) ->
+  (message, file, line, column, error) ->
+    if error
+      notifier.notify(error)
+    else
+      notifier.notify({error: {
+        message: message,
+        fileName: file,
+        lineNumber: line,
+        columnNumber: column or 0,
+      }})
+
+
 class Client
   constructor: (opts={}) ->
     @_projectId = opts.projectId || 0
@@ -29,6 +44,10 @@ class Client
       @addReporter(reporter)
 
     @addFilter(require('./internal/default_filter'))
+
+    @onerror = makeOnErrorHandler(this)
+    if not global.onerror?
+      global.onerror = @onerror
 
   setProject: (id, key) ->
     @_projectId = id
