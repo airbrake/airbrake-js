@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "wiredep": "^3.0.0-beta"
+  }
+}
