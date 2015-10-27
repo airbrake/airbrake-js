@@ -108,14 +108,6 @@ airbrake.addFilter(function(notice) {
 });
 ```
 
-### Error object
-
-Instead of exception you can pass error object constructed manually. For example, `window.onerror` handler can look like:
-
-    window.onerror = function(message, file, line) {
-      airbrake.notify({error: {message: message, fileName: file, lineNumber: line}});
-    }
-
 ### Source map
 
 In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has following line:
@@ -138,6 +130,29 @@ In this example, reported errors are also logged to the console.
 
 ## Integration
 
+### window.onerror
+
+In order to report uncatched errors you can setup [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler:
+
+```js
+var airbrake = new airbrakeJs.Client(...);
+
+window.onerror = function(message, file, line, column, error) {
+  if (error) { // Modern browsers.
+    airbrake.notify(error);
+  } else {
+    airbrake.notify({
+      error: {
+        message: message,
+        fileName: file,
+        lineNumber: line,
+        columnNumber: column || 0
+      }
+    });
+  }
+}
+```
+
 ### Angular
 
 Integration with Angular is as simple as adding [$exceptionHandler](https://docs.angularjs.org/api/ng/service/$exceptionHandler):
@@ -155,11 +170,14 @@ mod.factory('$exceptionHandler', function ($log, config) {
 
   return function (exception, cause) {
     $log.error(exception);
-    exception.params = {angular_cause: cause};
-    airbrake.notify(exception);
+    airbrake.notify({error: exception, params: {angular_cause: cause}});
   };
 });
 ```
+
+## Script error
+
+See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
 
 ## Developing
 
