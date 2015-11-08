@@ -157,12 +157,8 @@ describe "Client", ->
               context3: "notify_value3"
 
           reported = reporter.lastCall.args[0]
-          expect(reported.context).to.deep.equal
-            language: "JavaScript"
-            sourceMapEnabled: true
-            context1: "notify_value1"
-            context2: "value2"
-            context3: "notify_value3"
+          expect(reported.context.context1).to.equal('notify_value1')
+          expect(reported.context.context3).to.equal('notify_value3')
 
         it "reports custom environment name", ->
           client.setEnvironmentName("env1")
@@ -172,10 +168,7 @@ describe "Client", ->
               environment: "notify_env1"
 
           reported = reporter.lastCall.args[0]
-          expect(reported.context).to.deep.equal
-            language: "JavaScript"
-            sourceMapEnabled: true
-            environment: "notify_env1"
+          expect(reported.context.environment).to.equal('notify_env1')
 
         it "reports custom environment", ->
           client.addEnvironment(env1: "value1", env2: "value2")

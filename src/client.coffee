@@ -107,7 +107,7 @@ class Client
 
   notify: (err) ->
     defContext = {
-      language: 'JavaScript',
+      language: 'JavaScript'
       sourceMapEnabled: true
     }
     if global.navigator?.userAgent
@@ -121,15 +121,16 @@ class Client
 
     @_processor err.error or err, (processorName, errInfo) =>
       notice =
-        notifier:
-          name: 'airbrake-js-' + processorName
-          version: '<%= pkg.version %>'
-          url: 'https://github.com/airbrake/airbrake-js'
         errors: [errInfo]
         context: merge(defContext, err.context)
         params: err.params or {}
         environment: err.environment or {}
         session: err.session or {}
+
+      notice.context.notifier =
+        name: 'airbrake-js-' + processorName
+        version: '<%= pkg.version %>'
+        url: 'https://github.com/airbrake/airbrake-js'
 
       for filterFn in @_filters
         n = filterFn(notice)
