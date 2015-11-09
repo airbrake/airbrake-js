@@ -8,13 +8,13 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 Using npm:
 
-```
+```sh
 npm install airbrake-js
 ```
 
 or using Bower:
 
-```
+```sh
 bower install airbrake-js-client
 ```
 
@@ -30,28 +30,34 @@ We also include full source code with the package, so you can use [Browserify](e
 
 First you need to initialize notifier with project id and API key taken from [Airbrake.io](https://airbrake.io):
 
-    var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
+```js
+var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
+```
 
 The simplest method is to report errors directly:
 
-    try {
-      // This will throw if the document has no head tag
-      document.head.insertBefore(document.createElement("style"));
-    } catch(err) {
-      airbrake.notify(err);
-      throw err;
-    }
+```js
+try {
+  // This will throw if the document has no head tag
+  document.head.insertBefore(document.createElement("style"));
+} catch(err) {
+  airbrake.notify(err);
+  throw err;
+}
+```
 
 Alternatively you can wrap any code which may throw errors using the client's `wrap` method:
 
-    var startApp = function() {
-      // This will throw if the document has no head tag.
-      document.head.insertBefore(document.createElement("style"));
-    }
-    startApp = airbrake.wrap(startApp);
+```js
+var startApp = function() {
+  // This will throw if the document has no head tag.
+  document.head.insertBefore(document.createElement("style"));
+}
+startApp = airbrake.wrap(startApp);
 
-    // Any exceptions thrown in startApp will be reported to Airbrake.
-    startApp();
+// Any exceptions thrown in startApp will be reported to Airbrake.
+startApp();
+```
 
 ## Advanced Usage
 
@@ -59,18 +65,20 @@ Alternatively you can wrap any code which may throw errors using the client's `w
 
 It's possible to annotate error notices with all sorts of useful information at the time they're captured by supplying it in the object being reported.
 
-    try {
-      startApp();
-    } catch (err) {
-      airbrake.notify({
-        error:       err,
-        context:     { component: 'bootstrap' }
-        environment: { env1: 'value' },
-        params:      { param1: 'value' },
-        session:     { session1: 'value' },
-      });
-      throw err;
-    }
+```js
+try {
+  startApp();
+} catch (err) {
+  airbrake.notify({
+    error:       err,
+    context:     { component: 'bootstrap' }
+    environment: { env1: 'value' },
+    params:      { param1: 'value' },
+    session:     { session1: 'value' },
+  });
+  throw err;
+}
+```
 
 ### Filtering errors
 
@@ -112,7 +120,9 @@ airbrake.addFilter(function(notice) {
 
 In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has following line:
 
-    //# sourceMappingURL=airbrake.min.map
+```js
+//# sourceMappingURL=airbrake.min.map
+```
 
 *Please note* that Airbrake backend downloads source map file in order to process backtrace. This means that source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
 
@@ -122,11 +132,13 @@ If you're interested in inspecting the information reported to Airbrake in your 
 
 In this example, reported errors are also logged to the console.
 
-    <script>
-      airbrake.addReporter(function(notice) {
-        console.log(notice);
-      });
-    </script>
+```html
+<script>
+  airbrake.addReporter(function(notice) {
+    console.log(notice);
+  });
+</script>
+```
 
 ## Integration
 
@@ -169,19 +181,19 @@ See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#No
 
 Install dependencies:
 
-```
+```sh
 npm install
 ```
 
 Run unit tests:
 
-```
+```sh
 grunt test
 ```
 
 Run integration tests:
 
-```
+```sh
 grunt karma
 ```
 
