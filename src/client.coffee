@@ -137,7 +137,7 @@ class Client
         if n == null or n == false
           return
         # TODO: remove this check in new major version.
-        if n.notifier? and n.errors? # Check if this is a notice.
+        if n.errors? # Check if this is a notice.
           notice = n
         else
           console?.warn?('airbrake: filter must return notice or null to ignore the notice')

@@ -53,6 +53,7 @@ describe "Client", ->
     it 'returns notice to change payload', ->
       filter = sinon.spy (notice) ->
         notice.context.environment = 'production'
+        return notice
       client.addFilter(filter)
 
       client.notify(error: {})
@@ -60,6 +61,19 @@ describe "Client", ->
       expect(filter).to.have.been.called
       notice = reporter.lastCall.args[0]
       expect(notice.context.environment).to.equal('production')
+
+    it 'returns new notice', ->
+      newNotice = {errors: []}
+      filter = sinon.spy (notice) ->
+        return newNotice
+      client.addFilter(filter)
+
+      client.notify(error: {})
+
+      expect(filter).to.have.been.called
+      notice = reporter.lastCall.args[0]
+      expect(notice).to.equal(newNotice)
+
 
   describe '"Script error" message', ->
     it 'is filtered', ->
