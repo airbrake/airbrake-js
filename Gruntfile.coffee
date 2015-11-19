@@ -48,6 +48,13 @@ module.exports = (grunt) ->
         src: ['src/instrumentation/jquery.coffee']
         dest: 'dist/instrumentation/jquery.js'
 
+    uglify:
+      client:
+        options:
+          sourceMap: true
+        files:
+          'dist/client.min.js': ['dist/client.js']
+
     watch:
       test_only:
         files: ['test/unit/**/*.coffee']
@@ -96,7 +103,7 @@ module.exports = (grunt) ->
 
   # Running the `serve` command starts up a webserver.
   grunt.registerTask('serve', ['connect'])
-  grunt.registerTask('build', ['coffee', 'browserify'])
+  grunt.registerTask('build', ['coffee', 'browserify', 'uglify'])
   grunt.registerTask('default', ['build'])
 
   # Push distribution libraries to CDN.

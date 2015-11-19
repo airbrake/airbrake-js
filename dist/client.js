@@ -166,16 +166,16 @@ Client = (function() {
       return function(processorName, errInfo) {
         var filterFn, j, k, len, len1, n, notice, opts, ref1, ref2, reporterFn;
         notice = {
-          notifier: {
-            name: 'airbrake-js-' + processorName,
-            version: '0.5.5',
-            url: 'https://github.com/airbrake/airbrake-js'
-          },
           errors: [errInfo],
           context: merge(defContext, err.context),
           params: err.params || {},
           environment: err.environment || {},
           session: err.session || {}
+        };
+        notice.context.notifier = {
+          name: 'airbrake-js-' + processorName,
+          version: '0.5.6',
+          url: 'https://github.com/airbrake/airbrake-js'
         };
         ref1 = _this._filters;
         for (j = 0, len = ref1.length; j < len; j++) {
@@ -184,7 +184,7 @@ Client = (function() {
           if (n === null || n === false) {
             return;
           }
-          if ((n.notifier != null) && (n.errors != null)) {
+          if (n.errors != null) {
             notice = n;
           } else {
             if (typeof console !== "undefined" && console !== null) {
