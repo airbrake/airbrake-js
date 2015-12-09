@@ -1,20 +1,6 @@
 module.exports = (grunt) ->
   pkgData = grunt.file.readJSON('package.json')
 
-  # Interpolates pkg variables into files during browserification.
-  addPackageVars = (file) ->
-    through = require('through')
-
-    write = (buf) ->
-      data += grunt.template.process(String(buf), {pkg: pkgData})
-
-    end = ->
-      @queue(data)
-      @queue(null)
-
-    data = ''
-    return through(write, end)
-
   grunt.initConfig
     pkg: pkgData
 
@@ -28,7 +14,7 @@ module.exports = (grunt) ->
 
     browserify:
       options:
-        transform: ['coffeeify', addPackageVars]
+        transform: ['coffeeify']
 
       client:
         options:
@@ -48,12 +34,25 @@ module.exports = (grunt) ->
         src: ['src/instrumentation/jquery.coffee']
         dest: 'dist/instrumentation/jquery.js'
 
+    concat:
+      options:
+        process: {pkg: pkgData}
+
+      lib:
+        src: ['lib/client.js']
+        dest: 'lib/client.js'
+
+      dist:
+        src: ['dist/client.js']
+        dest: 'dist/client.js'
+
     uglify:
+      options:
+        sourceMap: true
+
       client:
-        options:
-          sourceMap: true
-        files:
-          'dist/client.min.js': ['dist/client.js']
+        src: 'dist/client.js'
+        dest: 'dist/client.min.js'
 
     watch:
       test_only:
@@ -103,7 +102,7 @@ module.exports = (grunt) ->
 
   # Running the `serve` command starts up a webserver.
   grunt.registerTask('serve', ['connect'])
-  grunt.registerTask('build', ['coffee', 'browserify', 'uglify'])
+  grunt.registerTask('build', ['coffee', 'browserify', 'concat', 'uglify'])
   grunt.registerTask('default', ['build'])
 
   # Push distribution libraries to CDN.
