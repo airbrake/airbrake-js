@@ -174,7 +174,7 @@ Client = (function() {
         };
         notice.context.notifier = {
           name: 'airbrake-js-' + processorName,
-          version: '0.5.6',
+          version: '0.5.7',
           url: 'https://github.com/airbrake/airbrake-js'
         };
         ref1 = _this._filters;
