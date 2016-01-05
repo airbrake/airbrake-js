@@ -163,7 +163,7 @@ Integration with Angular is as simple as adding [$exceptionHandler](https://docs
 
 ```js
 mod.factory('$exceptionHandler', function ($log, config) {
-  airbrake = new airbrakeJs.Client({
+  var airbrake = new airbrakeJs.Client({
     projectId: config.airbrake.projectId,
     projectKey: config.airbrake.key
   });
