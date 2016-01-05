@@ -482,7 +482,7 @@ describe 'stack processor', ->
       ]
       expect(backtrace).to.deep.equal(wanted)
 
-  context 'when called with message only', ->
+  context 'when called with "Uncaught ..." message', ->
     cb = null
 
     beforeEach ->
@@ -495,11 +495,11 @@ describe 'stack processor', ->
       name = cb.lastCall.args[0]
       expect(name).to.equal('nostack')
 
-    it 'receives error message and extracted error type', ->
+    it 'receives error type and message', ->
       expect(cb).to.have.been.called
       err = cb.lastCall.args[1]
       expect(err.type).to.equal('SecurityError')
-      expect(err.message).to.equal('Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
+      expect(err.message).to.equal('Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
 
   context 'when called with a standard ErrorEvent', ->
     cb = null
@@ -594,15 +594,62 @@ describe 'stack processor', ->
       backtrace = cb.lastCall.args[1].backtrace
       expect(backtrace).to.deep.equal([])
 
-  context 'when called with empty name', ->
+  context 'when called with name and message properties', ->
+    cb = null
+
+    beforeEach ->
+      e = {
+        name: 'Error'
+        message: 'message'
+      }
+      cb = sinon.spy()
+      processor(e, cb)
+
+    it 'receives nostack processor name', ->
+      expect(cb).to.have.been.called
+      name = cb.lastCall.args[0]
+      expect(name).to.equal('nostack')
+
+    it 'receives error type and message', ->
+      expect(cb).to.have.been.called
+      err = cb.lastCall.args[1]
+      expect(err.type).to.equal('Error')
+      expect(err.message).to.equal('message')
+
+  context 'when called without name property', ->
     cb = null
 
     beforeEach ->
       cb = sinon.spy()
-      e = {name: '', message: 'message'}
+      e = {message: 'message'}
       processor(e, cb)
 
-    it 'receives correct error message', ->
+    it 'receives correct error', ->
       expect(cb).to.have.been.called
-      message = cb.lastCall.args[1].message
-      expect(message).to.equal('message')
+      err = cb.lastCall.args[1]
+      expect(err.type).to.equal('')
+      expect(err.message).to.equal('message')
+
+  context 'when called without message property', ->
+    cb = null
+
+    beforeEach ->
+      cb = sinon.spy()
+      e = {name: 'Error'}
+      processor(e, cb)
+
+    it 'receives correct error', ->
+      expect(cb).to.have.been.called
+      err = cb.lastCall.args[1]
+      expect(err.type).to.equal('Error')
+      expect(err.message).to.equal('[object Object]')
+
+  context 'when called with empty string', ->
+    cb = null
+
+    beforeEach ->
+      cb = sinon.spy()
+      processor('', cb)
+
+    it 'error is ignored', ->
+      expect(cb).not.to.have.been.called
