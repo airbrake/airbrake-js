@@ -174,7 +174,7 @@ class Client
       catch exc
         args = Array.prototype.slice.call(arguments)
         self.notify({error: exc, params: {arguments: args}})
-        return null
+        return
 
     for prop of fn
       if fn.hasOwnProperty(prop)
