@@ -150,7 +150,7 @@ In this example, reported errors are also logged to the console.
 
 ### window.onerror
 
-By default notifier setups [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using following code:
+By default notifier setups [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using the following code:
 
 ```js
 var airbrake = new airbrakeJs.Client(...);
@@ -179,11 +179,22 @@ mod.factory('$exceptionHandler', function ($log, config) {
 });
 ```
 
-## Script error
+### jQuery
+
+You can catch and report exceptions thrown in jQuery event handlers and callbacks using the following code:
+
+```js
+var airbrake = new airbrakeJs.Client(...);
+if (window.jQuery) {
+  airbrakeJs.instrumentation.jquery(airbrake, jQuery);
+}
+```
+
+## What "Script error" means?
 
 See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
 
-## Developing
+## Contributing
 
 Install dependencies:
 
