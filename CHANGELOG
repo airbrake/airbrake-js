@@ -1,3 +1,53 @@
+# v0.5.8
+- Fix main file path (#181)
+
+# v0.5.7
+- Process vars in lib/client.js (#180)
+
+# v0.5.6
+- Move notifier to context (#174)
+
+# v0.5.5
+- Setup default onerror handler (#171)
+
+# v0.5.4
+- Filter 'Script error' (#169)
+- Add xhr and compat reporters (#168)
+
+# v0.5.3
+- Set context.rootDirectory (#163)
+
+# v0.5.2
+- Rename 'push' to 'notify' and clean up API to be consitent with other notifiers (#155)
+
+# v0.5.1
+- Change push to return promise (#135)
+- Remove debugging logs (#154)
+
+# v0.5.0
+- Change location of a build from dist/ to lib/ (#148)
+- Add browserify example (#149)
+
+# v0.4.3
+- Use old compatibility API that does not require Content-Type header (#143)
+
+# v0.4.2
+- Add Bower installation instructions to the README
+
+# v0.4.1
+- Fix Bower
+
+# v0.4.0
+- Enhance stack processor tests
+- Add support for PhantomJS stack (#141)
+
+# v0.4.0-alpha.2
+- Check if console is available (#128)
+- Fix console check for IE9 (#129)
+- Simplify initialization of client
+- Start accepting project id and project key in a constructor
+- Change source file to import from bower_modules from 'airbrake.js' to 'dist/client.js'
+
 # v0.3.12
 
 - Improve exception message when notice can't be converted to JSON.
