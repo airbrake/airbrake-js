@@ -46,7 +46,7 @@ class Client
     @addFilter(require('./internal/default_filter'))
 
     @onerror = makeOnErrorHandler(this)
-    if not global.onerror?
+    if not global.onerror? and opts.onerror != false
       global.onerror = @onerror
 
   setProject: (id, key) ->
