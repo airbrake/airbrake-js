@@ -54,7 +54,7 @@ Client = (function() {
     }
     this.addFilter(require('./internal/default_filter'));
     this.onerror = makeOnErrorHandler(this);
-    if (global.onerror == null) {
+    if ((global.onerror == null) && opts.onerror !== false) {
       global.onerror = this.onerror;
     }
   }
@@ -174,7 +174,7 @@ Client = (function() {
         };
         notice.context.notifier = {
           name: 'airbrake-js-' + processorName,
-          version: '0.5.8',
+          version: '0.5.9',
           url: 'https://github.com/airbrake/airbrake-js'
         };
         ref1 = _this._filters;
@@ -249,7 +249,6 @@ Client = (function() {
             "arguments": args
           }
         });
-        return null;
       }
     };
     for (prop in fn) {
@@ -707,15 +706,23 @@ processor = function(e, cb) {
   }
   if ((e.name != null) && e.name !== '') {
     type = e.name;
-    msg = type + ': ' + msg;
   } else {
-    uncaughtExcRe = /^Uncaught\s(.+?):\s.+$/;
+    uncaughtExcRe = /^Uncaught\s(.+?):\s(.+)$/;
     m = msg.match(uncaughtExcRe);
     if (m) {
       type = m[1];
+      msg = m[2];
     } else {
       type = '';
     }
+  }
+  if (type === '' && msg === '' && backtrace.length === 0) {
+    if (typeof console !== "undefined" && console !== null) {
+      if (typeof console.warn === "function") {
+        console.warn("airbrake: can't process error", e);
+      }
+    }
+    return;
   }
   return cb(processorName, {
     'type': type,
