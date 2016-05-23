@@ -594,7 +594,7 @@ describe 'stack processor', ->
       backtrace = cb.lastCall.args[1].backtrace
       expect(backtrace).to.deep.equal([])
 
-  context 'when called with name and message properties', ->
+  context 'when called with name and message', ->
     cb = null
 
     beforeEach ->
@@ -616,7 +616,7 @@ describe 'stack processor', ->
       expect(err.type).to.equal('Error')
       expect(err.message).to.equal('message')
 
-  context 'when called without name property', ->
+  context 'when called without name', ->
     cb = null
 
     beforeEach ->
@@ -630,7 +630,7 @@ describe 'stack processor', ->
       expect(err.type).to.equal('')
       expect(err.message).to.equal('message')
 
-  context 'when called without message property', ->
+  context 'when called without message', ->
     cb = null
 
     beforeEach ->
@@ -653,3 +653,16 @@ describe 'stack processor', ->
 
     it 'error is ignored', ->
       expect(cb).not.to.have.been.called
+
+  context 'when called with non-string message', ->
+    cb = null
+
+    beforeEach ->
+      cb = sinon.spy()
+      e = {message: [1, 2, 3]}
+      processor(e, cb)
+
+    it 'receives stringified message', ->
+      expect(cb).to.have.been.called
+      err = cb.lastCall.args[1]
+      expect(err.message).to.equal('1,2,3')

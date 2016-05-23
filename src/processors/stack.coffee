@@ -179,7 +179,7 @@ processor = (e, cb) ->
     })
 
   if e.message?
-    msg = e.message
+    msg = String(e.message)
   else
     msg = String(e)
 
