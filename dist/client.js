@@ -236,12 +236,12 @@ Client = (function() {
     }
     self = this;
     airbrakeWrapper = function() {
-      var args, exc;
+      var args, error1, exc;
       args = self._wrapArguments(arguments);
       try {
         return fn.apply(this, args);
-      } catch (_error) {
-        exc = _error;
+      } catch (error1) {
+        exc = error1;
         args = Array.prototype.slice.call(arguments);
         self.notify({
           error: exc,
@@ -268,7 +268,6 @@ Client = (function() {
 module.exports = Client;
 
 
-
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"./internal/compat":2,"./internal/default_filter":3,"./internal/merge":5,"./internal/promise":6,"./processors/stack":8,"./reporters/compat":9,"./reporters/jsonp":10,"./reporters/xhr":11}],2:[function(require,module,exports){
 var base;
@@ -287,7 +286,6 @@ if ((base = Array.prototype).indexOf == null) {
 }
 
 
-
 },{}],3:[function(require,module,exports){
 var IGNORED_MESSAGES, filter,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -304,7 +302,6 @@ filter = function(notice) {
 };
 
 module.exports = filter;
-
 
 
 },{}],4:[function(require,module,exports){
@@ -355,7 +352,6 @@ jsonifyNotice = function(notice, n, maxLength) {
 module.exports = jsonifyNotice;
 
 
-
 },{"./truncate":7}],5:[function(require,module,exports){
 var merge;
 
@@ -375,7 +371,6 @@ merge = function() {
 };
 
 module.exports = merge;
-
 
 
 },{}],6:[function(require,module,exports){
@@ -454,16 +449,15 @@ Promise = (function() {
 module.exports = Promise;
 
 
-
 },{}],7:[function(require,module,exports){
 var getAttr, truncate;
 
 getAttr = function(obj, attr) {
-  var exc;
+  var error, exc;
   try {
     return obj[attr];
-  } catch (_error) {
-    exc = _error;
+  } catch (error) {
+    exc = error;
     return void 0;
   }
 };
@@ -562,7 +556,6 @@ truncate = function(value, n, depth) {
 };
 
 module.exports = truncate;
-
 
 
 },{}],8:[function(require,module,exports){
@@ -700,7 +693,7 @@ processor = function(e, cb) {
     });
   }
   if (e.message != null) {
-    msg = e.message;
+    msg = String(e.message);
   } else {
     msg = String(e);
   }
@@ -734,7 +727,6 @@ processor = function(e, cb) {
 module.exports = processor;
 
 
-
 },{}],9:[function(require,module,exports){
 (function (global){
 var jsonifyNotice, report;
@@ -761,7 +753,6 @@ report = function(notice, opts, promise) {
 module.exports = report;
 
 
-
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../internal/jsonify_notice":4}],10:[function(require,module,exports){
 (function (global){
@@ -776,13 +767,13 @@ report = function(notice, opts, promise) {
   cbCount++;
   cbName = 'airbrakeCb' + String(cbCount);
   global[cbName] = function(resp) {
-    var _;
+    var _, error;
     notice.id = resp.id;
     promise.resolve(notice);
     try {
       return delete global[cbName];
-    } catch (_error) {
-      _ = _error;
+    } catch (error) {
+      _ = error;
       return global[cbName] = void 0;
     }
   };
@@ -801,7 +792,6 @@ report = function(notice, opts, promise) {
 };
 
 module.exports = report;
-
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
@@ -830,7 +820,6 @@ report = function(notice, opts, promise) {
 };
 
 module.exports = report;
-
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})

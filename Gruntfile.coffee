@@ -54,6 +54,10 @@ module.exports = (grunt) ->
         src: 'dist/client.js'
         dest: 'dist/client.min.js'
 
+      instrumentation_jquery:
+        src: 'dist/instrumentation/jquery.js'
+        dest: 'dist/instrumentation/jquery.min.js'
+
     watch:
       test_only:
         files: ['test/unit/**/*.coffee']
