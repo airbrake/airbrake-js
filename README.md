@@ -40,6 +40,13 @@ First you need to initialize notifier with project id and API key taken from [Ai
 var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
 ```
 
+Or if you are using browserify/webpack/etc:
+
+```js
+var airbrakeJs = require('airbrake-js');
+var airbrake = new airbrakeJs({projectId: 1, projectKey: 'abc'});
+```
+
 The simplest method is to report errors directly:
 
 ```js
