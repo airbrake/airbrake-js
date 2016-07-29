@@ -84,7 +84,7 @@ try {
 } catch (err) {
   airbrake.notify({
     error:       err,
-    context:     { component: 'bootstrap' }
+    context:     { component: 'bootstrap' },
     environment: { env1: 'value' },
     params:      { param1: 'value' },
     session:     { session1: 'value' },
