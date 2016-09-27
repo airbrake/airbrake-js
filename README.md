@@ -139,6 +139,18 @@ In order to enable source map support you have to specify path to the source map
 
 *Please note* that Airbrake backend downloads source map file in order to process backtrace. This means that source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
 
+You can also specify source map URL in the notice context using the `sourceMaps` map, which key is shell file name pattern and value is source map URL:
+
+```js
+airbrake.addFilter(function(notice) {
+  notice.context.sourceMaps = {
+    '*': 'https://domain.com/path/to/source.map', // for all files
+    'https://domain.com/path/to/file.min.js': 'https://domain.com/path/to/source.map'
+  };
+  return notice;
+});
+```
+
 ### Custom reporters
 
 If you're interested in inspecting the information reported to Airbrake in your own code, you can register your own error reporter. Note that reporters added this way may be executed out-of-order.
