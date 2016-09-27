@@ -41,7 +41,8 @@
     "mocha": "^2.5.3",
     "requirejs": "^2.2.0",
     "sinon": "^1.17.4",
-    "sinon-chai": "^2.8.0"
+    "sinon-chai": "^2.8.0",
+    "coffee-script": "^1.11.0"
   },
   "main": "lib/client.js",
   "files": [
