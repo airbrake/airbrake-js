@@ -2,7 +2,7 @@ jsonifyNotice = require('../internal/jsonify_notice')
 
 
 report = (notice, opts, promise) ->
-  url = "#{opts.host}/api/v3/projects/#{opts.projectId}/create-notice?key=#{opts.projectKey}"
+  url = "#{opts.host}/api/v3/projects/#{opts.projectId}/notices?key=#{opts.projectKey}"
   payload = jsonifyNotice(notice)
 
   req = new global.XMLHttpRequest()
