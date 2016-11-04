@@ -169,7 +169,7 @@ In this example, reported errors are also logged to the console.
 
 ### window.onerror
 
-By default notifier setups [window.onerror](https://developer.mozilla.org/ru/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using the following code:
+By default notifier setups [window.onerror](https://developer.mozilla.org/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using the following code:
 
 ```js
 var airbrake = new airbrakeJs.Client(...);
