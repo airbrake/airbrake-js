@@ -34,7 +34,7 @@ If you prefer not to host the library yourself,
 
 ## Basic Usage
 
-First you need to initialize notifier with project id and API key taken from [Airbrake.io](https://airbrake.io):
+First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
 var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
@@ -59,7 +59,7 @@ try {
 }
 ```
 
-Alternatively you can wrap any code which may throw errors using the client's `wrap` method:
+Alternatively, you can wrap any code which may throw errors using the client's `wrap` method:
 
 ```js
 var startApp = function() {
@@ -102,8 +102,8 @@ The Airbrake notifier makes it simple to ignore this chaff while still processin
 `addFilter` accepts the entire [error notice](https://airbrake.io/docs/#create-notice-v3) to be sent to Airbrake, and provides access to the `context`, `environment`, `params`, and `session` values submitted with the notice, as well as the single-element `errors` array with its `backtrace` element and associated backtrace lines.
 
 The return value of the filter function determines whether or not the error notice will be submitted.
-  * If null value is returned, the notice is ignored.
-  * Otherwise returned notice will be submitted.
+  * If a null value is returned, the notice is ignored.
+  * Otherwise, the returned notice will be submitted.
 
 An error notice must pass all provided filters to be submitted.
 
@@ -119,7 +119,7 @@ airbrake.addFilter(function(notice) {
 });
 ```
 
-Filters can be also used to modify notice payload, e.g. to set environment and application version:
+Filters can be also used to modify notice payload, e.g. to set the environment and application version:
 
 ```js
 airbrake.addFilter(function(notice) {
@@ -131,15 +131,15 @@ airbrake.addFilter(function(notice) {
 
 ### Source map
 
-In order to enable source map support you have to specify path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has following line:
+In order to enable source map support you have to specify the path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has the following line:
 
 ```js
 //# sourceMappingURL=airbrake.min.map
 ```
 
-*Please note* that Airbrake backend downloads source map file in order to process backtrace. This means that source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
+*Please note* that the Airbrake backend downloads the source map file to process the backtrace. This means that the source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
 
-Custom source map URLs are supported by assigning a special property of `notice.context` called `sourceMaps`. The keys of the `sourceMaps` object represent shell filename pattern and the values are URLs of your source maps.
+Custom source map URLs are supported by assigning a special property of `notice.context` called `sourceMaps`. The keys of the `sourceMaps` object represent shell filename patterns and the values are URLs of your source maps.
 
 ```js
 airbrake.addFilter(function(notice) {
@@ -169,7 +169,7 @@ In this example, reported errors are also logged to the console.
 
 ### window.onerror
 
-By default notifier setups [window.onerror](https://developer.mozilla.org/docs/Web/API/GlobalEventHandlers/onerror) handler if onerror handler is not already setup. You can manually setup it using the following code:
+By default, the notifier sets up the [window.onerror](https://developer.mozilla.org/docs/Web/API/GlobalEventHandlers/onerror) handler if the onerror handler is not already set up. You can manually set it up using the following code:
 
 ```js
 var airbrake = new airbrakeJs.Client(...);
@@ -178,7 +178,7 @@ window.onerror = airbrake.onerror;
 
 ### Angular
 
-Integration with Angular is as simple as adding [$exceptionHandler](https://docs.angularjs.org/api/ng/service/$exceptionHandler):
+Integration with Angular is as simple as adding an [$exceptionHandler](https://docs.angularjs.org/api/ng/service/$exceptionHandler):
 
 ```js
 mod.factory('$exceptionHandler', function ($log, config) {
@@ -209,7 +209,7 @@ if (window.jQuery) {
 }
 ```
 
-## What "Script error" means?
+## What does "Script error" mean?
 
 See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
 
