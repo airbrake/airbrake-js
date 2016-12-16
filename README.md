@@ -187,6 +187,19 @@ if (window.jQuery) {
 }
 ```
 
+## Example configurations
+
+Example configurations can be found in [examples](examples), including:
+
+* [Angular](examples/angular)
+* [Angular 2](examples/angular-2)
+* [Bower](examples/bower-wiredep)
+* [Browserify](examples/browserify)
+* [Legacy](examples/legacy)
+* [Rails](examples/rails)
+* [React Native](examples/react-native)
+* [RequireJS](examples/requirejs)
+
 ## What does "Script error" mean?
 
 See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
