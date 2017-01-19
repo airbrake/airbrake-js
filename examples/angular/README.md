@@ -4,13 +4,13 @@ Integration with Angular is as simple as adding an
 [$exceptionHandler](https://docs.angularjs.org/api/ng/service/$exceptionHandler):
 
 ```js
-mod.factory('$exceptionHandler', function ($log, config) {
+mod.factory('$exceptionHandler', function ($log) {
   var airbrake = new airbrakeJs.Client({
-    projectId: config.airbrake.projectId,
-    projectKey: config.airbrake.key
+    projectId: 1, // Airbrake project id
+    projectKey: 'abc' // Airbrake project API key
   });
   airbrake.addFilter(function (notice) {
-    notice.context.environment = config.envName;
+    notice.context.environment = 'production';
     return notice;
   });
 
