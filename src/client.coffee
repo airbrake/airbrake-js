@@ -56,42 +56,6 @@ class Client
   setHost: (host) ->
     @_host = host
 
-  # Deprecated. Use addFilter.
-  addContext: (context) ->
-    console?.warn?('airbrake: addContext is deprecated, please use addFilter')
-    @addFilter (notice) ->
-      notice.context = merge({}, context, notice.context)
-      return notice
-
-  # Deprecated. Use addFilter.
-  setEnvironmentName: (envName) ->
-    console?.warn?('airbrake: setEnvironmentName is deprecated, please use addFilter')
-    @addFilter (notice) ->
-      if not notice.context.environment?
-        notice.context.environment = envName
-      return notice
-
-  # Deprecated. Use addFilter.
-  addParams: (params) ->
-    console?.warn?('airbrake: addParams is deprecated, please use addFilter')
-    @addFilter (notice) ->
-      notice.params = merge({}, params, notice.params)
-      return notice
-
-  # Deprecated. Use addFilter.
-  addEnvironment: (env) ->
-    console?.warn?('airbrake: addEnvironment is deprecated, please use addFilter')
-    @addFilter (notice) ->
-      notice.environment = merge({}, env, notice.environment)
-      return notice
-
-  # Deprecated. Use addFilter.
-  addSession: (session) ->
-    console?.warn?('airbrake: addSession is deprecated, please use addFilter')
-    @addFilter (notice) ->
-      notice.session = merge({}, session, notice.session)
-      return notice
-
   addReporter: (reporter) ->
     switch reporter
       when 'compat'
@@ -106,23 +70,23 @@ class Client
     @_filters.push(filter)
 
   notify: (err) ->
-    defContext = {
+    context = {
       language: 'JavaScript'
       sourceMapEnabled: true
     }
     if global.navigator?.userAgent
-      defContext.userAgent = global.navigator.userAgent
+      context.userAgent = global.navigator.userAgent
     if global.location
-      defContext.url = String(global.location)
+      context.url = String(global.location)
       # Set root directory to group errors on different subdomains together.
-      defContext.rootDirectory = global.location.protocol + '//' + global.location.host
+      context.rootDirectory = global.location.protocol + '//' + global.location.host
 
     promise = new Promise()
 
     @_processor err.error or err, (processorName, errInfo) =>
       notice =
         errors: [errInfo]
-        context: merge(defContext, err.context)
+        context: merge(context, err.context)
         params: err.params or {}
         environment: err.environment or {}
         session: err.session or {}
@@ -133,14 +97,9 @@ class Client
         url: 'https://github.com/airbrake/airbrake-js'
 
       for filterFn in @_filters
-        n = filterFn(notice)
-        if n == null or n == false
+        notice = filterFn(notice)
+        if notice == null or notice == false
           return
-        # TODO: remove this check in new major version.
-        if n.errors? # Check if this is a notice.
-          notice = n
-        else
-          console?.warn?('airbrake: filter must return notice or null to ignore the notice')
 
       opts = {projectId: @_projectId, projectKey: @_projectKey, host: @_host}
       for reporterFn in @_reporters
@@ -149,11 +108,6 @@ class Client
       return
 
     return promise
-
-  # Deprecated. Use notify instead.
-  push: (err) ->
-    console?.warn?('airbrake: push is deprecated, please use notify')
-    @notify(err)
 
   _wrapArguments: (args) ->
     for arg, i in args
