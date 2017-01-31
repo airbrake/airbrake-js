@@ -33,7 +33,7 @@ describe "Client", ->
 
   describe 'filter', ->
     it 'returns null to ignore notice', ->
-      filter = sinon.spy (notice) -> null
+      filter = sinon.spy -> null
       client.addFilter(filter)
 
       client.notify({})
@@ -123,35 +123,36 @@ describe "Client", ->
 
     describe "custom data sent to reporter", ->
       it "reports context", ->
-        client.addContext(context_key: "[custom_context]")
+        client.addFilter (n) ->
+          n.context.context_key = "[custom_context]"
+          return n
         client.notify(exception)
 
         reported = reporter.lastCall.args[0]
         expect(reported.context.context_key).to.equal("[custom_context]")
 
-      it "reports environment name", ->
-        client.setEnvironmentName("[custom_env_name]")
-        client.notify(exception)
-
-        reported = reporter.lastCall.args[0]
-        expect(reported.context.environment).to.equal("[custom_env_name]")
-
       it "reports environment", ->
-        client.addEnvironment(env_key: "[custom_env]")
+        client.addFilter (n) ->
+          n.environment.env_key = "[custom_env]"
+          return n
         client.notify(exception)
 
         reported = reporter.lastCall.args[0]
         expect(reported.environment.env_key).to.equal("[custom_env]")
 
       it "reports params", ->
-        client.addParams(params_key: "[custom_params]")
+        client.addFilter (n) ->
+          n.params.params_key = "[custom_params]"
+          return n
         client.notify(exception)
 
         reported = reporter.lastCall.args[0]
         expect(reported.params.params_key).to.equal("[custom_params]")
 
       it "reports session", ->
-        client.addSession(session_key: "[custom_session]")
+        client.addFilter (n) ->
+          n.session.session_key = "[custom_session]"
+          return n
         client.notify(exception)
 
         reported = reporter.lastCall.args[0]
@@ -163,7 +164,11 @@ describe "Client", ->
           expect(processor).to.have.been.calledWith(exception)
 
         it "reports custom context", ->
-          client.addContext(context1: "value1", context2: "value2")
+          client.addFilter (n) ->
+            n.context.context1 = "value1"
+            n.context.context2 = "value2"
+            return n
+
           client.notify
             error: exception
             context:
@@ -171,21 +176,16 @@ describe "Client", ->
               context3: "notify_value3"
 
           reported = reporter.lastCall.args[0]
-          expect(reported.context.context1).to.equal('notify_value1')
+          expect(reported.context.context1).to.equal('value1')
+          expect(reported.context.context2).to.equal('value2')
           expect(reported.context.context3).to.equal('notify_value3')
 
-        it "reports custom environment name", ->
-          client.setEnvironmentName("env1")
-          client.notify
-            error: exception
-            context:
-              environment: "notify_env1"
-
-          reported = reporter.lastCall.args[0]
-          expect(reported.context.environment).to.equal('notify_env1')
-
         it "reports custom environment", ->
-          client.addEnvironment(env1: "value1", env2: "value2")
+          client.addFilter (n) ->
+            n.environment.env1 = "value1"
+            n.environment.env2 = "value2"
+            return n
+
           client.notify
             error: exception
             environment:
@@ -194,12 +194,16 @@ describe "Client", ->
 
           reported = reporter.lastCall.args[0]
           expect(reported.environment).to.deep.equal
-            env1: "notify_value1"
+            env1: "value1"
             env2: "value2"
             env3: "notify_value3"
 
         it "reports custom params", ->
-          client.addParams(param1: "value1", param2: "value2")
+          client.addFilter (n) ->
+            n.params.param1 = "value1"
+            n.params.param2 = "value2"
+            return n
+
           client.notify
             error: exception
             params:
@@ -208,12 +212,16 @@ describe "Client", ->
 
           reported = reporter.lastCall.args[0]
           expect(reported.params).to.deep.equal
-            param1: "notify_value1"
+            param1: "value1"
             param2: "value2"
             param3: "notify_value3"
 
         it "reports custom session", ->
-          client.addSession(session1: "value1", session2: "value2")
+          client.addFilter (n) ->
+            n.session.session1 = "value1"
+            n.session.session2 = "value2"
+            return n
+
           client.notify
             error: exception
             session:
@@ -222,7 +230,7 @@ describe "Client", ->
 
           reported = reporter.lastCall.args[0]
           expect(reported.session).to.deep.equal
-            session1: "notify_value1"
+            session1: "value1"
             session2: "value2"
             session3: "notify_value3"
 
