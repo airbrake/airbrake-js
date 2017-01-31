@@ -43,7 +43,7 @@ class Client
         reporter = 'jsonp'
       @addReporter(reporter)
 
-    @addFilter(require('./internal/default_filter'))
+    @addFilter(require('./internal/script_error_filter'))
 
     @onerror = makeOnErrorHandler(this)
     if not global.onerror? and opts.onerror != false
