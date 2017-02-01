@@ -17,7 +17,9 @@
   "devDependencies": {
     "browserify": "^13.0.1",
     "chai": "^3.5.0",
+    "coffee-script": "^1.11.0",
     "coffeeify": "^2.0.1",
+    "error-stack-parser": "^2.0.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-contrib-coffee": "^1.0.0",
@@ -41,8 +43,7 @@
     "mocha": "^2.5.3",
     "requirejs": "^2.2.0",
     "sinon": "^1.17.4",
-    "sinon-chai": "^2.8.0",
-    "coffee-script": "^1.11.0"
+    "sinon-chai": "^2.8.0"
   },
   "main": "lib/client.js",
   "files": [
