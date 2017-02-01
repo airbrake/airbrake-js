@@ -1,7 +1,7 @@
 re = ///^
   \[(\$.+)\] # type
   \s
-  (.+)     # message
+  (.+)       # message
 $///
 
 

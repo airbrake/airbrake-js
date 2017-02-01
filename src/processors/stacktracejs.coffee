@@ -7,10 +7,10 @@ processor = (e, cb) ->
   backtrace = []
   for frame in frames
     backtrace.push({
-      'function': frame.functionName,
-      'file': frame.fileName,
-      'line': frame.lineNumber,
-      'column': frame.columnNumber,
+      function: frame.functionName,
+      file: frame.fileName,
+      line: frame.lineNumber,
+      column: frame.columnNumber,
     })
 
   if e.message?
@@ -40,9 +40,9 @@ processor = (e, cb) ->
     return
 
   cb('stacktracejs', {
-    'type': type,
-    'message': msg,
-    'backtrace': backtrace,
+    type: type,
+    message: msg,
+    backtrace: backtrace,
   })
 
 
