@@ -94,7 +94,7 @@ class Client
         session: err.session or {}
 
       notice.context.notifier =
-        name: 'airbrake-js-' + processorName
+        name: 'airbrake-js'
         version: '<%= pkg.version %>'
         url: 'https://github.com/airbrake/airbrake-js'
 
