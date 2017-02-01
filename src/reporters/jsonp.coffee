@@ -16,7 +16,7 @@ report = (notice, opts, promise) ->
       global[cbName] = undefined
 
   payload = encodeURIComponent(jsonifyNotice(notice))
-  url = "#{opts.host}/api/v3/projects/#{opts.projectId}/create-notice?key=#{opts.projectKey}&callback=#{cbName}&body=#{payload}"
+  url = "#{opts.host}/api/v3/projects/#{opts.projectId}/notices?key=#{opts.projectKey}&callback=#{cbName}&body=#{payload}"
 
   document = global.document
   head = document.getElementsByTagName('head')[0]
