@@ -44,7 +44,8 @@ class Client
       @addReporter(reporter)
 
     @addFilter(require('./filter/script_error'))
-    @addFilter(require('./filter/angular_type'))
+    @addFilter(require('./filter/uncaught_message'))
+    @addFilter(require('./filter/angular_message'))
 
     @onerror = makeOnErrorHandler(this)
     if not global.onerror? and opts.onerror != false

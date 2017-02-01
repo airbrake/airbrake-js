@@ -80,10 +80,24 @@ describe "Client", ->
 
       expect(reporter).to.not.have.been.called
 
-  describe 'Angular error message', ->
-    it 'splitted into type and message', ->
-      client.notify(error: {message: "[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler"})
+  context '"Uncaught ..." error message', ->
+    beforeEach ->
+      msg = 'Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.'
+      client.notify(error: {message: msg})
 
+    it 'splitted into type and message', ->
+      expect(reporter).to.have.been.called
+      notice = reporter.lastCall.args[0]
+      err = notice.errors[0]
+      expect(err.type).to.equal('SecurityError')
+      expect(err.message).to.equal('Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
+
+  describe 'Angular error message', ->
+    beforeEach ->
+      msg = "[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler"
+      client.notify(error: {message: msg})
+
+    it 'splitted into type and message', ->
       expect(reporter).to.have.been.called
       notice = reporter.lastCall.args[0]
       err = notice.errors[0]

@@ -21,19 +21,7 @@ processor = (e, cb) ->
   if e.name? and e.name != ''
     type = e.name
   else
-    # Extract type from messages like "Uncaught Exception: message.".
-    uncaughtExcRe = ///^
-      Uncaught\s
-      (.+?)      # type
-      :\s
-      (.+)       # message
-    $///
-    m = msg.match(uncaughtExcRe)
-    if m
-      type = m[1]
-      msg = m[2]
-    else
-      type = ''
+    type = ''
 
   if type == '' and msg == '' and backtrace.length == 0
     console?.warn?("airbrake: can't process error", e)
