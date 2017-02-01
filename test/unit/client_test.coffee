@@ -41,7 +41,7 @@ describe "Client", ->
       expect(filter).to.have.been.called
       expect(reporter).not.to.have.been.called
 
-    it 'returns true to pass notice', ->
+    it 'returns true to keep notice', ->
       filter = sinon.spy (notice) -> true
       client.addFilter(filter)
 
@@ -74,12 +74,21 @@ describe "Client", ->
       notice = reporter.lastCall.args[0]
       expect(notice).to.equal(newNotice)
 
-
   describe '"Script error" message', ->
     it 'is filtered', ->
       client.notify(error: {message: 'Script error'})
 
       expect(reporter).to.not.have.been.called
+
+  describe 'Angular error message', ->
+    it 'splitted into type and message', ->
+      client.notify(error: {message: "[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler"})
+
+      expect(reporter).to.have.been.called
+      notice = reporter.lastCall.args[0]
+      err = notice.errors[0]
+      expect(err.type).to.equal('$injector:undef')
+      expect(err.message).to.equal("Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler")
 
   describe "notify", ->
     exception = do ->
