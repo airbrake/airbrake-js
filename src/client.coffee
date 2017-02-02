@@ -32,7 +32,7 @@ class Client
     if opts.processor != undefined
       @_processor = opts.processor
     else
-      @_processor = require('./processors/stack')
+      @_processor = require('./processors/stacktracejs')
 
     if opts.reporter != undefined
       @addReporter(opts.reporter)
