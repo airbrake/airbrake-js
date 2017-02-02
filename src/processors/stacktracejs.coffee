@@ -7,7 +7,7 @@ processor = (e, cb) ->
   backtrace = []
   for frame in frames
     backtrace.push({
-      function: frame.functionName,
+      function: frame.functionName or '',
       file: frame.fileName,
       line: frame.lineNumber,
       column: frame.columnNumber,

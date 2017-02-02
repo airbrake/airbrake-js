@@ -1,35 +1,26 @@
-expect = require('chai').expect
+chai = require('chai')
 sinon = require('sinon')
+sinon_chai = require('sinon-chai')
+expect = chai.expect
+chai.use(sinon_chai)
 
 reporter = require('../../../src/reporters/jsonp')
 
 
-MockHead = ->
-MockHead.prototype = {
-  appendChild: ->
-  removeChild: ->
-}
-
-MockDocument = ->
-MockDocument.prototype = {
-  getElementsByTagName: ->
-    return[new MockHead]
-}
-
 describe 'JSONPReporter', ->
-  oldDocument = null
+  head = null
 
   beforeEach ->
-    oldDocument = global.document
-    global.document = new MockDocument
+    head = {
+      appendChild: sinon.spy()
+    }
+    global.document.getElementsByTagName = sinon.spy ->
+      return [head]
 
-  afterEach ->
-    global.document = oldDocument
-
-  describe 'report', ->
-    it 'creates script tag with custom host', ->
-      mock = sinon.mock({})
-      MockDocument.prototype.createElement = ->
-        return mock
-      reporter({}, {projectId: '[project_id]', projectKey: '[project_key]', host: 'https://custom.domain.com'})
-      expect(mock.src).to.contain('https://custom.domain.com')
+  it 'report creates script tag with custom host', ->
+    reporter({}, {
+      projectId: '[project_id]',
+      projectKey: '[project_key]',
+      host: 'https://custom.domain.com'
+    })
+    expect(head.appendChild).to.have.been.called
