@@ -6,8 +6,8 @@ Integration with Angular is as simple as adding an
 ```js
 mod.factory('$exceptionHandler', function ($log) {
   var airbrake = new airbrakeJs.Client({
-    projectId: 1, // Airbrake project id
-    projectKey: 'abc' // Airbrake project API key
+    projectId: 1,       // Airbrake project id
+    projectKey: 'FIXME' // Airbrake project API key
   });
   airbrake.addFilter(function (notice) {
     notice.context.environment = 'production';

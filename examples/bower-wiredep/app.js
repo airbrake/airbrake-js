@@ -1,4 +1,4 @@
-var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
+var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'FIXME'});
 if (window.jQuery) {
   airbrakeJs.instrumentation.jquery(airbrake, jQuery);
 }

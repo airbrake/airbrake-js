@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js-example",
   "devDependencies": {
-    "airbrake-js": "^0.5.9"
+    "airbrake-js": "^0.6.0-alpha"
   }
 }

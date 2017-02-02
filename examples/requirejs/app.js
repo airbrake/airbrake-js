@@ -6,7 +6,7 @@ require.config({
 
 require(['airbrakeJs/client', 'airbrakeJs/instrumentation/jquery'],
         function (AirbrakeClient, instrumentJQuery) {
-  var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
+  var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'FIXME'});
   if (window.jQuery) {
     instrumentJQuery(airbrake, jQuery);
   }

@@ -15,7 +15,7 @@ And then place the following code into your `application.js`:
 ```javascript
 //= require airbrake-js-client
 
-var airbrake = new airbrakeJs.Client({projectId: 1234, projectKey: 'changeme'});
+var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'FIXME'});
 airbrake.addFilter(function(notice) {
   notice.context.environment = "<%= Rails.env %>";
   return notice;

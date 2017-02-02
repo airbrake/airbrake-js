@@ -8,8 +8,8 @@ class AirbrakeErrorHandler implements ErrorHandler {
 
   constructor() {
     this.airbrake = new airbrakeJs.Client({
-      projectId: 1234,
-      projectKey: 'abc123'
+      projectId: 1,
+      projectKey: 'FIXME'
     });
   }
 
