@@ -1,4 +1,309 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}(g.airbrakeJs || (g.airbrakeJs = {})).Client = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(root, factory) {
+    'use strict';
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js, Rhino, and browsers.
+
+    /* istanbul ignore next */
+    if (typeof define === 'function' && define.amd) {
+        define('error-stack-parser', ['stackframe'], factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory(require('stackframe'));
+    } else {
+        root.ErrorStackParser = factory(root.StackFrame);
+    }
+}(this, function ErrorStackParser(StackFrame) {
+    'use strict';
+
+    var FIREFOX_SAFARI_STACK_REGEXP = /(^|@)\S+\:\d+/;
+    var CHROME_IE_STACK_REGEXP = /^\s*at .*(\S+\:\d+|\(native\))/m;
+    var SAFARI_NATIVE_CODE_REGEXP = /^(eval@)?(\[native code\])?$/;
+
+    return {
+        /**
+         * Given an Error object, extract the most information from it.
+         *
+         * @param {Error} error object
+         * @return {Array} of StackFrames
+         */
+        parse: function ErrorStackParser$$parse(error) {
+            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
+                return this.parseOpera(error);
+            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
+                return this.parseV8OrIE(error);
+            } else if (error.stack) {
+                return this.parseFFOrSafari(error);
+            } else {
+                throw new Error('Cannot parse given Error object');
+            }
+        },
+
+        // Separate line and column numbers from a string of the form: (URI:Line:Column)
+        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
+            // Fail-fast but return locations like "(native)"
+            if (urlLike.indexOf(':') === -1) {
+                return [urlLike];
+            }
+
+            var regExp = /(.+?)(?:\:(\d+))?(?:\:(\d+))?$/;
+            var parts = regExp.exec(urlLike.replace(/[\(\)]/g, ''));
+            return [parts[1], parts[2] || undefined, parts[3] || undefined];
+        },
+
+        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
+            var filtered = error.stack.split('\n').filter(function(line) {
+                return !!line.match(CHROME_IE_STACK_REGEXP);
+            }, this);
+
+            return filtered.map(function(line) {
+                if (line.indexOf('(eval ') > -1) {
+                    // Throw away eval information until we implement stacktrace.js/stackframe#8
+                    line = line.replace(/eval code/g, 'eval').replace(/(\(eval at [^\()]*)|(\)\,.*$)/g, '');
+                }
+                var tokens = line.replace(/^\s+/, '').replace(/\(eval code/g, '(').split(/\s+/).slice(1);
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionName = tokens.join(' ') || undefined;
+                var fileName = ['eval', '<anonymous>'].indexOf(locationParts[0]) > -1 ? undefined : locationParts[0];
+
+                return new StackFrame({
+                    functionName: functionName,
+                    fileName: fileName,
+                    lineNumber: locationParts[1],
+                    columnNumber: locationParts[2],
+                    source: line
+                });
+            }, this);
+        },
+
+        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
+            var filtered = error.stack.split('\n').filter(function(line) {
+                return !line.match(SAFARI_NATIVE_CODE_REGEXP);
+            }, this);
+
+            return filtered.map(function(line) {
+                // Throw away eval information until we implement stacktrace.js/stackframe#8
+                if (line.indexOf(' > eval') > -1) {
+                    line = line.replace(/ line (\d+)(?: > eval line \d+)* > eval\:\d+\:\d+/g, ':$1');
+                }
+
+                if (line.indexOf('@') === -1 && line.indexOf(':') === -1) {
+                    // Safari eval frames only have function names and nothing else
+                    return new StackFrame({
+                        functionName: line
+                    });
+                } else {
+                    var tokens = line.split('@');
+                    var locationParts = this.extractLocation(tokens.pop());
+                    var functionName = tokens.join('@') || undefined;
+
+                    return new StackFrame({
+                        functionName: functionName,
+                        fileName: locationParts[0],
+                        lineNumber: locationParts[1],
+                        columnNumber: locationParts[2],
+                        source: line
+                    });
+                }
+            }, this);
+        },
+
+        parseOpera: function ErrorStackParser$$parseOpera(e) {
+            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
+                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
+                return this.parseOpera9(e);
+            } else if (!e.stack) {
+                return this.parseOpera10(e);
+            } else {
+                return this.parseOpera11(e);
+            }
+        },
+
+        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
+            var lines = e.message.split('\n');
+            var result = [];
+
+            for (var i = 2, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(new StackFrame({
+                        fileName: match[2],
+                        lineNumber: match[1],
+                        source: lines[i]
+                    }));
+                }
+            }
+
+            return result;
+        },
+
+        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
+            var lines = e.stacktrace.split('\n');
+            var result = [];
+
+            for (var i = 0, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(
+                        new StackFrame({
+                            functionName: match[3] || undefined,
+                            fileName: match[2],
+                            lineNumber: match[1],
+                            source: lines[i]
+                        })
+                    );
+                }
+            }
+
+            return result;
+        },
+
+        // Opera 10.65+ Error.stack very similar to FF/Safari
+        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
+            var filtered = error.stack.split('\n').filter(function(line) {
+                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) && !line.match(/^Error created at/);
+            }, this);
+
+            return filtered.map(function(line) {
+                var tokens = line.split('@');
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionCall = (tokens.shift() || '');
+                var functionName = functionCall
+                        .replace(/<anonymous function(: (\w+))?>/, '$2')
+                        .replace(/\([^\)]*\)/g, '') || undefined;
+                var argsRaw;
+                if (functionCall.match(/\(([^\)]*)\)/)) {
+                    argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
+                }
+                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ?
+                    undefined : argsRaw.split(',');
+
+                return new StackFrame({
+                    functionName: functionName,
+                    args: args,
+                    fileName: locationParts[0],
+                    lineNumber: locationParts[1],
+                    columnNumber: locationParts[2],
+                    source: line
+                });
+            }, this);
+        }
+    };
+}));
+
+},{"stackframe":2}],2:[function(require,module,exports){
+(function (root, factory) {
+    'use strict';
+    // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js, Rhino, and browsers.
+
+    /* istanbul ignore next */
+    if (typeof define === 'function' && define.amd) {
+        define('stackframe', [], factory);
+    } else if (typeof exports === 'object') {
+        module.exports = factory();
+    } else {
+        root.StackFrame = factory();
+    }
+}(this, function () {
+    'use strict';
+    function _isNumber(n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
+    }
+
+    function _capitalize(str) {
+        return str[0].toUpperCase() + str.substring(1);
+    }
+
+    function _getter(p) {
+        return function () {
+            return this[p];
+        };
+    }
+
+    var booleanProps = ['isConstructor', 'isEval', 'isNative', 'isToplevel'];
+    var numericProps = ['columnNumber', 'lineNumber'];
+    var stringProps = ['fileName', 'functionName', 'source'];
+    var arrayProps = ['args'];
+
+    function StackFrame(obj) {
+        if (obj instanceof Object) {
+            var props = booleanProps.concat(numericProps.concat(stringProps.concat(arrayProps)));
+            for (var i = 0; i < props.length; i++) {
+                if (obj.hasOwnProperty(props[i]) && obj[props[i]] !== undefined) {
+                    this['set' + _capitalize(props[i])](obj[props[i]]);
+                }
+            }
+        }
+    }
+
+    StackFrame.prototype = {
+        getArgs: function () {
+            return this.args;
+        },
+        setArgs: function (v) {
+            if (Object.prototype.toString.call(v) !== '[object Array]') {
+                throw new TypeError('Args must be an Array');
+            }
+            this.args = v;
+        },
+
+        getEvalOrigin: function () {
+            return this.evalOrigin;
+        },
+        setEvalOrigin: function (v) {
+            if (v instanceof StackFrame) {
+                this.evalOrigin = v;
+            } else if (v instanceof Object) {
+                this.evalOrigin = new StackFrame(v);
+            } else {
+                throw new TypeError('Eval Origin must be an Object or StackFrame');
+            }
+        },
+
+        toString: function () {
+            var functionName = this.getFunctionName() || '{anonymous}';
+            var args = '(' + (this.getArgs() || []).join(',') + ')';
+            var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
+            var lineNumber = _isNumber(this.getLineNumber()) ? (':' + this.getLineNumber()) : '';
+            var columnNumber = _isNumber(this.getColumnNumber()) ? (':' + this.getColumnNumber()) : '';
+            return functionName + args + fileName + lineNumber + columnNumber;
+        }
+    };
+
+    for (var i = 0; i < booleanProps.length; i++) {
+        StackFrame.prototype['get' + _capitalize(booleanProps[i])] = _getter(booleanProps[i]);
+        StackFrame.prototype['set' + _capitalize(booleanProps[i])] = (function (p) {
+            return function (v) {
+                this[p] = Boolean(v);
+            };
+        })(booleanProps[i]);
+    }
+
+    for (var j = 0; j < numericProps.length; j++) {
+        StackFrame.prototype['get' + _capitalize(numericProps[j])] = _getter(numericProps[j]);
+        StackFrame.prototype['set' + _capitalize(numericProps[j])] = (function (p) {
+            return function (v) {
+                if (!_isNumber(v)) {
+                    throw new TypeError(p + ' must be a Number');
+                }
+                this[p] = Number(v);
+            };
+        })(numericProps[j]);
+    }
+
+    for (var k = 0; k < stringProps.length; k++) {
+        StackFrame.prototype['get' + _capitalize(stringProps[k])] = _getter(stringProps[k]);
+        StackFrame.prototype['set' + _capitalize(stringProps[k])] = (function (p) {
+            return function (v) {
+                this[p] = String(v);
+            };
+        })(stringProps[k]);
+    }
+
+    return StackFrame;
+}));
+
+},{}],3:[function(require,module,exports){
 (function (global){
 var Client, Promise, makeOnErrorHandler, merge;
 
@@ -40,7 +345,7 @@ Client = (function() {
     if (opts.processor !== void 0) {
       this._processor = opts.processor;
     } else {
-      this._processor = require('./processors/stack');
+      this._processor = require('./processors/stacktracejs');
     }
     if (opts.reporter !== void 0) {
       this.addReporter(opts.reporter);
@@ -52,7 +357,9 @@ Client = (function() {
       }
       this.addReporter(reporter);
     }
-    this.addFilter(require('./internal/default_filter'));
+    this.addFilter(require('./filter/script_error'));
+    this.addFilter(require('./filter/uncaught_message'));
+    this.addFilter(require('./filter/angular_message'));
     this.onerror = makeOnErrorHandler(this);
     if ((global.onerror == null) && opts.onerror !== false) {
       global.onerror = this.onerror;
@@ -66,68 +373,6 @@ Client = (function() {
 
   Client.prototype.setHost = function(host) {
     return this._host = host;
-  };
-
-  Client.prototype.addContext = function(context) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: addContext is deprecated, please use addFilter');
-      }
-    }
-    return this.addFilter(function(notice) {
-      notice.context = merge({}, context, notice.context);
-      return notice;
-    });
-  };
-
-  Client.prototype.setEnvironmentName = function(envName) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: setEnvironmentName is deprecated, please use addFilter');
-      }
-    }
-    return this.addFilter(function(notice) {
-      if (notice.context.environment == null) {
-        notice.context.environment = envName;
-      }
-      return notice;
-    });
-  };
-
-  Client.prototype.addParams = function(params) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: addParams is deprecated, please use addFilter');
-      }
-    }
-    return this.addFilter(function(notice) {
-      notice.params = merge({}, params, notice.params);
-      return notice;
-    });
-  };
-
-  Client.prototype.addEnvironment = function(env) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: addEnvironment is deprecated, please use addFilter');
-      }
-    }
-    return this.addFilter(function(notice) {
-      notice.environment = merge({}, env, notice.environment);
-      return notice;
-    });
-  };
-
-  Client.prototype.addSession = function(session) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: addSession is deprecated, please use addFilter');
-      }
-    }
-    return this.addFilter(function(notice) {
-      notice.session = merge({}, session, notice.session);
-      return notice;
-    });
   };
 
   Client.prototype.addReporter = function(reporter) {
@@ -149,49 +394,40 @@ Client = (function() {
   };
 
   Client.prototype.notify = function(err) {
-    var defContext, promise, ref;
-    defContext = {
+    var context, promise, ref;
+    context = {
       language: 'JavaScript',
       sourceMapEnabled: true
     };
     if ((ref = global.navigator) != null ? ref.userAgent : void 0) {
-      defContext.userAgent = global.navigator.userAgent;
+      context.userAgent = global.navigator.userAgent;
     }
     if (global.location) {
-      defContext.url = String(global.location);
-      defContext.rootDirectory = global.location.protocol + '//' + global.location.host;
+      context.url = String(global.location);
+      context.rootDirectory = global.location.protocol + '//' + global.location.host;
     }
     promise = new Promise();
     this._processor(err.error || err, (function(_this) {
       return function(processorName, errInfo) {
-        var filterFn, j, k, len, len1, n, notice, opts, ref1, ref2, reporterFn;
+        var filterFn, j, k, len, len1, notice, opts, ref1, ref2, reporterFn;
         notice = {
           errors: [errInfo],
-          context: merge(defContext, err.context),
+          context: merge(context, err.context),
           params: err.params || {},
           environment: err.environment || {},
           session: err.session || {}
         };
         notice.context.notifier = {
-          name: 'airbrake-js-' + processorName,
-          version: '0.5.9',
+          name: 'airbrake-js',
+          version: '0.6.0-alpha',
           url: 'https://github.com/airbrake/airbrake-js'
         };
         ref1 = _this._filters;
         for (j = 0, len = ref1.length; j < len; j++) {
           filterFn = ref1[j];
-          n = filterFn(notice);
-          if (n === null || n === false) {
+          notice = filterFn(notice);
+          if (notice === null || notice === false) {
             return;
-          }
-          if (n.errors != null) {
-            notice = n;
-          } else {
-            if (typeof console !== "undefined" && console !== null) {
-              if (typeof console.warn === "function") {
-                console.warn('airbrake: filter must return notice or null to ignore the notice');
-              }
-            }
           }
         }
         opts = {
@@ -207,15 +443,6 @@ Client = (function() {
       };
     })(this));
     return promise;
-  };
-
-  Client.prototype.push = function(err) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn('airbrake: push is deprecated, please use notify');
-      }
-    }
-    return this.notify(err);
   };
 
   Client.prototype._wrapArguments = function(args) {
@@ -269,24 +496,32 @@ module.exports = Client;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./internal/compat":2,"./internal/default_filter":3,"./internal/merge":5,"./internal/promise":6,"./processors/stack":8,"./reporters/compat":9,"./reporters/jsonp":10,"./reporters/xhr":11}],2:[function(require,module,exports){
-var base;
+},{"./filter/angular_message":4,"./filter/script_error":5,"./filter/uncaught_message":6,"./internal/compat":7,"./internal/merge":9,"./internal/promise":10,"./processors/stacktracejs":12,"./reporters/compat":13,"./reporters/jsonp":14,"./reporters/xhr":15}],4:[function(require,module,exports){
+var filter, re;
 
-if ((base = Array.prototype).indexOf == null) {
-  base.indexOf = function(obj, start) {
-    var i, j, ref, ref1;
-    start = start || 0;
-    for (i = j = ref = start, ref1 = this.length; ref <= ref1 ? j < ref1 : j > ref1; i = ref <= ref1 ? ++j : --j) {
-      if (this[i] === obj) {
-        return i;
-      }
-    }
-    return -1;
-  };
-}
+re = /^\[(\$.+)\]\s(.+)$/;
+
+filter = function(notice) {
+  var err, m;
+  err = notice.errors[0];
+  if ((err.type != null) && err.type !== '' && err.type !== 'Error') {
+    return notice;
+  }
+  if (err.message == null) {
+    return notice;
+  }
+  m = err.message.match(re);
+  if (m) {
+    err.type = m[1];
+    err.message = m[2];
+  }
+  return notice;
+};
+
+module.exports = filter;
 
 
-},{}],3:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 var IGNORED_MESSAGES, filter,
   indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
@@ -304,7 +539,49 @@ filter = function(notice) {
 module.exports = filter;
 
 
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+var filter, re;
+
+re = /^Uncaught\s(.+?):\s(.+)$/;
+
+filter = function(notice) {
+  var err, m;
+  err = notice.errors[0];
+  if ((err.type != null) && err.type !== '' && err.type !== 'Error') {
+    return notice;
+  }
+  if (err.message == null) {
+    return notice;
+  }
+  m = err.message.match(re);
+  if (m) {
+    err.type = m[1];
+    err.message = m[2];
+  }
+  return notice;
+};
+
+module.exports = filter;
+
+
+},{}],7:[function(require,module,exports){
+var base;
+
+if ((base = Array.prototype).indexOf == null) {
+  base.indexOf = function(obj, start) {
+    var i, j, ref, ref1;
+    start = start || 0;
+    for (i = j = ref = start, ref1 = this.length; ref <= ref1 ? j < ref1 : j > ref1; i = ref <= ref1 ? ++j : --j) {
+      if (this[i] === obj) {
+        return i;
+      }
+    }
+    return -1;
+  };
+}
+
+
+},{}],8:[function(require,module,exports){
 var jsonifyNotice, truncate, truncateObj;
 
 truncate = require('./truncate');
@@ -352,7 +629,7 @@ jsonifyNotice = function(notice, n, maxLength) {
 module.exports = jsonifyNotice;
 
 
-},{"./truncate":7}],5:[function(require,module,exports){
+},{"./truncate":11}],9:[function(require,module,exports){
 var merge;
 
 merge = function() {
@@ -373,7 +650,7 @@ merge = function() {
 module.exports = merge;
 
 
-},{}],6:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 var Promise;
 
 Promise = (function() {
@@ -449,7 +726,7 @@ Promise = (function() {
 module.exports = Promise;
 
 
-},{}],7:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var getAttr, truncate;
 
 getAttr = function(obj, attr) {
@@ -558,138 +835,22 @@ truncate = function(value, n, depth) {
 module.exports = truncate;
 
 
-},{}],8:[function(require,module,exports){
-var processor, rules, typeMessageRe;
+},{}],12:[function(require,module,exports){
+var ErrorStackParser, processor;
 
-rules = [
-  {
-    name: 'v8',
-    re: /^\s*at\s(.+?)\s\((?:(?:(.+):(\d+):(\d+))|(.+))\)$/,
-    fn: function(m) {
-      return {
-        "function": m[1],
-        file: m[2] || m[5],
-        line: m[3] && parseInt(m[3], 10) || 0,
-        column: m[4] && parseInt(m[4], 10) || 0
-      };
-    }
-  }, {
-    name: 'firefox30',
-    re: /^(.*)@(.+):(\d+):(\d+)$/,
-    fn: function(m) {
-      var evaledRe, file, func, mm;
-      func = m[1];
-      file = m[2];
-      evaledRe = /^(\S+)\s(line\s\d+\s>\seval.*)$/;
-      if (mm = file.match(evaledRe)) {
-        if (func.length > 0) {
-          func = func + ' ' + mm[2];
-        } else {
-          func = mm[2];
-        }
-        file = mm[1];
-      }
-      return {
-        "function": func,
-        file: file,
-        line: parseInt(m[3], 10),
-        column: parseInt(m[4], 10)
-      };
-    }
-  }, {
-    name: 'firefox14',
-    re: /^(.*)@(.+):(\d+)$/,
-    fn: function(m, i, e) {
-      var column;
-      if (i === 0) {
-        column = e.columnNumber || 0;
-      } else {
-        column = 0;
-      }
-      return {
-        "function": m[1],
-        file: m[2],
-        line: parseInt(m[3], 10),
-        column: column
-      };
-    }
-  }, {
-    name: 'v8-short',
-    re: /^\s*at\s(.+):(\d+):(\d+)$/,
-    fn: function(m) {
-      return {
-        "function": '',
-        file: m[1],
-        line: parseInt(m[2], 10),
-        column: parseInt(m[3], 10)
-      };
-    }
-  }, {
-    name: 'phantomjs',
-    re: /^\s*at\s(.+):(\d+)$/,
-    fn: function(m) {
-      return {
-        "function": '',
-        file: m[1],
-        line: parseInt(m[2], 10),
-        column: 0
-      };
-    }
-  }, {
-    name: 'default',
-    re: /.+/,
-    fn: function(m) {
-      return {
-        "function": m[0],
-        file: '',
-        line: 0,
-        column: 0
-      };
-    }
-  }
-];
-
-typeMessageRe = /^\S+:\s.+$/;
+ErrorStackParser = require('error-stack-parser');
 
 processor = function(e, cb) {
-  var backtrace, i, j, k, len, len1, line, lines, m, msg, processorName, rule, stack, type, uncaughtExcRe;
-  processorName = 'nostack';
-  stack = e.stack || '';
-  lines = stack.split('\n');
+  var backtrace, frame, frames, i, len, msg, type;
+  frames = ErrorStackParser.parse(e);
   backtrace = [];
-  for (i = j = 0, len = lines.length; j < len; i = ++j) {
-    line = lines[i];
-    if (line === '') {
-      continue;
-    }
-    for (k = 0, len1 = rules.length; k < len1; k++) {
-      rule = rules[k];
-      m = line.match(rule.re);
-      if (!m) {
-        continue;
-      }
-      processorName = rule.name;
-      backtrace.push(rule.fn(m, i, e));
-      break;
-    }
-  }
-  if ((processorName === 'v8' || processorName === 'v8-short') && backtrace.length > 0 && backtrace[0]["function"].match(typeMessageRe)) {
-    backtrace = backtrace.slice(1);
-  }
-  if (backtrace.length === 0 && ((e.fileName != null) || (e.lineNumber != null) || (e.columnNumber != null))) {
+  for (i = 0, len = frames.length; i < len; i++) {
+    frame = frames[i];
     backtrace.push({
-      "function": '',
-      file: e.fileName || '',
-      line: parseInt(e.lineNumber, 10) || 0,
-      column: parseInt(e.columnNumber, 10) || 0
-    });
-  }
-  if (backtrace.length === 0 && ((e.filename != null) || (e.lineno != null) || (e.column != null) || (e.colno != null))) {
-    backtrace.push({
-      "function": '',
-      file: e.filename || '',
-      line: parseInt(e.lineno, 10) || 0,
-      column: parseInt(e.column || e.colno, 10) || 0
+      "function": frame.functionName,
+      file: frame.fileName,
+      line: frame.lineNumber,
+      column: frame.columnNumber
     });
   }
   if (e.message != null) {
@@ -700,14 +861,7 @@ processor = function(e, cb) {
   if ((e.name != null) && e.name !== '') {
     type = e.name;
   } else {
-    uncaughtExcRe = /^Uncaught\s(.+?):\s(.+)$/;
-    m = msg.match(uncaughtExcRe);
-    if (m) {
-      type = m[1];
-      msg = m[2];
-    } else {
-      type = '';
-    }
+    type = '';
   }
   if (type === '' && msg === '' && backtrace.length === 0) {
     if (typeof console !== "undefined" && console !== null) {
@@ -717,17 +871,17 @@ processor = function(e, cb) {
     }
     return;
   }
-  return cb(processorName, {
-    'type': type,
-    'message': msg,
-    'backtrace': backtrace
+  return cb('stacktracejs', {
+    type: type,
+    message: msg,
+    backtrace: backtrace
   });
 };
 
 module.exports = processor;
 
 
-},{}],9:[function(require,module,exports){
+},{"error-stack-parser":1}],13:[function(require,module,exports){
 (function (global){
 var jsonifyNotice, report;
 
@@ -754,7 +908,7 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":4}],10:[function(require,module,exports){
+},{"../internal/jsonify_notice":8}],14:[function(require,module,exports){
 (function (global){
 var cbCount, jsonifyNotice, report;
 
@@ -795,7 +949,7 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":4}],11:[function(require,module,exports){
+},{"../internal/jsonify_notice":8}],15:[function(require,module,exports){
 (function (global){
 var jsonifyNotice, report;
 
@@ -823,5 +977,5 @@ module.exports = report;
 
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../internal/jsonify_notice":4}]},{},[1])(1)
+},{"../internal/jsonify_notice":8}]},{},[3])(3)
 });
