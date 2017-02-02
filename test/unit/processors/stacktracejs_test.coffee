@@ -33,4 +33,4 @@ describe 'stacktracejs processor', ->
     expect(frame.file).to.contain('airbrake-js/test/unit/processors/stacktracejs_test.coffee')
     expect(frame.function).to.equal('Context.<anonymous>')
     expect(frame.line).to.be.a('number')
-    expect(frame.column).to.a('number')
+    expect(frame.column).to.be.a('number')

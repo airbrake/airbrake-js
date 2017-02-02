@@ -43,7 +43,9 @@ class Client
         reporter = 'jsonp'
       @addReporter(reporter)
 
-    @addFilter(require('./internal/script_error_filter'))
+    @addFilter(require('./filter/script_error'))
+    @addFilter(require('./filter/uncaught_message'))
+    @addFilter(require('./filter/angular_message'))
 
     @onerror = makeOnErrorHandler(this)
     if not global.onerror? and opts.onerror != false
@@ -92,7 +94,7 @@ class Client
         session: err.session or {}
 
       notice.context.notifier =
-        name: 'airbrake-js-' + processorName
+        name: 'airbrake-js'
         version: '<%= pkg.version %>'
         url: 'https://github.com/airbrake/airbrake-js'
 

@@ -41,7 +41,7 @@ describe "Client", ->
       expect(filter).to.have.been.called
       expect(reporter).not.to.have.been.called
 
-    it 'returns true to pass notice', ->
+    it 'returns true to keep notice', ->
       filter = sinon.spy (notice) -> true
       client.addFilter(filter)
 
@@ -74,12 +74,35 @@ describe "Client", ->
       notice = reporter.lastCall.args[0]
       expect(notice).to.equal(newNotice)
 
-
   describe '"Script error" message', ->
     it 'is filtered', ->
       client.notify(error: {message: 'Script error'})
 
       expect(reporter).to.not.have.been.called
+
+  context '"Uncaught ..." error message', ->
+    beforeEach ->
+      msg = 'Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.'
+      client.notify(error: {message: msg})
+
+    it 'splitted into type and message', ->
+      expect(reporter).to.have.been.called
+      notice = reporter.lastCall.args[0]
+      err = notice.errors[0]
+      expect(err.type).to.equal('SecurityError')
+      expect(err.message).to.equal('Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.')
+
+  describe 'Angular error message', ->
+    beforeEach ->
+      msg = "[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler"
+      client.notify(error: {message: msg})
+
+    it 'splitted into type and message', ->
+      expect(reporter).to.have.been.called
+      notice = reporter.lastCall.args[0]
+      err = notice.errors[0]
+      expect(err.type).to.equal('$injector:undef')
+      expect(err.message).to.equal("Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler")
 
   describe "notify", ->
     exception = do ->
