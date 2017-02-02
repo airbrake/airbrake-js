@@ -37,10 +37,12 @@ class Client
     if opts.reporter != undefined
       @addReporter(opts.reporter)
     else
-      if 'withCredentials' of new global.XMLHttpRequest()
+      if not opts.host? and 'withCredentials' of new global.XMLHttpRequest()
         reporter = 'compat'
-      else
+      else if global.document?
         reporter = 'jsonp'
+      else
+        reporter = 'xhr'
       @addReporter(reporter)
 
     @addFilter(require('./filter/script_error'))
