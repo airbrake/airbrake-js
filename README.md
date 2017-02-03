@@ -20,17 +20,23 @@ bower install airbrake-js-client
 
 ## Setup
 
-The notifier is built using a
-[standalone browserify build](http://www.forbeslindesay.co.uk/post/46324645400/standalone-browserify-builds)
-and can be used with:
-- [RequireJS](examples/requirejs/app.js).
-- [Global/Window](examples/legacy/app.js).
+Example configurations can be found in [examples](examples), including:
 
-We include the full source code with the package, so you can use
-[Browserify](examples/browserify/app.js) too.
+* [Angular](examples/angular)
+* [Angular 2](examples/angular-2)
+* [Bower](examples/bower-wiredep)
+* [Browserify](examples/browserify)
+* [Legacy](examples/legacy)
+* [Rails](examples/rails)
+* [RequireJS](examples/requirejs)
+
+The notifier is built using
+[umd](https://webpack.js.org/concepts/output/#output-librarytarget)
+and therefore can be imported with AMD, CommonJS2 or as property in root.
 
 If you prefer not to host the library yourself,
-[airbrake-js is available on the excellent cdnjs CDN](https://cdnjs.com/libraries/airbrake-js).
+airbrake-js is available on the excellent on
+[cdnjs](https://cdnjs.com/libraries/airbrake-js).
 
 ## Basic Usage
 
@@ -186,18 +192,6 @@ if (window.jQuery) {
   airbrakeJs.instrumentation.jquery(airbrake, jQuery);
 }
 ```
-
-## Example configurations
-
-Example configurations can be found in [examples](examples), including:
-
-* [Angular](examples/angular)
-* [Angular 2](examples/angular-2)
-* [Bower](examples/bower-wiredep)
-* [Browserify](examples/browserify)
-* [Legacy](examples/legacy)
-* [Rails](examples/rails)
-* [RequireJS](examples/requirejs)
 
 ## What does "Script error" mean?
 
