@@ -76,7 +76,6 @@ class Client
   notify: (err) ->
     context = {
       language: 'JavaScript'
-      sourceMapEnabled: true
     }
     if global.navigator?.userAgent
       context.userAgent = global.navigator.userAgent

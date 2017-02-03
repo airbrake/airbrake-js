@@ -1,5 +1,5 @@
 var AirbrakeClient = require('airbrake-js'),
-    instrumentJQuery = require('airbrake-js/lib/instrumentation/jquery.js');
+    instrumentJQuery = require('airbrake-js/dist/instrumentation/jquery.js');
 
 var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'FIXME'});
 if (window.jQuery) {
