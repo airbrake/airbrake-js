@@ -9,7 +9,10 @@ describe 'stacktracejs processor', ->
 
   beforeEach  ->
     cb = sinon.spy()
-    processor(new Error('BOOM'), cb)
+    try
+      throw new Error('BOOM')
+    catch err
+      processor(err, cb)
 
   it 'calls callback', ->
     expect(cb).to.have.been.called
@@ -30,7 +33,7 @@ describe 'stacktracejs processor', ->
     expect(backtrace.length).to.equal(6)
 
     frame = backtrace[0]
-    expect(frame.file).to.contain('airbrake-js/test/unit/processors/stacktracejs_test.coffee')
-    expect(frame.function).to.equal('Context.<anonymous>')
+    expect(frame.file).to.contain('test/unit/processors/stacktracejs_test.coffee')
+    expect(frame.function).to.equal('')
     expect(frame.line).to.be.a('number')
     expect(frame.column).to.be.a('number')

@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js-client",
-  "version": "0.5.9",
+  "version": "0.6.0-alpha.2",
   "homepage": "https://github.com/airbrake/airbrake-js",
   "authors": [
     "Exceptional"
@@ -21,7 +21,7 @@
     "exception",
     "error",
     "airbrake",
-    "exceptional"
+    "notifier"
   ],
   "license": "MIT"
 }

@@ -1,4 +1,4 @@
-# Airbrake-JS [![Build Status](https://circleci.com/gh/airbrake/airbrake-js.png?circle-token=3c561e089366ed8e0c9ec396a69f9665c1331581)](https://circleci.com/gh/airbrake/airbrake-js) [![CDNJS](https://img.shields.io/cdnjs/v/airbrake-js.svg)](https://cdnjs.com/libraries/airbrake-js)
+# Airbrake-JS [![Build Status](https://travis-ci.org/airbrake/airbrake-js.svg?branch=master)](https://travis-ci.org/airbrake/airbrake-js) [![CDNJS](https://img.shields.io/cdnjs/v/airbrake-js.svg)](https://cdnjs.com/libraries/airbrake-js)
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
@@ -197,7 +197,6 @@ Example configurations can be found in [examples](examples), including:
 * [Browserify](examples/browserify)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
-* [React Native](examples/react-native)
 * [RequireJS](examples/requirejs)
 
 ## What does "Script error" mean?
@@ -208,20 +207,20 @@ See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#No
 
 Install dependencies:
 
-```sh
+```bash
 npm install
 ```
 
 Run unit tests:
 
-```sh
-grunt test
+```bash
+karma start
 ```
 
-Run integration tests:
+Build project:
 
-```sh
-grunt karma
+```bash
+webpack
 ```
 
 ## Credits

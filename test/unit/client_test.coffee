@@ -7,15 +7,22 @@ chai.use(sinon_chai)
 Client = require("../../src/client")
 
 
-describe "Client", ->
-  clock = undefined
+describe 'window.onerror', ->
+  [onerror, client] = []
 
   beforeEach ->
-    clock = sinon.useFakeTimers()
+    onerror = window.onerror
+    window.onerror = null
+    client = new Client()
 
   afterEach ->
-    clock.restore()
+    window.onerror = onerror
 
+  it 'is setup', ->
+    expect(global.onerror).to.equal(client.onerror)
+
+
+describe 'Client', ->
   processor = null
   reporter = null
   client = null
@@ -26,10 +33,6 @@ describe "Client", ->
     reporter = sinon.spy (_, __, promise) ->
       promise.resolve({id: 1})
     client = new Client(processor: processor, reporter: reporter)
-
-  describe 'window.onerror', ->
-    it 'is setup', ->
-      expect(global.onerror).to.equal(client.onerror)
 
   describe 'filter', ->
     it 'returns null to ignore notice', ->
@@ -261,20 +264,15 @@ describe "Client", ->
       notice = null
 
       beforeEach ->
-        global.location = {
-          protocol: 'http:',
-          host: 'subdomain.domain.com',
-          toString: -> 'http://subdomain.domain.com/path',
-        }
         client.notify(exception)
         expect(reporter).to.have.been.called
         notice = reporter.lastCall.args[0]
 
       it 'reports context.url', ->
-        expect(notice.context.url).to.equal('http://subdomain.domain.com/path')
+        expect(notice.context.url).to.equal('http://localhost:9876/context.html')
 
       it 'reports context.rootDirectory', ->
-        expect(notice.context.rootDirectory).to.equal('http://subdomain.domain.com')
+        expect(notice.context.rootDirectory).to.equal('http://localhost:9876')
 
   describe 'addReporter', ->
     it 'supports xhr reporter', ->

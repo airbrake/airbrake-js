@@ -97,7 +97,7 @@ class Client
 
       notice.context.notifier =
         name: 'airbrake-js'
-        version: '<%= pkg.version %>'
+        version: VERSION
         url: 'https://github.com/airbrake/airbrake-js'
 
       for filterFn in @_filters
