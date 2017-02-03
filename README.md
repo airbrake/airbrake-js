@@ -208,20 +208,20 @@ See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#No
 
 Install dependencies:
 
-```sh
+```bash
 npm install
 ```
 
 Run unit tests:
 
-```sh
-grunt test
+```bash
+karma start
 ```
 
-Run integration tests:
+Build project:
 
-```sh
-grunt karma
+```bash
+webpack
 ```
 
 ## Credits
