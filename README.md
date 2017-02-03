@@ -197,7 +197,6 @@ Example configurations can be found in [examples](examples), including:
 * [Browserify](examples/browserify)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
-* [React Native](examples/react-native)
 * [RequireJS](examples/requirejs)
 
 ## What does "Script error" mean?
