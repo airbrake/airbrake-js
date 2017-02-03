@@ -1,5 +1,14 @@
-var airbrakeJs = airbrakeJs || {}; airbrakeJs["instrumentation"] = airbrakeJs["instrumentation"] || {}; airbrakeJs["instrumentation"]["jquery"] =
-/******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["jquery"] = factory();
+	else
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["instrumentation"] = root["airbrakeJs"]["instrumentation"] || {}, root["airbrakeJs"]["instrumentation"]["jquery"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -156,4 +165,5 @@ module.exports = instrumentJQuery;
 
 /***/ })
 /******/ ]);
+});
 //# sourceMappingURL=jquery.js.map

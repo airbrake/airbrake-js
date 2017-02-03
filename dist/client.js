@@ -1,5 +1,14 @@
-var airbrakeJs = airbrakeJs || {}; airbrakeJs["Client"] =
-/******/ (function(modules) { // webpackBootstrap
+(function webpackUniversalModuleDefinition(root, factory) {
+	if(typeof exports === 'object' && typeof module === 'object')
+		module.exports = factory();
+	else if(typeof define === 'function' && define.amd)
+		define([], factory);
+	else if(typeof exports === 'object')
+		exports["Client"] = factory();
+	else
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory();
+})(this, function() {
+return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 /******/
@@ -1047,7 +1056,7 @@ Client = (function() {
         };
         notice.context.notifier = {
           name: 'airbrake-js',
-          version: "0.6.0-alpha.2",
+          version: "0.6.0-alpha.3",
           url: 'https://github.com/airbrake/airbrake-js'
         };
         ref1 = _this._filters;
@@ -1126,4 +1135,5 @@ module.exports = Client;
 
 /***/ })
 /******/ ]);
+});
 //# sourceMappingURL=client.js.map
