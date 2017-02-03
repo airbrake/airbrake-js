@@ -21,7 +21,8 @@ function newConfig() {
     output: {
       filename: '[name].js',
       chunkFilename: '[id][name].js',
-      path: path.resolve(__dirname, 'dist')
+      path: path.resolve(__dirname, 'dist'),
+      libraryTarget: 'umd'
     },
 
     plugins: [
