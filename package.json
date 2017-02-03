@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js",
-  "version": "0.6.0-alpha",
+  "version": "0.6.0-alpha.2",
   "description": "Notify Airbrake on JavaScript exceptions",
   "author": "Airbrake",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "exception",
     "error",
     "airbrake",
-    "exceptional"
+    "notifier"
   ],
   "devDependencies": {
     "chai": "^3.5.0",
@@ -30,13 +30,14 @@
     "sinon-chai": "^2.8.0",
     "webpack": "^2.2.1"
   },
-  "main": "lib/client.js",
+  "main": "dist/client.js",
   "files": [
-    "lib",
     "dist/client.js",
     "dist/client.min.js",
     "dist/client.min.js.map",
     "dist/instrumentation/jquery.js",
+    "dist/instrumentation/jquery.min.js",
+    "dist/instrumentation/jquery.min.js.map",
     "README.md",
     "LICENSE"
   ],

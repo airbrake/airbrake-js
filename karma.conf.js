@@ -46,12 +46,20 @@ module.exports = function(config) {
       devtool: 'inline-source-map',
 
       plugins: [
+        new webpack.DefinePlugin({
+          VERSION: '"1.0.0"'
+        }),
         new webpack.SourceMapDevToolPlugin({
           filename: null,
           test: /\.coffee$/
         })
-      ]
+      ],
     },
+
+    webpackMiddleware: {
+      stats: 'errors-only'
+    },
+
 
     // test results reporter to use
     // possible values: 'dots', 'progress'

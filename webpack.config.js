@@ -1,6 +1,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const glob = require('glob');
+const pkg = require('./package.json');
 
 
 function newConfig() {
@@ -19,17 +20,21 @@ function newConfig() {
 
     output: {
       filename: '[name].js',
+      chunkFilename: '[id][name].js',
       path: path.resolve(__dirname, 'dist')
     },
 
     plugins: [
+      new webpack.DefinePlugin({
+        VERSION: JSON.stringify(pkg.version)
+      }),
       new webpack.optimize.UglifyJsPlugin({
         include: /\.min\.js$/,
         sourceMap: true
       })
     ]
   }
-}
+};
 
 
 var client = newConfig();
