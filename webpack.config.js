@@ -16,7 +16,7 @@ function newConfig() {
       ]
     },
 
-    devtool: 'source-map',
+    devtool: 'nosources-source-map',
 
     output: {
       filename: '[name].js',
