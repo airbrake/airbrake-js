@@ -35,7 +35,7 @@ The notifier is built using
 and therefore can be imported with AMD, CommonJS2 or as property in root.
 
 If you prefer not to host the library yourself,
-airbrake-js is available on the excellent on
+airbrake-js is available on the excellent
 [cdnjs](https://cdnjs.com/libraries/airbrake-js).
 
 ## Basic Usage
