@@ -341,3 +341,14 @@ describe 'Client', ->
       arg1Wrapper = fn.lastCall.args[0]
       expect(arg1Wrapper.__airbrake__).to.equal(true)
       expect(arg1Wrapper.__inner__).to.equal(arg1)
+
+  describe 'call', ->
+    it 'reports throwed exception', ->
+      client.notify = sinon.spy()
+      exc = new Error("test")
+      fn = ->
+        throw exc
+
+      client.call(fn, "hello", "world")
+      expect(client.notify).to.have.been.called
+      expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])

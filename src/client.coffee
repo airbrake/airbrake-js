@@ -142,5 +142,8 @@ class Client
 
     return airbrakeWrapper
 
+  call: (fn) ->
+    wrapper = this.wrap(fn)
+    return wrapper.apply(this, Array.prototype.slice.call(arguments, 1))
 
 module.exports = Client

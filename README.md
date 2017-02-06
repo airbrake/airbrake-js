@@ -58,7 +58,7 @@ The simplest method is to report errors directly:
 ```js
 try {
   // This will throw if the document has no head tag
-  document.head.insertBefore(document.createElement("style"));
+  document.head.insertBefore(document.createElement('style'));
 } catch(err) {
   airbrake.notify(err);
   throw err;
@@ -70,12 +70,23 @@ Alternatively, you can wrap any code which may throw errors using the client's `
 ```js
 var startApp = function() {
   // This will throw if the document has no head tag.
-  document.head.insertBefore(document.createElement("style"));
+  document.head.insertBefore(document.createElement('style'));
 }
 startApp = airbrake.wrap(startApp);
 
 // Any exceptions thrown in startApp will be reported to Airbrake.
 startApp();
+```
+
+or use `call` shortcut:
+
+```js
+var startApp = function() {
+  // This will throw if the document has no head tag.
+  document.head.insertBefore(document.createElement('style'));
+}
+
+airbrake.call(startApp);
 ```
 
 ## Advanced Usage
