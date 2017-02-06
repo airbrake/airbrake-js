@@ -1,9 +1,9 @@
-jsonifyNotice = require('../internal/jsonify_notice')
+import jsonifyNotice from '../internal/jsonify_notice'
 
 
 cbCount = 0
 
-report = (notice, opts, promise) ->
+export default report = (notice, opts, promise) ->
   cbCount++
 
   cbName = 'airbrakeCb' + String(cbCount)
@@ -26,6 +26,3 @@ report = (notice, opts, promise) ->
   script.onload = removeScript
   script.onerror = removeScript
   head.appendChild(script)
-
-
-module.exports = report

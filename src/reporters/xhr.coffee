@@ -1,7 +1,7 @@
-jsonifyNotice = require('../internal/jsonify_notice')
+import jsonifyNotice from '../internal/jsonify_notice'
 
 
-report = (notice, opts, promise) ->
+export default report = (notice, opts, promise) ->
   url = "#{opts.host}/api/v3/projects/#{opts.projectId}/notices?key=#{opts.projectKey}"
   payload = jsonifyNotice(notice)
 
@@ -14,6 +14,3 @@ report = (notice, opts, promise) ->
       resp = JSON.parse(req.responseText)
       notice.id = resp.id
       promise.resolve(notice)
-
-
-module.exports = report

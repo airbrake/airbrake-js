@@ -136,7 +136,7 @@ typeMessageRe = /// ^
   .+     # message
 $ ///
 
-processor = (e, cb) ->
+export default processor = (e, cb) ->
   processorName = 'nostack'
   stack = e.stack or ''
   lines = stack.split('\n')
@@ -197,6 +197,3 @@ processor = (e, cb) ->
     'message': msg,
     'backtrace': backtrace,
   })
-
-
-module.exports = processor

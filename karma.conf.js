@@ -34,12 +34,13 @@ module.exports = function(config) {
 
     webpack: {
       resolve: {
-        extensions: ['.js', '.coffee']
+        extensions: ['.js', '.coffee', '.ts', '.tsx']
       },
 
       module: {
         rules: [
-          {test: /\.coffee$/, loader: 'coffee-loader'}
+          {test: /\.coffee$/, loader: 'coffee-loader'},
+          {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
         ]
       },
 

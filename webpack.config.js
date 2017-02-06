@@ -7,12 +7,14 @@ const pkg = require('./package.json');
 function newConfig() {
   return {
     resolve: {
-      extensions: ['.coffee']
+      extensions: ['.js', '.coffee', '.ts', '.tsx']
     },
 
     module: {
       rules: [
-        {test: /\.coffee$/, loader: 'coffee-loader'}
+        {test: /\.coffee$/, loader: 'coffee-loader'},
+        {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
+        {test: /\.js$/, use: ['source-map-loader'], enforce: 'pre'},
       ]
     },
 
@@ -20,7 +22,6 @@ function newConfig() {
 
     output: {
       filename: '[name].js',
-      chunkFilename: '[id][name].js',
       path: path.resolve(__dirname, 'dist'),
       libraryTarget: 'umd'
     },
@@ -48,8 +49,8 @@ client.output.library = ['airbrakeJs', 'Client'];
 
 var jquery = newConfig();
 jquery.entry = {
-  'instrumentation/jquery': './src/instrumentation/jquery.coffee',
-  'instrumentation/jquery.min': './src/instrumentation/jquery.coffee',
+  'instrumentation/jquery': './src/instrumentation/jquery.ts',
+  'instrumentation/jquery.min': './src/instrumentation/jquery.ts',
 }
 jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
 

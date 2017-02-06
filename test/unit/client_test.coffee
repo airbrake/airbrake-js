@@ -1,10 +1,10 @@
-chai = require("chai")
-sinon = require("sinon")
-sinon_chai = require("sinon-chai")
+import chai from 'chai'
+import sinon from 'sinon'
+import sinon_chai from 'sinon-chai'
 expect = chai.expect
 chai.use(sinon_chai)
 
-Client = require("../../src/client")
+import Client from '../../src/client'
 
 
 describe 'window.onerror', ->
@@ -86,7 +86,7 @@ describe 'Client', ->
   context '"Uncaught ..." error message', ->
     beforeEach ->
       msg = 'Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.'
-      client.notify(error: {message: msg})
+      client.notify(error: {type: '', message: msg})
 
     it 'splitted into type and message', ->
       expect(reporter).to.have.been.called
@@ -98,7 +98,7 @@ describe 'Client', ->
   describe 'Angular error message', ->
     beforeEach ->
       msg = "[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler"
-      client.notify(error: {message: msg})
+      client.notify(error: {type: '', message: msg})
 
     it 'splitted into type and message', ->
       expect(reporter).to.have.been.called

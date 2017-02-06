@@ -1,7 +1,7 @@
-expect = require('chai').expect
-sinon = require('sinon')
+import { expect } from 'chai'
+import sinon from 'sinon'
 
-processor = require('../../../src/processors/stacktracejs')
+import processor from '../../../src/processors/stacktracejs'
 
 
 describe 'stacktracejs processor', ->

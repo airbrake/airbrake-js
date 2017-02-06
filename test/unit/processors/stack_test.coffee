@@ -1,7 +1,7 @@
-expect = require('chai').expect
-sinon = require('sinon')
+import { expect } from 'chai';
+import sinon from 'sinon';
 
-processor = require('../../../src/processors/stack')
+import processor from '../../../src/processors/stack';
 
 
 describe 'stack processor', ->

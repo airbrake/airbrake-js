@@ -1,7 +1,9 @@
-require('./internal/compat')
-merge = require('./internal/merge')
-Promise = require('./internal/promise')
-
+import './internal/compat'
+import merge from './internal/merge'
+import Promise from './internal/promise'
+import scriptErrorFilter from './filter/script_error'
+import uncaughtMessageFilter from './filter/uncaught_message'
+import angularMessageFilter from './filter/angular_message'
 
 # Creates window.onerror handler for notifier. See
 # https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
@@ -18,7 +20,7 @@ makeOnErrorHandler = (notifier) ->
       }})
 
 
-class Client
+export default class Client
   constructor: (opts={}) ->
     @_projectId = opts.projectId || 0
     @_projectKey = opts.projectKey || ''
@@ -45,9 +47,9 @@ class Client
         reporter = 'xhr'
       @addReporter(reporter)
 
-    @addFilter(require('./filter/script_error'))
-    @addFilter(require('./filter/uncaught_message'))
-    @addFilter(require('./filter/angular_message'))
+    @addFilter(scriptErrorFilter)
+    @addFilter(uncaughtMessageFilter)
+    @addFilter(angularMessageFilter)
 
     @onerror = makeOnErrorHandler(this)
     if not global.onerror? and opts.onerror != false
@@ -145,5 +147,3 @@ class Client
   call: (fn) ->
     wrapper = this.wrap(fn)
     return wrapper.apply(this, Array.prototype.slice.call(arguments, 1))
-
-module.exports = Client
