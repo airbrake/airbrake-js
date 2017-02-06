@@ -1,7 +1,7 @@
-expect = require('chai').expect
-sinon = require('sinon')
+import { expect } from 'chai'
+import sinon from 'sinon'
 
-jsonifyNotice = require('../../../src/internal/jsonify_notice')
+import jsonifyNotice from '../../../src/internal/jsonify_notice'
 
 
 describe 'jsonify_notice', ->

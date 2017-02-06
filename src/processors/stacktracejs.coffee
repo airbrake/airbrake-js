@@ -1,7 +1,7 @@
-ErrorStackParser = require('error-stack-parser')
+import ErrorStackParser from 'error-stack-parser'
 
 
-processor = (e, cb) ->
+export default processor = (e, cb) ->
   frames = ErrorStackParser.parse(e)
 
   backtrace = []
@@ -32,6 +32,3 @@ processor = (e, cb) ->
     message: msg,
     backtrace: backtrace,
   })
-
-
-module.exports = processor

@@ -12,9 +12,6 @@ formatError = (err) ->
   return s
 
 
-report = (notice) ->
+export default report = (notice) ->
   for err in notice.errors
     console?.log?(formatError(err))
-
-
-module.exports = report

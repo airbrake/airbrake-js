@@ -1,10 +1,10 @@
-chai = require('chai')
-sinon = require('sinon')
-sinon_chai = require('sinon-chai')
+import chai from 'chai'
+import sinon from 'sinon'
+import sinon_chai from 'sinon-chai'
 expect = chai.expect
 chai.use(sinon_chai)
 
-reporter = require('../../../src/reporters/xhr')
+import reporter from '../../../src/reporters/xhr'
 
 
 describe 'XhrReporter', ->

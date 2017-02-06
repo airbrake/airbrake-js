@@ -1,7 +1,7 @@
-expect = require('chai').expect
-sinon = require('sinon')
+import { expect } from 'chai'
+import sinon from 'sinon'
 
-truncate = require('../../../src/internal/truncate')
+import truncate from '../../../src/internal/truncate'
 
 
 describe 'truncate', ->

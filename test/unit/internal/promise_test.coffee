@@ -1,7 +1,7 @@
-expect = require('chai').expect
-sinon = require('sinon')
+import { expect } from 'chai'
+import sinon from 'sinon'
 
-Promise = require('../../../src/internal/promise')
+import Promise from '../../../src/internal/promise'
 
 
 describe 'Promise', ->
