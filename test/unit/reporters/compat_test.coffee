@@ -1,8 +1,5 @@
-import chai from 'chai'
+import { expect } from '../chai_with_sinon'
 import sinon from 'sinon'
-import sinon_chai from 'sinon-chai'
-expect = chai.expect
-chai.use(sinon_chai)
 
 import reporter from '../../../src/reporters/compat'
 
