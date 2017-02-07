@@ -14,6 +14,7 @@ function newConfig() {
       rules: [
         {test: /\.coffee$/, loader: 'coffee-loader'},
         {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
+        {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
         {test: /\.js$/, use: ['source-map-loader'], enforce: 'pre'},
       ]
     },

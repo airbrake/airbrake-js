@@ -33,6 +33,8 @@
     "sinon": "^2.0.0-pre.5",
     "sinon-chai": "^2.8.0",
     "source-map-loader": "^0.1.6",
+    "tslint": "^4.4.2",
+    "tslint-loader": "^3.3.0",
     "typescript": "^2.1.5",
     "uglify-js": "github:mishoo/UglifyJS2#harmony",
     "webpack": "^2.2.1"

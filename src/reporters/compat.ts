@@ -1,4 +1,4 @@
-import jsonifyNotice from '../internal/jsonify_notice'
+import jsonifyNotice from '../internal/jsonify_notice';
 
 
 export default function report(notice, opts, promise) {
@@ -9,10 +9,10 @@ export default function report(notice, opts, promise) {
     req.open('POST', url, true);
     req.send(payload);
     req.onreadystatechange = () => {
-        if (req.readyState == 4 && req.status == 200) {
+        if (req.readyState === 4 && req.status === 200) {
             let resp = JSON.parse(req.responseText);
             notice.id = resp.id;
             promise.resolve(notice);
         }
-    }
+    };
 }
