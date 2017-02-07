@@ -7,7 +7,7 @@ function getAttr(obj, attr: string) {
     }
 }
 
-export default function truncate(value, n=1000, depth=5) {
+export default function truncate(value, n = 1000, depth = 5) {
     let nn = 0;
     let keys: string[] = [];
     let seen = [];
@@ -24,14 +24,14 @@ export default function truncate(value, n=1000, depth=5) {
         return '~' + path.join('.');
     }
 
-    function fn(value, key='', dd=0) {
+    function fn(value, key = '', dd = 0) {
         nn++;
         if (nn > n) {
-            return '[Truncated]'
+            return '[Truncated]';
         }
 
         if (value === null || value === undefined) {
-            return value
+            return value;
         }
 
         switch (typeof value) {
@@ -76,7 +76,7 @@ export default function truncate(value, n=1000, depth=5) {
                 if (nn >= n) {
                     break;
                 }
-                dst.push(fn(el, key=i, dd));
+                dst.push(fn(el, i, dd));
             }
             return dst;
         }
@@ -94,7 +94,7 @@ export default function truncate(value, n=1000, depth=5) {
 
             let val = getAttr(value, key);
             if (val !== undefined) {
-                dst[key] = fn(val, key=key, dd);
+                dst[key] = fn(val, key, dd);
             }
         }
 

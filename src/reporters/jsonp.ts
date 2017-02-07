@@ -7,7 +7,7 @@ export default function report(notice, opts, promise): void {
     cbCount++;
 
     let cbName = 'airbrakeCb' + String(cbCount);
-    window[cbName] = function(resp) {
+    window[cbName] = (resp) => {
         notice.id = resp.id;
         promise.resolve(notice);
         try {
@@ -15,7 +15,7 @@ export default function report(notice, opts, promise): void {
         } catch (_) { // IE
             window[cbName] = undefined;
         }
-    }
+    };
 
     let payload = encodeURIComponent(jsonifyNotice(notice));
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/create-notice?key=${opts.projectKey}&callback=${cbName}&body=${payload}`;

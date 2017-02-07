@@ -15,5 +15,5 @@ export default function report(notice, opts, promise): void {
             notice.id = resp.id;
             promise.resolve(notice);
         }
-    }
+    };
 }
