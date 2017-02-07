@@ -23,9 +23,9 @@ describe 'Promise', ->
 
   it 'calls onResolved when resolved', ->
     expect(onResolved).to.not.have.been.called
-    resolve('hello', 'world')
+    resolve(['hello', 'world'])
     expect(onResolved).to.have.been.called
-    expect(onResolved.lastCall.args).to.deep.equal(['hello', 'world'])
+    expect(onResolved.lastCall.args).to.deep.equal([['hello', 'world']])
 
   it 'calls onRejected when rejected', ->
     expect(onRejected).to.not.have.been.called
