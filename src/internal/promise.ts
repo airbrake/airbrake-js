@@ -15,7 +15,7 @@ export default class Promise {
         }
     }
 
-    then(onResolved: Resolver, onRejected: Rejector): Promise {
+    then(onResolved: Resolver, onRejected?: Rejector): Promise {
         if (onResolved) {
             if (this.resolvedWith) {
                 onResolved(this.resolvedWith);
@@ -38,8 +38,9 @@ export default class Promise {
     catch(onRejected: Rejector): Promise {
         if (this.rejectedWith) {
             onRejected(this.rejectedWith);
+        } else {
+            this.onRejected.push(onRejected);
         }
-        this.onRejected.push(onRejected);
         return this;
     }
 
