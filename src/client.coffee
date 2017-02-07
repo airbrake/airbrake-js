@@ -1,5 +1,3 @@
-import './internal/compat'
-import merge from './internal/merge'
 import Promise from './internal/promise'
 import scriptErrorFilter from './filter/script_error'
 import uncaughtMessageFilter from './filter/uncaught_message'
@@ -91,7 +89,7 @@ export default class Client
     @_processor err.error or err, (processorName, errInfo) =>
       notice =
         errors: [errInfo]
-        context: merge(context, err.context)
+        context: Object.assign(context, err.context)
         params: err.params or {}
         environment: err.environment or {}
         session: err.session or {}

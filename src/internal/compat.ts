@@ -8,3 +8,15 @@ if (!Array.prototype.indexOf) {
         return -1;
     };
 }
+
+if (!Object.assign) {
+    Object.assign = function (target, ...args) {
+        for (let i in args) {
+            let source = args[i];
+            if (source) {
+                Object.keys(source).forEach(key => target[key] = source[key]);
+            }
+        }
+        return target;
+    };
+}
