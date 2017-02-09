@@ -1,6 +1,6 @@
 import chai from 'chai';
-import sinon_chai from 'sinon-chai';
-chai.use(sinon_chai);
+import sinonChai from 'sinon-chai';
+chai.use(sinonChai);
 
 
 export * from 'chai';

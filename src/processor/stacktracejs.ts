@@ -1,10 +1,13 @@
+import {AirbrakeFrame} from '../notice';
+import {Callback} from './processor';
+
 import ErrorStackParser from 'error-stack-parser';
 
 
-export default function processor(e, cb): void {
+export default function processor(err: Error, cb: Callback): void {
     let frames: any[];
     try {
-        frames = ErrorStackParser.parse(e);
+        frames = ErrorStackParser.parse(err);
     } catch (err) {
         if (console && console.warn) {
             console.warn('airbrake-js: error-stack-parser failed', err);
@@ -12,7 +15,7 @@ export default function processor(e, cb): void {
         frames = [];
     }
 
-    let backtrace = [];
+    let backtrace: AirbrakeFrame[] = [];
     for (let i in frames) {
         let frame = frames[i];
         backtrace.push({
@@ -24,22 +27,22 @@ export default function processor(e, cb): void {
     }
 
     let type: string;
-    if (e.name) {
-        type = e.name;
+    if (err.name) {
+        type = err.name;
     } else {
         type = '';
     }
 
     let msg: string;
-    if (e.message) {
-        msg = String(e.message);
+    if (err.message) {
+        msg = String(err.message);
     } else {
-        msg = String(e);
+        msg = String(err);
     }
 
     if (type === '' && msg === '' && backtrace.length === 0) {
         if (console && console.warn) {
-            console.warn('airbrake: can not process error', e);
+            console.warn('airbrake: can not process error', err);
         }
         return;
     }

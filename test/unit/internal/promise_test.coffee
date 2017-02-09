@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
 
-import Promise from '../../../src/internal/promise'
+import Promise from '../../../src/promise'
 
 
 describe 'Promise', ->

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import sinon from 'sinon'
 
-import processor from '../../../src/processors/stacktracejs'
+import processor from '../../../src/processor/stacktracejs'
 
 
 describe 'stacktracejs processor', ->
@@ -33,7 +33,7 @@ describe 'stacktracejs processor', ->
     expect(backtrace.length).to.equal(6)
 
     frame = backtrace[0]
-    expect(frame.file).to.contain('test/unit/processors/stacktracejs_test.coffee')
+    expect(frame.file).to.contain('test/unit/processor/stacktracejs_test.coffee')
     expect(frame.function).to.equal('')
     expect(frame.line).to.be.a('number')
     expect(frame.column).to.be.a('number')

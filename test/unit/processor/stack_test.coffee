@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 
-import processor from '../../../src/processors/stack';
+import processor from '../../../src/processor/stack';
 
 
 describe 'stack processor', ->

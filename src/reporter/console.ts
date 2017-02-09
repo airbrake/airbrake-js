@@ -1,4 +1,7 @@
-function formatError(err): string {
+import {Notice, AirbrakeError} from '../notice';
+
+
+function formatError(err: AirbrakeError): string {
     let s: string[] = [];
     s.push(`${err.message}\n`);
 
@@ -19,11 +22,12 @@ function formatError(err): string {
 }
 
 
-export default function report(notice): void {
+export default function report(notice: Notice): void {
     if (!console.log) {
         return
     }
-    for (let err in notice.errors) {
+    for (let i in notice.errors) {
+        let err = notice.errors[i];
         console.log(formatError(err));
     }
 }

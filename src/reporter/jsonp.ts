@@ -1,9 +1,13 @@
+import Promise from '../promise';
+import Notice from '../notice';
 import jsonifyNotice from '../internal/jsonify_notice';
+
+import {ReporterOptions} from './reporter';
 
 
 let cbCount = 0;
 
-export default function report(notice, opts, promise): void {
+export default function report(notice: Notice, opts: ReporterOptions, promise: Promise): void {
     cbCount++;
 
     let cbName = 'airbrakeCb' + String(cbCount);

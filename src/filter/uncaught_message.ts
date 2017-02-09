@@ -1,3 +1,6 @@
+import Notice from '../notice';
+
+
 let re = new RegExp([
     '^',
     'Uncaught\\s',
@@ -8,7 +11,7 @@ let re = new RegExp([
 ].join(''));
 
 
-export default function filter(notice: any): any {
+export default function filter(notice: Notice): Notice {
     let err = notice.errors[0];
     if (err.type !== '' && err.type !== 'Error') {
         return notice;
