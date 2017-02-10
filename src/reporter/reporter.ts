@@ -11,7 +11,7 @@ export interface ReporterOptions {
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
 
 export function detectReporter(opts): string {
-    let hasXhr = XMLHttpRequest && (new XMLHttpRequest()).withCredentials;
+    let hasXhr = XMLHttpRequest;
     if (!opts.host && hasXhr) {
         return 'compat';
     }

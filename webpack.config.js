@@ -46,7 +46,7 @@ client.entry = {
   'client': clientFiles,
   'client.min': clientFiles,
 };
-client.output.library = ['airbrakeJs', 'Client'];
+client.output.library = ['airbrakeJs'];
 
 
 var jquery = newConfig();
@@ -54,7 +54,7 @@ jquery.entry = {
   'instrumentation/jquery': './src/instrumentation/jquery.ts',
   'instrumentation/jquery.min': './src/instrumentation/jquery.ts',
 }
-jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
+jquery.output.library = ['airbrakeJs', 'instrumentation'];
 
 
 module.exports = [client, jquery];

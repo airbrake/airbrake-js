@@ -40,7 +40,7 @@ function makeOnErrorHandler(notifier: Client): ErrorEventHandler {
     };
 }
 
-export default class Client {
+export class Client {
     onerror: ErrorEventHandler;
 
     private opts: ReporterOptions = {} as ReporterOptions;

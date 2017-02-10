@@ -1,7 +1,4 @@
-import Client from '../client';
-
-
-export default function instrumentJQuery(client: Client, jq = (<any>window).jQuery): any {
+export function jquery(client: any, jq = (<any>window).jQuery): any {
     function wrapArgs(args: any[]): any[] {
         for (let i in args) {
             let arg = args[i];
