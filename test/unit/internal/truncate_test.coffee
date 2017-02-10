@@ -1,6 +1,3 @@
-import { expect } from 'chai'
-import sinon from 'sinon'
-
 import truncate from '../../../src/internal/truncate'
 
 
