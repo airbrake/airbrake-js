@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["instrumentation"] = factory();
+		exports["jquery"] = factory();
 	else
-		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["instrumentation"] = factory();
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["instrumentation"] = root["airbrakeJs"]["instrumentation"] || {}, root["airbrakeJs"]["instrumentation"]["jquery"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -82,24 +82,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-exports.jquery = jquery;
-function jquery(client) {
-    var jq = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window.jQuery;
-
+function instrumentJQuery(client, jq) {
+    if (jq === void 0) { jq = window.jQuery; }
     function wrapArgs(args) {
         for (var i in args) {
             var arg = args[i];
-            var type = typeof arg === 'undefined' ? 'undefined' : _typeof(arg);
+            var type = typeof arg;
             if (type === 'function') {
                 args[i] = client.wrap(arg);
-            } else if (Array.isArray(arg)) {
+            }
+            else if (Array.isArray(arg)) {
                 // Wrap recursively.
                 args[i] = wrapArgs(arg);
             }
@@ -114,7 +106,8 @@ function jquery(client) {
                 handler.handler.guid = jq.guid++;
             }
             handler.handler = client.wrap(handler.handler);
-        } else {
+        }
+        else {
             if (!handler.guid) {
                 handler.guid = jq.guid++;
             }
@@ -140,6 +133,8 @@ function jquery(client) {
     };
     return jq;
 }
+module.exports = instrumentJQuery;
+
 
 /***/ })
 /******/ ]);
