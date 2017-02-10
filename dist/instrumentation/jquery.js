@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["jquery"] = factory();
+		exports["instrumentation"] = factory();
 	else
-		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["instrumentation"] = root["airbrakeJs"]["instrumentation"] || {}, root["airbrakeJs"]["instrumentation"]["jquery"] = factory();
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["instrumentation"] = factory();
 })(this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -89,8 +89,8 @@ Object.defineProperty(exports, "__esModule", {
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-exports.default = instrumentJQuery;
-function instrumentJQuery(client) {
+exports.jquery = jquery;
+function jquery(client) {
     var jq = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window.jQuery;
 
     function wrapArgs(args) {
