@@ -78,544 +78,794 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var g;
+"use strict";
 
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
 
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = jsonifyNotice;
+
+var _truncate = __webpack_require__(6);
+
+var _truncate2 = _interopRequireDefault(_truncate);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// truncateObj truncates each key in the object separately, which is
+// useful for handling circular references.
+function truncateObj(obj) {
+    var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+
+    var dst = {};
+    for (var key in obj) {
+        dst[key] = (0, _truncate2.default)(obj[key], n);
+    }
+    return dst;
 }
+// jsonifyNotice serializes notice to JSON and truncates params,
+// environment and session keys.
+function jsonifyNotice(notice) {
+    var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+    var maxLength = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 64000;
 
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
+    var s = void 0;
+    while (true) {
+        notice.params = truncateObj(notice.params, n);
+        notice.environment = truncateObj(notice.environment, n);
+        notice.session = truncateObj(notice.session, n);
+        s = JSON.stringify(notice);
+        if (s.length < maxLength) {
+            return s;
+        }
+        if (n === 0) {
+            break;
+        }
+        n = Math.floor(n / 2);
+    }
+    var err = new Error('airbrake-js: cannot jsonify notice (length=' + s.length + ' maxLength=' + maxLength + ')');
+    err.params = {
+        json: s.slice(0, Math.floor(n / 2)) + '...'
+    };
+    throw err;
+}
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var jsonifyNotice, truncate, truncateObj;
+"use strict";
 
-truncate = __webpack_require__(12);
 
-truncateObj = function(obj, n) {
-  var dst, key;
-  if (n == null) {
-    n = 1000;
-  }
-  dst = {};
-  for (key in obj) {
-    dst[key] = truncate(obj[key], n = n);
-  }
-  return dst;
-};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-jsonifyNotice = function(notice, n, maxLength) {
-  var err, s;
-  if (n == null) {
-    n = 1000;
-  }
-  if (maxLength == null) {
-    maxLength = 64000;
-  }
-  while (true) {
-    notice.params = truncateObj(notice.params, n = n);
-    notice.environment = truncateObj(notice.environment, n = n);
-    notice.session = truncateObj(notice.session, n = n);
-    s = JSON.stringify(notice);
-    if (s.length < maxLength) {
-      return s;
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _promise = __webpack_require__(8);
+
+var _promise2 = _interopRequireDefault(_promise);
+
+var _stacktracejs = __webpack_require__(7);
+
+var _stacktracejs2 = _interopRequireDefault(_stacktracejs);
+
+var _script_error = __webpack_require__(4);
+
+var _script_error2 = _interopRequireDefault(_script_error);
+
+var _uncaught_message = __webpack_require__(5);
+
+var _uncaught_message2 = _interopRequireDefault(_uncaught_message);
+
+var _angular_message = __webpack_require__(3);
+
+var _angular_message2 = _interopRequireDefault(_angular_message);
+
+var _reporter = __webpack_require__(11);
+
+var _compat = __webpack_require__(9);
+
+var _compat2 = _interopRequireDefault(_compat);
+
+var _xhr = __webpack_require__(12);
+
+var _xhr2 = _interopRequireDefault(_xhr);
+
+var _jsonp = __webpack_require__(10);
+
+var _jsonp2 = _interopRequireDefault(_jsonp);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+// Creates window.onerror handler for notifier. See
+// https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
+function makeOnErrorHandler(notifier) {
+    return function (message, filename, line, column, error) {
+        if (error) {
+            notifier.notify(error);
+        }
+        notifier.notify({ error: {
+                message: message,
+                fileName: filename,
+                lineNumber: line,
+                columnNumber: column
+            } });
+    };
+}
+
+var Client = function () {
+    function Client() {
+        var opts = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+        _classCallCheck(this, Client);
+
+        this.opts = {};
+        this.reporters = [];
+        this.filters = [];
+        this.opts.projectId = opts.projectId;
+        this.opts.projectKey = opts.projectKey;
+        if (opts.host) {
+            this.opts.host = opts.host;
+        } else {
+            this.opts.host = 'https://api.airbrake.io';
+        }
+        if (opts.processor) {
+            this.processor = opts.processor;
+        } else {
+            this.processor = _stacktracejs2.default;
+        }
+        if (opts.reporter) {
+            this.addReporter(opts.reporter);
+        } else {
+            this.addReporter((0, _reporter.detectReporter)(opts));
+        }
+        this.addFilter(_script_error2.default);
+        this.addFilter(_uncaught_message2.default);
+        this.addFilter(_angular_message2.default);
+        this.onerror = makeOnErrorHandler(this);
+        if (!window.onerror && opts.onerror !== false) {
+            window.onerror = this.onerror;
+        }
     }
-    if (n === 0) {
-      break;
-    }
-    n = Math.floor(n / 2);
-  }
-  err = new Error("airbrake-js: cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
-  err.params = {
-    json: s.slice(0, +Math.floor(n / 2) + 1 || 9e9) + '...'
-  };
-  throw err;
-};
 
-module.exports = jsonifyNotice;
+    _createClass(Client, [{
+        key: 'setProject',
+        value: function setProject(id, key) {
+            this.opts.projectId = id;
+            this.opts.projectKey = key;
+        }
+    }, {
+        key: 'setHost',
+        value: function setHost(host) {
+            this.opts.host = host;
+        }
+    }, {
+        key: 'addReporter',
+        value: function addReporter(name) {
+            var reporter = void 0;
+            switch (name) {
+                case 'compat':
+                    reporter = _compat2.default;
+                    break;
+                case 'xhr':
+                    reporter = _xhr2.default;
+                    break;
+                case 'jsonp':
+                    reporter = _jsonp2.default;
+                    break;
+                default:
+                    reporter = name;
+            }
+            this.reporters.push(reporter);
+        }
+    }, {
+        key: 'addFilter',
+        value: function addFilter(filter) {
+            this.filters.push(filter);
+        }
+    }, {
+        key: 'notify',
+        value: function notify(err) {
+            var _this = this;
 
+            var context = {
+                language: 'JavaScript',
+                notifier: {
+                    name: 'airbrake-js',
+                    version: "0.6.0-beta",
+                    url: 'https://github.com/airbrake/airbrake-js'
+                }
+            };
+            if (window.navigator && window.navigator.userAgent) {
+                context.userAgent = window.navigator.userAgent;
+            }
+            if (window.location) {
+                context.url = String(window.location);
+                // Set root directory to group errors on different subdomains together.
+                context.rootDirectory = window.location.protocol + '//' + window.location.host;
+            }
+            var promise = new _promise2.default();
+            this.processor(err.error || err, function (_, errInfo) {
+                var notice = {
+                    id: '',
+                    errors: [errInfo],
+                    context: Object.assign(context, err.context),
+                    params: err.params || {},
+                    environment: err.environment || {},
+                    session: err.session || {}
+                };
+                for (var i in _this.filters) {
+                    var filterFn = _this.filters[i];
+                    notice = filterFn(notice);
+                    if (notice === null || notice === false) {
+                        return;
+                    }
+                }
+                for (var _i in _this.reporters) {
+                    var reporterFn = _this.reporters[_i];
+                    reporterFn(notice, _this.opts, promise);
+                }
+            });
+            return promise;
+        }
+    }, {
+        key: 'wrapArguments',
+        value: function wrapArguments(args) {
+            for (var i in args) {
+                var arg = args[i];
+                if (typeof arg === 'function') {
+                    args[i] = this.wrap(arg);
+                }
+            }
+            return args;
+        }
+    }, {
+        key: 'wrap',
+        value: function wrap(fn) {
+            if (fn.__airbrake__) {
+                return fn;
+            }
+            var self = this;
+            var airbrakeWrapper = function airbrakeWrapper() {
+                var fnArgs = Array.prototype.slice.call(arguments);
+                var wrappedArgs = self.wrapArguments(fnArgs);
+                try {
+                    return fn.apply(this, wrappedArgs);
+                } catch (exc) {
+                    self.notify({ error: exc, params: { arguments: fnArgs } });
+                    return;
+                }
+            };
+            for (var prop in fn) {
+                if (fn.hasOwnProperty(prop)) {
+                    airbrakeWrapper[prop] = fn[prop];
+                }
+            }
+            airbrakeWrapper.__airbrake__ = true;
+            airbrakeWrapper.__inner__ = fn;
+            return airbrakeWrapper;
+        }
+    }, {
+        key: 'call',
+        value: function call(fn) {
+            var wrapper = this.wrap(fn);
+            return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+        }
+    }]);
+
+    return Client;
+}();
+
+exports.default = Client;
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var filter, re;
+"use strict";
 
-re = /^\[(\$.+)\]\s(.+)$/;
 
-filter = function(notice) {
-  var err, m;
-  err = notice.errors[0];
-  if ((err.type != null) && err.type !== '' && err.type !== 'Error') {
-    return notice;
-  }
-  if (err.message == null) {
-    return notice;
-  }
-  m = err.message.match(re);
-  if (m) {
-    err.type = m[1];
-    err.message = m[2];
-  }
-  return notice;
-};
+if (!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function (obj) {
+        var start = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
 
-module.exports = filter;
+        for (var i = start; i < this.length; i++) {
+            if (this[i] === obj) {
+                return i;
+            }
+        }
+        return -1;
+    };
+}
+if (!Object.assign) {
+    Object.assign = function (target) {
+        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+            args[_key - 1] = arguments[_key];
+        }
 
+        var _loop = function _loop(i) {
+            var source = args[i];
+            if (source) {
+                Object.keys(source).forEach(function (key) {
+                    return target[key] = source[key];
+                });
+            }
+        };
+
+        for (var i in args) {
+            _loop(i);
+        }
+        return target;
+    };
+}
 
 /***/ }),
 /* 3 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var IGNORED_MESSAGES, filter,
-  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+"use strict";
 
-IGNORED_MESSAGES = ['Script error', 'Script error.'];
 
-filter = function(notice) {
-  var msg;
-  msg = notice.errors[0].message;
-  if (indexOf.call(IGNORED_MESSAGES, msg) >= 0) {
-    return null;
-  }
-  return notice;
-};
-
-module.exports = filter;
-
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = filter;
+var re = new RegExp(['^', '\\[(\\$.+)\\]', '\\s', '(.+)', '$'].join(''));
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type !== '' && err.type !== 'Error') {
+        return notice;
+    }
+    var m = err.message.match(re);
+    if (m !== null) {
+        err.type = m[1];
+        err.message = m[2];
+    }
+    return notice;
+}
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var filter, re;
+"use strict";
 
-re = /^Uncaught\s(.+?):\s(.+)$/;
 
-filter = function(notice) {
-  var err, m;
-  err = notice.errors[0];
-  if ((err.type != null) && err.type !== '' && err.type !== 'Error') {
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = filter;
+var IGNORED_MESSAGES = ['Script error', 'Script error.'];
+function filter(notice) {
+    var msg = notice.errors[0].message;
+    if (IGNORED_MESSAGES.indexOf(msg) > -1) {
+        return null;
+    }
     return notice;
-  }
-  if (err.message == null) {
-    return notice;
-  }
-  m = err.message.match(re);
-  if (m) {
-    err.type = m[1];
-    err.message = m[2];
-  }
-  return notice;
-};
-
-module.exports = filter;
-
+}
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var base;
+"use strict";
 
-if ((base = Array.prototype).indexOf == null) {
-  base.indexOf = function(obj, start) {
-    var i, j, ref, ref1;
-    start = start || 0;
-    for (i = j = ref = start, ref1 = this.length; ref <= ref1 ? j < ref1 : j > ref1; i = ref <= ref1 ? ++j : --j) {
-      if (this[i] === obj) {
-        return i;
-      }
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = filter;
+var re = new RegExp(['^', 'Uncaught\\s', '(.+?)', ':\\s', '(.+)', '$'].join(''));
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type !== '' && err.type !== 'Error') {
+        return notice;
     }
-    return -1;
-  };
+    var m = err.message.match(re);
+    if (m !== null) {
+        err.type = m[1];
+        err.message = m[2];
+    }
+    return notice;
 }
-
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var merge;
+"use strict";
 
-merge = function() {
-  var dst, i, key, len, obj, objs;
-  objs = Array.prototype.slice.call(arguments);
-  dst = objs.shift() || {};
-  for (i = 0, len = objs.length; i < len; i++) {
-    obj = objs[i];
-    for (key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        dst[key] = obj[key];
-      }
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.default = truncate;
+function getAttr(obj, attr) {
+    // Ignore browser specific exceptions trying to read attribute (#79).
+    try {
+        return obj[attr];
+    } catch (exc) {
+        return undefined;
     }
-  }
-  return dst;
-};
+}
+function truncate(value) {
+    var n = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1000;
+    var depth = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 5;
 
-module.exports = merge;
+    var nn = 0;
+    var keys = [];
+    var seen = [];
+    function getPath(value) {
+        var index = seen.indexOf(value);
+        var path = [keys[index]];
+        for (var i = index; i >= 0; i--) {
+            if (seen[i] && getAttr(seen[i], path[0]) === value) {
+                value = seen[i];
+                path.unshift(keys[i]);
+            }
+        }
+        return '~' + path.join('.');
+    }
+    function fn(value) {
+        var key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+        var dd = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
 
+        nn++;
+        if (nn > n) {
+            return '[Truncated]';
+        }
+        if (value === null || value === undefined) {
+            return value;
+        }
+        switch (typeof value === 'undefined' ? 'undefined' : _typeof(value)) {
+            case 'boolean':
+            case 'number':
+            case 'string':
+            case 'function':
+                return value;
+            case 'object':
+                break;
+            default:
+                return String(value);
+        }
+        if (value instanceof Boolean || value instanceof Number || value instanceof String || value instanceof Date || value instanceof RegExp) {
+            return value;
+        }
+        if (seen.indexOf(value) >= 0) {
+            return '[Circular ' + getPath(value) + ']';
+        }
+        // At this point value can be either array or object. Check maximum depth.
+        dd++;
+        if (dd > depth) {
+            return '[Truncated]';
+        }
+        keys.push(key);
+        seen.push(value);
+        nn--; // nn was increased above for primitives.
+        if (Object.prototype.toString.apply(value) === '[object Array]') {
+            var _dst = [];
+            for (var i in value) {
+                var el = value[i];
+                nn++;
+                if (nn >= n) {
+                    break;
+                }
+                _dst.push(fn(el, i, dd));
+            }
+            return _dst;
+        }
+        var dst = {};
+        for (key in value) {
+            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+                continue;
+            }
+            nn++;
+            if (nn >= n) {
+                break;
+            }
+            var val = getAttr(value, key);
+            if (val !== undefined) {
+                dst[key] = fn(val, key, dd);
+            }
+        }
+        return dst;
+    }
+    return fn(value);
+}
 
 /***/ }),
 /* 7 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var Promise;
+"use strict";
 
-Promise = (function() {
-  function Promise(executor) {
-    var reject, resolve;
-    this._onResolved = [];
-    this._onRejected = [];
-    resolve = (function(_this) {
-      return function() {
-        return _this.resolve.apply(_this, arguments);
-      };
-    })(this);
-    reject = (function(_this) {
-      return function() {
-        return _this.reject.apply(_this, arguments);
-      };
-    })(this);
-    if (executor != null) {
-      executor(resolve, reject);
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = processor;
+
+var _errorStackParser = __webpack_require__(13);
+
+var _errorStackParser2 = _interopRequireDefault(_errorStackParser);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function processor(err, cb) {
+    var frames = void 0;
+    try {
+        frames = _errorStackParser2.default.parse(err);
+    } catch (err) {
+        if (console && console.warn) {
+            console.warn('airbrake-js: error-stack-parser failed', err);
+        }
+        frames = [];
     }
-  }
-
-  Promise.prototype.then = function(onResolved, onRejected) {
-    if (onResolved) {
-      if (this._resolvedWith != null) {
-        onResolved(this._resolvedWith);
-      }
-      this._onResolved.push(onResolved);
+    var backtrace = [];
+    for (var i in frames) {
+        var frame = frames[i];
+        backtrace.push({
+            function: frame.functionName || '',
+            file: frame.fileName,
+            line: frame.lineNumber,
+            column: frame.columnNumber
+        });
     }
-    if (onRejected) {
-      if (this._rejectedWith != null) {
-        onRejected(this._resolvedWith);
-      }
-      this._onRejected.push(onRejected);
+    var type = void 0;
+    if (err.name) {
+        type = err.name;
+    } else {
+        type = '';
     }
-    return this;
-  };
-
-  Promise.prototype["catch"] = function(onRejected) {
-    if (this._rejectedWith != null) {
-      onRejected(this._rejectedWith);
+    var msg = void 0;
+    if (err.message) {
+        msg = String(err.message);
+    } else {
+        msg = String(err);
     }
-    this._onRejected.push(onRejected);
-    return this;
-  };
-
-  Promise.prototype.resolve = function() {
-    var fn, i, len, ref;
-    this._resolvedWith = arguments;
-    ref = this._onResolved;
-    for (i = 0, len = ref.length; i < len; i++) {
-      fn = ref[i];
-      fn.apply(this, this._resolvedWith);
+    if (type === '' && msg === '' && backtrace.length === 0) {
+        if (console && console.warn) {
+            console.warn('airbrake: can not process error', err);
+        }
+        return;
     }
-    return this;
-  };
-
-  Promise.prototype.reject = function() {
-    var fn, i, len, ref;
-    this._rejectedWith = arguments;
-    ref = this._onRejected;
-    for (i = 0, len = ref.length; i < len; i++) {
-      fn = ref[i];
-      fn.apply(this, this._rejectedWith);
-    }
-    return this;
-  };
-
-  return Promise;
-
-})();
-
-module.exports = Promise;
-
+    cb('stacktracejs', {
+        type: type,
+        message: msg,
+        backtrace: backtrace
+    });
+}
 
 /***/ }),
 /* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var ErrorStackParser, processor;
+"use strict";
 
-ErrorStackParser = __webpack_require__(13);
 
-processor = function(e, cb) {
-  var backtrace, frame, frames, i, len, msg, type;
-  frames = ErrorStackParser.parse(e);
-  backtrace = [];
-  for (i = 0, len = frames.length; i < len; i++) {
-    frame = frames[i];
-    backtrace.push({
-      "function": frame.functionName || '',
-      file: frame.fileName,
-      line: frame.lineNumber,
-      column: frame.columnNumber
-    });
-  }
-  if (e.message != null) {
-    msg = String(e.message);
-  } else {
-    msg = String(e);
-  }
-  if ((e.name != null) && e.name !== '') {
-    type = e.name;
-  } else {
-    type = '';
-  }
-  if (type === '' && msg === '' && backtrace.length === 0) {
-    if (typeof console !== "undefined" && console !== null) {
-      if (typeof console.warn === "function") {
-        console.warn("airbrake: can't process error", e);
-      }
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var Promise = function () {
+    function Promise(executor) {
+        _classCallCheck(this, Promise);
+
+        this.onResolved = [];
+        this.onRejected = [];
+        if (executor) {
+            executor(this.resolve.bind(this), this.reject.bind(this));
+        }
     }
-    return;
-  }
-  return cb('stacktracejs', {
-    type: type,
-    message: msg,
-    backtrace: backtrace
-  });
-};
 
-module.exports = processor;
+    _createClass(Promise, [{
+        key: 'then',
+        value: function then(onResolved, onRejected) {
+            if (onResolved) {
+                if (this.resolvedWith) {
+                    onResolved(this.resolvedWith);
+                } else {
+                    this.onResolved.push(onResolved);
+                }
+            }
+            if (onRejected) {
+                if (this.rejectedWith) {
+                    onRejected(this.rejectedWith);
+                } else {
+                    this.onRejected.push(onRejected);
+                }
+            }
+            return this;
+        }
+    }, {
+        key: 'catch',
+        value: function _catch(onRejected) {
+            if (this.rejectedWith) {
+                onRejected(this.rejectedWith);
+            } else {
+                this.onRejected.push(onRejected);
+            }
+            return this;
+        }
+    }, {
+        key: 'resolve',
+        value: function resolve(value) {
+            if (this.resolvedWith || this.rejectedWith) {
+                throw new Error('Promise is already resolved or rejected');
+            }
+            this.resolvedWith = value;
+            for (var i in this.onResolved) {
+                var fn = this.onResolved[i];
+                fn(value);
+            }
+            return this;
+        }
+    }, {
+        key: 'reject',
+        value: function reject(reason) {
+            if (this.resolvedWith || this.rejectedWith) {
+                throw new Error('Promise is already resolved or rejected');
+            }
+            this.rejectedWith = reason;
+            for (var i in this.onRejected) {
+                var fn = this.onRejected[i];
+                fn(reason);
+            }
+            return this;
+        }
+    }]);
 
+    return Promise;
+}();
+
+exports.default = Promise;
 
 /***/ }),
 /* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var jsonifyNotice, report;
+"use strict";
 
-jsonifyNotice = __webpack_require__(1);
 
-report = function(notice, opts, promise) {
-  var payload, req, url;
-  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
-  payload = jsonifyNotice(notice);
-  req = new global.XMLHttpRequest();
-  req.open('POST', url, true);
-  req.send(payload);
-  return req.onreadystatechange = function() {
-    var resp;
-    if (req.readyState === 4 && req.status === 200) {
-      resp = JSON.parse(req.responseText);
-      notice.id = resp.id;
-      return promise.resolve(notice);
-    }
-  };
-};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = report;
 
-module.exports = report;
+var _jsonify_notice = __webpack_require__(0);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+var _jsonify_notice2 = _interopRequireDefault(_jsonify_notice);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function report(notice, opts, promise) {
+    var url = opts.host + '/api/v3/projects/' + opts.projectId + '/create-notice?key=' + opts.projectKey;
+    var payload = (0, _jsonify_notice2.default)(notice);
+    var req = new XMLHttpRequest();
+    req.open('POST', url, true);
+    req.send(payload);
+    req.onreadystatechange = function () {
+        if (req.readyState === 4 && req.status === 200) {
+            var resp = JSON.parse(req.responseText);
+            notice.id = resp.id;
+            promise.resolve(notice);
+        }
+    };
+}
 
 /***/ }),
 /* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var cbCount, jsonifyNotice, report;
+"use strict";
 
-jsonifyNotice = __webpack_require__(1);
 
-cbCount = 0;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = report;
 
-report = function(notice, opts, promise) {
-  var cbName, document, head, payload, removeScript, script, url;
-  cbCount++;
-  cbName = 'airbrakeCb' + String(cbCount);
-  global[cbName] = function(resp) {
-    var _;
-    notice.id = resp.id;
-    promise.resolve(notice);
-    try {
-      return delete global[cbName];
-    } catch (error) {
-      _ = error;
-      return global[cbName] = void 0;
-    }
-  };
-  payload = encodeURIComponent(jsonifyNotice(notice));
-  url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
-  document = global.document;
-  head = document.getElementsByTagName('head')[0];
-  script = document.createElement('script');
-  script.src = url;
-  removeScript = function() {
-    return head.removeChild(script);
-  };
-  script.onload = removeScript;
-  script.onerror = removeScript;
-  return head.appendChild(script);
-};
+var _jsonify_notice = __webpack_require__(0);
 
-module.exports = report;
+var _jsonify_notice2 = _interopRequireDefault(_jsonify_notice);
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var cbCount = 0;
+function report(notice, opts, promise) {
+    cbCount++;
+    var cbName = 'airbrakeCb' + String(cbCount);
+    window[cbName] = function (resp) {
+        notice.id = resp.id;
+        promise.resolve(notice);
+        try {
+            delete window[cbName];
+        } catch (_) {
+            window[cbName] = undefined;
+        }
+    };
+    var payload = encodeURIComponent((0, _jsonify_notice2.default)(notice));
+    var url = opts.host + '/api/v3/projects/' + opts.projectId + '/create-notice?key=' + opts.projectKey + '&callback=' + cbName + '&body=' + payload;
+    var document = window.document;
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.src = url;
+    var removeScript = function removeScript() {
+        return head.removeChild(script);
+    };
+    script.onload = removeScript;
+    script.onerror = removeScript;
+    head.appendChild(script);
+}
 
 /***/ }),
 /* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var jsonifyNotice, report;
+"use strict";
 
-jsonifyNotice = __webpack_require__(1);
 
-report = function(notice, opts, promise) {
-  var payload, req, url;
-  url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-  payload = jsonifyNotice(notice);
-  req = new global.XMLHttpRequest();
-  req.open('POST', url, true);
-  req.setRequestHeader('Content-Type', 'application/json');
-  req.send(payload);
-  return req.onreadystatechange = function() {
-    var resp;
-    if (req.readyState === 4 && req.status === 201) {
-      resp = JSON.parse(req.responseText);
-      notice.id = resp.id;
-      return promise.resolve(notice);
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.detectReporter = detectReporter;
+function detectReporter(opts) {
+    var hasXhr = XMLHttpRequest && new XMLHttpRequest().withCredentials;
+    if (!opts.host && hasXhr) {
+        return 'compat';
     }
-  };
-};
-
-module.exports = report;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+    if (hasXhr) {
+        return 'xhr';
+    }
+    return 'jsonp';
+}
 
 /***/ }),
 /* 12 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-var getAttr, truncate;
+"use strict";
 
-getAttr = function(obj, attr) {
-  var exc;
-  try {
-    return obj[attr];
-  } catch (error) {
-    exc = error;
-    return void 0;
-  }
-};
 
-truncate = function(value, n, depth) {
-  var fn, getPath, keys, nn, seen;
-  if (n == null) {
-    n = 1000;
-  }
-  if (depth == null) {
-    depth = 5;
-  }
-  nn = 0;
-  keys = [];
-  seen = [];
-  getPath = function(value) {
-    var i, index, j, path, ref;
-    index = seen.indexOf(value);
-    path = [keys[index]];
-    for (i = j = ref = index; ref <= 0 ? j <= 0 : j >= 0; i = ref <= 0 ? ++j : --j) {
-      if (seen[i] && getAttr(seen[i], path[0]) === value) {
-        value = seen[i];
-        path.unshift(keys[i]);
-      }
-    }
-    return '~' + path.join('.');
-  };
-  fn = function(value, key, dd) {
-    var dst, el, i, j, len, val;
-    if (key == null) {
-      key = '';
-    }
-    if (dd == null) {
-      dd = 0;
-    }
-    nn++;
-    if (nn > n) {
-      return '[Truncated]';
-    }
-    if (value === null || value === void 0) {
-      return value;
-    }
-    switch (typeof value) {
-      case 'boolean':
-      case 'number':
-      case 'string':
-      case 'function':
-        return value;
-      case 'object':
-        break;
-      default:
-        return String(value);
-    }
-    if (value instanceof Boolean || value instanceof Number || value instanceof String || value instanceof Date || value instanceof RegExp) {
-      return value;
-    }
-    if (seen.indexOf(value) >= 0) {
-      return "[Circular " + (getPath(value)) + "]";
-    }
-    dd++;
-    if (dd > depth) {
-      return '[Truncated]';
-    }
-    keys.push(key);
-    seen.push(value);
-    nn--;
-    if (Object.prototype.toString.apply(value) === '[object Array]') {
-      dst = [];
-      for (i = j = 0, len = value.length; j < len; i = ++j) {
-        el = value[i];
-        nn++;
-        if (nn >= n) {
-          break;
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = report;
+
+var _jsonify_notice = __webpack_require__(0);
+
+var _jsonify_notice2 = _interopRequireDefault(_jsonify_notice);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function report(notice, opts, promise) {
+    var url = opts.host + '/api/v3/projects/' + opts.projectId + '/notices?key=' + opts.projectKey;
+    var payload = (0, _jsonify_notice2.default)(notice);
+    var req = new XMLHttpRequest();
+    req.open('POST', url, true);
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.send(payload);
+    req.onreadystatechange = function () {
+        if (req.readyState === 4 && req.status === 201) {
+            var resp = JSON.parse(req.responseText);
+            notice.id = resp.id;
+            promise.resolve(notice);
         }
-        dst.push(fn(el, key = i, dd));
-      }
-      return dst;
-    }
-    dst = {};
-    for (key in value) {
-      if (!Object.prototype.hasOwnProperty.call(value, key)) {
-        continue;
-      }
-      nn++;
-      if (nn >= n) {
-        break;
-      }
-      val = getAttr(value, key);
-      if (val !== void 0) {
-        dst[key] = fn(val, key = key, dd);
-      }
-    }
-    return dst;
-  };
-  return fn(value);
-};
-
-module.exports = truncate;
-
+    };
+}
 
 /***/ }),
 /* 13 */
@@ -940,198 +1190,9 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var Client, Promise, makeOnErrorHandler, merge;
+__webpack_require__(2);
+module.exports = __webpack_require__(1);
 
-__webpack_require__(5);
-
-merge = __webpack_require__(6);
-
-Promise = __webpack_require__(7);
-
-makeOnErrorHandler = function(notifier) {
-  return function(message, file, line, column, error) {
-    if (error) {
-      return notifier.notify(error);
-    } else {
-      return notifier.notify({
-        error: {
-          message: message,
-          fileName: file,
-          lineNumber: line,
-          columnNumber: column || 0
-        }
-      });
-    }
-  };
-};
-
-Client = (function() {
-  function Client(opts) {
-    var reporter;
-    if (opts == null) {
-      opts = {};
-    }
-    this._projectId = opts.projectId || 0;
-    this._projectKey = opts.projectKey || '';
-    this._host = opts.host || 'https://api.airbrake.io';
-    this._processor = null;
-    this._reporters = [];
-    this._filters = [];
-    if (opts.processor !== void 0) {
-      this._processor = opts.processor;
-    } else {
-      this._processor = __webpack_require__(8);
-    }
-    if (opts.reporter !== void 0) {
-      this.addReporter(opts.reporter);
-    } else {
-      if ((opts.host == null) && 'withCredentials' in new global.XMLHttpRequest()) {
-        reporter = 'compat';
-      } else if (global.document != null) {
-        reporter = 'jsonp';
-      } else {
-        reporter = 'xhr';
-      }
-      this.addReporter(reporter);
-    }
-    this.addFilter(__webpack_require__(3));
-    this.addFilter(__webpack_require__(4));
-    this.addFilter(__webpack_require__(2));
-    this.onerror = makeOnErrorHandler(this);
-    if ((global.onerror == null) && opts.onerror !== false) {
-      global.onerror = this.onerror;
-    }
-  }
-
-  Client.prototype.setProject = function(id, key) {
-    this._projectId = id;
-    return this._projectKey = key;
-  };
-
-  Client.prototype.setHost = function(host) {
-    return this._host = host;
-  };
-
-  Client.prototype.addReporter = function(reporter) {
-    switch (reporter) {
-      case 'compat':
-        reporter = __webpack_require__(9);
-        break;
-      case 'xhr':
-        reporter = __webpack_require__(11);
-        break;
-      case 'jsonp':
-        reporter = __webpack_require__(10);
-    }
-    return this._reporters.push(reporter);
-  };
-
-  Client.prototype.addFilter = function(filter) {
-    return this._filters.push(filter);
-  };
-
-  Client.prototype.notify = function(err) {
-    var context, promise, ref;
-    context = {
-      language: 'JavaScript',
-      sourceMapEnabled: true
-    };
-    if ((ref = global.navigator) != null ? ref.userAgent : void 0) {
-      context.userAgent = global.navigator.userAgent;
-    }
-    if (global.location) {
-      context.url = String(global.location);
-      context.rootDirectory = global.location.protocol + '//' + global.location.host;
-    }
-    promise = new Promise();
-    this._processor(err.error || err, (function(_this) {
-      return function(processorName, errInfo) {
-        var filterFn, j, k, len, len1, notice, opts, ref1, ref2, reporterFn;
-        notice = {
-          errors: [errInfo],
-          context: merge(context, err.context),
-          params: err.params || {},
-          environment: err.environment || {},
-          session: err.session || {}
-        };
-        notice.context.notifier = {
-          name: 'airbrake-js',
-          version: "0.6.0-alpha.3",
-          url: 'https://github.com/airbrake/airbrake-js'
-        };
-        ref1 = _this._filters;
-        for (j = 0, len = ref1.length; j < len; j++) {
-          filterFn = ref1[j];
-          notice = filterFn(notice);
-          if (notice === null || notice === false) {
-            return;
-          }
-        }
-        opts = {
-          projectId: _this._projectId,
-          projectKey: _this._projectKey,
-          host: _this._host
-        };
-        ref2 = _this._reporters;
-        for (k = 0, len1 = ref2.length; k < len1; k++) {
-          reporterFn = ref2[k];
-          reporterFn(notice, opts, promise);
-        }
-      };
-    })(this));
-    return promise;
-  };
-
-  Client.prototype._wrapArguments = function(args) {
-    var arg, i, j, len;
-    for (i = j = 0, len = args.length; j < len; i = ++j) {
-      arg = args[i];
-      if (typeof arg === 'function') {
-        args[i] = this.wrap(arg);
-      }
-    }
-    return args;
-  };
-
-  Client.prototype.wrap = function(fn) {
-    var airbrakeWrapper, prop, self;
-    if (fn.__airbrake__) {
-      return fn;
-    }
-    self = this;
-    airbrakeWrapper = function() {
-      var args, exc;
-      args = self._wrapArguments(arguments);
-      try {
-        return fn.apply(this, args);
-      } catch (error1) {
-        exc = error1;
-        args = Array.prototype.slice.call(arguments);
-        self.notify({
-          error: exc,
-          params: {
-            "arguments": args
-          }
-        });
-      }
-    };
-    for (prop in fn) {
-      if (fn.hasOwnProperty(prop)) {
-        airbrakeWrapper[prop] = fn[prop];
-      }
-    }
-    airbrakeWrapper.__airbrake__ = true;
-    airbrakeWrapper.__inner__ = fn;
-    return airbrakeWrapper;
-  };
-
-  return Client;
-
-})();
-
-module.exports = Client;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
 
 /***/ })
 /******/ ]);

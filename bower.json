@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js-client",
-  "version": "0.6.0-alpha.3",
+  "version": "0.6.0-beta",
   "homepage": "https://github.com/airbrake/airbrake-js",
   "authors": [
     "Exceptional"

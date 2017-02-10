@@ -73,95 +73,73 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/* WEBPACK VAR INJECTION */(function(global) {var instrumentJQuery;
+"use strict";
 
-instrumentJQuery = function(client, jq) {
-  var jqCallbacks, jqEventAdd, jqReady, wrapArguments;
-  if (jq == null) {
-    jq = global.jQuery;
-  }
-  wrapArguments = function(args) {
-    var arg, i, j, len, type;
-    for (i = j = 0, len = args.length; j < len; i = ++j) {
-      arg = args[i];
-      type = typeof arg;
-      if (type === 'function') {
-        args[i] = client.wrap(arg);
-      } else if (arg && arg.length && type !== 'string') {
-        args[i] = wrapArguments(arg);
-      }
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.default = instrumentJQuery;
+function instrumentJQuery(client) {
+    var jq = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : window.jQuery;
+
+    function wrapArgs(args) {
+        for (var i in args) {
+            var arg = args[i];
+            var type = typeof arg === 'undefined' ? 'undefined' : _typeof(arg);
+            if (type === 'function') {
+                args[i] = client.wrap(arg);
+            } else if (Array.isArray(arg)) {
+                // Wrap recursively.
+                args[i] = wrapArgs(arg);
+            }
+            return args;
+        }
     }
-    return args;
-  };
-  jqEventAdd = jq.event.add;
-  jq.event.add = function(elem, types, handler, data, selector) {
-    if (handler.handler) {
-      if (!handler.handler.guid) {
-        handler.handler.guid = jq.guid++;
-      }
-      handler.handler = client.wrap(handler.handler);
-    } else {
-      if (!handler.guid) {
-        handler.guid = jq.guid++;
-      }
-      handler = client.wrap(handler);
-    }
-    return jqEventAdd(elem, types, handler, data, selector);
-  };
-  jqCallbacks = jq.Callbacks;
-  jq.Callbacks = function(options) {
-    var cb, cbAdd;
-    cb = jqCallbacks(options);
-    cbAdd = cb.add;
-    cb.add = function() {
-      return cbAdd.apply(this, wrapArguments(arguments));
+    // Reports exceptions thrown in jQuery event handlers.
+    var jqEventAdd = jq.event.add;
+    jq.event.add = function (elem, types, handler, data, selector) {
+        if (handler.handler) {
+            if (!handler.handler.guid) {
+                handler.handler.guid = jq.guid++;
+            }
+            handler.handler = client.wrap(handler.handler);
+        } else {
+            if (!handler.guid) {
+                handler.guid = jq.guid++;
+            }
+            handler = client.wrap(handler);
+        }
+        return jqEventAdd(elem, types, handler, data, selector);
     };
-    return cb;
-  };
-  jqReady = jq.fn.ready;
-  jq.fn.ready = function(fn) {
-    return jqReady(client.wrap(fn));
-  };
-  return jq;
-};
-
-module.exports = instrumentJQuery;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+    // Reports exceptions thrown in jQuery callbacks.
+    var jqCallbacks = jq.Callbacks;
+    jq.Callbacks = function (options) {
+        var cb = jqCallbacks(options);
+        var cbAdd = cb.add;
+        cb.add = function () {
+            var args = Array.prototype.slice.call(arguments);
+            return cbAdd.apply(this, wrapArgs(args));
+        };
+        return cb;
+    };
+    // Reports exceptions thrown in jQuery ready callbacks.
+    var jqReady = jq.fn.ready;
+    jq.fn.ready = function (fn) {
+        return jqReady(client.wrap(fn));
+    };
+    return jq;
+}
 
 /***/ })
 /******/ ]);
