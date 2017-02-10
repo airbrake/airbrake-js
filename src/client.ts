@@ -40,7 +40,7 @@ function makeOnErrorHandler(notifier: Client): ErrorEventHandler {
     };
 }
 
-export class Client {
+class Client {
     onerror: ErrorEventHandler;
 
     private opts: ReporterOptions = {} as ReporterOptions;
@@ -142,17 +142,15 @@ export class Client {
                 session: err.session || {},
             };
 
-            for (let i in this.filters) {
-                let filterFn = this.filters[i];
-                notice = filterFn(notice);
+            for (let filter of this.filters) {
+                notice = filter(notice);
                 if (notice === null || (notice as any) === false) {
                     return;
                 }
             }
 
-            for (let i in this.reporters) {
-                let reporterFn = this.reporters[i];
-                reporterFn(notice, this.opts, promise);
+            for (let reporter of this.reporters) {
+                reporter(notice, this.opts, promise);
             }
         });
 
@@ -203,3 +201,5 @@ export class Client {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
 }
+
+export = Client;

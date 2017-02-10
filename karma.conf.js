@@ -11,7 +11,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'sinon-chai'],
 
 
     // list of files / patterns to load in the browser
@@ -42,7 +42,7 @@ module.exports = function(config) {
       module: {
         rules: [
           {test: /\.coffee$/, loader: 'coffee-loader'},
-          {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
+          {test: /\.tsx?$/, loader: 'ts-loader'},
         ]
       },
 
@@ -54,7 +54,7 @@ module.exports = function(config) {
         }),
         new webpack.SourceMapDevToolPlugin({
           filename: null,
-          test: /\.coffee$/
+          test: /\.(coffee|ts)$/
         })
       ],
     },

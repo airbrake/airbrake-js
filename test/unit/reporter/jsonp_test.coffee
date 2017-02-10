@@ -1,6 +1,3 @@
-import { expect } from '../chai_with_sinon'
-import sinon from 'sinon'
-
 import reporter from '../../../src/reporter/jsonp'
 
 

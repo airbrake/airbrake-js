@@ -1,4 +1,4 @@
-export function jquery(client: any, jq = (<any>window).jQuery): any {
+function instrumentJQuery(client: any, jq = (<any>window).jQuery): any {
     function wrapArgs(args: any[]): any[] {
         for (let i in args) {
             let arg = args[i];
@@ -50,3 +50,5 @@ export function jquery(client: any, jq = (<any>window).jQuery): any {
 
     return jq;
 }
+
+export = instrumentJQuery;
