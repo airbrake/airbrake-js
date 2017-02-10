@@ -26,8 +26,7 @@ export default function report(notice: Notice): void {
     if (!console.log) {
         return
     }
-    for (let i in notice.errors) {
-        let err = notice.errors[i];
+    for (let err of notice.errors) {
         console.log(formatError(err));
     }
 }

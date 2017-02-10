@@ -13,7 +13,7 @@ function newConfig() {
     module: {
       rules: [
         {test: /\.coffee$/, loader: 'coffee-loader'},
-        {test: /\.tsx?$/, loader: 'awesome-typescript-loader'},
+        {test: /\.tsx?$/, loader: 'ts-loader'},
         {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
         {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'},
       ]
@@ -46,7 +46,7 @@ client.entry = {
   'client': clientFiles,
   'client.min': clientFiles,
 };
-client.output.library = ['airbrakeJs'];
+client.output.library = ['airbrakeJs', 'Client'];
 
 
 var jquery = newConfig();
@@ -54,7 +54,7 @@ jquery.entry = {
   'instrumentation/jquery': './src/instrumentation/jquery.ts',
   'instrumentation/jquery.min': './src/instrumentation/jquery.ts',
 }
-jquery.output.library = ['airbrakeJs', 'instrumentation'];
+jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
 
 
 module.exports = [client, jquery];

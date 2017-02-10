@@ -48,8 +48,7 @@ export default class Promise {
             throw new Error('Promise is already resolved or rejected');
         }
         this.resolvedWith = value;
-        for (let i in this.onResolved) {
-            let fn = this.onResolved[i];
+        for (let fn of this.onResolved) {
             fn(value);
         }
         return this;
@@ -60,8 +59,7 @@ export default class Promise {
             throw new Error('Promise is already resolved or rejected');
         }
         this.rejectedWith = reason;
-        for (let i in this.onRejected) {
-            let fn = this.onRejected[i];
+        for (let fn of this.onRejected) {
             fn(reason);
         }
         return this;

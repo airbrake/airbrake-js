@@ -1,7 +1,7 @@
 import {AirbrakeFrame} from '../notice';
 import {Callback} from './processor';
 
-import ErrorStackParser from 'error-stack-parser';
+import ErrorStackParser = require('error-stack-parser');
 
 
 export default function processor(err: Error, cb: Callback): void {
@@ -16,8 +16,7 @@ export default function processor(err: Error, cb: Callback): void {
     }
 
     let backtrace: AirbrakeFrame[] = [];
-    for (let i in frames) {
-        let frame = frames[i];
+    for (let frame of frames) {
         backtrace.push({
             function: frame.functionName || '',
             file: frame.fileName,
