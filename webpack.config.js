@@ -41,9 +41,10 @@ function newConfig() {
 
 
 var client = newConfig();
+var clientFiles = ['./src/internal/compat.ts', './src/client.ts'];
 client.entry = {
-  'client': ['./src/internal/compat.ts', './src/client.coffee'],
-  'client.min': './src/client.coffee'
+  'client': clientFiles,
+  'client.min': clientFiles,
 };
 client.output.library = ['airbrakeJs', 'Client'];
 

@@ -1,7 +1,11 @@
+import Promise from '../promise';
+import Notice from '../notice';
 import jsonifyNotice from '../internal/jsonify_notice';
 
+import {ReporterOptions} from './reporter';
 
-export default function report(notice, opts, promise) {
+
+export default function report(notice: Notice, opts: ReporterOptions, promise: Promise): void {
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/create-notice?key=${opts.projectKey}`;
     let payload = jsonifyNotice(notice);
 

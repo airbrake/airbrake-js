@@ -1,7 +1,7 @@
 import { expect } from '../chai_with_sinon'
 import sinon from 'sinon'
 
-import reporter from '../../../src/reporters/xhr'
+import reporter from '../../../src/reporter/xhr'
 
 
 describe 'XhrReporter', ->

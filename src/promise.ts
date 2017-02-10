@@ -1,6 +1,5 @@
-type Resolver = (value: any) => void;
-type Rejector = (reason: any) => void;
-
+export type Resolver = (value: any) => void;
+export type Rejector = (reason: any) => void;
 
 export default class Promise {
     private onResolved: Resolver[] = [];
@@ -9,7 +8,7 @@ export default class Promise {
     private resolvedWith;
     private rejectedWith;
 
-    constructor(executor) {
+    constructor(executor?) {
         if (executor) {
             executor(this.resolve.bind(this), this.reject.bind(this));
         }

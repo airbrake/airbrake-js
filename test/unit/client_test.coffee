@@ -271,22 +271,6 @@ describe 'Client', ->
       it 'reports context.rootDirectory', ->
         expect(notice.context.rootDirectory).to.equal('http://localhost:9876')
 
-  describe 'addReporter', ->
-    it 'supports xhr reporter', ->
-      client.addReporter('xhr')
-      reporter = client._reporters.pop()
-      expect(reporter).to.equal(require('../../src/reporters/xhr'))
-
-    it 'supports compat reporter', ->
-      client.addReporter('compat')
-      reporter = client._reporters.pop()
-      expect(reporter).to.equal(require('../../src/reporters/compat'))
-
-    it 'supports jsonp reporter', ->
-      client.addReporter('jsonp')
-      reporter = client._reporters.pop()
-      expect(reporter).to.equal(require('../../src/reporters/jsonp'))
-
   describe "custom reporter", ->
     it "is called on error", ->
       custom_reporter = sinon.spy()
