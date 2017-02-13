@@ -143,6 +143,7 @@ function makeOnErrorHandler(notifier) {
     return function (message, filename, line, column, error) {
         if (error) {
             notifier.notify(error);
+            return;
         }
         notifier.notify({ error: {
                 message: message,
@@ -219,7 +220,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0-beta.3",
+                version: "0.6.0-beta.4",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         };

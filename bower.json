@@ -1,15 +1,13 @@
 {
   "name": "airbrake-js-client",
-  "version": "0.6.0-beta.3",
+  "version": "0.6.0-beta.4",
   "homepage": "https://github.com/airbrake/airbrake-js",
-  "authors": [
-    "Exceptional"
-  ],
+  "authors": ["Airbrake"],
   "description": "Notify Airbrake on JavaScript exceptions",
   "main": "dist/client.js",
   "ignore": [
+    "src/**",
     "test/**",
-    "*.coffee",
     "package.json",
     ".gitignore"
   ],
