@@ -38,12 +38,7 @@
   },
   "main": "dist/client.js",
   "files": [
-    "dist/client.js",
-    "dist/client.min.js",
-    "dist/client.min.js.map",
-    "dist/instrumentation/jquery.js",
-    "dist/instrumentation/jquery.min.js",
-    "dist/instrumentation/jquery.min.js.map",
+    "dist/",
     "README.md",
     "LICENSE"
   ],

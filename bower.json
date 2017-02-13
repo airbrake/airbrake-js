@@ -10,7 +10,12 @@
     "test/**",
     "examples/**",
     "package.json",
-    ".gitignore"
+    "webpack.config.js",
+    "karma.conf.js",
+    "tsconfig.json",
+    "tslint.json",
+    ".gitignore",
+    ".travis.yml"
   ],
   "moduleType": [
     "amd",
