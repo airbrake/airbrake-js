@@ -29,6 +29,7 @@ function makeOnErrorHandler(notifier: Client): ErrorEventHandler {
     return function(message: string, filename?: string, line?: number, column?: number, error?: Error): void {
         if (error) {
             notifier.notify(error);
+            return;
         }
 
         notifier.notify({error: {

@@ -4,6 +4,10 @@ function start() {
     airbrakeJs.instrumentation.jquery(airbrake, jQuery);
   }
 
+  $('#send_error').click(function() {
+    throw new Error($('#error_text').val());
+  });
+
   try {
     throw new Error('hello from airbrake-js');
   } catch (err) {
@@ -13,5 +17,3 @@ function start() {
     });
   }
 }
-
-start();
