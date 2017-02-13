@@ -220,7 +220,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0-beta.4",
+                version: "0.6.0-beta.5",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         };
