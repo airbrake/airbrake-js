@@ -8,6 +8,7 @@
   "ignore": [
     "src/**",
     "test/**",
+    "examples/**",
     "package.json",
     ".gitignore"
   ],
