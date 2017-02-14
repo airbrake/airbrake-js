@@ -1,5 +1,4 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
     "lib": ["ES2015", "DOM"],
     "target": "ES5",
@@ -10,9 +9,5 @@
     "preserveConstEnums": true,
     "sourceMap": true,
     "skipLibCheck": true
-  },
-  "awesomeTypescriptLoaderOptions": {
-    "useCache": true,
-    "useBabel": true
   }
 }
