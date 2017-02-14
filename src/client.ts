@@ -5,11 +5,13 @@ import Processor from './processor/processor';
 import stacktracejsProcessor from './processor/stacktracejs';
 
 import Filter from './filter/filter';
+import windowFilter from './filter/window';
 import scriptErrorFilter from './filter/script_error';
 import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
 
 import {Reporter, ReporterOptions, detectReporter} from './reporter/reporter';
+import nodeReporter from './reporter/node';
 import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
@@ -72,12 +74,17 @@ class Client {
             this.addReporter(detectReporter(opts));
         }
 
+        let hasWindow = typeof window !== 'undefined';
+
+        if (hasWindow) {
+            this.addFilter(windowFilter);
+        }
         this.addFilter(scriptErrorFilter);
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
         this.onerror = makeOnErrorHandler(this);
-        if (!window.onerror && opts.onerror !== false) {
+        if (hasWindow && !window.onerror && opts.onerror !== false) {
             window.onerror = this.onerror;
         }
     }
@@ -94,6 +101,9 @@ class Client {
     addReporter(name: string|Reporter): void {
         let reporter: Reporter;
         switch (name) {
+        case 'node':
+            reporter = nodeReporter;
+            break;
         case 'compat':
             reporter = compatReporter;
             break;
@@ -122,14 +132,6 @@ class Client {
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         };
-        if (window.navigator && window.navigator.userAgent) {
-            context.userAgent = window.navigator.userAgent;
-        }
-        if (window.location) {
-            context.url = String(window.location);
-            // Set root directory to group errors on different subdomains together.
-            context.rootDirectory = window.location.protocol + '//' + window.location.host;
-        }
 
         let promise = new Promise();
 
