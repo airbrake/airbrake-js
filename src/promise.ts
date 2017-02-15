@@ -1,12 +1,12 @@
 export type Resolver = (value: any) => void;
-export type Rejector = (reason: any) => void;
+export type Rejector = (reason: Error) => void;
 
 export default class Promise {
     private onResolved: Resolver[] = [];
     private onRejected: Rejector[] = [];
 
     private resolvedWith;
-    private rejectedWith;
+    private rejectedWith: Error;
 
     constructor(executor?) {
         if (executor) {
@@ -54,7 +54,7 @@ export default class Promise {
         return this;
     }
 
-    reject(reason: any): Promise {
+    reject(reason: Error): Promise {
         if (this.resolvedWith || this.rejectedWith) {
             throw new Error('Promise is already resolved or rejected');
         }

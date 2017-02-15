@@ -14,10 +14,25 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
     req.setRequestHeader('Content-Type', 'application/json');
     req.send(payload);
     req.onreadystatechange = () => {
-        if (req.readyState === 4 && req.status === 201) {
-            let resp = JSON.parse(req.responseText);
-            notice.id = resp.id;
-            promise.resolve(notice);
+        if (req.readyState === 4) {
+            if (req.status >= 200 && req.status < 500) {
+                let resp = JSON.parse(req.responseText);
+                if (resp.id) {
+                    notice.id = resp.id;
+                    promise.resolve(notice);
+                    return;
+                }
+                if (resp.error) {
+                    let err = new Error(resp.error);
+                    promise.reject(err);
+                    return;
+                }
+            }
+
+            let body = req.responseText.trim();
+            let err = new Error(
+                `airbrake: unexpected response: code=${req.status} body='${body}'`);
+            promise.reject(err);
         }
     };
 }
