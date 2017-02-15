@@ -6,6 +6,7 @@ import stacktracejsProcessor from './processor/stacktracejs';
 
 import Filter from './filter/filter';
 import windowFilter from './filter/window';
+import nodeFilter from './filter/node';
 import scriptErrorFilter from './filter/script_error';
 import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
@@ -74,18 +75,27 @@ class Client {
             this.addReporter(detectReporter(opts));
         }
 
-        let hasWindow = typeof window !== 'undefined';
-
-        if (hasWindow) {
-            this.addFilter(windowFilter);
-        }
         this.addFilter(scriptErrorFilter);
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
         this.onerror = makeOnErrorHandler(this);
-        if (hasWindow && !window.onerror && opts.onerror !== false) {
-            window.onerror = this.onerror;
+
+        if (typeof window !== 'undefined') {
+            this.addFilter(windowFilter);
+            if (!window.onerror && !opts.onerror) {
+                window.onerror = this.onerror;
+            }
+        }
+
+        if (typeof process === 'object') {
+            this.addFilter(nodeFilter);
+            if (!opts.uncaughtException) {
+                process.on('uncaughtException', (err) => {
+                    this.notify(err);
+                    throw err;
+                });
+            }
         }
     }
 
