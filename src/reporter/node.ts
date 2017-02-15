@@ -23,10 +23,28 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
             'content-type': 'application/json'
         },
     }, function (error, response, body) {
-        if (!error && response.statusCode === 201) {
-            let resp = JSON.parse(body);
-            notice.id = resp.id;
-            promise.resolve(notice);
+        if (error) {
+            promise.reject(error);
+            return;
         }
+
+        if (response.statusCode >= 200 && response.statusCode < 500) {
+            let resp = JSON.parse(body);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                let err = new Error(resp.error);
+                promise.reject(err);
+                return;
+            }
+        }
+
+        body = body.trim();
+        let err = new Error(
+            `airbrake: unexpected response: code=${response.statusCode} body='${body}'`);
+        promise.reject(err);
     });
 }

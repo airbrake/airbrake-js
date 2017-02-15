@@ -13,7 +13,11 @@ app.get('/', function (req, res) {
 })
 
 app.use(function (err, req, res, next) {
-  airbrake.notify(err);
+  airbrake.notify(err).then(function(notice) {
+    console.log('notice id', notice.id);
+  }, function(err) {
+    console.log('airbrake failed', err.toString());
+  });
   next(err);
 });
 

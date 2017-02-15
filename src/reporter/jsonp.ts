@@ -12,13 +12,25 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
 
     let cbName = 'airbrakeCb' + String(cbCount);
     window[cbName] = (resp) => {
-        notice.id = resp.id;
-        promise.resolve(notice);
         try {
             delete window[cbName];
         } catch (_) { // IE
             window[cbName] = undefined;
         }
+
+        if (resp.id) {
+            notice.id = resp.id;
+            promise.resolve(notice);
+            return;
+        }
+        if (resp.error) {
+            let err = new Error(resp.error);
+            promise.reject(err);
+            return;
+        }
+
+        let err = new Error(resp);
+        promise.reject(err);
     };
 
     let payload = encodeURIComponent(jsonifyNotice(notice));
@@ -28,8 +40,11 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
     let head = document.getElementsByTagName('head')[0];
     let script = document.createElement('script');
     script.src = url;
-    let removeScript = () => head.removeChild(script);
-    script.onload = removeScript;
-    script.onerror = removeScript;
+    script.onload = () => head.removeChild(script);
+    script.onerror = () => {
+        head.removeChild(script);
+        let err = new Error('airbrake: JSONP script error');
+        promise.reject(err);
+    };
     head.appendChild(script);
 }
