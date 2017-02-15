@@ -230,11 +230,10 @@ describe 'Client', ->
               param1: "notify_value1"
               param3: "notify_value3"
 
-          reported = reporter.lastCall.args[0]
-          expect(reported.params).to.deep.equal
-            param1: "value1"
-            param2: "value2"
-            param3: "notify_value3"
+          params = reporter.lastCall.args[0].params
+          expect(params.param1).to.equal('value1')
+          expect(params.param2).to.equal('value2')
+          expect(params.param3).to.equal('notify_value3')
 
         it "reports custom session", ->
           client.addFilter (n) ->
