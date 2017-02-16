@@ -22,6 +22,7 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
         headers: {
             'content-type': 'application/json'
         },
+        timeout: opts.timeout,
     }, function (error, response, body) {
         if (error) {
             promise.reject(error);
