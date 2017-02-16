@@ -121,26 +121,27 @@ class Client {
     }
 
     notify(err) {
-        let context: any = {
+        let context: any = Object.assign({
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
                 version: VERSION,
                 url: 'https://github.com/airbrake/airbrake-js',
             },
+        }, err.context);
+        let notice: Notice = {
+            id: '',
+            errors: null,
+            context: context,
+            params: err.params || {},
+            environment: err.environment || {},
+            session: err.session || {},
         };
 
         let promise = new Promise();
 
-        this.processor(err.error || err, (_: string, errInfo: AirbrakeError): void => {
-            let notice: Notice = {
-                id: '',
-                errors: [errInfo],
-                context: Object.assign(context, err.context),
-                params: err.params || {},
-                environment: err.environment || {},
-                session: err.session || {},
-            };
+        this.processor(err.error || err, (_: string, error: AirbrakeError): void => {
+            notice.errors = [error];
 
             for (let filter of this.filters) {
                 notice = filter(notice);

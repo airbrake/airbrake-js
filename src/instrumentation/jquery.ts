@@ -1,4 +1,7 @@
-function instrumentJQuery(client: any, jq = (<any>window).jQuery): any {
+import Client = require('../client');
+
+
+function instrumentJQuery(client: Client, jq = (<any>window).jQuery): any {
     function wrapArgs(args: any[]): any[] {
         for (let i in args) {
             let arg = args[i];
