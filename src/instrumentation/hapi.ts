@@ -3,7 +3,7 @@ import Client = require('../client');
 
 function makeHandler(client: Client) {
     let fn: any = function (server, _options, next): void {
-        server.on('request-error', function(req, err): void {
+        server.on('request-error', function(req, err: Error): void {
             let url = req.connection.info.protocol + '://' +
                 req.info.host +
                 req.url.path;
