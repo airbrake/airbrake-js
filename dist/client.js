@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 15);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -82,7 +82,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
-var truncate_1 = __webpack_require__(8);
+var truncate_1 = __webpack_require__(11);
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
 function truncateObj(obj, n) {
@@ -124,19 +124,208 @@ exports.default = jsonifyNotice;
 
 /***/ }),
 /* 1 */
+/***/ (function(module, exports) {
+
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
-
-var promise_1 = __webpack_require__(10);
-var stacktracejs_1 = __webpack_require__(9);
-var script_error_1 = __webpack_require__(6);
-var uncaught_message_1 = __webpack_require__(7);
-var angular_message_1 = __webpack_require__(5);
-var reporter_1 = __webpack_require__(13);
-var compat_1 = __webpack_require__(11);
-var xhr_1 = __webpack_require__(14);
-var jsonp_1 = __webpack_require__(12);
+/* WEBPACK VAR INJECTION */(function(process) {
+var promise_1 = __webpack_require__(13);
+var stacktracejs_1 = __webpack_require__(12);
+var window_1 = __webpack_require__(10);
+var node_1 = __webpack_require__(7);
+var script_error_1 = __webpack_require__(8);
+var uncaught_message_1 = __webpack_require__(9);
+var angular_message_1 = __webpack_require__(6);
+var reporter_1 = __webpack_require__(17);
+var node_2 = __webpack_require__(16);
+var compat_1 = __webpack_require__(14);
+var xhr_1 = __webpack_require__(18);
+var jsonp_1 = __webpack_require__(15);
 // Creates window.onerror handler for notifier. See
 // https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
 function makeOnErrorHandler(notifier) {
@@ -156,35 +345,34 @@ function makeOnErrorHandler(notifier) {
 var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
+        var _this = this;
         this.opts = {};
         this.reporters = [];
         this.filters = [];
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
-        if (opts.host) {
-            this.opts.host = opts.host;
-        }
-        else {
-            this.opts.host = 'https://api.airbrake.io';
-        }
-        if (opts.processor) {
-            this.processor = opts.processor;
-        }
-        else {
-            this.processor = stacktracejs_1.default;
-        }
-        if (opts.reporter) {
-            this.addReporter(opts.reporter);
-        }
-        else {
-            this.addReporter(reporter_1.detectReporter(opts));
-        }
+        this.opts.host = opts.host || 'https://api.airbrake.io';
+        this.opts.timeout = opts.timeout || 10000;
+        this.processor = opts.processor || stacktracejs_1.default;
+        this.addReporter(opts.reporter || reporter_1.detectReporter(opts));
         this.addFilter(script_error_1.default);
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
         this.onerror = makeOnErrorHandler(this);
-        if (!window.onerror && opts.onerror !== false) {
-            window.onerror = this.onerror;
+        if (typeof window !== 'undefined') {
+            this.addFilter(window_1.default);
+            if (!window.onerror && !opts.onerror) {
+                window.onerror = this.onerror;
+            }
+        }
+        if (typeof process === 'object') {
+            this.addFilter(node_1.default);
+            if (!opts.uncaughtException) {
+                process.on('uncaughtException', function (err) {
+                    _this.notify(err);
+                    throw err;
+                });
+            }
         }
     }
     Client.prototype.setProject = function (id, key) {
@@ -197,6 +385,9 @@ var Client = (function () {
     Client.prototype.addReporter = function (name) {
         var reporter;
         switch (name) {
+            case 'node':
+                reporter = node_2.default;
+                break;
             case 'compat':
                 reporter = compat_1.default;
                 break;
@@ -216,32 +407,25 @@ var Client = (function () {
     };
     Client.prototype.notify = function (err) {
         var _this = this;
-        var context = {
+        var context = Object.assign({
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0-beta.5",
+                version: "0.6.0-beta.6",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
+        }, err.context);
+        var notice = {
+            id: '',
+            errors: null,
+            context: context,
+            params: err.params || {},
+            environment: err.environment || {},
+            session: err.session || {},
         };
-        if (window.navigator && window.navigator.userAgent) {
-            context.userAgent = window.navigator.userAgent;
-        }
-        if (window.location) {
-            context.url = String(window.location);
-            // Set root directory to group errors on different subdomains together.
-            context.rootDirectory = window.location.protocol + '//' + window.location.host;
-        }
         var promise = new promise_1.default();
-        this.processor(err.error || err, function (_, errInfo) {
-            var notice = {
-                id: '',
-                errors: [errInfo],
-                context: Object.assign(context, err.context),
-                params: err.params || {},
-                environment: err.environment || {},
-                session: err.session || {},
-            };
+        this.processor(err.error || err, function (_, error) {
+            notice.errors = [error];
             for (var _i = 0, _a = _this.filters; _i < _a.length; _i++) {
                 var filter = _a[_i];
                 notice = filter(notice);
@@ -298,9 +482,10 @@ var Client = (function () {
 }());
 module.exports = Client;
 
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports) {
 
 if (!Array.prototype.indexOf) {
@@ -335,7 +520,7 @@ if (!Object.assign) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function(root, factory) {
@@ -344,7 +529,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
     /* istanbul ignore next */
     if (true) {
-        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(4)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
+        !(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(5)], __WEBPACK_AMD_DEFINE_FACTORY__ = (factory),
 				__WEBPACK_AMD_DEFINE_RESULT__ = (typeof __WEBPACK_AMD_DEFINE_FACTORY__ === 'function' ?
 				(__WEBPACK_AMD_DEFINE_FACTORY__.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__)) : __WEBPACK_AMD_DEFINE_FACTORY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
@@ -535,7 +720,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;(function (root, factory) {
@@ -654,7 +839,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -683,7 +868,60 @@ exports.default = filter;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+var os;
+try {
+    // Use eval to hide import from Webpack.
+    os = eval('require')('os');
+}
+catch (_) { }
+function filter(notice) {
+    if (os) {
+        notice.context.os = os.type() + "/" + os.release();
+        notice.context.architecture = os.arch();
+        notice.context.hostname = os.hostname();
+    }
+    notice.context.platform = process.platform;
+    if (!notice.context.rootDirectory) {
+        notice.context.rootDirectory = process.cwd();
+    }
+    if (process.env.NODE_ENV) {
+        notice.context.environment = process.env.NODE_ENV;
+    }
+    notice.params.process = {
+        pid: process.pid,
+        cwd: process.cwd(),
+        execPath: process.execPath,
+        argv: process.argv,
+    };
+    for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
+        if (process[name_1]) {
+            notice.params.process[name_1] = process[name_1]();
+        }
+    }
+    if (os) {
+        notice.params.os = {
+            homedir: os.homedir(),
+            uptime: os.uptime(),
+            freemem: os.freemem(),
+            totalmem: os.totalmem(),
+            cpus: os.cpus(),
+            loadavg: os.loadavg(),
+        };
+    }
+    return notice;
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = filter;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(1)))
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -704,7 +942,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 7 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -734,7 +972,28 @@ exports.default = filter;
 
 
 /***/ }),
-/* 8 */
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+function filter(notice) {
+    if (window.navigator && window.navigator.userAgent) {
+        notice.context.userAgent = window.navigator.userAgent;
+    }
+    if (window.location) {
+        notice.context.url = String(window.location);
+        // Set root directory to group errors on different subdomains together.
+        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
+    }
+    return notice;
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = filter;
+
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -839,12 +1098,12 @@ exports.default = truncate;
 
 
 /***/ }),
-/* 9 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var ErrorStackParser = __webpack_require__(3);
+var ErrorStackParser = __webpack_require__(4);
 function processor(err, cb) {
     var frames;
     try {
@@ -897,7 +1156,7 @@ exports.default = processor;
 
 
 /***/ }),
-/* 10 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -967,7 +1226,7 @@ exports.default = Promise;
 
 
 /***/ }),
-/* 11 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -980,10 +1239,23 @@ function report(notice, opts, promise) {
     req.open('POST', url, true);
     req.send(payload);
     req.onreadystatechange = function () {
-        if (req.readyState === 4 && req.status === 200) {
-            var resp = JSON.parse(req.responseText);
-            notice.id = resp.id;
-            promise.resolve(notice);
+        if (req.readyState === 4) {
+            if (req.status >= 200 && req.status < 500) {
+                var resp = JSON.parse(req.responseText);
+                if (resp.id) {
+                    notice.id = resp.id;
+                    promise.resolve(notice);
+                    return;
+                }
+                if (resp.error) {
+                    var err_1 = new Error(resp.error);
+                    promise.reject(err_1);
+                    return;
+                }
+            }
+            var body = req.responseText.trim();
+            var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+            promise.reject(err);
         }
     };
 }
@@ -992,7 +1264,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 12 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1003,14 +1275,24 @@ function report(notice, opts, promise) {
     cbCount++;
     var cbName = 'airbrakeCb' + String(cbCount);
     window[cbName] = function (resp) {
-        notice.id = resp.id;
-        promise.resolve(notice);
         try {
             delete window[cbName];
         }
         catch (_) {
             window[cbName] = undefined;
         }
+        if (resp.id) {
+            notice.id = resp.id;
+            promise.resolve(notice);
+            return;
+        }
+        if (resp.error) {
+            var err_1 = new Error(resp.error);
+            promise.reject(err_1);
+            return;
+        }
+        var err = new Error(resp);
+        promise.reject(err);
     };
     var payload = encodeURIComponent(jsonify_notice_1.default(notice));
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
@@ -1018,9 +1300,12 @@ function report(notice, opts, promise) {
     var head = document.getElementsByTagName('head')[0];
     var script = document.createElement('script');
     script.src = url;
-    var removeScript = function () { return head.removeChild(script); };
-    script.onload = removeScript;
-    script.onerror = removeScript;
+    script.onload = function () { return head.removeChild(script); };
+    script.onerror = function () {
+        head.removeChild(script);
+        var err = new Error('airbrake: JSONP script error');
+        promise.reject(err);
+    };
     head.appendChild(script);
 }
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -1028,26 +1313,79 @@ exports.default = report;
 
 
 /***/ }),
-/* 13 */
+/* 16 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+var jsonify_notice_1 = __webpack_require__(0);
+var request;
+try {
+    // Use eval to hide import from Webpack.
+    request = eval('require')('request');
+}
+catch (_) { }
+function report(notice, opts, promise) {
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    request({
+        url: url,
+        method: 'POST',
+        body: payload,
+        headers: {
+            'content-type': 'application/json'
+        },
+        timeout: opts.timeout,
+    }, function (error, response, body) {
+        if (error) {
+            promise.reject(error);
+            return;
+        }
+        if (response.statusCode >= 200 && response.statusCode < 500) {
+            var resp = JSON.parse(body);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                var err_1 = new Error(resp.error);
+                promise.reject(err_1);
+                return;
+            }
+        }
+        body = body.trim();
+        var err = new Error("airbrake: unexpected response: code=" + response.statusCode + " body='" + body + "'");
+        promise.reject(err);
+    });
+}
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = report;
+
+
+/***/ }),
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 function detectReporter(opts) {
-    var hasXhr = XMLHttpRequest;
-    if (!opts.host && hasXhr) {
+    if (typeof XMLHttpRequest !== 'undefined') {
+        if (opts.host) {
+            return 'xhr';
+        }
         return 'compat';
     }
-    if (hasXhr) {
-        return 'xhr';
+    if (typeof window !== 'undefined') {
+        return 'jsonp';
     }
-    return 'jsonp';
+    return 'node';
 }
 exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 14 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1061,10 +1399,23 @@ function report(notice, opts, promise) {
     req.setRequestHeader('Content-Type', 'application/json');
     req.send(payload);
     req.onreadystatechange = function () {
-        if (req.readyState === 4 && req.status === 201) {
-            var resp = JSON.parse(req.responseText);
-            notice.id = resp.id;
-            promise.resolve(notice);
+        if (req.readyState === 4) {
+            if (req.status >= 200 && req.status < 500) {
+                var resp = JSON.parse(req.responseText);
+                if (resp.id) {
+                    notice.id = resp.id;
+                    promise.resolve(notice);
+                    return;
+                }
+                if (resp.error) {
+                    var err_1 = new Error(resp.error);
+                    promise.reject(err_1);
+                    return;
+                }
+            }
+            var body = req.responseText.trim();
+            var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+            promise.reject(err);
         }
     };
 }
@@ -1073,11 +1424,11 @@ exports.default = report;
 
 
 /***/ }),
-/* 15 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(2);
-module.exports = __webpack_require__(1);
+__webpack_require__(3);
+module.exports = __webpack_require__(2);
 
 
 /***/ })
