@@ -56,24 +56,11 @@ class Client {
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
+        this.opts.host = opts.host || 'https://api.airbrake.io';
+        this.opts.timeout = opts.timeout || 10000;
 
-        if (opts.host) {
-            this.opts.host = opts.host;
-        } else {
-            this.opts.host = 'https://api.airbrake.io';
-        }
-
-        if (opts.processor) {
-            this.processor = opts.processor;
-        } else {
-            this.processor = stacktracejsProcessor;
-        }
-
-        if (opts.reporter) {
-            this.addReporter(opts.reporter);
-        } else {
-            this.addReporter(detectReporter(opts));
-        }
+        this.processor = opts.processor || stacktracejsProcessor;
+        this.addReporter(opts.reporter || detectReporter(opts));
 
         this.addFilter(scriptErrorFilter);
         this.addFilter(uncaughtMessageFilter);

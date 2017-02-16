@@ -130,8 +130,9 @@ describe 'Client', ->
         opts = reporter.lastCall.args[1]
         expect(opts).to.deep.equal({
           projectId: 999
-          projectKey: "custom_project_key",
+          projectKey: "custom_project_key"
           host: "https://api.airbrake.io"
+          timeout: 10000
         })
 
       it "reporter is called with custom host", ->

@@ -14,6 +14,12 @@ export default function filter(notice: Notice): Notice {
         notice.context.hostname = os.hostname();
     }
     notice.context.platform = process.platform;
+    if (!notice.context.rootDirectory) {
+        notice.context.rootDirectory = process.cwd();
+    }
+    if (process.env.NODE_ENV) {
+        notice.context.environment = process.env.NODE_ENV;
+    }
 
     notice.params.process = {
         pid: process.pid,

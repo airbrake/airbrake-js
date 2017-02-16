@@ -6,6 +6,7 @@ export interface ReporterOptions {
     projectId: number;
     projectKey: string;
     host: string;
+    timeout: number;
 }
 
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
