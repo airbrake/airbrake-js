@@ -27,6 +27,7 @@ Example configurations can be found in [examples](examples), including:
 * [Bower](examples/bower-wiredep)
 * [Browserify](examples/browserify)
 * [Express.js](examples/express)
+* [hapi.js](examples/hapi)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
 * [React](examples/react)
