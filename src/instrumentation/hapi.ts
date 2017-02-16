@@ -5,18 +5,23 @@ function makeHandler(client: Client) {
     let fn: any = function (server, _options, next): void {
         server.on('request-error', function(req, err: Error): void {
             let url = req.connection.info.protocol + '://' +
-                req.info.host +
-                req.url.path;
+                req.headers['host'] +
+                req.path;
             let notice: any = {
                 error: err,
                 context: {
+                    userAddr: req.info.remoteAddress,
+                    userAgent: req.headers['user-agent'],
                     url: url,
+                    route: req.route.path,
                     httpMethod: req.method,
+                    component: 'hapi',
+                    action: req.route.settings.handler.name,
                 },
             };
-            let ua = req.headers['user-agent'];
-            if (ua) {
-                notice.context.userAgent = ua;
+            let referer = req.headers['referer'];
+            if (referer) {
+                notice.context.referer = referer;
             }
 
             client.notify(notice).catch(function(err) {
