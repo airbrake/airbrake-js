@@ -64,4 +64,11 @@ express.entry = {
 express.output.library = ['airbrakeJs', 'instrumentation', 'express'];
 
 
-module.exports = [client, jquery, express];
+var hapi = newConfig();
+hapi.entry = {
+  'instrumentation/hapi': './src/instrumentation/hapi.ts',
+}
+express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
+
+
+module.exports = [client, jquery, express, hapi];
