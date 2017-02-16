@@ -57,4 +57,11 @@ jquery.entry = {
 jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
 
 
-module.exports = [client, jquery];
+var express = newConfig();
+express.entry = {
+  'instrumentation/express': './src/instrumentation/express.ts',
+}
+express.output.library = ['airbrakeJs', 'instrumentation', 'express'];
+
+
+module.exports = [client, jquery, express];
