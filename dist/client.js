@@ -411,7 +411,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0-beta.6",
+                version: "0.6.0-beta.7",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -909,7 +909,6 @@ function filter(notice) {
             uptime: os.uptime(),
             freemem: os.freemem(),
             totalmem: os.totalmem(),
-            cpus: os.cpus(),
             loadavg: os.loadavg(),
         };
     }

@@ -84,16 +84,22 @@ return /******/ (function(modules) { // webpackBootstrap
 
 function makeErrorHandler(client) {
     return function errorHandler(err, req, _res, next) {
+        var url = req.protocol + '://' + req.headers['host'] + req.path;
         var notice = {
             error: err,
             context: {
-                url: req.url,
-                httpMethod: req.httpMethod,
+                userAddr: req.ip,
+                userAgent: req.headers['user-agent'],
+                url: url,
+                route: req.route.path,
+                httpMethod: req.method,
+                component: 'express',
+                action: req.route.stack[0].name,
             },
         };
-        var ua = req.get('User-Agent');
-        if (ua) {
-            notice.context.userAgent = ua;
+        var referer = req.headers['referer'];
+        if (referer) {
+            notice.context.referer = referer;
         }
         client.notify(notice).catch(function (err) {
             console.log('airbrake failed:', err.toString());
