@@ -27,6 +27,10 @@ function newConfig() {
       libraryTarget: 'umd'
     },
 
+    node: {
+      process: false
+    },
+
     plugins: [
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(pkg.version)
