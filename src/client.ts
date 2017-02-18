@@ -73,12 +73,11 @@ class Client {
             if (!window.onerror && !opts.onerror) {
                 window.onerror = this.onerror;
             }
-        }
-
-        if (typeof process === 'object') {
+        } else {
             this.addFilter(nodeFilter);
             if (!opts.uncaughtException) {
-                process.on('uncaughtException', (err) => {
+                // Use eval to hide process usage from Webpack and Browserify.
+                eval('process').on('uncaughtException', (err) => {
                     this.notify(err);
                     throw err;
                 });

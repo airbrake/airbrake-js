@@ -1,8 +1,9 @@
 import Notice from '../notice';
 
-let os;
+let myProcess, os;
 try {
-    // Use eval to hide import from Webpack.
+    // Use eval to hide import from Webpack and browserify.
+    myProcess = eval('process');
     os = eval('require')('os');
 } catch (_) {}
 
@@ -13,23 +14,23 @@ export default function filter(notice: Notice): Notice {
         notice.context.architecture = os.arch();
         notice.context.hostname = os.hostname();
     }
-    notice.context.platform = process.platform;
+    notice.context.platform = myProcess.platform;
     if (!notice.context.rootDirectory) {
-        notice.context.rootDirectory = process.cwd();
+        notice.context.rootDirectory = myProcess.cwd();
     }
-    if (process.env.NODE_ENV) {
-        notice.context.environment = process.env.NODE_ENV;
+    if (myProcess.env.NODE_ENV) {
+        notice.context.environment = myProcess.env.NODE_ENV;
     }
 
-    notice.params.process = {
-        pid: process.pid,
-        cwd: process.cwd(),
-        execPath: process.execPath,
-        argv: process.argv,
+    notice.params.myProcess = {
+        pid: myProcess.pid,
+        cwd: myProcess.cwd(),
+        execPath: myProcess.execPath,
+        argv: myProcess.argv,
     };
     for (let name in ['uptime', 'cpuUsage', 'memoryUsage']) {
-        if (process[name]) {
-            notice.params.process[name] = process[name]();
+        if (myProcess[name]) {
+            notice.params.myProcess[name] = myProcess[name]();
         }
     }
 
