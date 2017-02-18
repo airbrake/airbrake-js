@@ -39,7 +39,6 @@ export default function filter(notice: Notice): Notice {
             uptime: os.uptime(),
             freemem: os.freemem(),
             totalmem: os.totalmem(),
-            cpus: os.cpus(),
             loadavg: os.loadavg(),
         };
     }
