@@ -22,7 +22,7 @@ server.connection({
 server.route({
   method: 'GET',
   path: '/hello',
-  handler: function (request, reply) {
+  handler: function hello(request, reply) {
     throw new Error('hello from hapi');
     return reply('hello world');
   }

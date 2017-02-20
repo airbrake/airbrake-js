@@ -8,7 +8,7 @@ var airbrake = new AirbrakeClient({
   projectKey: 'FIXME'
 });
 
-app.get('/', function (req, res) {
+app.get('/', function hello (req, res) {
   throw new Error('hello from Express');
   res.send('Hello World!');
 })
