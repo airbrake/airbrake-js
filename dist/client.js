@@ -179,10 +179,11 @@ var Client = (function () {
                 window.onerror = this.onerror;
             }
         }
-        if (typeof process === 'object') {
+        else {
             this.addFilter(node_1.default);
             if (!opts.uncaughtException) {
-                process.on('uncaughtException', function (err) {
+                // Use eval to hide process usage from Webpack and Browserify.
+                eval('process').on('uncaughtException', function (err) {
                     _this.notify(err);
                     throw err;
                 });
@@ -225,7 +226,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0-beta.8",
+                version: "0.6.0",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -686,9 +687,10 @@ exports.default = filter;
 
 "use strict";
 
-var os;
+var myProcess, os;
 try {
-    // Use eval to hide import from Webpack.
+    // Use eval to hide import from Webpack and browserify.
+    myProcess = eval('process');
     os = eval('require')('os');
 }
 catch (_) { }
@@ -698,22 +700,22 @@ function filter(notice) {
         notice.context.architecture = os.arch();
         notice.context.hostname = os.hostname();
     }
-    notice.context.platform = process.platform;
+    notice.context.platform = myProcess.platform;
     if (!notice.context.rootDirectory) {
-        notice.context.rootDirectory = process.cwd();
+        notice.context.rootDirectory = myProcess.cwd();
     }
-    if (process.env.NODE_ENV) {
-        notice.context.environment = process.env.NODE_ENV;
+    if (myProcess.env.NODE_ENV) {
+        notice.context.environment = myProcess.env.NODE_ENV;
     }
     notice.params.process = {
-        pid: process.pid,
-        cwd: process.cwd(),
-        execPath: process.execPath,
-        argv: process.argv,
+        pid: myProcess.pid,
+        cwd: myProcess.cwd(),
+        execPath: myProcess.execPath,
+        argv: myProcess.argv,
     };
     for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
-        if (process[name_1]) {
-            notice.params.process[name_1] = process[name_1]();
+        if (myProcess[name_1]) {
+            notice.params.process[name_1] = myProcess[name_1]();
         }
     }
     if (os) {
