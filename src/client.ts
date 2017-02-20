@@ -53,6 +53,8 @@ class Client {
     private reporters: Reporter[] = [];
     private filters: Filter[] = [];
 
+    private logHistory = [];
+
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
@@ -68,10 +70,14 @@ class Client {
 
         this.onerror = makeOnErrorHandler(this);
 
-        if (typeof window !== 'undefined') {
+        if (typeof window === 'object') {
             this.addFilter(windowFilter);
             if (!window.onerror && !opts.onerror) {
                 window.onerror = this.onerror;
+            }
+
+            if (typeof console === 'object') {
+                this.instrumentConsole();
             }
         } else {
             this.addFilter(nodeFilter);
@@ -136,6 +142,9 @@ class Client {
             environment: err.environment || {},
             session: err.session || {},
         };
+        if (this.logHistory.length > 0) {
+            notice.params.logHistory = this.logHistory;
+        }
 
         let promise = new Promise();
 
@@ -172,15 +181,14 @@ class Client {
             return fn;
         }
 
-        let self = this;
+        let client = this;
         let airbrakeWrapper = function () {
             let fnArgs = Array.prototype.slice.call(arguments);
-            let wrappedArgs = self.wrapArguments(fnArgs);
+            let wrappedArgs = client.wrapArguments(fnArgs);
             try {
                 return fn.apply(this, wrappedArgs);
             } catch (exc) {
-                self.notify({error: exc, params: {arguments: fnArgs}});
-                return;
+                client.notify({error: exc, params: {arguments: fnArgs}});
             }
         } as FunctionWrapper;
 
@@ -199,6 +207,27 @@ class Client {
     call(fn) {
         let wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    }
+
+    private instrumentConsole() {
+        const historyMaxLen = 10;
+
+        let client = this;
+        let methods = ['debug', 'log', 'info', 'warn', 'error'];
+        for (let m of methods) {
+            let oldFn = console[m];
+            if (oldFn) {
+                let newFn = function () {
+                    oldFn.apply(console, arguments);
+
+                    client.logHistory.push(Array.prototype.slice.call(arguments));
+                    if (client.logHistory.length > historyMaxLen) {
+                        client.logHistory = client.logHistory.slice(-historyMaxLen);
+                    }
+                };
+                console[m] = newFn;
+            }
+        }
     }
 }
 
