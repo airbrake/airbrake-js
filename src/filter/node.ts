@@ -22,7 +22,7 @@ export default function filter(notice: Notice): Notice {
         notice.context.environment = myProcess.env.NODE_ENV;
     }
 
-    notice.params.myProcess = {
+    notice.params.process = {
         pid: myProcess.pid,
         cwd: myProcess.cwd(),
         execPath: myProcess.execPath,
@@ -30,7 +30,7 @@ export default function filter(notice: Notice): Notice {
     };
     for (let name in ['uptime', 'cpuUsage', 'memoryUsage']) {
         if (myProcess[name]) {
-            notice.params.myProcess[name] = myProcess[name]();
+            notice.params.process[name] = myProcess[name]();
         }
     }
 
