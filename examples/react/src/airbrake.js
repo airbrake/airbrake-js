@@ -6,7 +6,10 @@ let airbrakeClient;
 
 export function notify(err) {
   if (!airbrakeClient) {
-    airbrakeClient = new AirbrakeClient({projectId: 1, projectKey: 'FIXME'});
+    airbrakeClient = new AirbrakeClient({
+      projectId: 1,
+      projectKey: 'FIXME'
+    });
   }
   airbrakeClient.notify(err);
 }
