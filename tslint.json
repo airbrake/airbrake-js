@@ -53,7 +53,7 @@
             true,
             "spaces"
         ],
-        "no-eval": true,
+        "no-eval": false,
         "no-internal-module": true,
         "no-trailing-whitespace": true,
         "no-unsafe-finally": true,
