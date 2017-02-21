@@ -332,12 +332,21 @@ describe 'Client', ->
       expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
 
   it 'reports log history', ->
-    logHistory = []
     for i in [0..15]
       console.log(i)
-      logHistory.push([i])
     client.notify(new Error('test'))
 
     expect(reporter).to.have.been.called
     notice = reporter.lastCall.args[0]
-    expect(notice.params.logHistory).to.deep.equal(logHistory.slice(-10))
+    expect(notice.params.logHistory).to.deep.equal([
+      ['log', 6],
+      ['log', 7],
+      ['log', 8],
+      ['log', 9],
+      ['log', 10],
+      ['log', 11],
+      ['log', 12],
+      ['log', 13],
+      ['log', 14],
+      ['log', 15],
+    ])

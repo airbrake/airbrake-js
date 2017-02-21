@@ -220,7 +220,10 @@ class Client {
                 let newFn = function () {
                     oldFn.apply(console, arguments);
 
-                    client.logHistory.push(Array.prototype.slice.call(arguments));
+                    let data = [m];
+                    Array.prototype.push.apply(data, arguments)
+                    client.logHistory.push(data);
+
                     if (client.logHistory.length > historyMaxLen) {
                         client.logHistory = client.logHistory.slice(-historyMaxLen);
                     }
