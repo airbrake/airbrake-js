@@ -17,6 +17,8 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
+import {makeEventHandler} from './instrumentation/dom';
+
 
 declare const VERSION: string;
 
@@ -47,13 +49,15 @@ function makeOnErrorHandler(notifier: Client): ErrorEventHandler {
 class Client {
     onerror: ErrorEventHandler;
 
+    private historyMaxLen = 10;
+
     private opts: ReporterOptions = {} as ReporterOptions;
 
     private processor: Processor;
     private reporters: Reporter[] = [];
     private filters: Filter[] = [];
 
-    private logHistory = [];
+    private history = [];
 
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
@@ -75,10 +79,6 @@ class Client {
             if (!window.onerror && !opts.onerror) {
                 window.onerror = this.onerror;
             }
-
-            if (typeof console === 'object') {
-                this.instrumentConsole();
-            }
         } else {
             this.addFilter(nodeFilter);
             if (!opts.uncaughtException) {
@@ -88,6 +88,13 @@ class Client {
                     throw err;
                 });
             }
+        }
+
+        if (typeof document === 'object') {
+            this.instrumentDOM();
+        }
+        if (typeof console === 'object') {
+            this.instrumentConsole();
         }
     }
 
@@ -142,8 +149,8 @@ class Client {
             environment: err.environment || {},
             session: err.session || {},
         };
-        if (this.logHistory.length > 0) {
-            notice.params.logHistory = this.logHistory;
+        if (this.history.length > 0) {
+            notice.params.history = this.history;
         }
 
         let promise = new Promise();
@@ -209,27 +216,34 @@ class Client {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
 
-    private instrumentConsole() {
-        const historyMaxLen = 10;
+    pushHistory(state) {
+        this.history.push(state);
+        if (this.history.length > this.historyMaxLen) {
+            this.history = this.history.slice(-this.historyMaxLen);
+        }
+    }
 
+    private instrumentDOM(): void {
+        document.addEventListener('click', makeEventHandler(this, 'click'), false);
+    }
+
+    private instrumentConsole(): void {
         let client = this;
         let methods = ['debug', 'log', 'info', 'warn', 'error'];
         for (let m of methods) {
-            let oldFn = console[m];
-            if (oldFn) {
-                let newFn = function () {
-                    oldFn.apply(console, arguments);
-
-                    let data = [m];
-                    Array.prototype.push.apply(data, arguments)
-                    client.logHistory.push(data);
-
-                    if (client.logHistory.length > historyMaxLen) {
-                        client.logHistory = client.logHistory.slice(-historyMaxLen);
-                    }
-                };
-                console[m] = newFn;
+            if (!(m in console)) {
+                continue;
             }
+
+            let oldFn = console[m];
+            let newFn = function () {
+                oldFn.apply(console, arguments);
+
+                let data = [m];
+                Array.prototype.push.apply(data, arguments);
+                client.pushHistory(data);
+            };
+            console[m] = newFn;
         }
     }
 }
