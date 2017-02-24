@@ -1,4 +1,4 @@
-function getAttr(obj, attr: string) {
+function getAttr(obj: object, attr: string) {
     // Ignore browser specific exceptions trying to read attribute (#79).
     try {
         return obj[attr];
@@ -52,6 +52,10 @@ export default function truncate(value, n = 1000, depth = 5) {
             value instanceof Date ||
             value instanceof RegExp) {
             return value;
+        }
+
+        if (value instanceof Error) {
+            return value.toString();
         }
 
         if (seen.indexOf(value) >= 0) {
