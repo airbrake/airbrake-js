@@ -20,7 +20,8 @@ describe 'truncate', ->
       date: new Date(),
       func: Math.sin,
       func2: new Function('x', 'y', 'return x * y'),
-      re: /s/,
+      re: /a/,
+      re2: new RegExp('a'),
     }
 
     truncated = null
@@ -30,6 +31,10 @@ describe 'truncate', ->
 
     it 'produces same object', ->
       expect(truncated).to.deep.equal(obj)
+
+  it 'returns Error.toString()', ->
+    truncated = truncate(new Error('hello'))
+    expect(truncated).to.equal('Error: hello')
 
   context 'when called with object with circular references', ->
     obj = {foo: 'bar'}
