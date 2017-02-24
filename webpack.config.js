@@ -15,7 +15,7 @@ function newConfig() {
         {test: /\.coffee$/, loader: 'coffee-loader'},
         {test: /\.tsx?$/, loader: 'ts-loader'},
         {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
-        {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'},
+        {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'}
       ]
     },
 
@@ -48,7 +48,7 @@ var client = newConfig();
 var clientFiles = ['./src/internal/compat.ts', './src/client.ts'];
 client.entry = {
   'client': clientFiles,
-  'client.min': clientFiles,
+  'client.min': clientFiles
 };
 client.output.library = ['airbrakeJs', 'Client'];
 
@@ -56,22 +56,22 @@ client.output.library = ['airbrakeJs', 'Client'];
 var jquery = newConfig();
 jquery.entry = {
   'instrumentation/jquery': './src/instrumentation/jquery.ts',
-  'instrumentation/jquery.min': './src/instrumentation/jquery.ts',
-}
+  'instrumentation/jquery.min': './src/instrumentation/jquery.ts'
+};
 jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
 
 
 var express = newConfig();
 express.entry = {
-  'instrumentation/express': './src/instrumentation/express.ts',
-}
+  'instrumentation/express': './src/instrumentation/express.ts'
+};
 express.output.library = ['airbrakeJs', 'instrumentation', 'express'];
 
 
 var hapi = newConfig();
 hapi.entry = {
-  'instrumentation/hapi': './src/instrumentation/hapi.ts',
-}
+  'instrumentation/hapi': './src/instrumentation/hapi.ts'
+};
 express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
 
 

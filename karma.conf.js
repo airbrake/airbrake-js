@@ -1,6 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
-
+const webpackConfig = require('./webpack.config')[0];
 
 module.exports = function(config) {
   config.set({
@@ -18,6 +18,7 @@ module.exports = function(config) {
     files: [
       'src/internal/compat.ts',
       'test/unit/**/*_test.coffee',
+      'test/unit/**/*_test.ts',
     ],
 
 
@@ -35,16 +36,8 @@ module.exports = function(config) {
 
 
     webpack: {
-      resolve: {
-        extensions: ['.js', '.coffee', '.ts', '.tsx']
-      },
-
-      module: {
-        rules: [
-          {test: /\.coffee$/, loader: 'coffee-loader'},
-          {test: /\.tsx?$/, loader: 'ts-loader'},
-        ]
-      },
+      resolve: webpackConfig.resolve,
+      module: webpackConfig.module,
 
       devtool: 'inline-source-map',
 
