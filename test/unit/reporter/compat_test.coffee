@@ -1,3 +1,4 @@
+import Promise from '../../../src/promise'
 import reporter from '../../../src/reporter/compat'
 
 
@@ -15,7 +16,7 @@ describe 'CompatReporter', ->
       projectId: '[project_id]',
       projectKey: '[project_key]',
       host: 'https://api.airbrake.io'
-    })
+    }, new Promise())
     expect(spy).to.have.been.calledWith(
       'POST',
       'https://api.airbrake.io/api/v3/projects/[project_id]/create-notice?key=[project_key]',
@@ -27,7 +28,7 @@ describe 'CompatReporter', ->
       projectId: '[project_id]',
       projectKey: '[project_key]',
       host: 'https://custom.domain.com'
-    })
+    }, new Promise())
     expect(spy).to.have.been.calledWith(
       'POST',
       'https://custom.domain.com/api/v3/projects/[project_id]/create-notice?key=[project_key]',

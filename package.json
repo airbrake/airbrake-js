@@ -32,7 +32,8 @@
     "ts-loader": "^2.0.0",
     "tslint": "^4.4.2",
     "tslint-loader": "^3.3.0",
-    "typescript": "^2.1.5",
+    "typescript": "^2.2.1",
+    "typings": "^2.1.0",
     "uglify-js": "github:mishoo/UglifyJS2#harmony",
     "webpack": "^2.2.1"
   },
@@ -44,6 +45,7 @@
   ],
   "scripts": {
     "build": "webpack",
+    "pretest": "typings install",
     "test": "karma start"
   }
 }
