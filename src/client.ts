@@ -17,7 +17,7 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {makeEventHandler} from './instrumentation/dom';
+import {makeEventHandler, debounceEventHandler} from './instrumentation/dom';
 
 
 declare const VERSION: string;
@@ -58,6 +58,7 @@ class Client {
     private filters: Filter[] = [];
 
     private history = [];
+    private lastState;
 
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
@@ -216,15 +217,44 @@ class Client {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
 
-    pushHistory(state) {
+    pushHistory(state): void {
+        if (this.isDupState(state)) {
+            if (this.lastState.num) {
+                this.lastState.num++;
+            } else {
+                this.lastState.num = 2;
+            }
+            return;
+        }
+
         this.history.push(state);
+        this.lastState = state;
+
         if (this.history.length > this.historyMaxLen) {
             this.history = this.history.slice(-this.historyMaxLen);
         }
     }
 
+    private isDupState(state): boolean {
+        if (!this.lastState) {
+            return false;
+        }
+        for (let key in state) {
+            if (state[key] !== this.lastState[key]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private instrumentDOM(): void {
-        document.addEventListener('click', makeEventHandler(this, 'click'), false);
+        let handler = makeEventHandler(this);
+        document.addEventListener('click', handler, false);
+        document.addEventListener(
+            'keypress',
+            debounceEventHandler(handler),
+            false,
+        );
     }
 
     private instrumentConsole(): void {
@@ -238,10 +268,10 @@ class Client {
             let oldFn = console[m];
             let newFn = function () {
                 oldFn.apply(console, arguments);
-
-                let data = [m];
-                Array.prototype.push.apply(data, arguments);
-                client.pushHistory(data);
+                client.pushHistory({
+                    type: m,
+                    arguments: Array.prototype.slice.call(arguments),
+                });
             };
             console[m] = newFn;
         }

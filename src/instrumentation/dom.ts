@@ -57,14 +57,42 @@ function elemPath(elem: HTMLElement): string {
     return path.reverse().join(' > ');
 }
 
-export function makeEventHandler(client: Client, eventName: string): EventListener {
+export function debounceEventHandler(fn: EventListener, timeout = 1500): EventListener {
+    let timer: number;
     return function(event: Event): void {
-        let path: string;
-        try {
-            path = elemPath(event.target as HTMLElement);
-        } catch (err) {
-            path = `<${err.toString()}>`;
+        if (timer) {
+            clearTimeout(timer);
+        } else {
+            fn(event);
         }
-        client.pushHistory([eventName, path]);
+        timer = setTimeout(() => {
+            timer = null;
+        }, timeout);
+    };
+}
+
+export function makeEventHandler(client: Client): EventListener {
+    return function(event: Event): void {
+        let target: HTMLElement;
+        try {
+            target = event.target as HTMLElement;
+        } catch (_) {
+            return;
+        }
+
+        let state: any = {type: event.type};
+
+        try {
+            state.target = elemPath(target);
+        } catch (err) {
+            state.target = `<${err.toString()}>`;
+        }
+
+        let kb = event as KeyboardEvent;
+        if (kb.key) {
+            state.key = kb.key;
+        }
+
+        client.pushHistory(state);
     };
 }
