@@ -10,28 +10,30 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
     let payload = jsonifyNotice(notice);
 
     let req = new XMLHttpRequest();
+    req.timeout = opts.timeout;
     req.open('POST', url, true);
-    req.send(payload);
     req.onreadystatechange = () => {
-        if (req.readyState === 4) {
-            if (req.status >= 200 && req.status < 500) {
-                let resp = JSON.parse(req.responseText);
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
-                    return;
-                }
-                if (resp.error) {
-                    let err = new Error(resp.error);
-                    promise.reject(err);
-                    return;
-                }
-            }
-
-            let body = req.responseText.trim();
-            let err = new Error(
-                `airbrake: unexpected response: code=${req.status} body='${body}'`);
-            promise.reject(err);
+        if (req.readyState !== 4) {
+            return;
         }
+        if (req.status >= 200 && req.status < 500) {
+            let resp = JSON.parse(req.responseText);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                let err = new Error(resp.error);
+                promise.reject(err);
+                return;
+            }
+        }
+
+        let body = req.responseText.trim();
+        let err = new Error(
+            `airbrake: unexpected response: code=${req.status} body='${body}'`);
+        promise.reject(err);
     };
+    req.send(payload);
 }

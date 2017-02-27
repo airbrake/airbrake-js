@@ -97,6 +97,9 @@ class Client {
         if (typeof console === 'object') {
             this.instrumentConsole();
         }
+        if (typeof XMLHttpRequest === 'function') {
+            this.instrumentXHR(XMLHttpRequest.prototype);
+        }
     }
 
     setProject(id: number, key: string): void {
@@ -275,6 +278,48 @@ class Client {
             };
             console[m] = newFn;
         }
+    }
+
+    private instrumentXHR(proto): void {
+        let client = this;
+        let state;
+
+        let oldOpen = proto.open;
+        proto.open = function(method, url) {
+            state = {
+                type: 'xhr',
+                method: method,
+                url: url,
+            };
+            return oldOpen.apply(this, arguments);
+        };
+
+        let oldSend = proto.send;
+        proto.send = function(_data) {
+            let req = this;
+            let oldFn = req.onreadystatechange;
+            req.onreadystatechange = function() {
+                if (oldFn) {
+                    oldFn = client.wrap(oldFn);
+                    oldFn.apply(this, arguments);
+                }
+                if (!state || req.readyState !== 4) {
+                    return;
+                }
+                state.statusCode = req.status;
+                client.pushHistory(state);
+                state = null;
+            };
+
+            const events = ['onload', 'onerror', 'onprogress'];
+            for (let event of events) {
+                if (typeof req[event] === 'function') {
+                    req[event] = client.wrap(req[event]);
+                }
+            }
+
+            return oldSend.apply(this, arguments);
+        };
     }
 }
 
