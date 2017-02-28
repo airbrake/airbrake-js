@@ -141,22 +141,6 @@ var compat_1 = __webpack_require__(14);
 var xhr_1 = __webpack_require__(18);
 var jsonp_1 = __webpack_require__(15);
 var dom_1 = __webpack_require__(10);
-// Creates window.onerror handler for notifier. See
-// https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
-function makeOnErrorHandler(notifier) {
-    return function (message, filename, line, column, error) {
-        if (error) {
-            notifier.notify(error);
-            return;
-        }
-        notifier.notify({ error: {
-                message: message,
-                fileName: filename,
-                lineNumber: line,
-                columnNumber: column,
-            } });
-    };
-}
 var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
@@ -166,6 +150,7 @@ var Client = (function () {
         this.reporters = [];
         this.filters = [];
         this.history = [];
+        this.ignoreWindowError = 0;
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
         this.opts.host = opts.host || 'https://api.airbrake.io';
@@ -175,11 +160,10 @@ var Client = (function () {
         this.addFilter(script_error_1.default);
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
-        this.onerror = makeOnErrorHandler(this);
         if (typeof window === 'object') {
             this.addFilter(window_1.default);
             if (!window.onerror && !opts.onerror) {
-                window.onerror = this.onerror;
+                window.onerror = this.onerror.bind(this);
             }
         }
         else {
@@ -241,7 +225,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.7.0-rc.1",
+                version: "0.7.0-rc.2",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -295,6 +279,7 @@ var Client = (function () {
             }
             catch (err) {
                 client.notify({ error: err, params: { arguments: fnArgs } });
+                client.ignoreNextWindowError();
                 throw err;
             }
         };
@@ -326,6 +311,26 @@ var Client = (function () {
         if (this.history.length > this.historyMaxLen) {
             this.history = this.history.slice(-this.historyMaxLen);
         }
+    };
+    Client.prototype.onerror = function (message, filename, line, column, err) {
+        if (this.ignoreWindowError > 0) {
+            return;
+        }
+        if (err) {
+            this.notify(err);
+            return;
+        }
+        this.notify({ error: {
+                message: message,
+                fileName: filename,
+                lineNumber: line,
+                columnNumber: column,
+            } });
+    };
+    Client.prototype.ignoreNextWindowError = function () {
+        var _this = this;
+        this.ignoreWindowError++;
+        setTimeout(function () { return _this.ignoreWindowError--; });
     };
     Client.prototype.isDupState = function (state) {
         if (!this.lastState) {
