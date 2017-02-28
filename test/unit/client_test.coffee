@@ -306,7 +306,11 @@ describe 'Client', ->
       fn = ->
         throw exc
       wrapper = client.wrap(fn)
-      wrapper("hello", "world")
+      try
+        wrapper("hello", "world")
+      catch err
+        # ignore
+
       expect(client.notify).to.have.been.called
       expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
 
@@ -326,8 +330,11 @@ describe 'Client', ->
       exc = new Error("test")
       fn = ->
         throw exc
+      try
+        client.call(fn, "hello", "world")
+      catch err
+        # ignore
 
-      client.call(fn, "hello", "world")
       expect(client.notify).to.have.been.called
       expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
 
