@@ -8,6 +8,8 @@ function start() {
   }
 
   $('#send_error').click(function() {
+    history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+
     var val = $('#error_text').val();
     throw new Error(val);
   });
