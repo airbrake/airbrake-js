@@ -158,7 +158,7 @@ class Client {
             session: err.session || {},
         };
         if (this.history.length > 0) {
-            notice.params.history = this.history;
+            notice.context.history = this.history;
         }
 
         let promise = new Promise();

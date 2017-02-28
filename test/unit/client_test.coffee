@@ -345,7 +345,7 @@ describe 'Client', ->
 
     expect(reporter).to.have.been.called
     notice = reporter.lastCall.args[0]
-    expect(notice.params.history).to.deep.equal([
+    expect(notice.context.history).to.deep.equal([
       {type: 'log', arguments: [6]},
       {type: 'log', arguments: [7]},
       {type: 'log', arguments: [8]},
