@@ -59,6 +59,7 @@ class Client {
 
     private history = [];
     private lastState;
+    private lastURL;
 
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
@@ -99,6 +100,9 @@ class Client {
         }
         if (typeof XMLHttpRequest === 'function') {
             this.instrumentXHR(XMLHttpRequest.prototype);
+        }
+        if (typeof history === 'object') {
+            this.instrumentHistory();
         }
     }
 
@@ -319,6 +323,44 @@ class Client {
             }
 
             return oldSend.apply(this, arguments);
+        };
+    }
+
+    private instrumentHistory(): void {
+        this.lastURL = document.location.pathname;
+
+        let client = this;
+        let oldFn = window.onpopstate;
+        window.onpopstate = function(event: PopStateEvent): any {
+            client.pushHistory({
+                type: 'location',
+                from: client.lastURL,
+                to: document.location.pathname,
+                state: event.state,
+            });
+            client.lastURL = document.location.pathname;
+
+            if (oldFn) {
+                return oldFn.apply(this, arguments);
+            }
+        };
+
+        let oldPushState = history.pushState;
+        history.pushState = function(state: any, title: string, url?: string | null): void {
+            if (url) {
+                if (url.charAt(0) !== '/') {
+                    url = '/' + url;
+                }
+                client.pushHistory({
+                    type: 'location',
+                    from: client.lastURL,
+                    to: url,
+                    state: state,
+                    title: title,
+                });
+                client.lastURL = url;
+            }
+            oldPushState.apply(this, arguments);
         };
     }
 }
