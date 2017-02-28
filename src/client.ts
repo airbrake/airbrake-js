@@ -202,8 +202,9 @@ class Client {
             let wrappedArgs = client.wrapArguments(fnArgs);
             try {
                 return fn.apply(this, wrappedArgs);
-            } catch (exc) {
-                client.notify({error: exc, params: {arguments: fnArgs}});
+            } catch (err) {
+                client.notify({error: err, params: {arguments: fnArgs}});
+                throw err;
             }
         } as FunctionWrapper;
 
