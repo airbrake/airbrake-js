@@ -13,7 +13,7 @@ describe 'window.onerror', ->
     window.onerror = onerror
 
   it 'is setup', ->
-    expect(global.onerror).to.equal(client.onerror)
+    expect(window.onerror).not.to.be.null
 
 
 describe 'Client', ->

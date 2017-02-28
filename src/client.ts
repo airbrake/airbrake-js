@@ -28,27 +28,7 @@ interface FunctionWrapper {
     __inner__: () => any;
 }
 
-// Creates window.onerror handler for notifier. See
-// https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
-function makeOnErrorHandler(notifier: Client): ErrorEventHandler {
-    return function(message: string, filename?: string, line?: number, column?: number, error?: Error): void {
-        if (error) {
-            notifier.notify(error);
-            return;
-        }
-
-        notifier.notify({error: {
-            message: message,
-            fileName: filename,
-            lineNumber: line,
-            columnNumber: column,
-        }});
-    };
-}
-
 class Client {
-    onerror: ErrorEventHandler;
-
     private historyMaxLen = 10;
 
     private opts: ReporterOptions = {} as ReporterOptions;
@@ -59,7 +39,9 @@ class Client {
 
     private history = [];
     private lastState;
-    private lastURL;
+    private lastURL: string | null;
+
+    private ignoreWindowError = 0;
 
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
@@ -74,12 +56,10 @@ class Client {
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
-        this.onerror = makeOnErrorHandler(this);
-
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
             if (!window.onerror && !opts.onerror) {
-                window.onerror = this.onerror;
+                window.onerror = this.onerror.bind(this);
             }
         } else {
             this.addFilter(nodeFilter);
@@ -204,6 +184,7 @@ class Client {
                 return fn.apply(this, wrappedArgs);
             } catch (err) {
                 client.notify({error: err, params: {arguments: fnArgs}});
+                client.ignoreNextWindowError();
                 throw err;
             }
         } as FunctionWrapper;
@@ -241,6 +222,35 @@ class Client {
         if (this.history.length > this.historyMaxLen) {
             this.history = this.history.slice(-this.historyMaxLen);
         }
+    }
+
+    onerror(
+        message: string,
+        filename?: string,
+        line?: number,
+        column?: number,
+        err?: Error
+    ): void {
+        if (this.ignoreWindowError > 0) {
+            return;
+        }
+
+        if (err) {
+            this.notify(err);
+            return;
+        }
+
+        this.notify({error: {
+            message: message,
+            fileName: filename,
+            lineNumber: line,
+            columnNumber: column,
+        }});
+    }
+
+    private ignoreNextWindowError() {
+        this.ignoreWindowError++;
+        setTimeout(() => this.ignoreWindowError--);
     }
 
     private isDupState(state): boolean {
