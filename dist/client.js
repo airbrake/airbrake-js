@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -82,7 +82,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
-var truncate_1 = __webpack_require__(10);
+Object.defineProperty(exports, "__esModule", { value: true });
+var truncate_1 = __webpack_require__(11);
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
 function truncateObj(obj, n) {
@@ -118,7 +119,6 @@ function jsonifyNotice(notice, n, maxLength) {
     };
     throw err;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = jsonifyNotice;
 
 
@@ -128,18 +128,19 @@ exports.default = jsonifyNotice;
 
 "use strict";
 
-var promise_1 = __webpack_require__(12);
-var stacktracejs_1 = __webpack_require__(11);
+var promise_1 = __webpack_require__(13);
+var stacktracejs_1 = __webpack_require__(12);
 var window_1 = __webpack_require__(9);
 var node_1 = __webpack_require__(6);
 var script_error_1 = __webpack_require__(7);
 var uncaught_message_1 = __webpack_require__(8);
 var angular_message_1 = __webpack_require__(5);
-var reporter_1 = __webpack_require__(16);
-var node_2 = __webpack_require__(15);
-var compat_1 = __webpack_require__(13);
-var xhr_1 = __webpack_require__(17);
-var jsonp_1 = __webpack_require__(14);
+var reporter_1 = __webpack_require__(17);
+var node_2 = __webpack_require__(16);
+var compat_1 = __webpack_require__(14);
+var xhr_1 = __webpack_require__(18);
+var jsonp_1 = __webpack_require__(15);
+var dom_1 = __webpack_require__(10);
 // Creates window.onerror handler for notifier. See
 // https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror.
 function makeOnErrorHandler(notifier) {
@@ -160,9 +161,11 @@ var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
         var _this = this;
+        this.historyMaxLen = 10;
         this.opts = {};
         this.reporters = [];
         this.filters = [];
+        this.history = [];
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
         this.opts.host = opts.host || 'https://api.airbrake.io';
@@ -173,7 +176,7 @@ var Client = (function () {
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
         this.onerror = makeOnErrorHandler(this);
-        if (typeof window !== 'undefined') {
+        if (typeof window === 'object') {
             this.addFilter(window_1.default);
             if (!window.onerror && !opts.onerror) {
                 window.onerror = this.onerror;
@@ -188,6 +191,18 @@ var Client = (function () {
                     throw err;
                 });
             }
+        }
+        if (typeof document === 'object') {
+            this.instrumentDOM();
+        }
+        if (typeof console === 'object') {
+            this.instrumentConsole();
+        }
+        if (typeof XMLHttpRequest === 'function') {
+            this.instrumentXHR(XMLHttpRequest.prototype);
+        }
+        if (typeof history === 'object') {
+            this.instrumentHistory();
         }
     }
     Client.prototype.setProject = function (id, key) {
@@ -226,7 +241,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.6.0",
+                version: "0.7.0-rc.1",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -238,6 +253,9 @@ var Client = (function () {
             environment: err.environment || {},
             session: err.session || {},
         };
+        if (this.history.length > 0) {
+            notice.context.history = this.history;
+        }
         var promise = new promise_1.default();
         this.processor(err.error || err, function (_, error) {
             notice.errors = [error];
@@ -268,16 +286,16 @@ var Client = (function () {
         if (fn.__airbrake__) {
             return fn;
         }
-        var self = this;
+        var client = this;
         var airbrakeWrapper = function () {
             var fnArgs = Array.prototype.slice.call(arguments);
-            var wrappedArgs = self.wrapArguments(fnArgs);
+            var wrappedArgs = client.wrapArguments(fnArgs);
             try {
                 return fn.apply(this, wrappedArgs);
             }
-            catch (exc) {
-                self.notify({ error: exc, params: { arguments: fnArgs } });
-                return;
+            catch (err) {
+                client.notify({ error: err, params: { arguments: fnArgs } });
+                throw err;
             }
         };
         for (var prop in fn) {
@@ -292,6 +310,132 @@ var Client = (function () {
     Client.prototype.call = function (fn) {
         var wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    };
+    Client.prototype.pushHistory = function (state) {
+        if (this.isDupState(state)) {
+            if (this.lastState.num) {
+                this.lastState.num++;
+            }
+            else {
+                this.lastState.num = 2;
+            }
+            return;
+        }
+        this.history.push(state);
+        this.lastState = state;
+        if (this.history.length > this.historyMaxLen) {
+            this.history = this.history.slice(-this.historyMaxLen);
+        }
+    };
+    Client.prototype.isDupState = function (state) {
+        if (!this.lastState) {
+            return false;
+        }
+        for (var key in state) {
+            if (state[key] !== this.lastState[key]) {
+                return false;
+            }
+        }
+        return true;
+    };
+    Client.prototype.instrumentDOM = function () {
+        var handler = dom_1.makeEventHandler(this);
+        document.addEventListener('click', handler, false);
+        document.addEventListener('keypress', dom_1.debounceEventHandler(handler), false);
+    };
+    Client.prototype.instrumentConsole = function () {
+        var client = this;
+        var methods = ['debug', 'log', 'info', 'warn', 'error'];
+        var _loop_1 = function (m) {
+            if (!(m in console)) {
+                return "continue";
+            }
+            var oldFn = console[m];
+            var newFn = function () {
+                oldFn.apply(console, arguments);
+                client.pushHistory({
+                    type: m,
+                    arguments: Array.prototype.slice.call(arguments),
+                });
+            };
+            console[m] = newFn;
+        };
+        for (var _i = 0, methods_1 = methods; _i < methods_1.length; _i++) {
+            var m = methods_1[_i];
+            _loop_1(m);
+        }
+    };
+    Client.prototype.instrumentXHR = function (proto) {
+        var client = this;
+        var state;
+        var oldOpen = proto.open;
+        proto.open = function (method, url) {
+            state = {
+                type: 'xhr',
+                method: method,
+                url: url,
+            };
+            return oldOpen.apply(this, arguments);
+        };
+        var oldSend = proto.send;
+        proto.send = function (_data) {
+            var req = this;
+            var oldFn = req.onreadystatechange;
+            req.onreadystatechange = function () {
+                if (oldFn) {
+                    oldFn = client.wrap(oldFn);
+                    oldFn.apply(this, arguments);
+                }
+                if (!state || req.readyState !== 4) {
+                    return;
+                }
+                state.statusCode = req.status;
+                client.pushHistory(state);
+                state = null;
+            };
+            var events = ['onload', 'onerror', 'onprogress'];
+            for (var _i = 0, events_1 = events; _i < events_1.length; _i++) {
+                var event_1 = events_1[_i];
+                if (typeof req[event_1] === 'function') {
+                    req[event_1] = client.wrap(req[event_1]);
+                }
+            }
+            return oldSend.apply(this, arguments);
+        };
+    };
+    Client.prototype.instrumentHistory = function () {
+        this.lastURL = document.location.pathname;
+        var client = this;
+        var oldFn = window.onpopstate;
+        window.onpopstate = function (event) {
+            client.pushHistory({
+                type: 'location',
+                from: client.lastURL,
+                to: document.location.pathname,
+                state: event.state,
+            });
+            client.lastURL = document.location.pathname;
+            if (oldFn) {
+                return oldFn.apply(this, arguments);
+            }
+        };
+        var oldPushState = history.pushState;
+        history.pushState = function (state, title, url) {
+            if (url) {
+                if (url.charAt(0) !== '/') {
+                    url = '/' + url;
+                }
+                client.pushHistory({
+                    type: 'location',
+                    from: client.lastURL,
+                    to: url,
+                    state: state,
+                    title: title,
+                });
+                client.lastURL = url;
+            }
+            oldPushState.apply(this, arguments);
+        };
     };
     return Client;
 }());
@@ -658,6 +802,7 @@ var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var re = new RegExp([
     '^',
     '\\[(\\$.+)\\]',
@@ -677,7 +822,6 @@ function filter(notice) {
     }
     return notice;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = filter;
 
 
@@ -687,6 +831,7 @@ exports.default = filter;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var myProcess, os;
 try {
     // Use eval to hide import from Webpack and browserify.
@@ -729,7 +874,6 @@ function filter(notice) {
     }
     return notice;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = filter;
 
 
@@ -739,6 +883,7 @@ exports.default = filter;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var IGNORED_MESSAGES = [
     'Script error',
     'Script error.',
@@ -750,7 +895,6 @@ function filter(notice) {
     }
     return notice;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = filter;
 
 
@@ -760,6 +904,7 @@ exports.default = filter;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var re = new RegExp([
     '^',
     'Uncaught\\s',
@@ -780,7 +925,6 @@ function filter(notice) {
     }
     return notice;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = filter;
 
 
@@ -790,6 +934,7 @@ exports.default = filter;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 function filter(notice) {
     if (window.navigator && window.navigator.userAgent) {
         notice.context.userAgent = window.navigator.userAgent;
@@ -801,7 +946,6 @@ function filter(notice) {
     }
     return notice;
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = filter;
 
 
@@ -811,6 +955,99 @@ exports.default = filter;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+var elemAttrs = ['type', 'name'];
+function elemName(elem) {
+    if (!elem) {
+        return '';
+    }
+    var s = [];
+    if (typeof elem.tagName === 'string') {
+        s.push(elem.tagName.toLowerCase());
+    }
+    if (typeof elem.id === 'string' && elem.id !== '') {
+        s.push('#');
+        s.push(elem.id);
+    }
+    if (typeof elem.className === 'string' && elem.className !== '') {
+        s.push('.');
+        s.push(elem.className.split(' ').join('.'));
+    }
+    if (typeof elem.getAttribute === 'function') {
+        for (var _i = 0, elemAttrs_1 = elemAttrs; _i < elemAttrs_1.length; _i++) {
+            var attr = elemAttrs_1[_i];
+            var value = elem.getAttribute(attr);
+            if (value) {
+                s.push("[" + attr + "=\"" + value + "\"]");
+            }
+        }
+    }
+    return s.join('');
+}
+function elemPath(elem) {
+    var maxLen = 10;
+    var path = [];
+    while (elem) {
+        var name_1 = elemName(elem);
+        if (name_1 !== '') {
+            path.push(name_1);
+            if (path.length > maxLen) {
+                break;
+            }
+        }
+        elem = elem.parentNode;
+    }
+    return path.reverse().join(' > ');
+}
+function debounceEventHandler(fn, timeout) {
+    if (timeout === void 0) { timeout = 1500; }
+    var timer;
+    return function (event) {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        else {
+            fn(event);
+        }
+        timer = setTimeout(function () {
+            timer = null;
+        }, timeout);
+    };
+}
+exports.debounceEventHandler = debounceEventHandler;
+function makeEventHandler(client) {
+    return function (event) {
+        var target;
+        try {
+            target = event.target;
+        }
+        catch (_) {
+            return;
+        }
+        var state = { type: event.type };
+        try {
+            state.target = elemPath(target);
+        }
+        catch (err) {
+            state.target = "<" + err.toString() + ">";
+        }
+        var kb = event;
+        if (kb.key) {
+            state.key = kb.key;
+        }
+        client.pushHistory(state);
+    };
+}
+exports.makeEventHandler = makeEventHandler;
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 function getAttr(obj, attr) {
     // Ignore browser specific exceptions trying to read attribute (#79).
     try {
@@ -865,6 +1102,9 @@ function truncate(value, n, depth) {
             value instanceof RegExp) {
             return value;
         }
+        if (value instanceof Error) {
+            return value.toString();
+        }
         if (seen.indexOf(value) >= 0) {
             return "[Circular " + getPath(value) + "]";
         }
@@ -906,16 +1146,16 @@ function truncate(value, n, depth) {
     }
     return fn(value);
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = truncate;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorStackParser = __webpack_require__(3);
 function processor(err, cb) {
     var frames;
@@ -964,16 +1204,16 @@ function processor(err, cb) {
         backtrace: backtrace,
     });
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = processor;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var Promise = (function () {
     function Promise(executor) {
         this.onResolved = [];
@@ -1034,46 +1274,7 @@ var Promise = (function () {
     };
     return Promise;
 }());
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = Promise;
-
-
-/***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var jsonify_notice_1 = __webpack_require__(0);
-function report(notice, opts, promise) {
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    var req = new XMLHttpRequest();
-    req.open('POST', url, true);
-    req.send(payload);
-    req.onreadystatechange = function () {
-        if (req.readyState === 4) {
-            if (req.status >= 200 && req.status < 500) {
-                var resp = JSON.parse(req.responseText);
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
-                    return;
-                }
-                if (resp.error) {
-                    var err_1 = new Error(resp.error);
-                    promise.reject(err_1);
-                    return;
-                }
-            }
-            var body = req.responseText.trim();
-            var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
-            promise.reject(err);
-        }
-    };
-}
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.default = report;
 
 
 /***/ }),
@@ -1082,6 +1283,47 @@ exports.default = report;
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(0);
+function report(notice, opts, promise) {
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    var req = new XMLHttpRequest();
+    req.timeout = opts.timeout;
+    req.open('POST', url, true);
+    req.onreadystatechange = function () {
+        if (req.readyState !== 4) {
+            return;
+        }
+        if (req.status >= 200 && req.status < 500) {
+            var resp = JSON.parse(req.responseText);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                var err_1 = new Error(resp.error);
+                promise.reject(err_1);
+                return;
+            }
+        }
+        var body = req.responseText.trim();
+        var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+        promise.reject(err);
+    };
+    req.send(payload);
+}
+exports.default = report;
+
+
+/***/ }),
+/* 15 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
 var cbCount = 0;
 function report(notice, opts, promise) {
@@ -1121,16 +1363,16 @@ function report(notice, opts, promise) {
     };
     head.appendChild(script);
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = report;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
 var request;
 try {
@@ -1172,16 +1414,16 @@ function report(notice, opts, promise) {
         promise.reject(err);
     });
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = report;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 function detectReporter(opts) {
     if (typeof XMLHttpRequest !== 'undefined') {
         if (opts.host) {
@@ -1198,46 +1440,48 @@ exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
 function report(notice, opts, promise) {
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     var req = new XMLHttpRequest();
+    req.timeout = opts.timeout;
     req.open('POST', url, true);
     req.setRequestHeader('Content-Type', 'application/json');
-    req.send(payload);
     req.onreadystatechange = function () {
-        if (req.readyState === 4) {
-            if (req.status >= 200 && req.status < 500) {
-                var resp = JSON.parse(req.responseText);
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
-                    return;
-                }
-                if (resp.error) {
-                    var err_1 = new Error(resp.error);
-                    promise.reject(err_1);
-                    return;
-                }
-            }
-            var body = req.responseText.trim();
-            var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
-            promise.reject(err);
+        if (req.readyState !== 4) {
+            return;
         }
+        if (req.status >= 200 && req.status < 500) {
+            var resp = JSON.parse(req.responseText);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                var err_1 = new Error(resp.error);
+                promise.reject(err_1);
+                return;
+            }
+        }
+        var body = req.responseText.trim();
+        var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+        promise.reject(err);
     };
+    req.send(payload);
 }
-Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = report;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(2);
