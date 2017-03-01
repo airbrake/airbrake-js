@@ -17,7 +17,7 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {makeEventHandler, debounceEventHandler} from './instrumentation/dom';
+import {makeEventHandler} from './instrumentation/dom';
 
 
 declare const VERSION: string;
@@ -272,11 +272,7 @@ class Client {
     private instrumentDOM(): void {
         let handler = makeEventHandler(this);
         document.addEventListener('click', handler, false);
-        document.addEventListener(
-            'keypress',
-            debounceEventHandler(handler),
-            false,
-        );
+        document.addEventListener('keypress', handler, false);
     }
 
     private instrumentConsole(): void {
