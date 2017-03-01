@@ -28,6 +28,10 @@ interface FunctionWrapper {
     __inner__: () => any;
 }
 
+interface XMLHttpRequestWithState extends XMLHttpRequest {
+    __state: any;
+}
+
 class Client {
     private historyMaxLen = 10;
 
@@ -297,44 +301,61 @@ class Client {
 
     private instrumentXHR(proto): void {
         let client = this;
-        let state;
 
         let oldOpen = proto.open;
-        proto.open = function(method, url) {
-            state = {
+        proto.open = function(
+            method: string,
+            url: string,
+            _async?: boolean,
+            _user?: string,
+            _password?: string
+        ): void {
+            this.__state = {
                 type: 'xhr',
                 method: method,
                 url: url,
             };
-            return oldOpen.apply(this, arguments);
+            oldOpen.apply(this, arguments);
         };
 
         let oldSend = proto.send;
-        proto.send = function(_data) {
-            let req = this;
-            let oldFn = req.onreadystatechange;
-            req.onreadystatechange = function() {
+        proto.send = function(_data?: any): void {
+            let oldFn = this.onreadystatechange;
+            if (oldFn) {
+                oldFn = client.wrap(oldFn);
+            }
+
+            this.onreadystatechange = function(_ev: Event): any {
+                if (this.__state && this.readyState === 4) {
+                    client.recordReq(this);
+                }
                 if (oldFn) {
-                    oldFn = client.wrap(oldFn);
-                    oldFn.apply(this, arguments);
+                    return oldFn.apply(this, arguments);
                 }
-                if (!state || req.readyState !== 4) {
-                    return;
-                }
-                state.statusCode = req.status;
-                client.pushHistory(state);
-                state = null;
             };
 
             const events = ['onload', 'onerror', 'onprogress'];
             for (let event of events) {
-                if (typeof req[event] === 'function') {
-                    req[event] = client.wrap(req[event]);
+                if (typeof this[event] === 'function') {
+                    this[event] = client.wrap(this[event]);
                 }
             }
 
+            (this as XMLHttpRequestWithState).__state.start = new Date();
             return oldSend.apply(this, arguments);
         };
+    }
+
+    private recordReq(req: XMLHttpRequestWithState): void {
+        let state = req.__state;
+        delete req.__state;
+
+        state.statusCode = req.status;
+        if (state.start) {
+            state.duration = new Date().getTime() - state.start.getTime();
+            delete state.start;
+        }
+        this.pushHistory(state);
     }
 
     private instrumentHistory(): void {
