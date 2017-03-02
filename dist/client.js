@@ -225,7 +225,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.7.0-rc.3",
+                version: "0.7.0-rc.4",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -363,7 +363,8 @@ var Client = (function () {
             var newFn = function () {
                 oldFn.apply(console, arguments);
                 client.pushHistory({
-                    type: m,
+                    type: 'log',
+                    severity: m,
                     arguments: Array.prototype.slice.call(arguments),
                 });
             };
