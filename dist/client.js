@@ -225,7 +225,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.7.0-rc.2",
+                version: "0.7.0-rc.3",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -257,15 +257,6 @@ var Client = (function () {
         });
         return promise;
     };
-    Client.prototype.wrapArguments = function (args) {
-        for (var i in args) {
-            var arg = args[i];
-            if (typeof arg === 'function') {
-                args[i] = this.wrap(arg);
-            }
-        }
-        return args;
-    };
     Client.prototype.wrap = function (fn) {
         if (fn.__airbrake__) {
             return fn;
@@ -291,6 +282,15 @@ var Client = (function () {
         airbrakeWrapper.__airbrake__ = true;
         airbrakeWrapper.__inner__ = fn;
         return airbrakeWrapper;
+    };
+    Client.prototype.wrapArguments = function (args) {
+        for (var i in args) {
+            var arg = args[i];
+            if (typeof arg === 'function') {
+                args[i] = this.wrap(arg);
+            }
+        }
+        return args;
     };
     Client.prototype.call = function (fn) {
         var wrapper = this.wrap(fn);
@@ -320,6 +320,10 @@ var Client = (function () {
             this.notify(err);
             return;
         }
+        // Ignore errors without file or line.
+        if (!filename || !line) {
+            return;
+        }
         this.notify({ error: {
                 message: message,
                 fileName: filename,
@@ -346,7 +350,7 @@ var Client = (function () {
     Client.prototype.instrumentDOM = function () {
         var handler = dom_1.makeEventHandler(this);
         document.addEventListener('click', handler, false);
-        document.addEventListener('keypress', dom_1.debounceEventHandler(handler), false);
+        document.addEventListener('keypress', handler, false);
     };
     Client.prototype.instrumentConsole = function () {
         var client = this;
@@ -372,41 +376,39 @@ var Client = (function () {
     };
     Client.prototype.instrumentXHR = function (proto) {
         var client = this;
-        var state;
         var oldOpen = proto.open;
-        proto.open = function (method, url) {
-            state = {
+        proto.open = function (method, url, _async, _user, _password) {
+            this.__state = {
                 type: 'xhr',
                 method: method,
                 url: url,
             };
-            return oldOpen.apply(this, arguments);
+            oldOpen.apply(this, arguments);
         };
         var oldSend = proto.send;
         proto.send = function (_data) {
-            var req = this;
-            var oldFn = req.onreadystatechange;
-            req.onreadystatechange = function () {
+            var oldFn = this.onreadystatechange;
+            this.onreadystatechange = function (_ev) {
+                if (this.__state && this.readyState === 4) {
+                    client.recordReq(this);
+                }
                 if (oldFn) {
-                    oldFn = client.wrap(oldFn);
-                    oldFn.apply(this, arguments);
+                    return oldFn.apply(this, arguments);
                 }
-                if (!state || req.readyState !== 4) {
-                    return;
-                }
-                state.statusCode = req.status;
-                client.pushHistory(state);
-                state = null;
             };
-            var events = ['onload', 'onerror', 'onprogress'];
-            for (var _i = 0, events_1 = events; _i < events_1.length; _i++) {
-                var event_1 = events_1[_i];
-                if (typeof req[event_1] === 'function') {
-                    req[event_1] = client.wrap(req[event_1]);
-                }
-            }
+            this.__state.start = new Date();
             return oldSend.apply(this, arguments);
         };
+    };
+    Client.prototype.recordReq = function (req) {
+        var state = req.__state;
+        delete req.__state;
+        state.statusCode = req.status;
+        if (state.start) {
+            state.duration = new Date().getTime() - state.start.getTime();
+            delete state.start;
+        }
+        this.pushHistory(state);
     };
     Client.prototype.instrumentHistory = function () {
         this.lastURL = document.location.pathname;
@@ -1004,22 +1006,6 @@ function elemPath(elem) {
     }
     return path.reverse().join(' > ');
 }
-function debounceEventHandler(fn, timeout) {
-    if (timeout === void 0) { timeout = 1500; }
-    var timer;
-    return function (event) {
-        if (timer) {
-            clearTimeout(timer);
-        }
-        else {
-            fn(event);
-        }
-        timer = setTimeout(function () {
-            timer = null;
-        }, timeout);
-    };
-}
-exports.debounceEventHandler = debounceEventHandler;
 function makeEventHandler(client) {
     return function (event) {
         var target;
@@ -1035,10 +1021,6 @@ function makeEventHandler(client) {
         }
         catch (err) {
             state.target = "<" + err.toString() + ">";
-        }
-        var kb = event;
-        if (kb.key) {
-            state.key = kb.key;
         }
         client.pushHistory(state);
     };
