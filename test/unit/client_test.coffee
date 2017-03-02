@@ -338,7 +338,7 @@ describe 'Client', ->
       expect(client.notify).to.have.been.called
       expect(client.notify.lastCall.args).to.deep.equal([{error: exc, params: {arguments: ["hello", "world"]}}])
 
-  it 'reports log history', ->
+  it 'instruments console', ->
     for i in [0..15]
       console.log(i)
     client.notify(new Error('test'))

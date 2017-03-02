@@ -42,8 +42,8 @@ class Client {
     private filters: Filter[] = [];
 
     private history = [];
-    private lastState;
-    private lastURL: string | null;
+    private lastState: any;
+    private lastLocation: string | null;
 
     private ignoreWindowError = 0;
 
@@ -86,7 +86,7 @@ class Client {
             this.instrumentXHR(XMLHttpRequest.prototype);
         }
         if (typeof history === 'object') {
-            this.instrumentHistory();
+            this.instrumentLocation();
         }
     }
 
@@ -356,42 +356,47 @@ class Client {
         this.pushHistory(state);
     }
 
-    private instrumentHistory(): void {
-        this.lastURL = document.location.pathname;
+    private instrumentLocation(): void {
+        this.lastLocation = document.location.pathname;
 
         let client = this;
         let oldFn = window.onpopstate;
-        window.onpopstate = function(event: PopStateEvent): any {
-            client.pushHistory({
-                type: 'location',
-                from: client.lastURL,
-                to: document.location.pathname,
-                state: event.state,
-            });
-            client.lastURL = document.location.pathname;
-
+        window.onpopstate = function(_event: PopStateEvent): any {
+            client.recordLocation(document.location.pathname);
             if (oldFn) {
                 return oldFn.apply(this, arguments);
             }
         };
 
         let oldPushState = history.pushState;
-        history.pushState = function(state: any, title: string, url?: string | null): void {
+        history.pushState = function(_state: any, _title: string, url?: string | null): void {
             if (url) {
-                if (url.charAt(0) !== '/') {
-                    url = '/' + url;
-                }
-                client.pushHistory({
-                    type: 'location',
-                    from: client.lastURL,
-                    to: url,
-                    state: state,
-                    title: title,
-                });
-                client.lastURL = url;
+                client.recordLocation(url);
             }
             oldPushState.apply(this, arguments);
         };
+    }
+
+    private recordLocation(url: string): void {
+        let index = url.indexOf('://');
+        if (index >= 0) {
+            url = url.slice(index + 3);
+            index = url.indexOf('/');
+            if (index >= 0) {
+                url = url.slice(index);
+            } else {
+                url = '/';
+            }
+        } else if (url.charAt(0) !== '/') {
+            url = '/' + url;
+        }
+
+        this.pushHistory({
+            type: 'location',
+            from: this.lastLocation,
+            to: url,
+        });
+        this.lastLocation = url;
     }
 }
 
