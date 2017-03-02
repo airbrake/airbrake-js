@@ -165,16 +165,6 @@ class Client {
         return promise;
     }
 
-    private wrapArguments(args: any[]) {
-        for (let i in args) {
-            let arg = args[i];
-            if (typeof arg === 'function') {
-                args[i] = this.wrap(arg);
-            }
-        }
-        return args;
-    }
-
     wrap(fn): FunctionWrapper {
         if (fn.__airbrake__) {
             return fn;
@@ -203,6 +193,16 @@ class Client {
         airbrakeWrapper.__inner__ = fn;
 
         return airbrakeWrapper;
+    }
+
+    private wrapArguments(args: any[]) {
+        for (let i in args) {
+            let arg = args[i];
+            if (typeof arg === 'function') {
+                args[i] = this.wrap(arg);
+            }
+        }
+        return args;
     }
 
     call(fn) {
@@ -241,6 +241,11 @@ class Client {
 
         if (err) {
             this.notify(err);
+            return;
+        }
+
+        // Ignore errors without file or line.
+        if (!this.file || !this.line) {
             return;
         }
 
@@ -317,9 +322,6 @@ class Client {
         let oldSend = proto.send;
         proto.send = function(_data?: any): void {
             let oldFn = this.onreadystatechange;
-            if (oldFn) {
-                oldFn = client.wrap(oldFn);
-            }
 
             this.onreadystatechange = function(_ev: Event): any {
                 if (this.__state && this.readyState === 4) {
@@ -329,13 +331,6 @@ class Client {
                     return oldFn.apply(this, arguments);
                 }
             };
-
-            const events = ['onload', 'onerror', 'onprogress'];
-            for (let event of events) {
-                if (typeof this[event] === 'function') {
-                    this[event] = client.wrap(this[event]);
-                }
-            }
 
             (this as XMLHttpRequestWithState).__state.start = new Date();
             return oldSend.apply(this, arguments);
