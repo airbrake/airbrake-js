@@ -288,11 +288,11 @@ describe 'Client', ->
       expect(fn).to.have.been.called
       expect(fn.lastCall.args).to.deep.equal(["hello", "world"])
 
-    it "sets __airbrake__ and __inner__ properties", ->
+    it "sets __airbrake and __inner properties", ->
       fn = sinon.spy()
       wrapper = client.wrap(fn)
-      expect(wrapper.__airbrake__).to.equal(true)
-      expect(wrapper.__inner__).to.equal(fn)
+      expect(wrapper.__airbrake).to.equal(true)
+      expect(wrapper.__inner).to.equal(fn)
 
     it "copies function properties", ->
       fn = sinon.spy()
@@ -321,8 +321,8 @@ describe 'Client', ->
       wrapper(arg1)
       expect(fn).to.have.been.called
       arg1Wrapper = fn.lastCall.args[0]
-      expect(arg1Wrapper.__airbrake__).to.equal(true)
-      expect(arg1Wrapper.__inner__).to.equal(arg1)
+      expect(arg1Wrapper.__airbrake).to.equal(true)
+      expect(arg1Wrapper.__inner).to.equal(arg1)
 
   describe 'call', ->
     it 'reports throwed exception', ->
