@@ -346,14 +346,14 @@ describe 'Client', ->
     expect(reporter).to.have.been.called
     notice = reporter.lastCall.args[0]
     expect(notice.context.history).to.deep.equal([
-      {type: 'log', arguments: [6]},
-      {type: 'log', arguments: [7]},
-      {type: 'log', arguments: [8]},
-      {type: 'log', arguments: [9]},
-      {type: 'log', arguments: [10]},
-      {type: 'log', arguments: [11]},
-      {type: 'log', arguments: [12]},
-      {type: 'log', arguments: [13]},
-      {type: 'log', arguments: [14]},
-      {type: 'log', arguments: [15]},
+      {type: 'log', severity: 'log', arguments: [6]},
+      {type: 'log', severity: 'log', arguments: [7]},
+      {type: 'log', severity: 'log', arguments: [8]},
+      {type: 'log', severity: 'log', arguments: [9]},
+      {type: 'log', severity: 'log', arguments: [10]},
+      {type: 'log', severity: 'log', arguments: [11]},
+      {type: 'log', severity: 'log', arguments: [12]},
+      {type: 'log', severity: 'log', arguments: [13]},
+      {type: 'log', severity: 'log', arguments: [14]},
+      {type: 'log', severity: 'log', arguments: [15]},
     ])
