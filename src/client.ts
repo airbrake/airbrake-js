@@ -245,7 +245,7 @@ class Client {
         }
 
         // Ignore errors without file or line.
-        if (!this.file || !this.line) {
+        if (!filename || !line) {
             return;
         }
 
