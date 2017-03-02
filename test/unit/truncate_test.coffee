@@ -1,4 +1,4 @@
-import truncate from '../../../src/internal/truncate'
+import { truncate } from '../../src/jsonify_notice'
 
 
 describe 'truncate', ->

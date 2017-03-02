@@ -1,5 +1,5 @@
-import Promise from '../../../src/promise';
-import { expect } from '../sinon_chai';
+import Promise from '../../src/promise';
+import { expect } from './sinon_chai';
 
 
 describe('Promise', () => {

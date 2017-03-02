@@ -1,4 +1,4 @@
-import jsonifyNotice from '../../../src/internal/jsonify_notice'
+import jsonifyNotice from '../../src/jsonify_notice'
 
 
 describe 'jsonify_notice', ->
@@ -59,7 +59,7 @@ describe 'jsonify_notice', ->
         jsonifyNotice(obj, 1000, maxLength)
 
     it 'throws an exception', ->
-      expect(fn).to.throw('airbrake-js: cannot jsonify notice (length=100068 maxLength=30000)')
+      expect(fn).to.throw('airbrake-js: cannot jsonify notice (length=100081 maxLength=30000)')
 
     it 'throws an exception with `json` property', ->
       try

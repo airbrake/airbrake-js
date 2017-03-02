@@ -1,6 +1,6 @@
 import Promise from '../promise';
 import Notice from '../notice';
-import jsonifyNotice from '../internal/jsonify_notice';
+import jsonifyNotice from '../jsonify_notice';
 
 import {ReporterOptions} from './reporter';
 
