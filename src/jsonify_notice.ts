@@ -141,11 +141,11 @@ export function truncate(value: any, n = 1000, depth = 5): any {
     return fn(value);
 }
 
-function getAttr(obj: object, attr: string) {
-    // Ignore browser specific exceptions trying to read attribute (#79).
+function getAttr(obj: any, attr: string): any {
+    // Ignore browser specific exception trying to read attribute (#79).
     try {
         return obj[attr];
-    } catch (exc) {
-        return undefined;
+    } catch (_) {
+        return;
     }
 }

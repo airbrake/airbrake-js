@@ -24,8 +24,8 @@ declare const VERSION: string;
 
 interface FunctionWrapper {
     (): any;
-    __airbrake__: boolean;
-    __inner__: () => any;
+    __airbrake: boolean;
+    __inner: () => any;
 }
 
 interface XMLHttpRequestWithState extends XMLHttpRequest {
@@ -166,7 +166,7 @@ class Client {
     }
 
     wrap(fn): FunctionWrapper {
-        if (fn.__airbrake__) {
+        if (fn.__airbrake) {
             return fn;
         }
 
@@ -189,8 +189,8 @@ class Client {
             }
         }
 
-        airbrakeWrapper.__airbrake__ = true;
-        airbrakeWrapper.__inner__ = fn;
+        airbrakeWrapper.__airbrake = true;
+        airbrakeWrapper.__inner = fn;
 
         return airbrakeWrapper;
     }
@@ -272,6 +272,7 @@ class Client {
             fileName: filename,
             lineNumber: line,
             columnNumber: column,
+            __noStack: true,
         }});
     }
 
