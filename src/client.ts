@@ -292,7 +292,8 @@ class Client {
             let newFn = function () {
                 oldFn.apply(console, arguments);
                 client.pushHistory({
-                    type: m,
+                    type: 'log',
+                    severity: m,
                     arguments: Array.prototype.slice.call(arguments),
                 });
             };
