@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 18);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -83,17 +83,6 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var truncate_1 = __webpack_require__(11);
-// truncateObj truncates each key in the object separately, which is
-// useful for handling circular references.
-function truncateObj(obj, n) {
-    if (n === void 0) { n = 1000; }
-    var dst = {};
-    for (var key in obj) {
-        dst[key] = truncate_1.default(obj[key], n);
-    }
-    return dst;
-}
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 function jsonifyNotice(notice, n, maxLength) {
@@ -101,6 +90,7 @@ function jsonifyNotice(notice, n, maxLength) {
     if (maxLength === void 0) { maxLength = 64000; }
     var s;
     while (true) {
+        notice.context = truncateObj(notice.context, n);
         notice.params = truncateObj(notice.params, n);
         notice.environment = truncateObj(notice.environment, n);
         notice.session = truncateObj(notice.session, n);
@@ -120,6 +110,115 @@ function jsonifyNotice(notice, n, maxLength) {
     throw err;
 }
 exports.default = jsonifyNotice;
+// truncateObj truncates each key in the object separately, which is
+// useful for handling circular references.
+function truncateObj(obj, n) {
+    if (n === void 0) { n = 1000; }
+    var dst = {};
+    for (var key in obj) {
+        dst[key] = truncate(obj[key], n);
+    }
+    return dst;
+}
+function truncate(value, n, depth) {
+    if (n === void 0) { n = 1000; }
+    if (depth === void 0) { depth = 5; }
+    var nn = 0;
+    var keys = [];
+    var seen = [];
+    function getPath(value) {
+        var index = seen.indexOf(value);
+        var path = [keys[index]];
+        for (var i = index; i >= 0; i--) {
+            if (seen[i] && getAttr(seen[i], path[0]) === value) {
+                value = seen[i];
+                path.unshift(keys[i]);
+            }
+        }
+        return '~' + path.join('.');
+    }
+    function fn(value, key, dd) {
+        if (key === void 0) { key = ''; }
+        if (dd === void 0) { dd = 0; }
+        nn++;
+        if (nn > n) {
+            return '[Truncated]';
+        }
+        if (value === null || value === undefined) {
+            return value;
+        }
+        switch (typeof value) {
+            case 'boolean':
+            case 'number':
+            case 'string':
+            case 'function':
+                return value;
+            case 'object':
+                break;
+            default:
+                return String(value);
+        }
+        if (value instanceof Boolean ||
+            value instanceof Number ||
+            value instanceof String ||
+            value instanceof Date ||
+            value instanceof RegExp) {
+            return value;
+        }
+        if (value instanceof Error) {
+            return value.toString();
+        }
+        if (seen.indexOf(value) >= 0) {
+            return "[Circular " + getPath(value) + "]";
+        }
+        // At this point value can be either array or object. Check maximum depth.
+        dd++;
+        if (dd > depth) {
+            return '[Truncated]';
+        }
+        keys.push(key);
+        seen.push(value);
+        nn--; // nn was increased above for primitives.
+        if (Object.prototype.toString.apply(value) === '[object Array]') {
+            var dst_1 = [];
+            for (var i in value) {
+                var el = value[i];
+                nn++;
+                if (nn >= n) {
+                    break;
+                }
+                dst_1.push(fn(el, i, dd));
+            }
+            return dst_1;
+        }
+        var dst = {};
+        for (key in value) {
+            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+                continue;
+            }
+            nn++;
+            if (nn >= n) {
+                break;
+            }
+            var val = getAttr(value, key);
+            if (val !== undefined) {
+                dst[key] = fn(val, key, dd);
+            }
+        }
+        return dst;
+    }
+    return fn(value);
+}
+exports.truncate = truncate;
+function getAttr(obj, attr) {
+    // Ignore browser specific exception trying to read attribute (#79).
+    try {
+        return obj[attr];
+    }
+    catch (_) {
+        return;
+    }
+}
 
 
 /***/ }),
@@ -128,18 +227,18 @@ exports.default = jsonifyNotice;
 
 "use strict";
 
-var promise_1 = __webpack_require__(13);
-var stacktracejs_1 = __webpack_require__(12);
+var promise_1 = __webpack_require__(12);
+var stacktracejs_1 = __webpack_require__(11);
 var window_1 = __webpack_require__(9);
 var node_1 = __webpack_require__(6);
 var script_error_1 = __webpack_require__(7);
 var uncaught_message_1 = __webpack_require__(8);
 var angular_message_1 = __webpack_require__(5);
-var reporter_1 = __webpack_require__(17);
-var node_2 = __webpack_require__(16);
-var compat_1 = __webpack_require__(14);
-var xhr_1 = __webpack_require__(18);
-var jsonp_1 = __webpack_require__(15);
+var reporter_1 = __webpack_require__(16);
+var node_2 = __webpack_require__(15);
+var compat_1 = __webpack_require__(13);
+var xhr_1 = __webpack_require__(17);
+var jsonp_1 = __webpack_require__(14);
 var dom_1 = __webpack_require__(10);
 var Client = (function () {
     function Client(opts) {
@@ -186,7 +285,7 @@ var Client = (function () {
             this.instrumentXHR(XMLHttpRequest.prototype);
         }
         if (typeof history === 'object') {
-            this.instrumentHistory();
+            this.instrumentLocation();
         }
     }
     Client.prototype.setProject = function (id, key) {
@@ -225,7 +324,7 @@ var Client = (function () {
             language: 'JavaScript',
             notifier: {
                 name: 'airbrake-js',
-                version: "0.7.0-rc.4",
+                version: "0.7.0-rc.5",
                 url: 'https://github.com/airbrake/airbrake-js',
             },
         }, err.context);
@@ -258,7 +357,7 @@ var Client = (function () {
         return promise;
     };
     Client.prototype.wrap = function (fn) {
-        if (fn.__airbrake__) {
+        if (fn.__airbrake) {
             return fn;
         }
         var client = this;
@@ -279,8 +378,8 @@ var Client = (function () {
                 airbrakeWrapper[prop] = fn[prop];
             }
         }
-        airbrakeWrapper.__airbrake__ = true;
-        airbrakeWrapper.__inner__ = fn;
+        airbrakeWrapper.__airbrake = true;
+        airbrakeWrapper.__inner = fn;
         return airbrakeWrapper;
     };
     Client.prototype.wrapArguments = function (args) {
@@ -306,11 +405,28 @@ var Client = (function () {
             }
             return;
         }
+        if (!state.date) {
+            state.date = new Date();
+        }
         this.history.push(state);
         this.lastState = state;
         if (this.history.length > this.historyMaxLen) {
             this.history = this.history.slice(-this.historyMaxLen);
         }
+    };
+    Client.prototype.isDupState = function (state) {
+        if (!this.lastState) {
+            return false;
+        }
+        for (var key in state) {
+            if (key === 'date') {
+                continue;
+            }
+            if (state[key] !== this.lastState[key]) {
+                return false;
+            }
+        }
+        return true;
     };
     Client.prototype.onerror = function (message, filename, line, column, err) {
         if (this.ignoreWindowError > 0) {
@@ -329,23 +445,13 @@ var Client = (function () {
                 fileName: filename,
                 lineNumber: line,
                 columnNumber: column,
+                __noStack: true,
             } });
     };
     Client.prototype.ignoreNextWindowError = function () {
         var _this = this;
         this.ignoreWindowError++;
         setTimeout(function () { return _this.ignoreWindowError--; });
-    };
-    Client.prototype.isDupState = function (state) {
-        if (!this.lastState) {
-            return false;
-        }
-        for (var key in state) {
-            if (state[key] !== this.lastState[key]) {
-                return false;
-            }
-        }
-        return true;
     };
     Client.prototype.instrumentDOM = function () {
         var handler = dom_1.makeEventHandler(this);
@@ -397,7 +503,7 @@ var Client = (function () {
                     return oldFn.apply(this, arguments);
                 }
             };
-            this.__state.start = new Date();
+            this.__state.date = new Date();
             return oldSend.apply(this, arguments);
         };
     };
@@ -406,44 +512,49 @@ var Client = (function () {
         delete req.__state;
         state.statusCode = req.status;
         if (state.start) {
-            state.duration = new Date().getTime() - state.start.getTime();
-            delete state.start;
+            state.duration = new Date().getTime() - state.date.getTime();
         }
         this.pushHistory(state);
     };
-    Client.prototype.instrumentHistory = function () {
-        this.lastURL = document.location.pathname;
+    Client.prototype.instrumentLocation = function () {
+        this.lastLocation = document.location.pathname;
         var client = this;
         var oldFn = window.onpopstate;
-        window.onpopstate = function (event) {
-            client.pushHistory({
-                type: 'location',
-                from: client.lastURL,
-                to: document.location.pathname,
-                state: event.state,
-            });
-            client.lastURL = document.location.pathname;
+        window.onpopstate = function (_event) {
+            client.recordLocation(document.location.pathname);
             if (oldFn) {
                 return oldFn.apply(this, arguments);
             }
         };
         var oldPushState = history.pushState;
-        history.pushState = function (state, title, url) {
+        history.pushState = function (_state, _title, url) {
             if (url) {
-                if (url.charAt(0) !== '/') {
-                    url = '/' + url;
-                }
-                client.pushHistory({
-                    type: 'location',
-                    from: client.lastURL,
-                    to: url,
-                    state: state,
-                    title: title,
-                });
-                client.lastURL = url;
+                client.recordLocation(url);
             }
             oldPushState.apply(this, arguments);
         };
+    };
+    Client.prototype.recordLocation = function (url) {
+        var index = url.indexOf('://');
+        if (index >= 0) {
+            url = url.slice(index + 3);
+            index = url.indexOf('/');
+            if (index >= 0) {
+                url = url.slice(index);
+            }
+            else {
+                url = '/';
+            }
+        }
+        else if (url.charAt(0) !== '/') {
+            url = '/' + url;
+        }
+        this.pushHistory({
+            type: 'location',
+            from: this.lastLocation,
+            to: url,
+        });
+        this.lastLocation = url;
     };
     return Client;
 }());
@@ -1036,134 +1147,36 @@ exports.makeEventHandler = makeEventHandler;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function getAttr(obj, attr) {
-    // Ignore browser specific exceptions trying to read attribute (#79).
-    try {
-        return obj[attr];
-    }
-    catch (exc) {
-        return undefined;
-    }
-}
-function truncate(value, n, depth) {
-    if (n === void 0) { n = 1000; }
-    if (depth === void 0) { depth = 5; }
-    var nn = 0;
-    var keys = [];
-    var seen = [];
-    function getPath(value) {
-        var index = seen.indexOf(value);
-        var path = [keys[index]];
-        for (var i = index; i >= 0; i--) {
-            if (seen[i] && getAttr(seen[i], path[0]) === value) {
-                value = seen[i];
-                path.unshift(keys[i]);
-            }
-        }
-        return '~' + path.join('.');
-    }
-    function fn(value, key, dd) {
-        if (key === void 0) { key = ''; }
-        if (dd === void 0) { dd = 0; }
-        nn++;
-        if (nn > n) {
-            return '[Truncated]';
-        }
-        if (value === null || value === undefined) {
-            return value;
-        }
-        switch (typeof value) {
-            case 'boolean':
-            case 'number':
-            case 'string':
-            case 'function':
-                return value;
-            case 'object':
-                break;
-            default:
-                return String(value);
-        }
-        if (value instanceof Boolean ||
-            value instanceof Number ||
-            value instanceof String ||
-            value instanceof Date ||
-            value instanceof RegExp) {
-            return value;
-        }
-        if (value instanceof Error) {
-            return value.toString();
-        }
-        if (seen.indexOf(value) >= 0) {
-            return "[Circular " + getPath(value) + "]";
-        }
-        // At this point value can be either array or object. Check maximum depth.
-        dd++;
-        if (dd > depth) {
-            return '[Truncated]';
-        }
-        keys.push(key);
-        seen.push(value);
-        nn--; // nn was increased above for primitives.
-        if (Object.prototype.toString.apply(value) === '[object Array]') {
-            var dst_1 = [];
-            for (var i in value) {
-                var el = value[i];
-                nn++;
-                if (nn >= n) {
-                    break;
-                }
-                dst_1.push(fn(el, i, dd));
-            }
-            return dst_1;
-        }
-        var dst = {};
-        for (key in value) {
-            if (!Object.prototype.hasOwnProperty.call(value, key)) {
-                continue;
-            }
-            nn++;
-            if (nn >= n) {
-                break;
-            }
-            var val = getAttr(value, key);
-            if (val !== undefined) {
-                dst[key] = fn(val, key, dd);
-            }
-        }
-        return dst;
-    }
-    return fn(value);
-}
-exports.default = truncate;
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorStackParser = __webpack_require__(3);
+var hasConsole = typeof console === 'object' && console.warn;
 function processor(err, cb) {
-    var frames;
-    try {
-        frames = ErrorStackParser.parse(err);
-    }
-    catch (err) {
-        if (console && console.warn) {
-            console.warn('airbrake-js: error-stack-parser failed', err);
+    var frames = [];
+    if (!err.__noStack) {
+        try {
+            frames = ErrorStackParser.parse(err);
         }
-        frames = [];
+        catch (err) {
+            if (hasConsole) {
+                console.warn('airbrake-js: ErrorStackParser failed:', err.toString());
+            }
+        }
     }
     var backtrace = [];
     for (var _i = 0, frames_1 = frames; _i < frames_1.length; _i++) {
         var frame = frames_1[_i];
         backtrace.push({
             function: frame.functionName || '',
-            file: frame.fileName,
-            line: frame.lineNumber,
-            column: frame.columnNumber,
+            file: frame.fileName || 0,
+            line: frame.lineNumber || 0,
+            column: frame.columnNumber || 0,
+        });
+    }
+    if (backtrace.length === 0 && err.fileName && err.lineNumber) {
+        backtrace.push({
+            function: err.functionName || '',
+            file: err.fileName || '',
+            line: err.lineNumber || 0,
+            column: err.columnNumber || 0,
         });
     }
     var type;
@@ -1181,8 +1194,8 @@ function processor(err, cb) {
         msg = String(err);
     }
     if (type === '' && msg === '' && backtrace.length === 0) {
-        if (console && console.warn) {
-            console.warn('airbrake: can not process error', err);
+        if (hasConsole) {
+            console.warn('airbrake: can not process error:', err.toString());
         }
         return;
     }
@@ -1196,7 +1209,7 @@ exports.default = processor;
 
 
 /***/ }),
-/* 13 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1266,7 +1279,7 @@ exports.default = Promise;
 
 
 /***/ }),
-/* 14 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1306,7 +1319,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 15 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1355,7 +1368,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 16 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1406,7 +1419,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 17 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1428,7 +1441,7 @@ exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 18 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1469,7 +1482,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 19 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(2);
