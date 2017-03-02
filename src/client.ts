@@ -220,12 +220,30 @@ class Client {
             return;
         }
 
+        if (!state.date) {
+            state.date = new Date();
+        }
         this.history.push(state);
         this.lastState = state;
 
         if (this.history.length > this.historyMaxLen) {
             this.history = this.history.slice(-this.historyMaxLen);
         }
+    }
+
+    private isDupState(state): boolean {
+        if (!this.lastState) {
+            return false;
+        }
+        for (let key in state) {
+            if (key === 'date') {
+                continue;
+            }
+            if (state[key] !== this.lastState[key]) {
+                return false;
+            }
+        }
+        return true;
     }
 
     onerror(
@@ -260,18 +278,6 @@ class Client {
     private ignoreNextWindowError() {
         this.ignoreWindowError++;
         setTimeout(() => this.ignoreWindowError--);
-    }
-
-    private isDupState(state): boolean {
-        if (!this.lastState) {
-            return false;
-        }
-        for (let key in state) {
-            if (state[key] !== this.lastState[key]) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private instrumentDOM(): void {
@@ -333,7 +339,7 @@ class Client {
                 }
             };
 
-            (this as XMLHttpRequestWithState).__state.start = new Date();
+            (this as XMLHttpRequestWithState).__state.date = new Date();
             return oldSend.apply(this, arguments);
         };
     }
@@ -344,8 +350,7 @@ class Client {
 
         state.statusCode = req.status;
         if (state.start) {
-            state.duration = new Date().getTime() - state.start.getTime();
-            delete state.start;
+            state.duration = new Date().getTime() - state.date.getTime();
         }
         this.pushHistory(state);
     }

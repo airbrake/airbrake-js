@@ -345,15 +345,10 @@ describe 'Client', ->
 
     expect(reporter).to.have.been.called
     notice = reporter.lastCall.args[0]
-    expect(notice.context.history).to.deep.equal([
-      {type: 'log', severity: 'log', arguments: [6]},
-      {type: 'log', severity: 'log', arguments: [7]},
-      {type: 'log', severity: 'log', arguments: [8]},
-      {type: 'log', severity: 'log', arguments: [9]},
-      {type: 'log', severity: 'log', arguments: [10]},
-      {type: 'log', severity: 'log', arguments: [11]},
-      {type: 'log', severity: 'log', arguments: [12]},
-      {type: 'log', severity: 'log', arguments: [13]},
-      {type: 'log', severity: 'log', arguments: [14]},
-      {type: 'log', severity: 'log', arguments: [15]},
-    ])
+    history = notice.context.history
+    expect(history).to.have.length(10)
+    for i, state of history
+      expect(state.type).to.equal('log')
+      expect(state.severity).to.equal('log')
+      expect(state.arguments).to.deep.equal([+i+6])
+      expect(state.date).to.be.defined
