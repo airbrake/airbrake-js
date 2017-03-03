@@ -82,7 +82,7 @@ class Client {
         if (typeof console === 'object') {
             this.instrumentConsole();
         }
-        if (typeof XMLHttpRequest === 'function') {
+        if (typeof XMLHttpRequest !== 'undefined') {
             this.instrumentXHR(XMLHttpRequest.prototype);
         }
         if (typeof history === 'object') {
@@ -125,18 +125,17 @@ class Client {
     }
 
     notify(err) {
-        let context: any = Object.assign({
-            language: 'JavaScript',
-            notifier: {
-                name: 'airbrake-js',
-                version: VERSION,
-                url: 'https://github.com/airbrake/airbrake-js',
-            },
-        }, err.context);
         let notice: Notice = {
             id: '',
             errors: null,
-            context: context,
+            context: Object.assign({
+                language: 'JavaScript',
+                notifier: {
+                    name: 'airbrake-js',
+                    version: VERSION,
+                    url: 'https://github.com/airbrake/airbrake-js',
+                },
+            }, err.context),
             params: err.params || {},
             environment: err.environment || {},
             session: err.session || {},
@@ -330,7 +329,6 @@ class Client {
         let oldSend = proto.send;
         proto.send = function(_data?: any): void {
             let oldFn = this.onreadystatechange;
-
             this.onreadystatechange = function(_ev: Event): any {
                 if (this.__state && this.readyState === 4) {
                     client.recordReq(this);
@@ -347,10 +345,8 @@ class Client {
 
     private recordReq(req: XMLHttpRequestWithState): void {
         let state = req.__state;
-        delete req.__state;
-
         state.statusCode = req.status;
-        if (state.start) {
+        if (state.date) {
             state.duration = new Date().getTime() - state.date.getTime();
         }
         this.pushHistory(state);
