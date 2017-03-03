@@ -20,8 +20,8 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         try {
             frames = ErrorStackParser.parse(err);
         } catch (err) {
-            if (hasConsole) {
-                console.warn('airbrake-js: ErrorStackParser failed:', err.toString());
+            if (hasConsole && err.stack) {
+                console.warn('airbrake-js: cannot parse stack:', err.stack);
             }
         }
     }
