@@ -281,7 +281,7 @@ var Client = (function () {
         if (typeof console === 'object') {
             this.instrumentConsole();
         }
-        if (typeof XMLHttpRequest === 'function') {
+        if (typeof XMLHttpRequest !== 'undefined') {
             this.instrumentXHR(XMLHttpRequest.prototype);
         }
         if (typeof history === 'object') {
@@ -320,18 +320,17 @@ var Client = (function () {
     };
     Client.prototype.notify = function (err) {
         var _this = this;
-        var context = Object.assign({
-            language: 'JavaScript',
-            notifier: {
-                name: 'airbrake-js',
-                version: "0.7.0-rc.5",
-                url: 'https://github.com/airbrake/airbrake-js',
-            },
-        }, err.context);
         var notice = {
             id: '',
             errors: null,
-            context: context,
+            context: Object.assign({
+                language: 'JavaScript',
+                notifier: {
+                    name: 'airbrake-js',
+                    version: "0.7.0-rc.6",
+                    url: 'https://github.com/airbrake/airbrake-js',
+                },
+            }, err.context),
             params: err.params || {},
             environment: err.environment || {},
             session: err.session || {},
@@ -509,9 +508,8 @@ var Client = (function () {
     };
     Client.prototype.recordReq = function (req) {
         var state = req.__state;
-        delete req.__state;
         state.statusCode = req.status;
-        if (state.start) {
+        if (state.date) {
             state.duration = new Date().getTime() - state.date.getTime();
         }
         this.pushHistory(state);
@@ -1156,8 +1154,8 @@ function processor(err, cb) {
             frames = ErrorStackParser.parse(err);
         }
         catch (err) {
-            if (hasConsole) {
-                console.warn('airbrake-js: ErrorStackParser failed:', err.toString());
+            if (hasConsole && err.stack) {
+                console.warn('airbrake-js: cannot parse stack:', err.stack);
             }
         }
     }
@@ -1166,7 +1164,7 @@ function processor(err, cb) {
         var frame = frames_1[_i];
         backtrace.push({
             function: frame.functionName || '',
-            file: frame.fileName || 0,
+            file: frame.fileName || '',
             line: frame.lineNumber || 0,
             column: frame.columnNumber || 0,
         });
