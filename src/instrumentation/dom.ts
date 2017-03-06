@@ -1,7 +1,7 @@
-import Client = require('../client');
+import Historian from './historian';
 
 
-const elemAttrs = ['type', 'name'];
+const elemAttrs = ['type', 'name', 'src'];
 
 
 function elemName(elem: HTMLElement): string {
@@ -57,7 +57,7 @@ function elemPath(elem: HTMLElement): string {
     return path.reverse().join(' > ');
 }
 
-export function makeEventHandler(client: Client): EventListener {
+export function makeEventHandler(client: Historian): EventListener {
     return function(event: Event): void {
         let target: HTMLElement;
         try {
