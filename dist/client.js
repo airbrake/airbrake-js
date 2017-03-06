@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 18);
+/******/ 	return __webpack_require__(__webpack_require__.s = 19);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -227,28 +227,26 @@ function getAttr(obj, attr) {
 
 "use strict";
 
-var promise_1 = __webpack_require__(12);
-var stacktracejs_1 = __webpack_require__(11);
+var promise_1 = __webpack_require__(13);
+var stacktracejs_1 = __webpack_require__(12);
 var window_1 = __webpack_require__(9);
 var node_1 = __webpack_require__(6);
 var script_error_1 = __webpack_require__(7);
 var uncaught_message_1 = __webpack_require__(8);
 var angular_message_1 = __webpack_require__(5);
-var reporter_1 = __webpack_require__(16);
-var node_2 = __webpack_require__(15);
-var compat_1 = __webpack_require__(13);
-var xhr_1 = __webpack_require__(17);
-var jsonp_1 = __webpack_require__(14);
-var dom_1 = __webpack_require__(10);
+var reporter_1 = __webpack_require__(17);
+var node_2 = __webpack_require__(16);
+var compat_1 = __webpack_require__(14);
+var xhr_1 = __webpack_require__(18);
+var jsonp_1 = __webpack_require__(15);
+var historian_1 = __webpack_require__(11);
 var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
         var _this = this;
-        this.historyMaxLen = 10;
         this.opts = {};
         this.reporters = [];
         this.filters = [];
-        this.history = [];
         this.ignoreWindowError = 0;
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
@@ -274,18 +272,6 @@ var Client = (function () {
                     throw err;
                 });
             }
-        }
-        if (typeof document === 'object') {
-            this.instrumentDOM();
-        }
-        if (typeof console === 'object') {
-            this.instrumentConsole();
-        }
-        if (typeof XMLHttpRequest !== 'undefined') {
-            this.instrumentXHR(XMLHttpRequest.prototype);
-        }
-        if (typeof history === 'object') {
-            this.instrumentLocation();
         }
     }
     Client.prototype.setProject = function (id, key) {
@@ -327,7 +313,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.6",
+                    version: "0.7.0-rc.7",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -335,8 +321,9 @@ var Client = (function () {
             environment: err.environment || {},
             session: err.session || {},
         };
-        if (this.history.length > 0) {
-            notice.context.history = this.history;
+        var history = historian_1.getHistory();
+        if (history.length > 0) {
+            notice.context.history = history;
         }
         var promise = new promise_1.default();
         this.processor(err.error || err, function (_, error) {
@@ -394,39 +381,6 @@ var Client = (function () {
         var wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     };
-    Client.prototype.pushHistory = function (state) {
-        if (this.isDupState(state)) {
-            if (this.lastState.num) {
-                this.lastState.num++;
-            }
-            else {
-                this.lastState.num = 2;
-            }
-            return;
-        }
-        if (!state.date) {
-            state.date = new Date();
-        }
-        this.history.push(state);
-        this.lastState = state;
-        if (this.history.length > this.historyMaxLen) {
-            this.history = this.history.slice(-this.historyMaxLen);
-        }
-    };
-    Client.prototype.isDupState = function (state) {
-        if (!this.lastState) {
-            return false;
-        }
-        for (var key in state) {
-            if (key === 'date') {
-                continue;
-            }
-            if (state[key] !== this.lastState[key]) {
-                return false;
-            }
-        }
-        return true;
-    };
     Client.prototype.onerror = function (message, filename, line, column, err) {
         if (this.ignoreWindowError > 0) {
             return;
@@ -451,108 +405,6 @@ var Client = (function () {
         var _this = this;
         this.ignoreWindowError++;
         setTimeout(function () { return _this.ignoreWindowError--; });
-    };
-    Client.prototype.instrumentDOM = function () {
-        var handler = dom_1.makeEventHandler(this);
-        document.addEventListener('click', handler, false);
-        document.addEventListener('keypress', handler, false);
-    };
-    Client.prototype.instrumentConsole = function () {
-        var client = this;
-        var methods = ['debug', 'log', 'info', 'warn', 'error'];
-        var _loop_1 = function (m) {
-            if (!(m in console)) {
-                return "continue";
-            }
-            var oldFn = console[m];
-            var newFn = function () {
-                oldFn.apply(console, arguments);
-                client.pushHistory({
-                    type: 'log',
-                    severity: m,
-                    arguments: Array.prototype.slice.call(arguments),
-                });
-            };
-            console[m] = newFn;
-        };
-        for (var _i = 0, methods_1 = methods; _i < methods_1.length; _i++) {
-            var m = methods_1[_i];
-            _loop_1(m);
-        }
-    };
-    Client.prototype.instrumentXHR = function (proto) {
-        var client = this;
-        var oldOpen = proto.open;
-        proto.open = function (method, url, _async, _user, _password) {
-            this.__state = {
-                type: 'xhr',
-                method: method,
-                url: url,
-            };
-            oldOpen.apply(this, arguments);
-        };
-        var oldSend = proto.send;
-        proto.send = function (_data) {
-            var oldFn = this.onreadystatechange;
-            this.onreadystatechange = function (_ev) {
-                if (this.__state && this.readyState === 4) {
-                    client.recordReq(this);
-                }
-                if (oldFn) {
-                    return oldFn.apply(this, arguments);
-                }
-            };
-            this.__state.date = new Date();
-            return oldSend.apply(this, arguments);
-        };
-    };
-    Client.prototype.recordReq = function (req) {
-        var state = req.__state;
-        state.statusCode = req.status;
-        if (state.date) {
-            state.duration = new Date().getTime() - state.date.getTime();
-        }
-        this.pushHistory(state);
-    };
-    Client.prototype.instrumentLocation = function () {
-        this.lastLocation = document.location.pathname;
-        var client = this;
-        var oldFn = window.onpopstate;
-        window.onpopstate = function (_event) {
-            client.recordLocation(document.location.pathname);
-            if (oldFn) {
-                return oldFn.apply(this, arguments);
-            }
-        };
-        var oldPushState = history.pushState;
-        history.pushState = function (_state, _title, url) {
-            if (url) {
-                client.recordLocation(url);
-            }
-            oldPushState.apply(this, arguments);
-        };
-    };
-    Client.prototype.recordLocation = function (url) {
-        var index = url.indexOf('://');
-        if (index >= 0) {
-            url = url.slice(index + 3);
-            index = url.indexOf('/');
-            if (index >= 0) {
-                url = url.slice(index);
-            }
-            else {
-                url = '/';
-            }
-        }
-        else if (url.charAt(0) !== '/') {
-            url = '/' + url;
-        }
-        this.pushHistory({
-            type: 'location',
-            from: this.lastLocation,
-            to: url,
-        });
-        this.lastLocation = url;
     };
     return Client;
 }());
@@ -1073,7 +925,7 @@ exports.default = filter;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var elemAttrs = ['type', 'name'];
+var elemAttrs = ['type', 'name', 'src'];
 function elemName(elem) {
     if (!elem) {
         return '';
@@ -1145,6 +997,180 @@ exports.makeEventHandler = makeEventHandler;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var dom_1 = __webpack_require__(10);
+var Historian = (function () {
+    function Historian() {
+        this.historyMaxLen = 10;
+        this.history = [];
+    }
+    Historian.prototype.getHistory = function () {
+        return this.history;
+    };
+    Historian.prototype.pushHistory = function (state) {
+        if (this.isDupState(state)) {
+            if (this.lastState.num) {
+                this.lastState.num++;
+            }
+            else {
+                this.lastState.num = 2;
+            }
+            return;
+        }
+        if (!state.date) {
+            state.date = new Date();
+        }
+        this.history.push(state);
+        this.lastState = state;
+        if (this.history.length > this.historyMaxLen) {
+            this.history = this.history.slice(-this.historyMaxLen);
+        }
+    };
+    Historian.prototype.isDupState = function (state) {
+        if (!this.lastState) {
+            return false;
+        }
+        for (var key in state) {
+            if (key === 'date') {
+                continue;
+            }
+            if (state[key] !== this.lastState[key]) {
+                return false;
+            }
+        }
+        return true;
+    };
+    Historian.prototype.dom = function () {
+        var handler = dom_1.makeEventHandler(this);
+        document.addEventListener('click', handler, false);
+        document.addEventListener('keypress', handler, false);
+        window.addEventListener('error', handler, true);
+    };
+    Historian.prototype.console = function () {
+        var client = this;
+        var methods = ['debug', 'log', 'info', 'warn', 'error'];
+        var _loop_1 = function (m) {
+            if (!(m in console)) {
+                return "continue";
+            }
+            var oldFn = console[m];
+            var newFn = function () {
+                oldFn.apply(console, arguments);
+                client.pushHistory({
+                    type: 'log',
+                    severity: m,
+                    arguments: Array.prototype.slice.call(arguments),
+                });
+            };
+            console[m] = newFn;
+        };
+        for (var _i = 0, methods_1 = methods; _i < methods_1.length; _i++) {
+            var m = methods_1[_i];
+            _loop_1(m);
+        }
+    };
+    Historian.prototype.xhr = function () {
+        var client = this;
+        var oldOpen = XMLHttpRequest.prototype.open;
+        XMLHttpRequest.prototype.open = function (method, url, _async, _user, _password) {
+            this.__state = {
+                type: 'xhr',
+                method: method,
+                url: url,
+            };
+            oldOpen.apply(this, arguments);
+        };
+        var oldSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.send = function (_data) {
+            var oldFn = this.onreadystatechange;
+            this.onreadystatechange = function (_ev) {
+                if (this.__state && this.readyState === 4) {
+                    client.recordReq(this);
+                }
+                if (oldFn) {
+                    return oldFn.apply(this, arguments);
+                }
+            };
+            this.__state.date = new Date();
+            return oldSend.apply(this, arguments);
+        };
+    };
+    Historian.prototype.recordReq = function (req) {
+        var state = req.__state;
+        state.statusCode = req.status;
+        if (state.date) {
+            state.duration = new Date().getTime() - state.date.getTime();
+        }
+        this.pushHistory(state);
+    };
+    Historian.prototype.location = function () {
+        this.lastLocation = document.location.pathname;
+        var client = this;
+        var oldFn = window.onpopstate;
+        window.onpopstate = function (_event) {
+            client.recordLocation(document.location.pathname);
+            if (oldFn) {
+                return oldFn.apply(this, arguments);
+            }
+        };
+        var oldPushState = history.pushState;
+        history.pushState = function (_state, _title, url) {
+            if (url) {
+                client.recordLocation(url);
+            }
+            oldPushState.apply(this, arguments);
+        };
+    };
+    Historian.prototype.recordLocation = function (url) {
+        var index = url.indexOf('://');
+        if (index >= 0) {
+            url = url.slice(index + 3);
+            index = url.indexOf('/');
+            if (index >= 0) {
+                url = url.slice(index);
+            }
+            else {
+                url = '/';
+            }
+        }
+        else if (url.charAt(0) !== '/') {
+            url = '/' + url;
+        }
+        this.pushHistory({
+            type: 'location',
+            from: this.lastLocation,
+            to: url,
+        });
+        this.lastLocation = url;
+    };
+    return Historian;
+}());
+exports.default = Historian;
+var historian = new Historian();
+if (typeof document === 'object') {
+    historian.dom();
+}
+if (typeof console === 'object') {
+    historian.console();
+}
+if (typeof XMLHttpRequest !== 'undefined') {
+    historian.xhr();
+}
+if (typeof history === 'object') {
+    historian.location();
+}
+function getHistory() {
+    return historian.getHistory();
+}
+exports.getHistory = getHistory;
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorStackParser = __webpack_require__(3);
 var hasConsole = typeof console === 'object' && console.warn;
 function processor(err, cb) {
@@ -1207,7 +1233,7 @@ exports.default = processor;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1277,7 +1303,7 @@ exports.default = Promise;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1317,7 +1343,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1366,7 +1392,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1417,7 +1443,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1439,7 +1465,7 @@ exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1480,7 +1506,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(2);
