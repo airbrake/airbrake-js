@@ -17,7 +17,7 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {makeEventHandler} from './instrumentation/dom';
+import {registerClient} from './instrumentation/init';
 
 
 declare const VERSION: string;
@@ -26,10 +26,6 @@ interface FunctionWrapper {
     (): any;
     __airbrake: boolean;
     __inner: () => any;
-}
-
-interface XMLHttpRequestWithState extends XMLHttpRequest {
-    __state: any;
 }
 
 class Client {
@@ -43,7 +39,6 @@ class Client {
 
     private history = [];
     private lastState: any;
-    private lastLocation: string | null;
 
     private ignoreWindowError = 0;
 
@@ -76,18 +71,7 @@ class Client {
             }
         }
 
-        if (typeof document === 'object') {
-            this.instrumentDOM();
-        }
-        if (typeof console === 'object') {
-            this.instrumentConsole();
-        }
-        if (typeof XMLHttpRequest !== 'undefined') {
-            this.instrumentXHR(XMLHttpRequest.prototype);
-        }
-        if (typeof history === 'object') {
-            this.instrumentLocation();
-        }
+        registerClient(this);
     }
 
     setProject(id: number, key: string): void {
@@ -209,7 +193,7 @@ class Client {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
 
-    pushHistory(state): void {
+    pushHistory(state: any): void {
         if (this.isDupState(state)) {
             if (this.lastState.num) {
                 this.lastState.num++;
@@ -278,121 +262,6 @@ class Client {
     private ignoreNextWindowError() {
         this.ignoreWindowError++;
         setTimeout(() => this.ignoreWindowError--);
-    }
-
-    private instrumentDOM(): void {
-        let handler = makeEventHandler(this);
-        document.addEventListener('click', handler, false);
-        document.addEventListener('keypress', handler, false);
-    }
-
-    private instrumentConsole(): void {
-        let client = this;
-        let methods = ['debug', 'log', 'info', 'warn', 'error'];
-        for (let m of methods) {
-            if (!(m in console)) {
-                continue;
-            }
-
-            let oldFn = console[m];
-            let newFn = function () {
-                oldFn.apply(console, arguments);
-                client.pushHistory({
-                    type: 'log',
-                    severity: m,
-                    arguments: Array.prototype.slice.call(arguments),
-                });
-            };
-            console[m] = newFn;
-        }
-    }
-
-    private instrumentXHR(proto): void {
-        let client = this;
-
-        let oldOpen = proto.open;
-        proto.open = function(
-            method: string,
-            url: string,
-            _async?: boolean,
-            _user?: string,
-            _password?: string
-        ): void {
-            this.__state = {
-                type: 'xhr',
-                method: method,
-                url: url,
-            };
-            oldOpen.apply(this, arguments);
-        };
-
-        let oldSend = proto.send;
-        proto.send = function(_data?: any): void {
-            let oldFn = this.onreadystatechange;
-            this.onreadystatechange = function(_ev: Event): any {
-                if (this.__state && this.readyState === 4) {
-                    client.recordReq(this);
-                }
-                if (oldFn) {
-                    return oldFn.apply(this, arguments);
-                }
-            };
-
-            (this as XMLHttpRequestWithState).__state.date = new Date();
-            return oldSend.apply(this, arguments);
-        };
-    }
-
-    private recordReq(req: XMLHttpRequestWithState): void {
-        let state = req.__state;
-        state.statusCode = req.status;
-        if (state.date) {
-            state.duration = new Date().getTime() - state.date.getTime();
-        }
-        this.pushHistory(state);
-    }
-
-    private instrumentLocation(): void {
-        this.lastLocation = document.location.pathname;
-
-        let client = this;
-        let oldFn = window.onpopstate;
-        window.onpopstate = function(_event: PopStateEvent): any {
-            client.recordLocation(document.location.pathname);
-            if (oldFn) {
-                return oldFn.apply(this, arguments);
-            }
-        };
-
-        let oldPushState = history.pushState;
-        history.pushState = function(_state: any, _title: string, url?: string | null): void {
-            if (url) {
-                client.recordLocation(url);
-            }
-            oldPushState.apply(this, arguments);
-        };
-    }
-
-    private recordLocation(url: string): void {
-        let index = url.indexOf('://');
-        if (index >= 0) {
-            url = url.slice(index + 3);
-            index = url.indexOf('/');
-            if (index >= 0) {
-                url = url.slice(index);
-            } else {
-                url = '/';
-            }
-        } else if (url.charAt(0) !== '/') {
-            url = '/' + url;
-        }
-
-        this.pushHistory({
-            type: 'location',
-            from: this.lastLocation,
-            to: url,
-        });
-        this.lastLocation = url;
     }
 }
 
