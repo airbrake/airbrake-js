@@ -30,9 +30,9 @@ describe('instrumentation', function() {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            expect(history.length).to.equal(3);
+            expect(history.length).to.equal(10);
 
-            let state = history[0];
+            let state = history[7];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -40,7 +40,7 @@ describe('instrumentation', function() {
                 to: '/world',
             });
 
-            state = history[1];
+            state = history[8];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -48,7 +48,7 @@ describe('instrumentation', function() {
                 to: '/foo',
             });
 
-            state = history[2];
+            state = history[9];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -72,9 +72,9 @@ describe('instrumentation', function() {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            expect(history.length).to.equal(1);
+            expect(history.length).to.equal(10);
 
-            let state = history[0];
+            let state = history[9];
             delete state.date;
             expect(state.type).to.equal('xhr');
             expect(state.method).to.equal('GET');
