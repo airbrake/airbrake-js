@@ -17,7 +17,7 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {registerClient} from './instrumentation/init';
+import {getHistory} from './instrumentation/historian';
 
 
 declare const VERSION: string;
@@ -29,16 +29,11 @@ interface FunctionWrapper {
 }
 
 class Client {
-    private historyMaxLen = 10;
-
     private opts: ReporterOptions = {} as ReporterOptions;
 
     private processor: Processor;
     private reporters: Reporter[] = [];
     private filters: Filter[] = [];
-
-    private history = [];
-    private lastState: any;
 
     private ignoreWindowError = 0;
 
@@ -70,8 +65,6 @@ class Client {
                 });
             }
         }
-
-        registerClient(this);
     }
 
     setProject(id: number, key: string): void {
@@ -124,8 +117,10 @@ class Client {
             environment: err.environment || {},
             session: err.session || {},
         };
-        if (this.history.length > 0) {
-            notice.context.history = this.history;
+
+        let history = getHistory();
+        if (history.length > 0) {
+            notice.context.history = history;
         }
 
         let promise = new Promise();
@@ -191,42 +186,6 @@ class Client {
     call(fn) {
         let wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
-    }
-
-    pushHistory(state: any): void {
-        if (this.isDupState(state)) {
-            if (this.lastState.num) {
-                this.lastState.num++;
-            } else {
-                this.lastState.num = 2;
-            }
-            return;
-        }
-
-        if (!state.date) {
-            state.date = new Date();
-        }
-        this.history.push(state);
-        this.lastState = state;
-
-        if (this.history.length > this.historyMaxLen) {
-            this.history = this.history.slice(-this.historyMaxLen);
-        }
-    }
-
-    private isDupState(state): boolean {
-        if (!this.lastState) {
-            return false;
-        }
-        for (let key in state) {
-            if (key === 'date') {
-                continue;
-            }
-            if (state[key] !== this.lastState[key]) {
-                return false;
-            }
-        }
-        return true;
     }
 
     onerror(
