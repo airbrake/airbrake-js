@@ -86,7 +86,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 function jsonifyNotice(notice, n, maxLength) {
-    if (n === void 0) { n = 1000; }
+    if (n === void 0) { n = 10000; }
     if (maxLength === void 0) { maxLength = 64000; }
     var s;
     while (true) {
@@ -113,10 +113,9 @@ exports.default = jsonifyNotice;
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
 function truncateObj(obj, n) {
-    if (n === void 0) { n = 1000; }
     var dst = {};
-    for (var key in obj) {
-        dst[key] = truncate(obj[key], n);
+    for (var attr in obj) {
+        dst[attr] = truncate(obj[attr], n);
     }
     return dst;
 }
@@ -130,8 +129,9 @@ function truncate(value, n, depth) {
         var index = seen.indexOf(value);
         var path = [keys[index]];
         for (var i = index; i >= 0; i--) {
-            if (seen[i] && getAttr(seen[i], path[0]) === value) {
-                value = seen[i];
+            var sub = seen[i];
+            if (sub && getAttr(sub, path[0]) === value) {
+                value = sub;
                 path.unshift(keys[i]);
             }
         }
@@ -192,17 +192,17 @@ function truncate(value, n, depth) {
             return dst_1;
         }
         var dst = {};
-        for (key in value) {
-            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+        for (var attr in value) {
+            if (!Object.prototype.hasOwnProperty.call(value, attr)) {
                 continue;
             }
             nn++;
             if (nn >= n) {
                 break;
             }
-            var val = getAttr(value, key);
+            var val = getAttr(value, attr);
             if (val !== undefined) {
-                dst[key] = fn(val, key, dd);
+                dst[attr] = fn(val, attr, dd);
             }
         }
         return dst;
@@ -313,7 +313,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.7",
+                    version: "0.7.0-rc.8",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1179,7 +1179,7 @@ function processor(err, cb) {
         try {
             frames = ErrorStackParser.parse(err);
         }
-        catch (err) {
+        catch (_) {
             if (hasConsole && err.stack) {
                 console.warn('airbrake-js: cannot parse stack:', err.stack);
             }
@@ -1217,7 +1217,7 @@ function processor(err, cb) {
     else {
         msg = String(err);
     }
-    if (type === '' && msg === '' && backtrace.length === 0) {
+    if ((type === '' && msg === '') || backtrace.length === 0) {
         if (hasConsole) {
             console.warn('airbrake: can not process error:', err.toString());
         }
