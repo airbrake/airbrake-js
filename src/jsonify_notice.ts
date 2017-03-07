@@ -3,7 +3,7 @@ import Notice from './notice';
 
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
-export default function jsonifyNotice(notice: Notice, n = 1000, maxLength = 64000): string {
+export default function jsonifyNotice(notice: Notice, n = 10000, maxLength = 64000): string {
     let s: string;
     while (true) {
         notice.context = truncateObj(notice.context, n);
@@ -32,10 +32,10 @@ export default function jsonifyNotice(notice: Notice, n = 1000, maxLength = 6400
 
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObj(obj: any, n = 1000): any {
+function truncateObj(obj: any, n: number): any {
     let dst = {};
-    for (let key in obj) {
-        dst[key] = truncate(obj[key], n);
+    for (let attr in obj) {
+        dst[attr] = truncate(obj[attr], n);
     }
     return dst;
 }
@@ -49,8 +49,9 @@ export function truncate(value: any, n = 1000, depth = 5): any {
         let index = seen.indexOf(value);
         let path = [keys[index]];
         for (let i = index; i >= 0; i--) {
-            if (seen[i] && getAttr(seen[i], path[0]) === value) {
-                value = seen[i];
+            let sub = seen[i];
+            if (sub && getAttr(sub, path[0]) === value) {
+                value = sub;
                 path.unshift(keys[i]);
             }
         }
@@ -119,8 +120,8 @@ export function truncate(value: any, n = 1000, depth = 5): any {
         }
 
         let dst = {};
-        for (key in value) {
-            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+        for (let attr in value) {
+            if (!Object.prototype.hasOwnProperty.call(value, attr)) {
                 continue;
             }
 
@@ -129,9 +130,9 @@ export function truncate(value: any, n = 1000, depth = 5): any {
                 break;
             }
 
-            let val = getAttr(value, key);
+            let val = getAttr(value, attr);
             if (val !== undefined) {
-                dst[key] = fn(val, key, dd);
+                dst[attr] = fn(val, attr, dd);
             }
         }
 
