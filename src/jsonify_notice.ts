@@ -40,27 +40,22 @@ function truncateObj(obj: any, n: number): any {
     return dst;
 }
 
-export function truncate(value: any, n = 1000, depth = 5): any {
-    let nn = 0;
-    let keys: string[] = [];
-    let seen = [];
+class Truncator {
+    private count = 0;
+    private maxCount: number;
+    private maxDepth: number;
 
-    function getPath(value): string {
-        let index = seen.indexOf(value);
-        let path = [keys[index]];
-        for (let i = index; i >= 0; i--) {
-            let sub = seen[i];
-            if (sub && getAttr(sub, path[0]) === value) {
-                value = sub;
-                path.unshift(keys[i]);
-            }
-        }
-        return '~' + path.join('.');
+    private keys: string[] = [];
+    private seen = [];
+
+    constructor(opts: any) {
+        this.maxCount = opts.maxCount;
+        this.maxDepth = opts.maxDepth;
     }
 
-    function fn(value, key = '', dd = 0) {
-        nn++;
-        if (nn > n) {
+    truncate(value: any, key = '', depth = 0): any {
+        this.count++;
+        if (this.count > this.maxCount) {
             return '[Truncated]';
         }
 
@@ -92,54 +87,79 @@ export function truncate(value: any, n = 1000, depth = 5): any {
             return value.toString();
         }
 
-        if (seen.indexOf(value) >= 0) {
-            return `[Circular ${getPath(value)}]`;
+        if (this.seen.indexOf(value) >= 0) {
+            return `[Circular ${this.getPath(value)}]`;
         }
 
         // At this point value can be either array or object. Check maximum depth.
-        dd++;
-        if (dd > depth) {
+        depth++;
+        if (depth > this.maxDepth) {
             return '[Truncated]';
         }
 
-        keys.push(key);
-        seen.push(value);
-        nn--; // nn was increased above for primitives.
+        this.keys.push(key);
+        this.seen.push(value);
 
-        if (Object.prototype.toString.apply(value) === '[object Array]') {
-            let dst = [];
-            for (let i in value) {
-                let el = value[i];
-                nn++;
-                if (nn >= n) {
-                    break;
-                }
-                dst.push(fn(el, i, dd));
-            }
-            return dst;
+        switch (Object.prototype.toString.apply(value)) {
+        case '[object Array]':
+            return this.truncateArray(value, depth);
+        case '[object Object]':
+            return this.truncateObject(value, depth);
+        default:
+            return String(value);
         }
+    }
 
-        let dst = {};
-        for (let attr in value) {
-            if (!Object.prototype.hasOwnProperty.call(value, attr)) {
-                continue;
+    private getPath(value): string {
+        let index = this.seen.indexOf(value);
+        let path = [this.keys[index]];
+        for (let i = index; i >= 0; i--) {
+            let sub = this.seen[i];
+            if (sub && getAttr(sub, path[0]) === value) {
+                value = sub;
+                path.unshift(this.keys[i]);
             }
+        }
+        return '~' + path.join('.');
+    }
 
-            nn++;
-            if (nn >= n) {
+    private truncateArray(arr: any[], depth: number): any[] {
+        let dst = [];
+        for (let i in arr) {
+            let el = arr[i];
+            this.count++;
+            if (this.count >= this.maxCount) {
                 break;
             }
-
-            let val = getAttr(value, attr);
-            if (val !== undefined) {
-                dst[attr] = fn(val, attr, dd);
-            }
+            dst.push(this.truncate(el, i, depth));
         }
-
         return dst;
     }
 
-    return fn(value);
+    private truncateObject(obj: any, depth: number): any {
+        let dst = {};
+        for (let attr in obj) {
+            if (!Object.prototype.hasOwnProperty.call(obj, attr)) {
+                continue;
+            }
+
+            this.count++;
+            if (this.count >= this.maxCount) {
+                break;
+            }
+
+            let value = getAttr(obj, attr);
+            if (value !== undefined) {
+                dst[attr] = this.truncate(value, attr, depth);
+            }
+        }
+        return dst;
+    }
+}
+
+export function truncate(value: any, maxCount = 10000, maxDepth = 5): any {
+    let t = new Truncator({maxCount: maxCount, maxDepth: maxDepth});
+    return t.truncate(value);
 }
 
 function getAttr(obj: any, attr: string): any {
