@@ -119,29 +119,19 @@ function truncateObj(obj, n) {
     }
     return dst;
 }
-function truncate(value, n, depth) {
-    if (n === void 0) { n = 1000; }
-    if (depth === void 0) { depth = 5; }
-    var nn = 0;
-    var keys = [];
-    var seen = [];
-    function getPath(value) {
-        var index = seen.indexOf(value);
-        var path = [keys[index]];
-        for (var i = index; i >= 0; i--) {
-            var sub = seen[i];
-            if (sub && getAttr(sub, path[0]) === value) {
-                value = sub;
-                path.unshift(keys[i]);
-            }
-        }
-        return '~' + path.join('.');
+var Truncator = (function () {
+    function Truncator(opts) {
+        this.count = 0;
+        this.keys = [];
+        this.seen = [];
+        this.maxCount = opts.maxCount;
+        this.maxDepth = opts.maxDepth;
     }
-    function fn(value, key, dd) {
+    Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
-        if (dd === void 0) { dd = 0; }
-        nn++;
-        if (nn > n) {
+        if (depth === void 0) { depth = 0; }
+        this.count++;
+        if (this.count > this.maxCount) {
             return '[Truncated]';
         }
         if (value === null || value === undefined) {
@@ -168,46 +158,73 @@ function truncate(value, n, depth) {
         if (value instanceof Error) {
             return value.toString();
         }
-        if (seen.indexOf(value) >= 0) {
-            return "[Circular " + getPath(value) + "]";
+        if (this.seen.indexOf(value) >= 0) {
+            return "[Circular " + this.getPath(value) + "]";
         }
         // At this point value can be either array or object. Check maximum depth.
-        dd++;
-        if (dd > depth) {
+        depth++;
+        if (depth > this.maxDepth) {
             return '[Truncated]';
         }
-        keys.push(key);
-        seen.push(value);
-        nn--; // nn was increased above for primitives.
-        if (Object.prototype.toString.apply(value) === '[object Array]') {
-            var dst_1 = [];
-            for (var i in value) {
-                var el = value[i];
-                nn++;
-                if (nn >= n) {
-                    break;
-                }
-                dst_1.push(fn(el, i, dd));
-            }
-            return dst_1;
+        this.keys.push(key);
+        this.seen.push(value);
+        switch (Object.prototype.toString.apply(value)) {
+            case '[object Array]':
+                return this.truncateArray(value, depth);
+            case '[object Object]':
+                return this.truncateObject(value, depth);
+            default:
+                return String(value);
         }
-        var dst = {};
-        for (var attr in value) {
-            if (!Object.prototype.hasOwnProperty.call(value, attr)) {
-                continue;
+    };
+    Truncator.prototype.getPath = function (value) {
+        var index = this.seen.indexOf(value);
+        var path = [this.keys[index]];
+        for (var i = index; i >= 0; i--) {
+            var sub = this.seen[i];
+            if (sub && getAttr(sub, path[0]) === value) {
+                value = sub;
+                path.unshift(this.keys[i]);
             }
-            nn++;
-            if (nn >= n) {
+        }
+        return '~' + path.join('.');
+    };
+    Truncator.prototype.truncateArray = function (arr, depth) {
+        var dst = [];
+        for (var i in arr) {
+            var el = arr[i];
+            this.count++;
+            if (this.count >= this.maxCount) {
                 break;
             }
-            var val = getAttr(value, attr);
-            if (val !== undefined) {
-                dst[attr] = fn(val, attr, dd);
+            dst.push(this.truncate(el, i, depth));
+        }
+        return dst;
+    };
+    Truncator.prototype.truncateObject = function (obj, depth) {
+        var dst = {};
+        for (var attr in obj) {
+            if (!Object.prototype.hasOwnProperty.call(obj, attr)) {
+                continue;
+            }
+            this.count++;
+            if (this.count >= this.maxCount) {
+                break;
+            }
+            var value = getAttr(obj, attr);
+            if (value !== undefined) {
+                dst[attr] = this.truncate(value, attr, depth);
             }
         }
         return dst;
-    }
-    return fn(value);
+    };
+    return Truncator;
+}());
+function truncate(value, maxCount, maxDepth) {
+    if (maxCount === void 0) { maxCount = 10000; }
+    if (maxDepth === void 0) { maxDepth = 5; }
+    var t = new Truncator({ maxCount: maxCount, maxDepth: maxDepth });
+    return t.truncate(value);
 }
 exports.truncate = truncate;
 function getAttr(obj, attr) {
@@ -313,7 +330,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.8",
+                    version: "0.7.0-rc.9",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1179,9 +1196,9 @@ function processor(err, cb) {
         try {
             frames = ErrorStackParser.parse(err);
         }
-        catch (_) {
+        catch (parseErr) {
             if (hasConsole && err.stack) {
-                console.warn('airbrake-js: cannot parse stack:', err.stack);
+                console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
             }
         }
     }
@@ -1217,7 +1234,7 @@ function processor(err, cb) {
     else {
         msg = String(err);
     }
-    if ((type === '' && msg === '') || backtrace.length === 0) {
+    if (backtrace.length === 0) {
         if (hasConsole) {
             console.warn('airbrake: can not process error:', err.toString());
         }
