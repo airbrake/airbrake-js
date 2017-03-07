@@ -19,7 +19,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
     if (!err.__noStack) {
         try {
             frames = ErrorStackParser.parse(err);
-        } catch (err) {
+        } catch (_) {
             if (hasConsole && err.stack) {
                 console.warn('airbrake-js: cannot parse stack:', err.stack);
             }
@@ -59,7 +59,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         msg = String(err);
     }
 
-    if (type === '' && msg === '' && backtrace.length === 0) {
+    if ((type === '' && msg === '') || backtrace.length === 0) {
         if (hasConsole) {
             console.warn('airbrake: can not process error:', err.toString());
         }
