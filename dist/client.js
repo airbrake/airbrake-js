@@ -330,7 +330,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.9",
+                    version: "0.7.0-rc.10",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -403,20 +403,30 @@ var Client = (function () {
             return;
         }
         if (err) {
-            this.notify(err);
+            this.notify({
+                error: err,
+                context: {
+                    windowError: true,
+                },
+            });
             return;
         }
         // Ignore errors without file or line.
         if (!filename || !line) {
             return;
         }
-        this.notify({ error: {
+        this.notify({
+            error: {
                 message: message,
                 fileName: filename,
                 lineNumber: line,
                 columnNumber: column,
-                __noStack: true,
-            } });
+                noStack: true,
+            },
+            context: {
+                windowError: true,
+            },
+        });
     };
     Client.prototype.ignoreNextWindowError = function () {
         var _this = this;
@@ -1191,26 +1201,26 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorStackParser = __webpack_require__(3);
 var hasConsole = typeof console === 'object' && console.warn;
 function processor(err, cb) {
-    var frames = [];
-    if (!err.__noStack) {
+    var backtrace = [];
+    if (!err.noStack) {
+        var frames_1 = [];
         try {
-            frames = ErrorStackParser.parse(err);
+            frames_1 = ErrorStackParser.parse(err);
         }
         catch (parseErr) {
             if (hasConsole && err.stack) {
                 console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
             }
         }
-    }
-    var backtrace = [];
-    for (var _i = 0, frames_1 = frames; _i < frames_1.length; _i++) {
-        var frame = frames_1[_i];
-        backtrace.push({
-            function: frame.functionName || '',
-            file: frame.fileName || '',
-            line: frame.lineNumber || 0,
-            column: frame.columnNumber || 0,
-        });
+        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
+            var frame = frames_2[_i];
+            backtrace.push({
+                function: frame.functionName || '',
+                file: frame.fileName || '',
+                line: frame.lineNumber || 0,
+                column: frame.columnNumber || 0,
+            });
+        }
     }
     if (backtrace.length === 0 && err.fileName && err.lineNumber) {
         backtrace.push({
@@ -1233,12 +1243,6 @@ function processor(err, cb) {
     }
     else {
         msg = String(err);
-    }
-    if (backtrace.length === 0) {
-        if (hasConsole) {
-            console.warn('airbrake: can not process error:', err.toString());
-        }
-        return;
     }
     cb('stacktracejs', {
         type: type,
