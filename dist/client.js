@@ -330,7 +330,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.10",
+                    version: "0.7.0-rc.11",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1200,16 +1200,29 @@ exports.getHistory = getHistory;
 Object.defineProperty(exports, "__esModule", { value: true });
 var ErrorStackParser = __webpack_require__(3);
 var hasConsole = typeof console === 'object' && console.warn;
+function parse(err) {
+    try {
+        return ErrorStackParser.parse(err);
+    }
+    catch (parseErr) {
+        if (hasConsole && err.stack) {
+            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        }
+        return [];
+    }
+}
 function processor(err, cb) {
     var backtrace = [];
     if (!err.noStack) {
-        var frames_1 = [];
-        try {
-            frames_1 = ErrorStackParser.parse(err);
-        }
-        catch (parseErr) {
-            if (hasConsole && err.stack) {
-                console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        var frames_1 = parse(err);
+        if (frames_1.length === 0) {
+            try {
+                throw new Error('fake');
+            }
+            catch (fakeErr) {
+                frames_1 = parse(fakeErr);
+                frames_1.shift();
+                frames_1.shift();
             }
         }
         for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
