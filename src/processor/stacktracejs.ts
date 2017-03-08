@@ -14,16 +14,28 @@ interface AirbrakeError extends Error {
     noStack?: boolean;
 }
 
+function parse(err: Error): ErrorStackParser.StackFrame[] {
+    try {
+        return ErrorStackParser.parse(err);
+    } catch (parseErr) {
+        if (hasConsole && err.stack) {
+            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        }
+        return [];
+    }
+}
+
 export default function processor(err: AirbrakeError, cb: Callback): void {
     let backtrace: AirbrakeFrame[] = [];
 
     if (!err.noStack) {
-        let frames: ErrorStackParser.StackFrame[] = [];
-        try {
-            frames = ErrorStackParser.parse(err);
-        } catch (parseErr) {
-            if (hasConsole && err.stack) {
-                console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        let frames = parse(err);
+        if (frames.length === 0) {
+            try {
+                throw new Error('fake');
+            } catch (fakeErr) {
+                frames = parse(fakeErr);
+                frames.shift();
             }
         }
 

@@ -65,5 +65,16 @@ describe('stacktracejs processor', () => {
             let msg = cb.lastCall.args[1].message;
             expect(msg).to.equal('BOOM');
         });
+
+        it('provides backtrace', () => {
+            let backtrace = cb.lastCall.args[1].backtrace;
+            expect(backtrace.length).to.equal(6);
+
+            let frame = backtrace[0];
+            expect(frame.file).to.contain('test/unit/processor/stacktracejs_test.ts');
+            expect(frame.function).to.equal('');
+            expect(frame.line).to.be.a('number');
+            expect(frame.column).to.be.a('number');
+        });
     });
 });
