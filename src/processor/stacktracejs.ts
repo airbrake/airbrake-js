@@ -36,6 +36,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
             } catch (fakeErr) {
                 frames = parse(fakeErr);
                 frames.shift();
+                frames.shift();
             }
         }
 
