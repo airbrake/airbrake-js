@@ -11,12 +11,14 @@ interface AirbrakeError extends Error {
     fileName?: string;
     lineNumber?: number;
     columnNumber?: number;
-    __noStack?: boolean;
+    noStack?: boolean;
 }
 
 export default function processor(err: AirbrakeError, cb: Callback): void {
-    let frames: ErrorStackParser.StackFrame[] = [];
-    if (!err.__noStack) {
+    let backtrace: AirbrakeFrame[] = [];
+
+    if (!err.noStack) {
+        let frames: ErrorStackParser.StackFrame[] = [];
         try {
             frames = ErrorStackParser.parse(err);
         } catch (parseErr) {
@@ -24,16 +26,15 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
                 console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
             }
         }
-    }
 
-    let backtrace: AirbrakeFrame[] = [];
-    for (let frame of frames) {
-        backtrace.push({
-            function: frame.functionName || '',
-            file: frame.fileName || '',
-            line: frame.lineNumber || 0,
-            column: frame.columnNumber || 0,
-        });
+        for (let frame of frames) {
+            backtrace.push({
+                function: frame.functionName || '',
+                file: frame.fileName || '',
+                line: frame.lineNumber || 0,
+                column: frame.columnNumber || 0,
+            });
+        }
     }
 
     if (backtrace.length === 0 && err.fileName && err.lineNumber) {
@@ -57,13 +58,6 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         msg = String(err.message);
     } else {
         msg = String(err);
-    }
-
-    if (backtrace.length === 0) {
-        if (hasConsole) {
-            console.warn('airbrake: can not process error:', err.toString());
-        }
-        return;
     }
 
     cb('stacktracejs', {

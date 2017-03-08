@@ -200,7 +200,12 @@ class Client {
         }
 
         if (err) {
-            this.notify(err);
+            this.notify({
+                error: err,
+                context: {
+                    windowError: true,
+                },
+            });
             return;
         }
 
@@ -209,13 +214,18 @@ class Client {
             return;
         }
 
-        this.notify({error: {
-            message: message,
-            fileName: filename,
-            lineNumber: line,
-            columnNumber: column,
-            __noStack: true,
-        }});
+        this.notify({
+            error: {
+                message: message,
+                fileName: filename,
+                lineNumber: line,
+                columnNumber: column,
+                noStack: true,
+            },
+            context: {
+                windowError: true,
+            },
+        });
     }
 
     private ignoreNextWindowError() {
