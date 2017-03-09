@@ -330,7 +330,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0-rc.11",
+                    version: "0.7.0",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1212,6 +1212,9 @@ function parse(err) {
     }
 }
 function processor(err, cb) {
+    if (!err) {
+        return;
+    }
     var backtrace = [];
     if (!err.noStack) {
         var frames_1 = parse(err);
