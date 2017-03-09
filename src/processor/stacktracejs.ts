@@ -26,6 +26,10 @@ function parse(err: Error): ErrorStackParser.StackFrame[] {
 }
 
 export default function processor(err: AirbrakeError, cb: Callback): void {
+    if (!err) {
+        return;
+    }
+
     let backtrace: AirbrakeFrame[] = [];
 
     if (!err.noStack) {
