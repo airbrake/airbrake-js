@@ -71,17 +71,4 @@ describe('stacktracejs processor', () => {
             expect(backtrace.length).to.equal(5);
         });
     });
-
-    describe('falsey', () => {
-        beforeEach(() => {
-            cb = sinon.spy();
-
-            let err: Error;
-            processor(err, cb);
-        });
-
-        it('does not call callback', () => {
-            expect(cb).to.not.have.been.called;
-        });
-    });
 });

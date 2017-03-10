@@ -130,10 +130,21 @@ describe('Client', () => {
             expect(onResolved).to.have.been.called;
         });
 
-        it('processor is called', () => {
+        it('calls processor', () => {
             client.notify(err);
-
             expect(processor).to.have.been.called;
+        });
+
+        it('ignores falsey error', () => {
+            let promise = client.notify('');
+            expect(processor).to.not.have.been.called;
+
+            let spy = sinon.spy();
+            promise.catch(spy);
+            expect(spy).to.have.been.called;
+
+            let err = spy.lastCall.args[0];
+            expect(err.toString()).to.equal('Error: notify: got err="", wanted an Error');
         });
 
         it('reporter is called with valid options', () => {
@@ -208,6 +219,19 @@ describe('Client', () => {
             it('unwraps and processes error', () => {
                 client.notify({error: err});
                 expect(processor).to.have.been.calledWith(err);
+            });
+
+            it('ignores falsey error', () => {
+                let promise = client.notify({error: null, params: {foo: 'bar'}});
+
+                expect(processor).to.not.have.been.called;
+
+                let spy = sinon.spy();
+                promise.catch(spy);
+                expect(spy).to.have.been.called;
+
+                let err = spy.lastCall.args[0];
+                expect(err.toString()).to.equal('Error: notify: got {"error":null,"params":{"foo":"bar"}}, wanted an Error');
             });
 
             it('reports custom context', () => {

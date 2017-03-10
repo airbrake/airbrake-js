@@ -101,7 +101,20 @@ class Client {
         this.filters.push(filter);
     }
 
-    notify(err) {
+    notify(err: any): Promise {
+        let promise = new Promise();
+
+        if (typeof err !== 'object') {
+            promise.reject(new Error(`notify: got err=${JSON.stringify(err)}, wanted an Error`));
+            return promise;
+        }
+
+        let exc: Error = err.error !== undefined ? err.error : err;
+        if (!exc) {
+            promise.reject(new Error(`notify: got ${JSON.stringify(err)}, wanted an Error`));
+            return promise;
+        }
+
         let notice: Notice = {
             id: '',
             errors: null,
@@ -122,8 +135,6 @@ class Client {
         if (history.length > 0) {
             notice.context.history = history;
         }
-
-        let promise = new Promise();
 
         this.processor(err.error || err, (_: string, error: AirbrakeError): void => {
             notice.errors = [error];
