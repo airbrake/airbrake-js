@@ -43,7 +43,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         for (let frame of frames) {
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '',
+                file: frame.fileName || '<anonymous>',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
@@ -53,7 +53,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
     if (backtrace.length === 0 && err.fileName && err.lineNumber) {
         backtrace.push({
             function: err.functionName || '',
-            file: err.fileName || '',
+            file: err.fileName || '<anonymous>',
             line: err.lineNumber || 0,
             column: err.columnNumber || 0,
         });
