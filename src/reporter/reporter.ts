@@ -10,6 +10,7 @@ export interface ReporterOptions {
 }
 
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
+export default Reporter;
 
 export function detectReporter(opts): string {
     if (typeof XMLHttpRequest !== 'undefined') {
