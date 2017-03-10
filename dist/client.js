@@ -323,6 +323,16 @@ var Client = (function () {
     };
     Client.prototype.notify = function (err) {
         var _this = this;
+        var promise = new promise_1.default();
+        if (typeof err !== 'object') {
+            promise.reject(new Error("notify: got err=" + JSON.stringify(err) + ", wanted an Error"));
+            return promise;
+        }
+        var exc = err.error !== undefined ? err.error : err;
+        if (!exc) {
+            promise.reject(new Error("notify: got " + JSON.stringify(err) + ", wanted an Error"));
+            return promise;
+        }
         var notice = {
             id: '',
             errors: null,
@@ -330,7 +340,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.0",
+                    version: "0.7.1",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -342,7 +352,6 @@ var Client = (function () {
         if (history.length > 0) {
             notice.context.history = history;
         }
-        var promise = new promise_1.default();
         this.processor(err.error || err, function (_, error) {
             notice.errors = [error];
             for (var _i = 0, _a = _this.filters; _i < _a.length; _i++) {
@@ -395,6 +404,10 @@ var Client = (function () {
         return args;
     };
     Client.prototype.call = function (fn) {
+        var _args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            _args[_i - 1] = arguments[_i];
+        }
         var wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     };
@@ -1212,9 +1225,6 @@ function parse(err) {
     }
 }
 function processor(err, cb) {
-    if (!err) {
-        return;
-    }
     var backtrace = [];
     if (!err.noStack) {
         var frames_1 = parse(err);
@@ -1232,7 +1242,7 @@ function processor(err, cb) {
             var frame = frames_2[_i];
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '',
+                file: frame.fileName || '<anonymous>',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
@@ -1241,7 +1251,7 @@ function processor(err, cb) {
     if (backtrace.length === 0 && err.fileName && err.lineNumber) {
         backtrace.push({
             function: err.functionName || '',
-            file: err.fileName || '',
+            file: err.fileName || '<anonymous>',
             line: err.lineNumber || 0,
             column: err.columnNumber || 0,
         });
