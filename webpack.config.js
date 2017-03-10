@@ -7,13 +7,12 @@ const pkg = require('./package.json');
 function newConfig() {
   return {
     resolve: {
-      extensions: ['.js', '.coffee', '.ts', '.tsx']
+      extensions: ['.js', '.ts', '.tsx']
     },
 
     module: {
       rules: [
-        {test: /\.coffee$/, loader: 'coffee-loader'},
-        {test: /\.tsx?$/, loader: 'ts-loader'},
+         {test: /\.tsx?$/, loader: 'ts-loader'},
         {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
         {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'}
       ]

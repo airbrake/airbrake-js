@@ -17,7 +17,6 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'src/internal/compat.ts',
-      'test/unit/**/*_test.coffee',
       'test/unit/**/*_test.ts',
     ],
 
@@ -31,7 +30,6 @@ module.exports = function(config) {
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
       '**/*.ts': ['webpack', 'sourcemap'],
-      '**/*.coffee': ['webpack', 'sourcemap']
     },
 
 
@@ -47,7 +45,7 @@ module.exports = function(config) {
         }),
         new webpack.SourceMapDevToolPlugin({
           filename: null,
-          test: /\.(coffee|ts)$/
+          test: /\.ts$/
         })
       ],
     },

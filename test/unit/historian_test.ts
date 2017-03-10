@@ -2,10 +2,10 @@ import Client = require('../../src/client');
 import { expect } from './sinon_chai';
 
 
-describe('instrumentation', function() {
+describe('instrumentation', () => {
     let processor, reporter, client;
 
-    beforeEach(function() {
+    beforeEach(() => {
         processor = sinon.spy((data, cb) => {
             cb('test-processor', data);
         });
@@ -15,8 +15,8 @@ describe('instrumentation', function() {
         client = new Client({processor: processor, reporter: reporter});
     });
 
-    describe('location', function() {
-        beforeEach(function() {
+    describe('location', () => {
+        beforeEach(() => {
             let locations = ['', 'http://hello/world', 'foo', '/'];
             for (let loc of locations) {
                 try {
@@ -26,13 +26,13 @@ describe('instrumentation', function() {
             client.notify(new Error('test'));
         });
 
-        it('records browser history', function() {
+        it('records browser history', () => {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            expect(history.length).to.equal(10);
+            let length = history.length;
 
-            let state = history[7];
+            let state = history[length - 3];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -40,7 +40,7 @@ describe('instrumentation', function() {
                 to: '/world',
             });
 
-            state = history[8];
+            state = history[length - 2];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -48,7 +48,7 @@ describe('instrumentation', function() {
                 to: '/foo',
             });
 
-            state = history[9];
+            state = history[length - 1];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -58,8 +58,8 @@ describe('instrumentation', function() {
         });
     });
 
-    describe('XHR', function() {
-        beforeEach(function() {
+    describe('XHR', () => {
+        beforeEach(() => {
             let req = new XMLHttpRequest();
             req.open('GET', 'https://google.com/', false);
             try {
@@ -68,19 +68,42 @@ describe('instrumentation', function() {
             client.notify(new Error('test'));
         });
 
-        it('records request', function() {
+        it('records request', () => {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            expect(history.length).to.equal(10);
+            let length = history.length;
 
-            let state = history[9];
+            let state = history[length - 1];
             delete state.date;
             expect(state.type).to.equal('xhr');
             expect(state.method).to.equal('GET');
             expect(state.url).to.equal('https://google.com/');
             expect(state.statusCode).to.equal(0);
             expect(state.duration).to.be.a('number');
+        });
+    });
+
+    describe('console', () => {
+        beforeEach(() => {
+            for (let i = 0; i < 15; i++) {
+                console.log(i);
+            }
+            client.notify(new Error('test'));
+        });
+
+        it('records log message', () => {
+            expect(reporter).to.have.been.called;
+            let notice = reporter.lastCall.args[0];
+            let history = notice.context.history;
+            expect(history).to.have.length(10);
+            for (let i in history) {
+                let state = history[i];
+                expect(state.type).to.equal('log');
+                expect(state.severity).to.equal('log');
+                expect(state.arguments).to.deep.equal([+i + 5]);
+                expect(state.date).to.exist;
+            }
         });
     });
 });

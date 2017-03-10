@@ -183,7 +183,7 @@ class Client {
         return args;
     }
 
-    call(fn) {
+    call(fn, ..._args: any[]) {
         let wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
