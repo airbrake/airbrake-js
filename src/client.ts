@@ -17,7 +17,7 @@ import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {getHistory} from './instrumentation/historian';
+import {historian, getHistory} from './instrumentation/historian';
 
 
 declare const VERSION: string;
@@ -35,8 +35,6 @@ class Client {
     private reporters: Reporter[] = [];
     private filters: Filter[] = [];
 
-    private ignoreWindowError = 0;
-
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
@@ -52,9 +50,6 @@ class Client {
 
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
-            if (!window.onerror && !opts.onerror) {
-                window.onerror = this.onerror.bind(this);
-            }
         } else {
             this.addFilter(nodeFilter);
             if (!opts.uncaughtException) {
@@ -65,6 +60,8 @@ class Client {
                 });
             }
         }
+
+        historian.registerNotifier(this);
     }
 
     setProject(id: number, key: string): void {
@@ -167,7 +164,7 @@ class Client {
                 return fn.apply(this, wrappedArgs);
             } catch (err) {
                 client.notify({error: err, params: {arguments: fnArgs}});
-                client.ignoreNextWindowError();
+                historian.ignoreNextWindowError();
                 throw err;
             }
         } as FunctionWrapper;
@@ -197,51 +194,6 @@ class Client {
     call(fn, ..._args: any[]) {
         let wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
-    }
-
-    onerror(
-        message: string,
-        filename?: string,
-        line?: number,
-        column?: number,
-        err?: Error
-    ): void {
-        if (this.ignoreWindowError > 0) {
-            return;
-        }
-
-        if (err) {
-            this.notify({
-                error: err,
-                context: {
-                    windowError: true,
-                },
-            });
-            return;
-        }
-
-        // Ignore errors without file or line.
-        if (!filename || !line) {
-            return;
-        }
-
-        this.notify({
-            error: {
-                message: message,
-                fileName: filename,
-                lineNumber: line,
-                columnNumber: column,
-                noStack: true,
-            },
-            context: {
-                windowError: true,
-            },
-        });
-    }
-
-    private ignoreNextWindowError() {
-        this.ignoreWindowError++;
-        setTimeout(() => this.ignoreWindowError--);
     }
 }
 

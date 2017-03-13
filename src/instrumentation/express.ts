@@ -1,7 +1,7 @@
-import Client = require('../client');
+import Notifier from '../notifier';
 
 
-function makeErrorHandler(client: Client) {
+function makeErrorHandler(client: Notifier) {
     return function errorHandler(err: Error, req, _res, next): void {
         let url = req.protocol + '://' + req.headers['host'] + req.path;
         let notice: any = {
