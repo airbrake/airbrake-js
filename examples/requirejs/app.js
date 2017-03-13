@@ -4,15 +4,11 @@ require.config({
   }
 });
 
-require(['airbrakeJs/client', 'airbrakeJs/instrumentation/jquery'],
-        function (AirbrakeClient, instrumentJQuery) {
+require(['airbrakeJs/client'], function (AirbrakeClient) {
   var airbrake = new AirbrakeClient({
     projectId: 1,
     projectKey: 'FIXME'
   });
-  if (window.jQuery) {
-    instrumentJQuery(airbrake, jQuery);
-  }
 
   try {
     throw new Error('hello from Require.js');

@@ -1,14 +1,12 @@
 <html>
 
-<!-- jQuery is NOT required by airbrake-js. -->
-<!-- Include it for demonstration. -->
-<script src="http://code.jquery.com/jquery-2.1.3.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/airbrake-js/0.7.0/client.js"></script>-->
+<script src="node_modules/airbrake-js/dist/client.js"></script>
 
-<script src="node_modules/airbrake-js/dist/client.min.js"></script>
-<script src="node_modules/airbrake-js/dist/instrumentation/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+
 <script src="app.js"></script>
-
-<body onload="start()">
+<script>start();</script>
 
 <input id="error_text" />
 <button id="send_error">Send error to Airbrake</button>

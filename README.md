@@ -196,17 +196,6 @@ var airbrake = new airbrakeJs.Client(...);
 window.onerror = airbrake.onerror;
 ```
 
-### jQuery
-
-You can catch and report exceptions thrown in jQuery event handlers and callbacks using the following code:
-
-```js
-var airbrake = new airbrakeJs.Client(...);
-if (window.jQuery) {
-  airbrakeJs.instrumentation.jquery(airbrake, jQuery);
-}
-```
-
 ## What does "Script error" mean?
 
 See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
