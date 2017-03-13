@@ -11,21 +11,21 @@ function elemName(elem: HTMLElement): string {
 
     let s: string[] = [];
 
-    if (typeof elem.tagName === 'string') {
+    if (elem.tagName) {
         s.push(elem.tagName.toLowerCase());
     }
 
-    if (typeof elem.id === 'string' && elem.id !== '') {
+    if (elem.id) {
         s.push('#');
         s.push(elem.id);
     }
 
-    if (typeof elem.className === 'string' && elem.className !== '') {
+    if (elem.className) {
         s.push('.');
         s.push(elem.className.split(' ').join('.'));
     }
 
-    if (typeof elem.getAttribute === 'function') {
+    if (elem.getAttribute) {
         for (let attr of elemAttrs) {
             let value = elem.getAttribute(attr);
             if (value) {
@@ -63,6 +63,9 @@ export function makeEventHandler(client: Historian): EventListener {
         try {
             target = event.target as HTMLElement;
         } catch (_) {
+            return;
+        }
+        if (!target) {
             return;
         }
 
