@@ -3,9 +3,6 @@ function start() {
     projectId: 1,
     projectKey: 'FIXME'
   });
-  if (window.jQuery) {
-    airbrakeJs.instrumentation.jquery(airbrake, jQuery);
-  }
 
   try {
     throw new Error('hello from Bower+Wiredep');

@@ -33,6 +33,3 @@ try {
 
 You should now be able to capture JavaScript exceptions in your Ruby on Rails
 application.
-
-If you wish to use the [additional jQuery support](https://github.com/airbrake/airbrake-js#jquery),
-include `//= require airbrake-js-client/instrumentation/jquery.js` in `application.js`.

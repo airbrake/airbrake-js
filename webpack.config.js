@@ -52,14 +52,6 @@ client.entry = {
 client.output.library = ['airbrakeJs', 'Client'];
 
 
-var jquery = newConfig();
-jquery.entry = {
-  'instrumentation/jquery': './src/instrumentation/jquery.ts',
-  'instrumentation/jquery.min': './src/instrumentation/jquery.ts'
-};
-jquery.output.library = ['airbrakeJs', 'instrumentation', 'jquery'];
-
-
 var express = newConfig();
 express.entry = {
   'instrumentation/express': './src/instrumentation/express.ts'
@@ -74,4 +66,4 @@ hapi.entry = {
 express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
 
 
-module.exports = [client, jquery, express, hapi];
+module.exports = [client, express, hapi];

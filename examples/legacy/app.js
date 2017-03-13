@@ -3,15 +3,16 @@ function start() {
     projectId: 1,
     projectKey: 'FIXME'
   });
-  if (window.jQuery) {
-    airbrakeJs.instrumentation.jquery(airbrake, jQuery);
-  }
 
-  $('#send_error').click(function() {
-    history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+  airbrake.notify('app started');
 
-    var val = $('#error_text').val();
-    throw new Error(val);
+  $(function() {
+    $('#send_error').click(function() {
+      history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+
+      var val = $('#error_text').val();
+      throw new Error(val);
+    });
   });
 
   try {
