@@ -84,12 +84,16 @@ describe('Client', () => {
         });
     });
 
-    describe('"Script error" message', () => {
-        it('is filtered', () => {
-            client.notify({message: 'Script error'});
+    it('"Script error" message is ignored', () => {
+        client.notify('Script error');
 
-            expect(reporter).to.not.have.been.called;
-        });
+        expect(reporter).to.not.have.been.called;
+    });
+
+    it('"InvalidAccessError" message is ignored', () => {
+        client.notify('InvalidAccessError');
+
+        expect(reporter).to.not.have.been.called;
     });
 
     context('"Uncaught ..." error message', () => {
