@@ -154,7 +154,12 @@ export default class Historian {
         let handler = makeEventHandler(this);
         document.addEventListener('click', handler, false);
         document.addEventListener('keypress', handler, false);
-        window.addEventListener('error', handler, true);
+        window.addEventListener('error', function(event: Event): void {
+            if ('error' in event) {
+                return;
+            }
+            handler(event);
+        }, true);
     }
 
     console(): void {
