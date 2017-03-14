@@ -43,15 +43,20 @@ function elemPath(elem: HTMLElement): string {
 
     let path: string[] = [];
 
-    while (elem) {
-        let name = elemName(elem);
+    let parent = elem;
+    while (parent) {
+        let name = elemName(parent);
         if (name !== '') {
             path.push(name);
             if (path.length > maxLen) {
                 break;
             }
         }
-        elem = elem.parentNode as HTMLElement;
+        parent = parent.parentNode as HTMLElement;
+    }
+
+    if (path.length === 0) {
+        return String(elem);
     }
 
     return path.reverse().join(' > ');
