@@ -247,8 +247,8 @@ function getAttr(obj, attr) {
 var promise_1 = __webpack_require__(13);
 var stacktracejs_1 = __webpack_require__(12);
 var window_1 = __webpack_require__(9);
-var node_1 = __webpack_require__(6);
-var script_error_1 = __webpack_require__(7);
+var node_1 = __webpack_require__(7);
+var ignore_message_1 = __webpack_require__(6);
 var uncaught_message_1 = __webpack_require__(8);
 var angular_message_1 = __webpack_require__(5);
 var reporter_1 = __webpack_require__(17);
@@ -264,21 +264,21 @@ var Client = (function () {
         this.opts = {};
         this.reporters = [];
         this.filters = [];
-        this.ignoreWindowError = 0;
+        this.offline = false;
+        this.errors = [];
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
         this.opts.host = opts.host || 'https://api.airbrake.io';
         this.opts.timeout = opts.timeout || 10000;
         this.processor = opts.processor || stacktracejs_1.default;
         this.addReporter(opts.reporter || reporter_1.detectReporter(opts));
-        this.addFilter(script_error_1.default);
+        this.addFilter(ignore_message_1.default);
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
         if (typeof window === 'object') {
             this.addFilter(window_1.default);
-            if (!window.onerror && !opts.onerror) {
-                window.onerror = this.onerror.bind(this);
-            }
+            window.addEventListener('online', this.onOnline.bind(this));
+            window.addEventListener('offline', function () { return _this.offline = true; });
         }
         else {
             this.addFilter(node_1.default);
@@ -290,6 +290,7 @@ var Client = (function () {
                 });
             }
         }
+        historian_1.historian.registerNotifier(this);
     }
     Client.prototype.setProject = function (id, key) {
         this.opts.projectId = id;
@@ -323,14 +324,21 @@ var Client = (function () {
     };
     Client.prototype.notify = function (err) {
         var _this = this;
-        var promise = new promise_1.default();
-        if (typeof err !== 'object') {
-            promise.reject(new Error("notify: got err=" + JSON.stringify(err) + ", wanted an Error"));
+        if (typeof err !== 'object' || err.error === undefined) {
+            err = { error: err };
+        }
+        var promise = err.promise || new promise_1.default();
+        if (!err.error) {
+            var reason = new Error("notify: got err=" + JSON.stringify(err.error) + ", wanted an Error");
+            promise.reject(reason);
             return promise;
         }
-        var exc = err.error !== undefined ? err.error : err;
-        if (!exc) {
-            promise.reject(new Error("notify: got " + JSON.stringify(err) + ", wanted an Error"));
+        if (this.offline) {
+            err.promise = promise;
+            this.errors.push(err);
+            if (this.errors.length > 100) {
+                this.errors.slice(-100);
+            }
             return promise;
         }
         var notice = {
@@ -340,7 +348,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.7.1",
+                    version: "0.8.0-rc.1",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -352,7 +360,7 @@ var Client = (function () {
         if (history.length > 0) {
             notice.context.history = history;
         }
-        this.processor(err.error || err, function (_, error) {
+        this.processor(err.error, function (_, error) {
             notice.errors = [error];
             for (var _i = 0, _a = _this.filters; _i < _a.length; _i++) {
                 var filter = _a[_i];
@@ -381,7 +389,7 @@ var Client = (function () {
             }
             catch (err) {
                 client.notify({ error: err, params: { arguments: fnArgs } });
-                client.ignoreNextWindowError();
+                historian_1.historian.ignoreNextWindowError();
                 throw err;
             }
         };
@@ -411,40 +419,13 @@ var Client = (function () {
         var wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     };
-    Client.prototype.onerror = function (message, filename, line, column, err) {
-        if (this.ignoreWindowError > 0) {
-            return;
+    Client.prototype.onOnline = function () {
+        this.offline = false;
+        for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
+            var err = _a[_i];
+            this.notify(err);
         }
-        if (err) {
-            this.notify({
-                error: err,
-                context: {
-                    windowError: true,
-                },
-            });
-            return;
-        }
-        // Ignore errors without file or line.
-        if (!filename || !line) {
-            return;
-        }
-        this.notify({
-            error: {
-                message: message,
-                fileName: filename,
-                lineNumber: line,
-                columnNumber: column,
-                noStack: true,
-            },
-            context: {
-                windowError: true,
-            },
-        });
-    };
-    Client.prototype.ignoreNextWindowError = function () {
-        var _this = this;
-        this.ignoreWindowError++;
-        setTimeout(function () { return _this.ignoreWindowError--; });
+        this.errors = [];
     };
     return Client;
 }());
@@ -455,17 +436,6 @@ module.exports = Client;
 /* 2 */
 /***/ (function(module, exports) {
 
-if (!Array.prototype.indexOf) {
-    Array.prototype.indexOf = function (obj, start) {
-        if (start === void 0) { start = 0; }
-        for (var i = start; i < this.length; i++) {
-            if (this[i] === obj) {
-                return i;
-            }
-        }
-        return -1;
-    };
-}
 if (!Object.assign) {
     Object.assign = function (target) {
         var args = [];
@@ -841,6 +811,31 @@ exports.default = filter;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var IGNORED_MESSAGES = [
+    'Script error',
+    'Script error.',
+    'InvalidAccessError',
+];
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type !== '') {
+        return notice;
+    }
+    if (IGNORED_MESSAGES.indexOf(err.message) > -1) {
+        return null;
+    }
+    return notice;
+}
+exports.default = filter;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var myProcess, os;
 try {
     // Use eval to hide import from Webpack and browserify.
@@ -880,27 +875,6 @@ function filter(notice) {
             totalmem: os.totalmem(),
             loadavg: os.loadavg(),
         };
-    }
-    return notice;
-}
-exports.default = filter;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var IGNORED_MESSAGES = [
-    'Script error',
-    'Script error.',
-];
-function filter(notice) {
-    var msg = notice.errors[0].message;
-    if (IGNORED_MESSAGES.indexOf(msg) > -1) {
-        return null;
     }
     return notice;
 }
@@ -971,18 +945,18 @@ function elemName(elem) {
         return '';
     }
     var s = [];
-    if (typeof elem.tagName === 'string') {
+    if (elem.tagName) {
         s.push(elem.tagName.toLowerCase());
     }
-    if (typeof elem.id === 'string' && elem.id !== '') {
+    if (elem.id) {
         s.push('#');
         s.push(elem.id);
     }
-    if (typeof elem.className === 'string' && elem.className !== '') {
+    if (elem.className) {
         s.push('.');
         s.push(elem.className.split(' ').join('.'));
     }
-    if (typeof elem.getAttribute === 'function') {
+    if (elem.getAttribute) {
         for (var _i = 0, elemAttrs_1 = elemAttrs; _i < elemAttrs_1.length; _i++) {
             var attr = elemAttrs_1[_i];
             var value = elem.getAttribute(attr);
@@ -996,15 +970,19 @@ function elemName(elem) {
 function elemPath(elem) {
     var maxLen = 10;
     var path = [];
-    while (elem) {
-        var name_1 = elemName(elem);
+    var parent = elem;
+    while (parent) {
+        var name_1 = elemName(parent);
         if (name_1 !== '') {
             path.push(name_1);
             if (path.length > maxLen) {
                 break;
             }
         }
-        elem = elem.parentNode;
+        parent = parent.parentNode;
+    }
+    if (path.length === 0) {
+        return String(elem);
     }
     return path.reverse().join(' > ');
 }
@@ -1015,6 +993,9 @@ function makeEventHandler(client) {
             target = event.target;
         }
         catch (_) {
+            return;
+        }
+        if (!target) {
             return;
         }
         var state = { type: event.type };
@@ -1041,8 +1022,87 @@ var dom_1 = __webpack_require__(10);
 var Historian = (function () {
     function Historian() {
         this.historyMaxLen = 10;
+        this.notifiers = [];
+        this.errors = [];
+        this.ignoreWindowError = 0;
         this.history = [];
+        if (typeof window === 'object') {
+            if (!window.onerror) {
+                window.onerror = this.onerror.bind(this);
+            }
+        }
+        if (typeof document === 'object') {
+            this.dom();
+        }
+        if (typeof console === 'object') {
+            this.console();
+        }
+        if (typeof XMLHttpRequest !== 'undefined') {
+            this.xhr();
+        }
+        if (typeof history === 'object') {
+            this.location();
+        }
     }
+    Historian.prototype.registerNotifier = function (n) {
+        this.notifiers.push(n);
+        for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
+            var err = _a[_i];
+            this.notifyNotifiers(err);
+        }
+        this.errors = [];
+    };
+    Historian.prototype.notify = function (err) {
+        if (this.notifiers.length > 0) {
+            this.notifyNotifiers(err);
+            return;
+        }
+        this.errors.push(err);
+        if (this.errors.length > this.historyMaxLen) {
+            this.errors = this.errors.slice(-this.historyMaxLen);
+        }
+    };
+    Historian.prototype.notifyNotifiers = function (err) {
+        for (var _i = 0, _a = this.notifiers; _i < _a.length; _i++) {
+            var notifier = _a[_i];
+            notifier.notify(err);
+        }
+    };
+    Historian.prototype.onerror = function (message, filename, line, column, err) {
+        if (this.ignoreWindowError > 0) {
+            return;
+        }
+        if (err) {
+            this.notify({
+                error: err,
+                context: {
+                    windowError: true,
+                },
+            });
+            return;
+        }
+        // Ignore errors without file or line.
+        if (!filename || !line) {
+            return;
+        }
+        this.notify({
+            error: {
+                message: message,
+                fileName: filename,
+                lineNumber: line,
+                columnNumber: column,
+                noStack: true,
+            },
+            context: {
+                windowError: true,
+            },
+        });
+    };
+    Historian.prototype.ignoreNextWindowError = function () {
+        var _this = this;
+        this.ignoreWindowError++;
+        setTimeout(function () { return _this.ignoreWindowError--; });
+    };
     Historian.prototype.getHistory = function () {
         return this.history;
     };
@@ -1083,7 +1143,12 @@ var Historian = (function () {
         var handler = dom_1.makeEventHandler(this);
         document.addEventListener('click', handler, false);
         document.addEventListener('keypress', handler, false);
-        window.addEventListener('error', handler, true);
+        window.addEventListener('error', function (event) {
+            if ('error' in event) {
+                return;
+            }
+            handler(event);
+        }, true);
     };
     Historian.prototype.console = function () {
         var client = this;
@@ -1185,21 +1250,9 @@ var Historian = (function () {
     return Historian;
 }());
 exports.default = Historian;
-var historian = new Historian();
-if (typeof document === 'object') {
-    historian.dom();
-}
-if (typeof console === 'object') {
-    historian.console();
-}
-if (typeof XMLHttpRequest !== 'undefined') {
-    historian.xhr();
-}
-if (typeof history === 'object') {
-    historian.location();
-}
+exports.historian = new Historian();
 function getHistory() {
-    return historian.getHistory();
+    return exports.historian.getHistory();
 }
 exports.getHistory = getHistory;
 
