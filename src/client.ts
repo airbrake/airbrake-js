@@ -35,6 +35,9 @@ class Client {
     private reporters: Reporter[] = [];
     private filters: Filter[] = [];
 
+    private offline = false;
+    private errors = [];
+
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
         this.opts.projectKey = opts.projectKey;
@@ -50,6 +53,9 @@ class Client {
 
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
+
+            window.addEventListener('online', this.onOnline.bind(this));
+            window.addEventListener('offline', () => this.offline = true);
         } else {
             this.addFilter(nodeFilter);
             if (!opts.uncaughtException) {
@@ -99,16 +105,24 @@ class Client {
     }
 
     notify(err: any): Promise {
-        let promise = new Promise();
+        if (typeof err !== 'object' || err.error === undefined) {
+            err = {error: err};
+        }
+        let promise = err.promise || new Promise();
 
-        if (typeof err !== 'object') {
-            promise.reject(new Error(`notify: got err=${JSON.stringify(err)}, wanted an Error`));
+        if (!err.error) {
+            let reason = new Error(
+                `notify: got err=${JSON.stringify(err.error)}, wanted an Error`);
+            promise.reject(reason);
             return promise;
         }
 
-        let exc: Error = err.error !== undefined ? err.error : err;
-        if (!exc) {
-            promise.reject(new Error(`notify: got ${JSON.stringify(err)}, wanted an Error`));
+        if (this.offline) {
+            err.promise = promise;
+            this.errors.push(err);
+            if (this.errors.length > 100) {
+                this.errors.slice(-100);
+            }
             return promise;
         }
 
@@ -133,7 +147,7 @@ class Client {
             notice.context.history = history;
         }
 
-        this.processor(err.error || err, (_: string, error: AirbrakeError): void => {
+        this.processor(err.error, (_: string, error: AirbrakeError): void => {
             notice.errors = [error];
 
             for (let filter of this.filters) {
@@ -181,7 +195,7 @@ class Client {
         return airbrakeWrapper;
     }
 
-    private wrapArguments(args: any[]) {
+    private wrapArguments(args: any[]): any[] {
         for (let i in args) {
             let arg = args[i];
             if (typeof arg === 'function') {
@@ -191,9 +205,18 @@ class Client {
         return args;
     }
 
-    call(fn, ..._args: any[]) {
+    call(fn, ..._args: any[]): any {
         let wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    }
+
+    private onOnline(): void {
+        this.offline = false;
+
+        for (let err of this.errors) {
+            this.notify(err);
+        }
+        this.errors = [];
     }
 }
 

@@ -3,17 +3,14 @@ import { expect } from './sinon_chai';
 
 
 describe('Client', () => {
-    let processor, reporter, client: Client;
+    let reporter, client: Client;
     let err = new Error('test');
 
     beforeEach(() => {
-        processor = sinon.spy((data, cb) => {
-            cb('test-processor', data);
-        });
         reporter = sinon.spy((_, __, promise) => {
             promise.resolve({id: 1});
         });
-        client = new Client({processor: processor, reporter: reporter});
+        client = new Client({reporter: reporter});
     });
 
     describe('filter', () => {
@@ -66,16 +63,26 @@ describe('Client', () => {
         });
     });
 
+    it('text error is reported', () => {
+        client.notify('hello');
+
+        expect(reporter).to.have.been.called;
+        let notice = reporter.lastCall.args[0];
+        let err = notice.errors[0];
+        expect(err.message).to.equal('hello');
+        expect(err.backtrace.length).to.equal(15);
+    });
+
     it('"Script error" message is ignored', () => {
         client.notify('Script error');
 
-        expect(reporter).to.not.have.been.called;
+        expect(reporter).not.to.have.been.called;
     });
 
     it('"InvalidAccessError" message is ignored', () => {
         client.notify('InvalidAccessError');
 
-        expect(reporter).to.not.have.been.called;
+        expect(reporter).not.to.have.been.called;
     });
 
     context('"Uncaught ..." error message', () => {
@@ -116,14 +123,14 @@ describe('Client', () => {
             expect(onResolved).to.have.been.called;
         });
 
-        it('calls processor', () => {
+        it('calls reporter', () => {
             client.notify(err);
-            expect(processor).to.have.been.called;
+            expect(reporter).to.have.been.called;
         });
 
         it('ignores falsey error', () => {
             let promise = client.notify('');
-            expect(processor).to.not.have.been.called;
+            expect(reporter).not.to.have.been.called;
 
             let spy = sinon.spy();
             promise.catch(spy);
@@ -204,20 +211,20 @@ describe('Client', () => {
         describe('wrapped error', () => {
             it('unwraps and processes error', () => {
                 client.notify({error: err});
-                expect(processor).to.have.been.calledWith(err);
+                expect(reporter).to.have.been.called;
             });
 
             it('ignores falsey error', () => {
                 let promise = client.notify({error: null, params: {foo: 'bar'}});
 
-                expect(processor).to.not.have.been.called;
+                expect(reporter).not.to.have.been.called;
 
                 let spy = sinon.spy();
                 promise.catch(spy);
                 expect(spy).to.have.been.called;
 
                 let err = spy.lastCall.args[0];
-                expect(err.toString()).to.equal('Error: notify: got {"error":null,"params":{"foo":"bar"}}, wanted an Error');
+                expect(err.toString()).to.equal('Error: notify: got err=null, wanted an Error');
             });
 
             it('reports custom context', () => {
@@ -409,6 +416,38 @@ describe('Client', () => {
                 error: err,
                 params: {arguments: ['hello', 'world']},
             }]);
+        });
+    });
+
+    describe('offline', () => {
+        let spy;
+
+        beforeEach(() => {
+            let event = new Event('offline');
+            window.dispatchEvent(event);
+
+            let promise = client.notify(err);
+            spy = sinon.spy();
+            promise.then(spy);
+        });
+
+        it('causes client to not report errors', () => {
+            expect(reporter).not.to.have.been.called;
+        });
+
+        describe('online', () => {
+            beforeEach(() => {
+                let event = new Event('online');
+                window.dispatchEvent(event);
+            });
+
+            it('causes client to report queued errors', () => {
+                expect(reporter).to.have.been.called;
+            });
+
+            it('resolves promise', () => {
+                expect(spy).to.have.been.called;
+            });
         });
     });
 });
