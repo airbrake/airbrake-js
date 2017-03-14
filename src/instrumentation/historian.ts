@@ -1,4 +1,6 @@
+import Notifier from '../notifier';
 import {makeEventHandler} from './dom';
+
 
 interface XMLHttpRequestWithState extends XMLHttpRequest {
     __state: any;
@@ -7,11 +9,106 @@ interface XMLHttpRequestWithState extends XMLHttpRequest {
 export default class Historian {
     private historyMaxLen = 10;
 
+    private notifiers: Notifier[] = [];
+
+    private errors = [];
+    private ignoreWindowError = 0;
+
     private history = [];
     private lastState: any;
     private lastLocation: string | null;
 
-    constructor() {}
+    constructor() {
+        if (typeof window === 'object') {
+            if (!window.onerror) {
+                window.onerror = this.onerror.bind(this);
+            }
+        }
+        if (typeof document === 'object') {
+            this.dom();
+        }
+        if (typeof console === 'object') {
+            this.console();
+        }
+        if (typeof XMLHttpRequest !== 'undefined') {
+            this.xhr();
+        }
+        if (typeof history === 'object') {
+            this.location();
+        }
+    }
+
+    registerNotifier(n: Notifier) {
+        this.notifiers.push(n);
+
+        for (let err of this.errors) {
+            this.notifyNotifiers(err);
+        }
+        this.errors = [];
+    }
+
+    notify(err: any): void {
+        if (this.notifiers.length > 0) {
+            this.notifyNotifiers(err);
+            return;
+        }
+
+        this.errors.push(err);
+        if (this.errors.length > this.historyMaxLen) {
+            this.errors = this.errors.slice(-this.historyMaxLen);
+        }
+    }
+
+    private notifyNotifiers(err: any): void {
+        for (let notifier of this.notifiers) {
+            notifier.notify(err);
+        }
+    }
+
+    onerror(
+        message: string,
+        filename?: string,
+        line?: number,
+        column?: number,
+        err?: Error
+    ): void {
+        if (this.ignoreWindowError > 0) {
+            return;
+        }
+
+        if (err) {
+            this.notify({
+                error: err,
+                context: {
+                    windowError: true,
+                },
+            });
+            return;
+        }
+
+        // Ignore errors without file or line.
+        if (!filename || !line) {
+            return;
+        }
+
+        this.notify({
+            error: {
+                message: message,
+                fileName: filename,
+                lineNumber: line,
+                columnNumber: column,
+                noStack: true,
+            },
+            context: {
+                windowError: true,
+            },
+        });
+    }
+
+    ignoreNextWindowError(): void {
+        this.ignoreWindowError++;
+        setTimeout(() => this.ignoreWindowError--);
+    }
 
     getHistory(): any[] {
         return this.history;
@@ -170,20 +267,7 @@ export default class Historian {
     }
 }
 
-let historian = new Historian();
-
-if (typeof document === 'object') {
-    historian.dom();
-}
-if (typeof console === 'object') {
-    historian.console();
-}
-if (typeof XMLHttpRequest !== 'undefined') {
-    historian.xhr();
-}
-if (typeof history === 'object') {
-    historian.location();
-}
+export let historian = new Historian();
 
 export function getHistory(): any[] {
     return historian.getHistory();

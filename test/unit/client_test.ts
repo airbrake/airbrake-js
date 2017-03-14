@@ -2,24 +2,6 @@ import Client = require('../../src/client');
 import { expect } from './sinon_chai';
 
 
-describe('window.onerror', () => {
-    let onerror, client: Client;
-
-    beforeEach(() => {
-        onerror = window.onerror;
-        window.onerror = null;
-        client = new Client();
-    });
-
-    afterEach(() => {
-        window.onerror = onerror;
-    });
-
-    it('is setup', () => {
-        expect(window.onerror).to.be.a('function');
-    });
-});
-
 describe('Client', () => {
     let processor, reporter, client: Client;
     let err = new Error('test');
