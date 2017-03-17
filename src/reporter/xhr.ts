@@ -10,8 +10,8 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
     let payload = jsonifyNotice(notice);
 
     let req = new XMLHttpRequest();
-    req.timeout = opts.timeout;
     req.open('POST', url, true);
+    req.timeout = opts.timeout;
     req.setRequestHeader('Content-Type', 'application/json');
     req.onreadystatechange = () => {
         if (req.readyState !== 4) {
