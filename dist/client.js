@@ -348,7 +348,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.0-rc.1",
+                    version: "0.8.0",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1414,8 +1414,8 @@ function report(notice, opts, promise) {
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     var req = new XMLHttpRequest();
-    req.timeout = opts.timeout;
     req.open('POST', url, true);
+    req.timeout = opts.timeout;
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
             return;
@@ -1576,8 +1576,8 @@ function report(notice, opts, promise) {
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     var req = new XMLHttpRequest();
-    req.timeout = opts.timeout;
     req.open('POST', url, true);
+    req.timeout = opts.timeout;
     req.setRequestHeader('Content-Type', 'application/json');
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
