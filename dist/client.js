@@ -343,12 +343,12 @@ var Client = (function () {
         }
         var notice = {
             id: '',
-            errors: null,
+            errors: [],
             context: Object.assign({
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.0",
+                    version: "0.8.1",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -361,13 +361,14 @@ var Client = (function () {
             notice.context.history = history;
         }
         this.processor(err.error, function (_, error) {
-            notice.errors = [error];
+            notice.errors.push(error);
             for (var _i = 0, _a = _this.filters; _i < _a.length; _i++) {
                 var filter = _a[_i];
-                notice = filter(notice);
-                if (notice === null || notice === false) {
+                var r = filter(notice);
+                if (r === null) {
                     return;
                 }
+                notice = r;
             }
             for (var _b = 0, _c = _this.reporters; _b < _c.length; _b++) {
                 var reporter = _c[_b];
@@ -1021,7 +1022,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var dom_1 = __webpack_require__(10);
 var Historian = (function () {
     function Historian() {
-        this.historyMaxLen = 10;
+        this.historyMaxLen = 20;
         this.notifiers = [];
         this.errors = [];
         this.ignoreWindowError = 0;
