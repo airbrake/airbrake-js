@@ -46,7 +46,7 @@ class Truncator {
     private maxDepth: number;
 
     private keys: string[] = [];
-    private seen = [];
+    private seen: any[] = [];
 
     constructor(opts: any) {
         this.maxCount = opts.maxCount;
@@ -124,7 +124,7 @@ class Truncator {
     }
 
     private truncateArray(arr: any[], depth: number): any[] {
-        let dst = [];
+        let dst: any = [];
         for (let i in arr) {
             let el = arr[i];
             this.count++;

@@ -36,7 +36,7 @@ class Client {
     private filters: Filter[] = [];
 
     private offline = false;
-    private errors = [];
+    private errors: any[] = [];
 
     constructor(opts: any = {}) {
         this.opts.projectId = opts.projectId;
@@ -128,7 +128,7 @@ class Client {
 
         let notice: Notice = {
             id: '',
-            errors: null,
+            errors: [],
             context: Object.assign({
                 language: 'JavaScript',
                 notifier: {
@@ -148,13 +148,14 @@ class Client {
         }
 
         this.processor(err.error, (_: string, error: AirbrakeError): void => {
-            notice.errors = [error];
+            notice.errors.push(error);
 
             for (let filter of this.filters) {
-                notice = filter(notice);
-                if (notice === null || (notice as any) === false) {
+                let r = filter(notice);
+                if (r === null) {
                     return;
                 }
+                notice = r;
             }
 
             for (let reporter of this.reporters) {

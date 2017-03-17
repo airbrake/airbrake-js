@@ -4,8 +4,10 @@
     "target": "ES5",
     "module": "None",
     "moduleResolution": "node",
+    "strictNullChecks": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "noImplicitReturns": true,
     "preserveConstEnums": true,
     "sourceMap": true,
     "skipLibCheck": true
