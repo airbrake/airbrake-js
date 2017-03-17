@@ -11,10 +11,10 @@ export default class Historian {
 
     private notifiers: Notifier[] = [];
 
-    private errors = [];
+    private errors: any[] = [];
     private ignoreWindowError = 0;
 
-    private history = [];
+    private history: any[] = [];
     private lastState: any;
     private lastLocation: string | null;
 

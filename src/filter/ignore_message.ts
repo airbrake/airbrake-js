@@ -7,7 +7,7 @@ const IGNORED_MESSAGES = [
     'InvalidAccessError',
 ];
 
-export default function filter(notice: Notice): Notice {
+export default function filter(notice: Notice): Notice | null {
     let err = notice.errors[0];
     if (err.type !== '') {
         return notice;
