@@ -24,7 +24,7 @@ function formatError(err: AirbrakeError): string {
 
 export default function report(notice: Notice): void {
     if (!console.log) {
-        return
+        return;
     }
     for (let err of notice.errors) {
         console.log(formatError(err));
