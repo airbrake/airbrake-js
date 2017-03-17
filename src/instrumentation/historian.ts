@@ -7,7 +7,7 @@ interface XMLHttpRequestWithState extends XMLHttpRequest {
 }
 
 export default class Historian {
-    private historyMaxLen = 10;
+    private historyMaxLen = 20;
 
     private notifiers: Notifier[] = [];
 

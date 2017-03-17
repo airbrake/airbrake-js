@@ -86,7 +86,7 @@ describe('instrumentation', () => {
 
     describe('console', () => {
         beforeEach(() => {
-            for (let i = 0; i < 15; i++) {
+            for (let i = 0; i < 25; i++) {
                 console.log(i);
             }
             client.notify(new Error('test'));
@@ -96,7 +96,7 @@ describe('instrumentation', () => {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            expect(history).to.have.length(10);
+            expect(history).to.have.length(20);
             for (let i in history) {
                 let state = history[i];
                 expect(state.type).to.equal('log');
