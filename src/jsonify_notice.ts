@@ -3,62 +3,65 @@ import Notice from './notice';
 
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
-export default function jsonifyNotice(notice: Notice, n = 10000, maxLength = 64000): string {
-    let s: string;
-    while (true) {
-        notice.context = truncateObj(notice.context, n);
-        notice.params = truncateObj(notice.params, n);
-        notice.environment = truncateObj(notice.environment, n);
-        notice.session = truncateObj(notice.session, n);
+export default function jsonifyNotice(notice: Notice, maxLength = 64000): string {
+    let s = '';
+    for (let level = 0; level < 8; level++) {
+        notice.context = truncateObj(notice.context, level);
+        notice.params = truncateObj(notice.params, level);
+        notice.environment = truncateObj(notice.environment, level);
+        notice.session = truncateObj(notice.session, level);
 
         s = JSON.stringify(notice);
         if (s.length < maxLength) {
             return s;
         }
-
-        if (n === 0) {
-            break;
-        }
-        n = Math.floor(n / 2);
     }
 
     let err = new Error(
         `airbrake-js: cannot jsonify notice (length=${s.length} maxLength=${maxLength})`);
     (err as any).params = {
-        json: s.slice(0, Math.floor(n / 2)) + '...',
+        json: s.slice(0, Math.floor(maxLength / 2)) + '...',
     };
     throw err;
 }
 
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObj(obj: any, n: number): any {
+function truncateObj(obj: any, level: number): any {
     let dst = {};
     for (let attr in obj) {
-        dst[attr] = truncate(obj[attr], n);
+        dst[attr] = truncate(obj[attr], level);
     }
     return dst;
 }
 
 class Truncator {
-    private count = 0;
-    private maxCount: number;
-    private maxDepth: number;
+    private maxStringLength = 1024;
+    private maxObjectLength = 128;
+    private maxArrayLength = 32;
+    private maxDepth = 8;
 
     private keys: string[] = [];
     private seen: any[] = [];
 
-    constructor(opts: any) {
-        this.maxCount = opts.maxCount;
-        this.maxDepth = opts.maxDepth;
+    constructor(level = 0) {
+        for (let i = 0; i < level; i++) {
+            if (this.maxStringLength > 1) {
+                this.maxStringLength /= 2;
+            }
+            if (this.maxObjectLength > 1) {
+                this.maxObjectLength /= 2;
+            }
+            if (this.maxArrayLength > 1) {
+                this.maxArrayLength /= 2;
+            }
+            if (this.maxDepth > 1) {
+                this.maxDepth /= 2;
+            }
+        }
     }
 
     truncate(value: any, key = '', depth = 0): any {
-        this.count++;
-        if (this.count > this.maxCount) {
-            return '[Truncated]';
-        }
-
         if (value === null || value === undefined) {
             return value;
         }
@@ -66,18 +69,22 @@ class Truncator {
         switch (typeof value) {
         case 'boolean':
         case 'number':
-        case 'string':
         case 'function':
             return value;
+        case 'string':
+            return this.truncateString(value);
         case 'object':
             break;
         default:
             return String(value);
         }
 
+        if (value instanceof String) {
+            return this.truncateString(value.toString());
+        }
+
         if (value instanceof Boolean ||
             value instanceof Number ||
-            value instanceof String ||
             value instanceof Date ||
             value instanceof RegExp) {
             return value;
@@ -91,22 +98,31 @@ class Truncator {
             return `[Circular ${this.getPath(value)}]`;
         }
 
-        // At this point value can be either array or object. Check maximum depth.
+        let type = objectType(value);
+
         depth++;
         if (depth > this.maxDepth) {
-            return '[Truncated]';
+            return `[Truncated ${type}]`;
         }
 
         this.keys.push(key);
         this.seen.push(value);
 
-        switch (Object.prototype.toString.apply(value)) {
-        case '[object Array]':
+        switch (type) {
+        case 'Array':
             return this.truncateArray(value, depth);
-        case '[object Object]':
+        case 'Object':
             return this.truncateObject(value, depth);
         default:
-            return String(value);
+            let saved = this.maxDepth;
+            this.maxDepth = 0;
+
+            let obj = this.truncateObject(value, depth);
+            obj.__type = type;
+
+            this.maxDepth = saved;
+
+            return obj;
         }
     }
 
@@ -123,42 +139,52 @@ class Truncator {
         return '~' + path.join('.');
     }
 
+    private truncateString(s: string): string {
+        if (s.length > this.maxStringLength) {
+            return s.slice(0, this.maxStringLength) + '...';
+        }
+        return s;
+    }
+
     private truncateArray(arr: any[], depth: number): any[] {
+        let length = 0;
         let dst: any = [];
         for (let i in arr) {
             let el = arr[i];
-            this.count++;
-            if (this.count >= this.maxCount) {
+
+            length++;
+            if (length >= this.maxArrayLength) {
                 break;
             }
+
             dst.push(this.truncate(el, i, depth));
         }
         return dst;
     }
 
     private truncateObject(obj: any, depth: number): any {
+        let length = 0;
         let dst = {};
         for (let attr in obj) {
-            if (!Object.prototype.hasOwnProperty.call(obj, attr)) {
+            let value = getAttr(obj, attr);
+
+            if (value === undefined || typeof value === 'function') {
                 continue;
             }
 
-            this.count++;
-            if (this.count >= this.maxCount) {
+            length++;
+            if (length >= this.maxObjectLength) {
                 break;
             }
 
-            let value = getAttr(obj, attr);
-            if (value !== undefined) {
-                dst[attr] = this.truncate(value, attr, depth);
-            }
+            dst[attr] = this.truncate(value, attr, depth);
         }
         return dst;
     }
 }
 
-export function truncate(value: any, maxCount = 10000, maxDepth = 5): any {
-    let t = new Truncator({maxCount: maxCount, maxDepth: maxDepth});
+export function truncate(value: any, level?: number): any {
+    let t = new Truncator(level);
     return t.truncate(value);
 }
 
@@ -169,4 +195,9 @@ function getAttr(obj: any, attr: string): any {
     } catch (_) {
         return;
     }
+}
+
+function objectType(obj: any): string {
+    let s = Object.prototype.toString.apply(obj);
+    return s.slice('[object '.length, -1);
 }

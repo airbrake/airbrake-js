@@ -31,7 +31,7 @@ describe('jsonify_notice', () => {
             for (let i = 0; i < 100; i++) {
                 obj.params.arr.push(Array(100).join('x'));
             }
-            json = jsonifyNotice(obj, 1000, maxLength);
+            json = jsonifyNotice(obj, maxLength);
         });
 
         it('limits json size', () => {
@@ -46,7 +46,7 @@ describe('jsonify_notice', () => {
             let obj = {
                 params: {str: Array(100000).join('x')},
             } as Notice;
-            json = jsonifyNotice(obj, 1000, maxLength);
+            json = jsonifyNotice(obj, maxLength);
         });
 
         it('limits json size', () => {
@@ -64,7 +64,7 @@ describe('jsonify_notice', () => {
                 }],
             } as Notice;
             fn = () => {
-                jsonifyNotice(obj, 1000, maxLength);
+                jsonifyNotice(obj, maxLength);
             };
         });
 

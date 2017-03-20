@@ -3,41 +3,53 @@ import { expect } from './sinon_chai';
 
 
 describe('truncate', () => {
-    context('when called with plain object', () => {
-        let obj = {
-            null: null,
-            bool: true,
-            boolObj: new Boolean(true),
-            int: 1,
-            float: 3.14,
-            numberObj: new Number(1),
-            infinity: Infinity,
-            nan: NaN,
-            ln2: Math.LN2,
-            str: 'hello world',
-            strObj: new String('hello world'),
-            arr: ['foo', 'bar'],
-            obj: {'foo': 'bar'},
-            date: new Date(),
-            func: Math.sin,
-            func2: new Function('x', 'y', 'return x * y'),
-            re: /a/,
-            re2: new RegExp('a'),
-        };
-        let truncated;
-
-        beforeEach(() => {
-            truncated = truncate(obj);
-        });
-
-        it('produces same object', () => {
-            expect(truncated).to.deep.equal(obj);
-        });
+    it('works', () => {
+        let tests = [
+            [undefined],
+            [null],
+            [true],
+            [false],
+            [new Boolean(true)],
+            [1],
+            [3.14],
+            [new Number(1)],
+            [Infinity],
+            [NaN],
+            [Math.LN2],
+            ['hello'],
+            [new String('hello'), 'hello'],
+            [['foo', 'bar']],
+            [{'foo': 'bar'}],
+            [new Date()],
+            [/a/],
+            [new RegExp('a')],
+            [new Error('hello'), 'Error: hello'],
+        ];
+        for (let test of tests) {
+            let wanted = test.length >= 2 ? test[1] : test[0];
+            if (isNaN(wanted as any)) {
+                continue;
+            }
+            expect(truncate(test[0])).to.equal(wanted);
+        }
     });
 
-    it('returns Error.toString()', () => {
-        let truncated = truncate(new Error('hello'));
-        expect(truncated).to.equal('Error: hello');
+    it('omits functions in object', () => {
+        let obj = {
+            foo: 'bar',
+            fn1: Math.sin,
+            fn2: () => null,
+            fn3: new Function('x', 'y', 'return x * y'),
+        };
+
+        expect(truncate(obj)).to.deep.equal({foo: 'bar'});
+    });
+
+    it('sets object type', () => {
+        let e = new Event('load');
+
+        let got = truncate(e);
+        expect(got.__type).to.equal('Event');
     });
 
     context('when called with object with circular references', () => {
@@ -104,7 +116,7 @@ describe('truncate', () => {
         let truncated;
 
         beforeEach(() => {
-            truncated = truncate(obj);
+            truncated = truncate(obj, 1);
         });
 
         it('produces truncated object', () => {
@@ -116,26 +128,11 @@ describe('truncate', () => {
                         'value': 2,
                         'obj': {
                             'value': 3,
-                            'obj': {
-                                'value': 4,
-                                'obj': '[Truncated]'
-                            }
-                        }
-                    }
-                }
+                            'obj': '[Truncated Object]',
+                        },
+                    },
+                },
             });
-        });
-    });
-
-    context('when called with n=0', () => {
-        let truncated;
-
-        beforeEach(() => {
-            truncated = truncate({foo: 'bar'}, 0);
-        });
-
-        it('produces [Truncated]', () => {
-            expect(truncated).to.equal('[Truncated]');
         });
     });
 });
