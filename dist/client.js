@@ -85,72 +85,82 @@ return /******/ (function(modules) { // webpackBootstrap
 Object.defineProperty(exports, "__esModule", { value: true });
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
-function jsonifyNotice(notice, n, maxLength) {
-    if (n === void 0) { n = 10000; }
+function jsonifyNotice(notice, maxLength) {
     if (maxLength === void 0) { maxLength = 64000; }
-    var s;
-    while (true) {
-        notice.context = truncateObj(notice.context, n);
-        notice.params = truncateObj(notice.params, n);
-        notice.environment = truncateObj(notice.environment, n);
-        notice.session = truncateObj(notice.session, n);
+    var s = '';
+    for (var level = 0; level < 8; level++) {
+        notice.context = truncateObj(notice.context, level);
+        notice.params = truncateObj(notice.params, level);
+        notice.environment = truncateObj(notice.environment, level);
+        notice.session = truncateObj(notice.session, level);
         s = JSON.stringify(notice);
         if (s.length < maxLength) {
             return s;
         }
-        if (n === 0) {
-            break;
-        }
-        n = Math.floor(n / 2);
     }
     var err = new Error("airbrake-js: cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
     err.params = {
-        json: s.slice(0, Math.floor(n / 2)) + '...',
+        json: s.slice(0, Math.floor(maxLength / 2)) + '...',
     };
     throw err;
 }
 exports.default = jsonifyNotice;
 // truncateObj truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObj(obj, n) {
+function truncateObj(obj, level) {
     var dst = {};
     for (var attr in obj) {
-        dst[attr] = truncate(obj[attr], n);
+        dst[attr] = truncate(obj[attr], level);
     }
     return dst;
 }
 var Truncator = (function () {
-    function Truncator(opts) {
-        this.count = 0;
+    function Truncator(level) {
+        if (level === void 0) { level = 0; }
+        this.maxStringLength = 1024;
+        this.maxObjectLength = 128;
+        this.maxArrayLength = 32;
+        this.maxDepth = 8;
         this.keys = [];
         this.seen = [];
-        this.maxCount = opts.maxCount;
-        this.maxDepth = opts.maxDepth;
+        for (var i = 0; i < level; i++) {
+            if (this.maxStringLength > 1) {
+                this.maxStringLength /= 2;
+            }
+            if (this.maxObjectLength > 1) {
+                this.maxObjectLength /= 2;
+            }
+            if (this.maxArrayLength > 1) {
+                this.maxArrayLength /= 2;
+            }
+            if (this.maxDepth > 1) {
+                this.maxDepth /= 2;
+            }
+        }
     }
     Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
         if (depth === void 0) { depth = 0; }
-        this.count++;
-        if (this.count > this.maxCount) {
-            return '[Truncated]';
-        }
         if (value === null || value === undefined) {
             return value;
         }
         switch (typeof value) {
             case 'boolean':
             case 'number':
-            case 'string':
             case 'function':
                 return value;
+            case 'string':
+                return this.truncateString(value);
             case 'object':
                 break;
             default:
                 return String(value);
         }
+        if (value instanceof String) {
+            return this.truncateString(value.toString());
+        }
         if (value instanceof Boolean ||
             value instanceof Number ||
-            value instanceof String ||
             value instanceof Date ||
             value instanceof RegExp) {
             return value;
@@ -161,20 +171,25 @@ var Truncator = (function () {
         if (this.seen.indexOf(value) >= 0) {
             return "[Circular " + this.getPath(value) + "]";
         }
-        // At this point value can be either array or object. Check maximum depth.
+        var type = objectType(value);
         depth++;
         if (depth > this.maxDepth) {
-            return '[Truncated]';
+            return "[Truncated " + type + "]";
         }
         this.keys.push(key);
         this.seen.push(value);
-        switch (Object.prototype.toString.apply(value)) {
-            case '[object Array]':
+        switch (type) {
+            case 'Array':
                 return this.truncateArray(value, depth);
-            case '[object Object]':
+            case 'Object':
                 return this.truncateObject(value, depth);
             default:
-                return String(value);
+                var saved = this.maxDepth;
+                this.maxDepth = 0;
+                var obj = this.truncateObject(value, depth);
+                obj.__type = type;
+                this.maxDepth = saved;
+                return obj;
         }
     };
     Truncator.prototype.getPath = function (value) {
@@ -189,12 +204,19 @@ var Truncator = (function () {
         }
         return '~' + path.join('.');
     };
+    Truncator.prototype.truncateString = function (s) {
+        if (s.length > this.maxStringLength) {
+            return s.slice(0, this.maxStringLength) + '...';
+        }
+        return s;
+    };
     Truncator.prototype.truncateArray = function (arr, depth) {
+        var length = 0;
         var dst = [];
         for (var i in arr) {
             var el = arr[i];
-            this.count++;
-            if (this.count >= this.maxCount) {
+            length++;
+            if (length >= this.maxArrayLength) {
                 break;
             }
             dst.push(this.truncate(el, i, depth));
@@ -202,28 +224,25 @@ var Truncator = (function () {
         return dst;
     };
     Truncator.prototype.truncateObject = function (obj, depth) {
+        var length = 0;
         var dst = {};
         for (var attr in obj) {
-            if (!Object.prototype.hasOwnProperty.call(obj, attr)) {
+            var value = getAttr(obj, attr);
+            if (value === undefined || typeof value === 'function') {
                 continue;
             }
-            this.count++;
-            if (this.count >= this.maxCount) {
+            length++;
+            if (length >= this.maxObjectLength) {
                 break;
             }
-            var value = getAttr(obj, attr);
-            if (value !== undefined) {
-                dst[attr] = this.truncate(value, attr, depth);
-            }
+            dst[attr] = this.truncate(value, attr, depth);
         }
         return dst;
     };
     return Truncator;
 }());
-function truncate(value, maxCount, maxDepth) {
-    if (maxCount === void 0) { maxCount = 10000; }
-    if (maxDepth === void 0) { maxDepth = 5; }
-    var t = new Truncator({ maxCount: maxCount, maxDepth: maxDepth });
+function truncate(value, level) {
+    var t = new Truncator(level);
     return t.truncate(value);
 }
 exports.truncate = truncate;
@@ -235,6 +254,10 @@ function getAttr(obj, attr) {
     catch (_) {
         return;
     }
+}
+function objectType(obj) {
+    var s = Object.prototype.toString.apply(obj);
+    return s.slice('[object '.length, -1);
 }
 
 
@@ -348,7 +371,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.1",
+                    version: "0.8.2",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1142,8 +1165,10 @@ var Historian = (function () {
     };
     Historian.prototype.dom = function () {
         var handler = dom_1.makeEventHandler(this);
-        document.addEventListener('click', handler, false);
-        document.addEventListener('keypress', handler, false);
+        document.addEventListener('DOMContentLoaded', handler);
+        window.addEventListener('load', handler);
+        document.addEventListener('click', handler);
+        document.addEventListener('keypress', handler);
         window.addEventListener('error', function (event) {
             if ('error' in event) {
                 return;
