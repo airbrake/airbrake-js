@@ -245,7 +245,7 @@ export default class Historian {
         let oldPushState = history.pushState;
         history.pushState = function(_state: any, _title: string, url?: string | null): void {
             if (url) {
-                client.recordLocation(url);
+                client.recordLocation(url.toString());
             }
             oldPushState.apply(this, arguments);
         };
