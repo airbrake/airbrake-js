@@ -2,6 +2,18 @@ import Client = require('../../src/client');
 import { expect } from './sinon_chai';
 
 
+class Location {
+    private s: string;
+
+    constructor(s: string) {
+        this.s = s;
+    }
+
+    toString(): string {
+        return this.s;
+    }
+}
+
 describe('instrumentation', () => {
     let processor, reporter, client;
 
@@ -17,10 +29,15 @@ describe('instrumentation', () => {
 
     describe('location', () => {
         beforeEach(() => {
-            let locations = ['', 'http://hello/world', 'foo', '/'];
+            let locations = [
+                '',
+                'http://hello/world',
+                'foo',
+                new Location('/'),
+            ];
             for (let loc of locations) {
                 try {
-                    window.history.pushState(null, '', loc);
+                    window.history.pushState(null, '', loc as string);
                 } catch (_) {}
             }
             client.notify(new Error('test'));
