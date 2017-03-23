@@ -371,7 +371,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.2",
+                    version: "0.8.3",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1246,7 +1246,7 @@ var Historian = (function () {
         var oldPushState = history.pushState;
         history.pushState = function (_state, _title, url) {
             if (url) {
-                client.recordLocation(url);
+                client.recordLocation(url.toString());
             }
             oldPushState.apply(this, arguments);
         };
