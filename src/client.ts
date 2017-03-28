@@ -58,13 +58,6 @@ class Client {
             window.addEventListener('offline', () => this.offline = true);
         } else {
             this.addFilter(nodeFilter);
-            if (!opts.uncaughtException) {
-                // Use eval to hide process usage from Webpack and Browserify.
-                eval('process').on('uncaughtException', (err) => {
-                    this.notify(err);
-                    throw err;
-                });
-            }
         }
 
         historian.registerNotifier(this);

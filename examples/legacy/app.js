@@ -8,7 +8,9 @@ function start() {
 
   $(function() {
     $('#send_error').click(function() {
-      history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+      try {
+        history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+      } catch (_) {}
 
       var val = $('#error_text').val();
       throw new Error(val);
@@ -26,3 +28,5 @@ function start() {
     });
   }
 }
+
+throw new Error('uncatched error');
