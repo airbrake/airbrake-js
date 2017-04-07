@@ -204,6 +204,10 @@ class Client {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     }
 
+    onerror(): void {
+        historian.onerror.apply(historian, arguments);
+    }
+
     private onOnline(): void {
         this.offline = false;
 
