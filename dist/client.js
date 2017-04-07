@@ -305,13 +305,6 @@ var Client = (function () {
         }
         else {
             this.addFilter(node_1.default);
-            if (!opts.uncaughtException) {
-                // Use eval to hide process usage from Webpack and Browserify.
-                eval('process').on('uncaughtException', function (err) {
-                    _this.notify(err);
-                    throw err;
-                });
-            }
         }
         historian_1.historian.registerNotifier(this);
     }
@@ -371,7 +364,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.3",
+                    version: "0.8.4",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -442,6 +435,9 @@ var Client = (function () {
         }
         var wrapper = this.wrap(fn);
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    };
+    Client.prototype.onerror = function () {
+        historian_1.historian.onerror.apply(historian_1.historian, arguments);
     };
     Client.prototype.onOnline = function () {
         this.offline = false;
@@ -1045,6 +1041,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var dom_1 = __webpack_require__(10);
 var Historian = (function () {
     function Historian() {
+        var _this = this;
         this.historyMaxLen = 20;
         this.notifiers = [];
         this.errors = [];
@@ -1054,6 +1051,18 @@ var Historian = (function () {
             if (!window.onerror) {
                 window.onerror = this.onerror.bind(this);
             }
+        }
+        else {
+            // Use eval to hide process usage from Webpack and Browserify.
+            var p = eval('process');
+            p.on('uncaughtException', function (err) {
+                // TODO: add wait for async notify
+                _this.notify(err);
+                throw err;
+            });
+            p.on('unhandledRejection', function (reason, _p) {
+                _this.notify(reason);
+            });
         }
         if (typeof document === 'object') {
             this.dom();
