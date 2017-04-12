@@ -20,9 +20,14 @@ export default class Historian {
 
     constructor() {
         if (typeof window === 'object') {
-            if (!window.onerror) {
-                window.onerror = this.onerror.bind(this);
-            }
+            let self = this;
+            let oldHandler = window.onerror;
+            window.onerror = function() {
+                if (oldHandler) {
+                    oldHandler.apply(this, arguments);
+                }
+                self.onerror.apply(self, arguments);
+            };
         } else {
             // Use eval to hide process usage from Webpack and Browserify.
             let p = eval('process');
