@@ -189,12 +189,7 @@ In this example, reported errors are also logged to the console.
 
 ### window.onerror
 
-By default, the notifier sets up the [window.onerror](https://developer.mozilla.org/docs/Web/API/GlobalEventHandlers/onerror) handler if the onerror handler is not already set up. You can manually set it up using the following code:
-
-```js
-var airbrake = new airbrakeJs.Client(...);
-window.onerror = airbrake.onerror;
-```
+airbrake-js automatically setups `window.onerror` handler when script is loaded. It also makes sure to call old error handler if there are any.
 
 ## What does "Script error" mean?
 
