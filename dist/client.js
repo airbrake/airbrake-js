@@ -364,7 +364,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.4",
+                    version: "0.8.5",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1048,9 +1048,14 @@ var Historian = (function () {
         this.ignoreWindowError = 0;
         this.history = [];
         if (typeof window === 'object') {
-            if (!window.onerror) {
-                window.onerror = this.onerror.bind(this);
-            }
+            var self_1 = this;
+            var oldHandler_1 = window.onerror;
+            window.onerror = function () {
+                if (oldHandler_1) {
+                    oldHandler_1.apply(this, arguments);
+                }
+                self_1.onerror.apply(self_1, arguments);
+            };
         }
         else {
             // Use eval to hide process usage from Webpack and Browserify.
