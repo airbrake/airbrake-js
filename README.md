@@ -31,6 +31,7 @@ Example configurations can be found in [examples](examples), including:
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
 * [React](examples/react)
+* [Redux](examples/redux)
 * [RequireJS](examples/requirejs)
 
 The notifier is built using
