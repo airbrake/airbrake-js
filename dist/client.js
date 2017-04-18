@@ -364,7 +364,7 @@ var Client = (function () {
                 language: 'JavaScript',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.5",
+                    version: "0.8.6",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -806,7 +806,7 @@ var re = new RegExp([
     '^',
     '\\[(\\$.+)\\]',
     '\\s',
-    '(.+)',
+    '([\\s\\S]+)',
     '$',
 ].join(''));
 function filter(notice) {
