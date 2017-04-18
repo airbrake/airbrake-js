@@ -5,7 +5,7 @@ let re = new RegExp([
     '^',
     '\\[(\\$.+)\\]', // type
     '\\s',
-    '(.+)',          // message
+    '([\\s\\S]+)',   // message
     '$',
 ].join(''));
 

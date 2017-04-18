@@ -102,8 +102,8 @@ describe('Client', () => {
 
     describe('Angular error message', () => {
         beforeEach(() => {
-            let msg = `[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`;
-            client.notify({type: '', message: msg});
+            let msg = `[$injector:undef] Provider '$exceptionHandler' must return a value from $get factory method.\nhttp://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`;
+            client.notify({type: 'Error', message: msg});
         });
 
         it('splitted into type and message', () => {
@@ -111,7 +111,7 @@ describe('Client', () => {
             let notice = reporter.lastCall.args[0];
             let err = notice.errors[0];
             expect(err.type).to.equal('$injector:undef');
-            expect(err.message).to.equal(`Provider '$exceptionHandler' must return a value from $get factory method. http://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`);
+            expect(err.message).to.equal(`Provider '$exceptionHandler' must return a value from $get factory method.\nhttp://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`);
         });
     });
 
