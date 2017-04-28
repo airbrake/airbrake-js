@@ -81,7 +81,7 @@ describe('instrumentation', () => {
             req.open('GET', 'https://google.com/', false);
             try {
                 req.send();
-            } catch (_) {};
+            } catch (_) {}
             client.notify(new Error('test'));
         });
 
