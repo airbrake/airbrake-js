@@ -12,9 +12,12 @@ function newConfig() {
 
     module: {
       rules: [
-         {test: /\.tsx?$/, loader: 'ts-loader'},
+        {test: /\.tsx?$/, loader: 'ts-loader'},
         {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
-        {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'}
+        {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'},
+        // Disable AMD.
+        {test: require.resolve('error-stack-parser'), use: 'imports-loader?define=>false'},
+        {test: require.resolve('stackframe'), use: 'imports-loader?define=>false'},
       ]
     },
 
