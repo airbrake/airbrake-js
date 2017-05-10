@@ -115,6 +115,27 @@ describe('Client', () => {
         });
     });
 
+    describe('severity', () => {
+        it('defaults to "error"', () => {
+            client.notify(err);
+            let reported = reporter.lastCall.args[0];
+            expect(reported.context.severity).to.equal('error');
+        });
+
+        it('can be overriden', () => {
+            let customSeverity = 'emergency';
+
+            client.addFilter((n) => {
+                n.context.severity = customSeverity;
+                return n;
+            });
+
+            client.notify(err);
+            let reported = reporter.lastCall.args[0];
+            expect(reported.context.severity).to.equal(customSeverity);
+        });
+    });
+
     describe('notify', () => {
         it('returns promise and resolves it', () => {
             let promise = client.notify(err);
@@ -160,6 +181,13 @@ describe('Client', () => {
 
             let opts = reporter.lastCall.args[1];
             expect(opts.host).to.equal('https://custom.domain.com');
+        });
+
+        it('sets severity', () => {
+            client.notify({ error: err, context: { severity: 'warning' } });
+
+            let reported = reporter.lastCall.args[0];
+            expect(reported.context.severity).to.equal('warning');
         });
 
         describe('custom data in the filter', () => {

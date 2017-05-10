@@ -113,6 +113,17 @@ try {
 }
 ```
 
+### Severity
+
+[Severity](https://airbrake.io/docs/airbrake-faq/what-is-severity/) allows categorizing how severe an error is. By default, it's set to `error`. To redefine severity, simply overwrite `context/severity` of a notice object. For example:
+
+```js
+airbrake.notify({
+  error: err,
+  context: { severity: 'warning' }
+});
+```
+
 ### Filtering errors
 
 There may be some errors thrown in your application that you're not interested in sending to Airbrake, such as errors thrown by 3rd-party libraries, or by browser extensions run by your users.
