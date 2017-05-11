@@ -124,6 +124,7 @@ class Client {
             errors: [],
             context: Object.assign({
                 language: 'JavaScript',
+                severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
                     version: VERSION,
