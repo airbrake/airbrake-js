@@ -362,9 +362,10 @@ var Client = (function () {
             errors: [],
             context: Object.assign({
                 language: 'JavaScript',
+                severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.7",
+                    version: "0.8.8",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -684,7 +685,7 @@ var define = false;
 /*** IMPORTS FROM imports-loader ***/
 var define = false;
 
-(function (root, factory) {
+(function(root, factory) {
     'use strict';
     // Universal Module Definition (UMD) to support AMD, CommonJS/Node.js, Rhino, and browsers.
 
@@ -696,7 +697,7 @@ var define = false;
     } else {
         root.StackFrame = factory();
     }
-}(this, function () {
+}(this, function() {
     'use strict';
     function _isNumber(n) {
         return !isNaN(parseFloat(n)) && isFinite(n);
@@ -707,7 +708,7 @@ var define = false;
     }
 
     function _getter(p) {
-        return function () {
+        return function() {
             return this[p];
         };
     }
@@ -717,9 +718,10 @@ var define = false;
     var stringProps = ['fileName', 'functionName', 'source'];
     var arrayProps = ['args'];
 
+    var props = booleanProps.concat(numericProps, stringProps, arrayProps);
+
     function StackFrame(obj) {
         if (obj instanceof Object) {
-            var props = booleanProps.concat(numericProps.concat(stringProps.concat(arrayProps)));
             for (var i = 0; i < props.length; i++) {
                 if (obj.hasOwnProperty(props[i]) && obj[props[i]] !== undefined) {
                     this['set' + _capitalize(props[i])](obj[props[i]]);
@@ -729,20 +731,20 @@ var define = false;
     }
 
     StackFrame.prototype = {
-        getArgs: function () {
+        getArgs: function() {
             return this.args;
         },
-        setArgs: function (v) {
+        setArgs: function(v) {
             if (Object.prototype.toString.call(v) !== '[object Array]') {
                 throw new TypeError('Args must be an Array');
             }
             this.args = v;
         },
 
-        getEvalOrigin: function () {
+        getEvalOrigin: function() {
             return this.evalOrigin;
         },
-        setEvalOrigin: function (v) {
+        setEvalOrigin: function(v) {
             if (v instanceof StackFrame) {
                 this.evalOrigin = v;
             } else if (v instanceof Object) {
@@ -752,7 +754,7 @@ var define = false;
             }
         },
 
-        toString: function () {
+        toString: function() {
             var functionName = this.getFunctionName() || '{anonymous}';
             var args = '(' + (this.getArgs() || []).join(',') + ')';
             var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
@@ -764,8 +766,8 @@ var define = false;
 
     for (var i = 0; i < booleanProps.length; i++) {
         StackFrame.prototype['get' + _capitalize(booleanProps[i])] = _getter(booleanProps[i]);
-        StackFrame.prototype['set' + _capitalize(booleanProps[i])] = (function (p) {
-            return function (v) {
+        StackFrame.prototype['set' + _capitalize(booleanProps[i])] = (function(p) {
+            return function(v) {
                 this[p] = Boolean(v);
             };
         })(booleanProps[i]);
@@ -773,8 +775,8 @@ var define = false;
 
     for (var j = 0; j < numericProps.length; j++) {
         StackFrame.prototype['get' + _capitalize(numericProps[j])] = _getter(numericProps[j]);
-        StackFrame.prototype['set' + _capitalize(numericProps[j])] = (function (p) {
-            return function (v) {
+        StackFrame.prototype['set' + _capitalize(numericProps[j])] = (function(p) {
+            return function(v) {
                 if (!_isNumber(v)) {
                     throw new TypeError(p + ' must be a Number');
                 }
@@ -785,8 +787,8 @@ var define = false;
 
     for (var k = 0; k < stringProps.length; k++) {
         StackFrame.prototype['get' + _capitalize(stringProps[k])] = _getter(stringProps[k]);
-        StackFrame.prototype['set' + _capitalize(stringProps[k])] = (function (p) {
-            return function (v) {
+        StackFrame.prototype['set' + _capitalize(stringProps[k])] = (function(p) {
+            return function(v) {
                 this[p] = String(v);
             };
         })(stringProps[k]);
