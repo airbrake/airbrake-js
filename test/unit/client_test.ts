@@ -73,14 +73,20 @@ describe('Client', () => {
         expect(err.backtrace.length).to.equal(15);
     });
 
-    it('"Script error" message is ignored', () => {
+    it('ignores "Script error" message', () => {
         client.notify('Script error');
 
         expect(reporter).not.to.have.been.called;
     });
 
-    it('"InvalidAccessError" message is ignored', () => {
+    it('ignores "InvalidAccessError" message', () => {
         client.notify('InvalidAccessError');
+
+        expect(reporter).not.to.have.been.called;
+    });
+
+    it('ignores errors occurred in <anonymous> file', () => {
+        client.notify({message: 'test', fileName: '<anonymous>'});
 
         expect(reporter).not.to.have.been.called;
     });

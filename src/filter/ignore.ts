@@ -9,11 +9,16 @@ const IGNORED_MESSAGES = [
 
 export default function filter(notice: Notice): Notice | null {
     let err = notice.errors[0];
-    if (err.type !== '') {
-        return notice;
-    }
-    if (IGNORED_MESSAGES.indexOf(err.message) > -1) {
+    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
         return null;
     }
+
+    if (err.backtrace) {
+        let frame = err.backtrace[0];
+        if (frame.file === '<anonymous>') {
+            return null;
+        }
+    }
+
     return notice;
 }

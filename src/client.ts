@@ -5,7 +5,7 @@ import Processor from './processor/processor';
 import stacktracejsProcessor from './processor/stacktracejs';
 
 import Filter from './filter/filter';
-import ignoreMessageFilter from './filter/ignore_message';
+import ignoreFilter from './filter/ignore';
 import makeDebounceFilter from './filter/debounce';
 import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
@@ -48,7 +48,7 @@ class Client {
         this.processor = opts.processor || stacktracejsProcessor;
         this.addReporter(opts.reporter || detectReporter(opts));
 
-        this.addFilter(ignoreMessageFilter);
+        this.addFilter(ignoreFilter);
         this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
