@@ -149,6 +149,13 @@ describe('Client', () => {
             expect(reporter).to.have.been.called;
         });
 
+        it('does not report same error twice', () => {
+            for (let i = 0; i < 10; i++) {
+                client.notify(err);
+            }
+            expect(reporter).to.have.been.calledOnce;
+        });
+
         it('ignores falsey error', () => {
             let promise = client.notify('');
             expect(reporter).not.to.have.been.called;
@@ -184,7 +191,7 @@ describe('Client', () => {
         });
 
         it('sets severity', () => {
-            client.notify({ error: err, context: { severity: 'warning' } });
+            client.notify({error: err, context: {severity: 'warning'}});
 
             let reported = reporter.lastCall.args[0];
             expect(reported.context.severity).to.equal('warning');
