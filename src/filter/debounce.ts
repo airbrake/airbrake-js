@@ -5,7 +5,7 @@ export default function makeFilter(): Filter {
     let lastNoticeJSON: string;
     let timeout: number;
 
-    return function filter(notice: Notice): Notice | null {
+    return function(notice: Notice): Notice | null {
         let s = JSON.stringify(notice);
         if (s === lastNoticeJSON) {
             return null;

@@ -45,20 +45,10 @@ class Truncator {
     private seen: any[] = [];
 
     constructor(level = 0) {
-        for (let i = 0; i < level; i++) {
-            if (this.maxStringLength > 1) {
-                this.maxStringLength /= 2;
-            }
-            if (this.maxObjectLength > 1) {
-                this.maxObjectLength /= 2;
-            }
-            if (this.maxArrayLength > 1) {
-                this.maxArrayLength /= 2;
-            }
-            if (this.maxDepth > 1) {
-                this.maxDepth /= 2;
-            }
-        }
+        this.maxStringLength = (this.maxStringLength >> level) || 1;
+        this.maxObjectLength = (this.maxObjectLength >> level) || 1;
+        this.maxArrayLength = (this.maxArrayLength >> level) || 1;
+        this.maxDepth = (this.maxDepth >> level) || 1;
     }
 
     truncate(value: any, key = '', depth = 0): any {
