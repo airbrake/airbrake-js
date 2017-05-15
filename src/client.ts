@@ -5,11 +5,12 @@ import Processor from './processor/processor';
 import stacktracejsProcessor from './processor/stacktracejs';
 
 import Filter from './filter/filter';
-import windowFilter from './filter/window';
-import nodeFilter from './filter/node';
 import ignoreMessageFilter from './filter/ignore_message';
+import makeDebounceFilter from './filter/debounce';
 import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
+import windowFilter from './filter/window';
+import nodeFilter from './filter/node';
 
 import {Reporter, ReporterOptions, detectReporter} from './reporter/reporter';
 import nodeReporter from './reporter/node';
@@ -48,6 +49,7 @@ class Client {
         this.addReporter(opts.reporter || detectReporter(opts));
 
         this.addFilter(ignoreMessageFilter);
+        this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
