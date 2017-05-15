@@ -14,15 +14,20 @@ interface AirbrakeError extends Error {
     noStack?: boolean;
 }
 
-function parse(err: Error): ErrorStackParser.StackFrame[] {
+function parse(err: AirbrakeError): ErrorStackParser.StackFrame[] {
     try {
         return ErrorStackParser.parse(err);
     } catch (parseErr) {
         if (hasConsole && err.stack) {
             console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
         }
-        return [];
     }
+
+    if (err.fileName) {
+        return [err];
+    }
+
+    return [];
 }
 
 export default function processor(err: AirbrakeError, cb: Callback): void {
@@ -48,15 +53,6 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
                 column: frame.columnNumber || 0,
             });
         }
-    }
-
-    if (backtrace.length === 0 && err.fileName && err.lineNumber) {
-        backtrace.push({
-            function: err.functionName || '',
-            file: err.fileName || '<anonymous>',
-            line: err.lineNumber || 0,
-            column: err.columnNumber || 0,
-        });
     }
 
     let type: string;
