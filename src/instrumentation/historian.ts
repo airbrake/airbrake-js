@@ -17,6 +17,7 @@ export default class Historian {
     private history: any[] = [];
     private lastState: any;
     private lastLocation: string | null;
+    private ignoreNextXHR = 0;
 
     constructor() {
         if (typeof window === 'object') {
@@ -46,6 +47,9 @@ export default class Historian {
         }
         if (typeof console === 'object') {
             this.console();
+        }
+        if (typeof fetch === 'function') {
+            this.fetch();
         }
         if (typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
@@ -202,6 +206,41 @@ export default class Historian {
         }
     }
 
+    fetch(): void {
+        let client = this;
+        let oldFetch = fetch;
+        window.fetch = function(input: RequestInfo, init?: RequestInit): Promise<Response> {
+            let state: any = {
+                type: 'xhr',
+                date: new Date(),
+            };
+
+            if (typeof input === 'string') {
+                state.url = input;
+            } else {
+                state.url = input.url;
+            }
+
+            if (init && init.method) {
+                state.method = init.method;
+            } else {
+                state.method = 'GET';
+            }
+
+            // Some platforms (e.g. react-native) implement fetch via XHR.
+            client.ignoreNextXHR++;
+            setTimeout(() => client.ignoreNextXHR--);
+
+            let promise = oldFetch.apply(this, arguments);
+            promise.then(function(req) {
+                state.statusCode = req.status;
+                state.duration = new Date().getTime() - state.date.getTime();
+                client.pushHistory(state);
+            });
+            return promise;
+        };
+    }
+
     xhr(): void {
         let client = this;
 
@@ -213,11 +252,13 @@ export default class Historian {
             _user?: string,
             _password?: string
         ): void {
-            this.__state = {
-                type: 'xhr',
-                method: method,
-                url: url,
-            };
+            if (client.ignoreNextXHR === 0) {
+                this.__state = {
+                    type: 'xhr',
+                    method: method,
+                    url: url,
+                };
+            }
             oldOpen.apply(this, arguments);
         };
 
@@ -225,7 +266,7 @@ export default class Historian {
         XMLHttpRequest.prototype.send = function(_data?: any): void {
             let oldFn = this.onreadystatechange;
             this.onreadystatechange = function(_ev: Event): any {
-                if (this.__state && this.readyState === 4) {
+                if (this.readyState === 4 && this.__state) {
                     client.recordReq(this);
                 }
                 if (oldFn) {
@@ -233,7 +274,9 @@ export default class Historian {
                 }
             };
 
-            (this as XMLHttpRequestWithState).__state.date = new Date();
+            if (this.__state) {
+                (this as XMLHttpRequestWithState).__state.date = new Date();
+            }
             return oldSend.apply(this, arguments);
         };
     }
@@ -241,9 +284,7 @@ export default class Historian {
     private recordReq(req: XMLHttpRequestWithState): void {
         let state = req.__state;
         state.statusCode = req.status;
-        if (state.date) {
-            state.duration = new Date().getTime() - state.date.getTime();
-        }
+        state.duration = new Date().getTime() - state.date.getTime();
         this.pushHistory(state);
     }
 
