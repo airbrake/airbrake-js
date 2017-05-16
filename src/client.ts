@@ -15,7 +15,6 @@ import nodeFilter from './filter/node';
 import {Reporter, ReporterOptions, detectReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
 import nodeReporter from './reporter/node';
-import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
@@ -85,9 +84,6 @@ class Client {
             break;
         case 'node':
             reporter = nodeReporter;
-            break;
-        case 'compat':
-            reporter = compatReporter;
             break;
         case 'xhr':
             reporter = xhrReporter;
