@@ -13,15 +13,20 @@ export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise)
 export default Reporter;
 
 export function detectReporter(opts): string {
-    if (typeof XMLHttpRequest !== 'undefined') {
+    if (typeof fetch === 'function') {
+        return 'fetch';
+    }
+
+    if (typeof XMLHttpRequest === 'function') {
         if (opts.host) {
             return 'xhr';
         }
         return 'compat';
     }
 
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'object') {
         return 'jsonp';
     }
+
     return 'node';
 }

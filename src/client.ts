@@ -13,6 +13,7 @@ import windowFilter from './filter/window';
 import nodeFilter from './filter/node';
 
 import {Reporter, ReporterOptions, detectReporter} from './reporter/reporter';
+import fetchReporter from './reporter/fetch';
 import nodeReporter from './reporter/node';
 import compatReporter from './reporter/compat';
 import xhrReporter from './reporter/xhr';
@@ -56,8 +57,10 @@ class Client {
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
 
-            window.addEventListener('online', this.onOnline.bind(this));
-            window.addEventListener('offline', () => this.offline = true);
+            if (typeof window.addEventListener === 'function') {
+                window.addEventListener('online', this.onOnline.bind(this));
+                window.addEventListener('offline', () => this.offline = true);
+            }
         } else {
             this.addFilter(nodeFilter);
         }
@@ -77,6 +80,9 @@ class Client {
     addReporter(name: string|Reporter): void {
         let reporter: Reporter;
         switch (name) {
+        case 'fetch':
+            reporter = fetchReporter;
+            break;
         case 'node':
             reporter = nodeReporter;
             break;

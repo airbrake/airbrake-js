@@ -45,7 +45,7 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
 
         body = body.trim();
         let err = new Error(
-            `airbrake: unexpected response: code=${response.statusCode} body='${body}'`);
+            `airbrake: node: unexpected response: code=${response.statusCode} body='${body}'`);
         promise.reject(err);
     });
 }
