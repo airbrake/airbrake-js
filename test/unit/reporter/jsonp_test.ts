@@ -4,7 +4,7 @@ import reporter from '../../../src/reporter/jsonp';
 import { expect } from '../sinon_chai';
 
 
-describe('JSONPReporter', () => {
+describe('JSONP reporter', () => {
     let head;
     let notice = {} as Notice;
 

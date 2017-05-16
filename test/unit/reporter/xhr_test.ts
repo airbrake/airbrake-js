@@ -4,7 +4,7 @@ import reporter from '../../../src/reporter/xhr';
 import { expect } from '../sinon_chai';
 
 
-describe('XhrReporter', () => {
+describe('xhr reporter', () => {
     let spy;
     let notice = {} as Notice;
 
@@ -16,7 +16,7 @@ describe('XhrReporter', () => {
         spy.restore();
     });
 
-    it('opens async POST to url', () => {
+    it('opens async POST to default url', () => {
         reporter(notice, {
             projectId: 123,
             projectKey: '[project_key]',

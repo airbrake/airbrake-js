@@ -12,16 +12,18 @@ export interface ReporterOptions {
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
 export default Reporter;
 
-export function detectReporter(opts): string {
-    if (typeof XMLHttpRequest !== 'undefined') {
-        if (opts.host) {
-            return 'xhr';
-        }
-        return 'compat';
+export function detectReporter(_opts): string {
+    if (typeof fetch === 'function') {
+        return 'fetch';
     }
 
-    if (typeof window !== 'undefined') {
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
+    }
+
+    if (typeof window === 'object') {
         return 'jsonp';
     }
+
     return 'node';
 }
