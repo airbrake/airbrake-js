@@ -70,7 +70,7 @@ describe('Client', () => {
         let notice = reporter.lastCall.args[0];
         let err = notice.errors[0];
         expect(err.message).to.equal('hello');
-        expect(err.backtrace.length).to.equal(15);
+        expect(err.backtrace.length).to.not.equal(0);
     });
 
     it('ignores "Script error" message', () => {
