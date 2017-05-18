@@ -6,15 +6,18 @@ import ErrorStackParser = require('error-stack-parser');
 
 const hasConsole = typeof console === 'object' && console.warn;
 
-interface AirbrakeError extends Error {
+interface StackFrame {
     functionName?: string;
     fileName?: string;
     lineNumber?: number;
     columnNumber?: number;
+}
+
+interface AirbrakeError extends Error, StackFrame {
     noStack?: boolean;
 }
 
-function parse(err: AirbrakeError): ErrorStackParser.StackFrame[] {
+function parse(err: AirbrakeError): StackFrame[] {
     try {
         return ErrorStackParser.parse(err);
     } catch (parseErr) {
@@ -24,7 +27,7 @@ function parse(err: AirbrakeError): ErrorStackParser.StackFrame[] {
     }
 
     if (err.fileName) {
-        return [err as ErrorStackParser.StackFrame];
+        return [err];
     }
 
     return [];
