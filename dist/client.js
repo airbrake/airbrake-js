@@ -73,7 +73,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 19);
+/******/ 	return __webpack_require__(__webpack_require__.s = 20);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -123,20 +123,10 @@ var Truncator = (function () {
         this.maxDepth = 8;
         this.keys = [];
         this.seen = [];
-        for (var i = 0; i < level; i++) {
-            if (this.maxStringLength > 1) {
-                this.maxStringLength /= 2;
-            }
-            if (this.maxObjectLength > 1) {
-                this.maxObjectLength /= 2;
-            }
-            if (this.maxArrayLength > 1) {
-                this.maxArrayLength /= 2;
-            }
-            if (this.maxDepth > 1) {
-                this.maxDepth /= 2;
-            }
-        }
+        this.maxStringLength = (this.maxStringLength >> level) || 1;
+        this.maxObjectLength = (this.maxObjectLength >> level) || 1;
+        this.maxArrayLength = (this.maxArrayLength >> level) || 1;
+        this.maxDepth = (this.maxDepth >> level) || 1;
     }
     Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
@@ -267,19 +257,20 @@ function objectType(obj) {
 
 "use strict";
 
-var promise_1 = __webpack_require__(13);
-var stacktracejs_1 = __webpack_require__(12);
-var window_1 = __webpack_require__(9);
-var node_1 = __webpack_require__(7);
-var ignore_message_1 = __webpack_require__(6);
-var uncaught_message_1 = __webpack_require__(8);
+var promise_1 = __webpack_require__(14);
+var stacktracejs_1 = __webpack_require__(13);
+var ignore_1 = __webpack_require__(7);
+var debounce_1 = __webpack_require__(6);
+var uncaught_message_1 = __webpack_require__(9);
 var angular_message_1 = __webpack_require__(5);
-var reporter_1 = __webpack_require__(17);
-var node_2 = __webpack_require__(16);
-var compat_1 = __webpack_require__(14);
-var xhr_1 = __webpack_require__(18);
-var jsonp_1 = __webpack_require__(15);
-var historian_1 = __webpack_require__(11);
+var window_1 = __webpack_require__(10);
+var node_1 = __webpack_require__(8);
+var reporter_1 = __webpack_require__(18);
+var fetch_1 = __webpack_require__(15);
+var node_2 = __webpack_require__(17);
+var xhr_1 = __webpack_require__(19);
+var jsonp_1 = __webpack_require__(16);
+var historian_1 = __webpack_require__(12);
 var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
@@ -295,13 +286,16 @@ var Client = (function () {
         this.opts.timeout = opts.timeout || 10000;
         this.processor = opts.processor || stacktracejs_1.default;
         this.addReporter(opts.reporter || reporter_1.detectReporter(opts));
-        this.addFilter(ignore_message_1.default);
+        this.addFilter(ignore_1.default);
+        this.addFilter(debounce_1.default());
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
         if (typeof window === 'object') {
             this.addFilter(window_1.default);
-            window.addEventListener('online', this.onOnline.bind(this));
-            window.addEventListener('offline', function () { return _this.offline = true; });
+            if (typeof window.addEventListener === 'function') {
+                window.addEventListener('online', this.onOnline.bind(this));
+                window.addEventListener('offline', function () { return _this.offline = true; });
+            }
         }
         else {
             this.addFilter(node_1.default);
@@ -318,11 +312,11 @@ var Client = (function () {
     Client.prototype.addReporter = function (name) {
         var reporter;
         switch (name) {
+            case 'fetch':
+                reporter = fetch_1.default;
+                break;
             case 'node':
                 reporter = node_2.default;
-                break;
-            case 'compat':
-                reporter = compat_1.default;
                 break;
             case 'xhr':
                 reporter = xhr_1.default;
@@ -365,7 +359,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.8.8",
+                    version: "0.9.0",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -835,6 +829,34 @@ exports.default = filter;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+function makeFilter() {
+    var lastNoticeJSON;
+    var timeout;
+    return function (notice) {
+        var s = JSON.stringify(notice);
+        if (s === lastNoticeJSON) {
+            return null;
+        }
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        lastNoticeJSON = s;
+        timeout = setTimeout(function () {
+            lastNoticeJSON = '';
+        }, 1000);
+        return notice;
+    };
+}
+exports.default = makeFilter;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
 var IGNORED_MESSAGES = [
     'Script error',
     'Script error.',
@@ -842,11 +864,14 @@ var IGNORED_MESSAGES = [
 ];
 function filter(notice) {
     var err = notice.errors[0];
-    if (err.type !== '') {
-        return notice;
-    }
-    if (IGNORED_MESSAGES.indexOf(err.message) > -1) {
+    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
         return null;
+    }
+    if (err.backtrace) {
+        var frame = err.backtrace[0];
+        if (frame.file === '<anonymous>') {
+            return null;
+        }
     }
     return notice;
 }
@@ -854,7 +879,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -906,7 +931,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -936,7 +961,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -957,7 +982,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1036,13 +1061,13 @@ exports.makeEventHandler = makeEventHandler;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var dom_1 = __webpack_require__(10);
+var dom_1 = __webpack_require__(11);
 var Historian = (function () {
     function Historian() {
         var _this = this;
@@ -1051,6 +1076,7 @@ var Historian = (function () {
         this.errors = [];
         this.ignoreWindowError = 0;
         this.history = [];
+        this.ignoreNextXHR = 0;
         if (typeof window === 'object') {
             var self_1 = this;
             var oldHandler_1 = window.onerror;
@@ -1078,6 +1104,9 @@ var Historian = (function () {
         }
         if (typeof console === 'object') {
             this.console();
+        }
+        if (typeof fetch === 'function') {
+            this.fetch();
         }
         if (typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
@@ -1217,38 +1246,72 @@ var Historian = (function () {
             _loop_1(m);
         }
     };
+    Historian.prototype.fetch = function () {
+        var client = this;
+        var oldFetch = fetch;
+        window.fetch = function (input, init) {
+            var state = {
+                type: 'xhr',
+                date: new Date(),
+            };
+            if (typeof input === 'string') {
+                state.url = input;
+            }
+            else {
+                state.url = input.url;
+            }
+            if (init && init.method) {
+                state.method = init.method;
+            }
+            else {
+                state.method = 'GET';
+            }
+            // Some platforms (e.g. react-native) implement fetch via XHR.
+            client.ignoreNextXHR++;
+            setTimeout(function () { return client.ignoreNextXHR--; });
+            var promise = oldFetch.apply(this, arguments);
+            promise.then(function (req) {
+                state.statusCode = req.status;
+                state.duration = new Date().getTime() - state.date.getTime();
+                client.pushHistory(state);
+            });
+            return promise;
+        };
+    };
     Historian.prototype.xhr = function () {
         var client = this;
         var oldOpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function (method, url, _async, _user, _password) {
-            this.__state = {
-                type: 'xhr',
-                method: method,
-                url: url,
-            };
+            if (client.ignoreNextXHR === 0) {
+                this.__state = {
+                    type: 'xhr',
+                    method: method,
+                    url: url,
+                };
+            }
             oldOpen.apply(this, arguments);
         };
         var oldSend = XMLHttpRequest.prototype.send;
         XMLHttpRequest.prototype.send = function (_data) {
             var oldFn = this.onreadystatechange;
             this.onreadystatechange = function (_ev) {
-                if (this.__state && this.readyState === 4) {
+                if (this.readyState === 4 && this.__state) {
                     client.recordReq(this);
                 }
                 if (oldFn) {
                     return oldFn.apply(this, arguments);
                 }
             };
-            this.__state.date = new Date();
+            if (this.__state) {
+                this.__state.date = new Date();
+            }
             return oldSend.apply(this, arguments);
         };
     };
     Historian.prototype.recordReq = function (req) {
         var state = req.__state;
         state.statusCode = req.status;
-        if (state.date) {
-            state.duration = new Date().getTime() - state.date.getTime();
-        }
+        state.duration = new Date().getTime() - state.date.getTime();
         this.pushHistory(state);
     };
     Historian.prototype.location = function () {
@@ -1302,7 +1365,7 @@ exports.getHistory = getHistory;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1318,8 +1381,11 @@ function parse(err) {
         if (hasConsole && err.stack) {
             console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
         }
-        return [];
     }
+    if (err.fileName) {
+        return [err];
+    }
+    return [];
 }
 function processor(err, cb) {
     var backtrace = [];
@@ -1345,14 +1411,6 @@ function processor(err, cb) {
             });
         }
     }
-    if (backtrace.length === 0 && err.fileName && err.lineNumber) {
-        backtrace.push({
-            function: err.functionName || '',
-            file: err.fileName || '<anonymous>',
-            line: err.lineNumber || 0,
-            column: err.columnNumber || 0,
-        });
-    }
     var type;
     if (err.name) {
         type = err.name;
@@ -1377,7 +1435,7 @@ exports.default = processor;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1447,7 +1505,7 @@ exports.default = Promise;
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1455,39 +1513,44 @@ exports.default = Promise;
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
 function report(notice, opts, promise) {
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey;
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
-    var req = new XMLHttpRequest();
-    req.open('POST', url, true);
-    req.timeout = opts.timeout;
-    req.onreadystatechange = function () {
-        if (req.readyState !== 4) {
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: payload,
+    }).then(function (req) {
+        if (req.status >= 200 && req.status < 500) {
+            req.json().then(function (resp) {
+                if (resp.id) {
+                    notice.id = resp.id;
+                    promise.resolve(notice);
+                    return;
+                }
+                if (resp.error) {
+                    var err = new Error(resp.error);
+                    promise.reject(err);
+                    return;
+                }
+            });
             return;
         }
-        if (req.status >= 200 && req.status < 500) {
-            var resp = JSON.parse(req.responseText);
-            if (resp.id) {
-                notice.id = resp.id;
-                promise.resolve(notice);
-                return;
-            }
-            if (resp.error) {
-                var err_1 = new Error(resp.error);
-                promise.reject(err_1);
-                return;
-            }
-        }
-        var body = req.responseText.trim();
-        var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+        req.text().then(function (body) {
+            var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
+            promise.reject(err);
+        });
+    }).catch(function (err) {
         promise.reject(err);
-    };
-    req.send(payload);
+    });
 }
 exports.default = report;
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1536,7 +1599,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1579,7 +1642,7 @@ function report(notice, opts, promise) {
             }
         }
         body = body.trim();
-        var err = new Error("airbrake: unexpected response: code=" + response.statusCode + " body='" + body + "'");
+        var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
         promise.reject(err);
     });
 }
@@ -1587,20 +1650,20 @@ exports.default = report;
 
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function detectReporter(opts) {
-    if (typeof XMLHttpRequest !== 'undefined') {
-        if (opts.host) {
-            return 'xhr';
-        }
-        return 'compat';
+function detectReporter(_opts) {
+    if (typeof fetch === 'function') {
+        return 'fetch';
     }
-    if (typeof window !== 'undefined') {
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
+    }
+    if (typeof window === 'object') {
         return 'jsonp';
     }
     return 'node';
@@ -1609,7 +1672,7 @@ exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1641,7 +1704,7 @@ function report(notice, opts, promise) {
             }
         }
         var body = req.responseText.trim();
-        var err = new Error("airbrake: unexpected response: code=" + req.status + " body='" + body + "'");
+        var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
         promise.reject(err);
     };
     req.send(payload);
@@ -1650,7 +1713,7 @@ exports.default = report;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 __webpack_require__(2);
