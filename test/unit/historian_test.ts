@@ -47,9 +47,8 @@ describe('instrumentation', () => {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            let length = history.length;
 
-            let state = history[length - 3];
+            let state = history[history.length - 3];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -57,7 +56,7 @@ describe('instrumentation', () => {
                 to: '/world',
             });
 
-            state = history[length - 2];
+            state = history[history.length - 2];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -65,7 +64,7 @@ describe('instrumentation', () => {
                 to: '/foo',
             });
 
-            state = history[length - 1];
+            state = history[history.length - 1];
             delete state.date;
             expect(state).to.deep.equal({
                 type: 'location',
@@ -87,12 +86,34 @@ describe('instrumentation', () => {
             expect(reporter).to.have.been.called;
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
-            let length = history.length;
 
-            let state = history[length - 1];
+            let state = history[history.length - 1];
             expect(state.type).to.equal('xhr');
             expect(state.method).to.equal('GET');
             expect(state.url).to.equal('http://ip2c.org/self');
+            expect(state.statusCode).to.equal(200);
+            expect(state.duration).to.be.a('number');
+        });
+    });
+
+    describe('fetch', () => {
+        beforeEach(() => {
+            let promise = fetch('http://ip2c.org/4.4.4.4');
+            promise.then(() => {
+                client.notify(new Error('test'));
+            });
+            return promise;
+        });
+
+        it('records request', () => {
+            expect(reporter).to.have.been.called;
+            let notice = reporter.lastCall.args[0];
+            let history = notice.context.history;
+
+            let state = history[history.length - 1];
+            expect(state.type).to.equal('xhr');
+            expect(state.method).to.equal('GET');
+            expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
             expect(state.statusCode).to.equal(200);
             expect(state.duration).to.be.a('number');
         });
@@ -111,6 +132,7 @@ describe('instrumentation', () => {
             let notice = reporter.lastCall.args[0];
             let history = notice.context.history;
             expect(history).to.have.length(20);
+
             for (let i in history) {
                 let state = history[i];
                 expect(state.type).to.equal('log');
