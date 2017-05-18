@@ -78,10 +78,8 @@ describe('instrumentation', () => {
     describe('XHR', () => {
         beforeEach(() => {
             let req = new XMLHttpRequest();
-            req.open('GET', 'https://google.com/', false);
-            try {
-                req.send();
-            } catch (_) {}
+            req.open('GET', 'http://ip2c.org/self', false);
+            req.send();
             client.notify(new Error('test'));
         });
 
@@ -92,11 +90,10 @@ describe('instrumentation', () => {
             let length = history.length;
 
             let state = history[length - 1];
-            delete state.date;
             expect(state.type).to.equal('xhr');
             expect(state.method).to.equal('GET');
-            expect(state.url).to.equal('https://google.com/');
-            expect(state.statusCode).to.equal(0);
+            expect(state.url).to.equal('http://ip2c.org/self');
+            expect(state.statusCode).to.equal(200);
             expect(state.duration).to.be.a('number');
         });
     });

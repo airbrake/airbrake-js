@@ -20,6 +20,9 @@ module.exports = function(config) {
       'test/unit/**/*_test.ts',
     ],
 
+    mime: {
+      'text/x-typescript': ['ts', 'tsx'],
+    },
 
     // list of files to exclude
     exclude: [
@@ -80,8 +83,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
-
+    browsers: ['ChromeHeadless'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
