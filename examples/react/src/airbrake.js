@@ -11,7 +11,9 @@ export function notify(err) {
       projectKey: 'FIXME'
     });
   }
-  airbrakeClient.notify(err);
+  airbrakeClient.notify(err).catch(function(err) {
+    console.warn('notify failed:', err);
+  });
 }
 
 export default class AirbrakeComponent extends Component {
