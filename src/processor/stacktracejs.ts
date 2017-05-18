@@ -24,7 +24,7 @@ function parse(err: AirbrakeError): ErrorStackParser.StackFrame[] {
     }
 
     if (err.fileName) {
-        return [err];
+        return [err as ErrorStackParser.StackFrame];
     }
 
     return [];
