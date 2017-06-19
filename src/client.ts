@@ -1,5 +1,6 @@
 import Promise from './promise';
 import {Notice, AirbrakeError} from './notice';
+import FuncWrapper from './func_wrapper';
 
 import Processor from './processor/processor';
 import stacktracejsProcessor from './processor/stacktracejs';
@@ -22,12 +23,6 @@ import {historian, getHistory} from './instrumentation/historian';
 
 
 declare const VERSION: string;
-
-interface FunctionWrapper {
-    (): any;
-    __airbrake: boolean;
-    __inner: () => any;
-}
 
 class Client {
     private opts: ReporterOptions = {} as ReporterOptions;
@@ -164,8 +159,8 @@ class Client {
         return promise;
     }
 
-    wrap(fn): FunctionWrapper {
-        if (fn.__airbrake) {
+    wrap(fn): FuncWrapper {
+        if (fn._airbrake) {
             return fn;
         }
 
@@ -180,7 +175,7 @@ class Client {
                 historian.ignoreNextWindowError();
                 throw err;
             }
-        } as FunctionWrapper;
+        } as FuncWrapper;
 
         for (let prop in fn) {
             if (fn.hasOwnProperty(prop)) {
@@ -188,8 +183,8 @@ class Client {
             }
         }
 
-        airbrakeWrapper.__airbrake = true;
-        airbrakeWrapper.__inner = fn;
+        airbrakeWrapper._airbrake = true;
+        airbrakeWrapper.inner = fn;
 
         return airbrakeWrapper;
     }
