@@ -203,7 +203,7 @@ In this example, reported errors are also logged to the console.
 
 airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using following code:
 
-```
+```js
 if (env === 'development') {
     let methods = ['debug', 'log', 'info', 'warn', 'error'];
     for (let m of methods) {
