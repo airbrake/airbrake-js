@@ -1,3 +1,4 @@
+/*! Airbrake JS v0.9.1 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -359,7 +360,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.0",
+                    version: "0.9.1",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -389,7 +390,7 @@ var Client = (function () {
         return promise;
     };
     Client.prototype.wrap = function (fn) {
-        if (fn.__airbrake) {
+        if (fn._airbrake) {
             return fn;
         }
         var client = this;
@@ -410,8 +411,8 @@ var Client = (function () {
                 airbrakeWrapper[prop] = fn[prop];
             }
         }
-        airbrakeWrapper.__airbrake = true;
-        airbrakeWrapper.__inner = fn;
+        airbrakeWrapper._airbrake = true;
+        airbrakeWrapper.inner = fn;
         return airbrakeWrapper;
     };
     Client.prototype.wrapArguments = function (args) {
@@ -1239,6 +1240,7 @@ var Historian = (function () {
                     arguments: Array.prototype.slice.call(arguments),
                 });
             };
+            newFn.inner = oldFn;
             console[m] = newFn;
         };
         for (var _i = 0, methods_1 = methods; _i < methods_1.length; _i++) {
