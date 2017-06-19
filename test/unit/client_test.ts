@@ -403,8 +403,8 @@ describe('Client', () => {
         it('sets __airbrake and __inner properties', () => {
             let fn = sinon.spy();
             let wrapper = client.wrap(fn);
-            expect(wrapper.__airbrake).to.equal(true);
-            expect(wrapper.__inner).to.equal(fn);
+            expect(wrapper._airbrake).to.equal(true);
+            expect(wrapper.inner).to.equal(fn);
         });
 
         it('copies function properties', () => {
@@ -438,8 +438,8 @@ describe('Client', () => {
 
             expect(fn).to.have.been.called;
             let arg1Wrapper = fn.lastCall.args[0];
-            expect(arg1Wrapper.__airbrake).to.equal(true);
-            expect(arg1Wrapper.__inner).to.equal(arg1);
+            expect(arg1Wrapper._airbrake).to.equal(true);
+            expect(arg1Wrapper.inner).to.equal(arg1);
         });
     });
 

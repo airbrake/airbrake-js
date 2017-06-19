@@ -1,4 +1,7 @@
-# Airbrake-JS [![Build Status](https://travis-ci.org/airbrake/airbrake-js.svg?branch=master)](https://travis-ci.org/airbrake/airbrake-js) [![CDNJS](https://img.shields.io/cdnjs/v/airbrake-js.svg)](https://cdnjs.com/libraries/airbrake-js)
+# Airbrake-JS
+
+[![Build Status](https://travis-ci.org/airbrake/airbrake-js.svg?branch=master)](https://travis-ci.org/airbrake/airbrake-js)
+[![CDNJS](https://img.shields.io/cdnjs/v/airbrake-js.svg)](https://cdnjs.com/libraries/airbrake-js)
 
 This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
 
@@ -194,6 +197,21 @@ In this example, reported errors are also logged to the console.
     console.log(notice);
   });
 </script>
+```
+
+### Unwrapping console
+
+airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using following code:
+
+```
+if (env === 'development') {
+    let methods = ['debug', 'log', 'info', 'warn', 'error'];
+    for (let m of methods) {
+        if (m in console && console[m].inner) {
+            console[m] = console[m].inner;
+        }
+    }
+}
 ```
 
 ## Integration

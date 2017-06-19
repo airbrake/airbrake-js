@@ -1,3 +1,4 @@
+import FuncWrapper from '../func_wrapper';
 import Notifier from '../notifier';
 import {makeEventHandler} from './dom';
 
@@ -201,7 +202,8 @@ export default class Historian {
                     severity: m,
                     arguments: Array.prototype.slice.call(arguments),
                 });
-            };
+            } as FuncWrapper;
+            newFn.inner = oldFn;
             console[m] = newFn;
         }
     }
