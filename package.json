@@ -34,7 +34,7 @@
     "typescript": "^2.3.2",
     "typings": "^2.1.1",
     "uglify-js": "github:mishoo/UglifyJS2#harmony",
-    "webpack": "^2.5.1"
+    "webpack": "^3.0.0"
   },
   "main": "dist/client.js",
   "files": [

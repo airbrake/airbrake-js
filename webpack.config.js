@@ -41,7 +41,7 @@ function newConfig() {
         include: /\.min\.js$/,
         sourceMap: true
       }),
-      new webpack.BannerPlugin({banner: 'Airbrake JS v' + pkg.version})
+      new webpack.BannerPlugin({banner: 'airbrake-js v' + pkg.version}),
     ]
   }
 };
