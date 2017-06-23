@@ -1,4 +1,4 @@
-/*! Airbrake JS v0.9.1 */
+/*! airbrake-js v0.9.2 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -44,9 +44,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
 /******/
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -74,7 +71,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 20);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -256,22 +253,54 @@ function objectType(obj) {
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
+__webpack_require__(2);
+module.exports = __webpack_require__(3);
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+if (!Object.assign) {
+    Object.assign = function (target) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        var _loop_1 = function (source) {
+            if (source) {
+                Object.keys(source).forEach(function (key) { return target[key] = source[key]; });
+            }
+        };
+        for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
+            var source = args_1[_a];
+            _loop_1(source);
+        }
+        return target;
+    };
+}
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
 "use strict";
 
-var promise_1 = __webpack_require__(14);
-var stacktracejs_1 = __webpack_require__(13);
-var ignore_1 = __webpack_require__(7);
-var debounce_1 = __webpack_require__(6);
-var uncaught_message_1 = __webpack_require__(9);
-var angular_message_1 = __webpack_require__(5);
-var window_1 = __webpack_require__(10);
-var node_1 = __webpack_require__(8);
-var reporter_1 = __webpack_require__(18);
+var promise_1 = __webpack_require__(4);
+var stacktracejs_1 = __webpack_require__(5);
+var ignore_1 = __webpack_require__(8);
+var debounce_1 = __webpack_require__(9);
+var uncaught_message_1 = __webpack_require__(10);
+var angular_message_1 = __webpack_require__(11);
+var window_1 = __webpack_require__(12);
+var node_1 = __webpack_require__(13);
+var reporter_1 = __webpack_require__(14);
 var fetch_1 = __webpack_require__(15);
-var node_2 = __webpack_require__(17);
-var xhr_1 = __webpack_require__(19);
-var jsonp_1 = __webpack_require__(16);
-var historian_1 = __webpack_require__(12);
+var node_2 = __webpack_require__(16);
+var xhr_1 = __webpack_require__(17);
+var jsonp_1 = __webpack_require__(18);
+var historian_1 = __webpack_require__(19);
 var Client = (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
@@ -281,10 +310,9 @@ var Client = (function () {
         this.filters = [];
         this.offline = false;
         this.errors = [];
-        this.opts.projectId = opts.projectId;
-        this.opts.projectKey = opts.projectKey;
-        this.opts.host = opts.host || 'https://api.airbrake.io';
-        this.opts.timeout = opts.timeout || 10000;
+        this.opts = opts;
+        this.opts.host = this.opts.host || 'https://api.airbrake.io';
+        this.opts.timeout = this.opts.timeout || 10000;
         this.processor = opts.processor || stacktracejs_1.default;
         this.addReporter(opts.reporter || reporter_1.detectReporter(opts));
         this.addFilter(ignore_1.default);
@@ -340,7 +368,12 @@ var Client = (function () {
         }
         var promise = err.promise || new promise_1.default();
         if (!err.error) {
-            var reason = new Error("notify: got err=" + JSON.stringify(err.error) + ", wanted an Error");
+            var reason = new Error("airbrake-js: got err=" + JSON.stringify(err.error) + ", wanted an Error");
+            promise.reject(reason);
+            return promise;
+        }
+        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
+            var reason = new Error('airbrake-js: window error is ignored');
             promise.reject(reason);
             return promise;
         }
@@ -360,7 +393,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.1",
+                    version: "0.9.2",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -449,31 +482,147 @@ module.exports = Client;
 
 
 /***/ }),
-/* 2 */
-/***/ (function(module, exports) {
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
 
-if (!Object.assign) {
-    Object.assign = function (target) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Promise = (function () {
+    function Promise(executor) {
+        this.onResolved = [];
+        this.onRejected = [];
+        if (executor) {
+            executor(this.resolve.bind(this), this.reject.bind(this));
         }
-        var _loop_1 = function (source) {
-            if (source) {
-                Object.keys(source).forEach(function (key) { return target[key] = source[key]; });
+    }
+    Promise.prototype.then = function (onResolved, onRejected) {
+        if (onResolved) {
+            if (this.resolvedWith) {
+                onResolved(this.resolvedWith);
             }
-        };
-        for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
-            var source = args_1[_a];
-            _loop_1(source);
+            else {
+                this.onResolved.push(onResolved);
+            }
         }
-        return target;
+        if (onRejected) {
+            if (this.rejectedWith) {
+                onRejected(this.rejectedWith);
+            }
+            else {
+                this.onRejected.push(onRejected);
+            }
+        }
+        return this;
     };
-}
+    Promise.prototype.catch = function (onRejected) {
+        if (this.rejectedWith) {
+            onRejected(this.rejectedWith);
+        }
+        else {
+            this.onRejected.push(onRejected);
+        }
+        return this;
+    };
+    Promise.prototype.resolve = function (value) {
+        if (this.resolvedWith || this.rejectedWith) {
+            throw new Error('Promise is already resolved or rejected');
+        }
+        this.resolvedWith = value;
+        for (var _i = 0, _a = this.onResolved; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn(value);
+        }
+        return this;
+    };
+    Promise.prototype.reject = function (reason) {
+        if (this.resolvedWith || this.rejectedWith) {
+            throw new Error('Promise is already resolved or rejected');
+        }
+        this.rejectedWith = reason;
+        for (var _i = 0, _a = this.onRejected; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn(reason);
+        }
+        return this;
+    };
+    return Promise;
+}());
+exports.default = Promise;
 
 
 /***/ }),
-/* 3 */
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ErrorStackParser = __webpack_require__(6);
+var hasConsole = typeof console === 'object' && console.warn;
+function parse(err) {
+    try {
+        return ErrorStackParser.parse(err);
+    }
+    catch (parseErr) {
+        if (hasConsole && err.stack) {
+            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        }
+    }
+    if (err.fileName) {
+        return [err];
+    }
+    return [];
+}
+function processor(err, cb) {
+    var backtrace = [];
+    if (!err.noStack) {
+        var frames_1 = parse(err);
+        if (frames_1.length === 0) {
+            try {
+                throw new Error('fake');
+            }
+            catch (fakeErr) {
+                frames_1 = parse(fakeErr);
+                frames_1.shift();
+                frames_1.shift();
+            }
+        }
+        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
+            var frame = frames_2[_i];
+            backtrace.push({
+                function: frame.functionName || '',
+                file: frame.fileName || '<anonymous>',
+                line: frame.lineNumber || 0,
+                column: frame.columnNumber || 0,
+            });
+        }
+    }
+    var type;
+    if (err.name) {
+        type = err.name;
+    }
+    else {
+        type = '';
+    }
+    var msg;
+    if (err.message) {
+        msg = String(err.message);
+    }
+    else {
+        msg = String(err);
+    }
+    cb('stacktracejs', {
+        type: type,
+        message: msg,
+        backtrace: backtrace,
+    });
+}
+exports.default = processor;
+
+
+/***/ }),
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -487,7 +636,7 @@ var define = false;
     if (typeof define === 'function' && define.amd) {
         define('error-stack-parser', ['stackframe'], factory);
     } else if (true) {
-        module.exports = factory(__webpack_require__(4));
+        module.exports = factory(__webpack_require__(7));
     } else {
         root.ErrorStackParser = factory(root.StackFrame);
     }
@@ -674,7 +823,7 @@ var define = false;
 
 
 /***/ }),
-/* 4 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -795,7 +944,93 @@ var define = false;
 
 
 /***/ }),
-/* 5 */
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var IGNORED_MESSAGES = [
+    'Script error',
+    'Script error.',
+    'InvalidAccessError',
+];
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
+        return null;
+    }
+    if (err.backtrace) {
+        var frame = err.backtrace[0];
+        if (frame.file === '<anonymous>') {
+            return null;
+        }
+    }
+    return notice;
+}
+exports.default = filter;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function makeFilter() {
+    var lastNoticeJSON;
+    var timeout;
+    return function (notice) {
+        var s = JSON.stringify(notice);
+        if (s === lastNoticeJSON) {
+            return null;
+        }
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        lastNoticeJSON = s;
+        timeout = setTimeout(function () {
+            lastNoticeJSON = '';
+        }, 1000);
+        return notice;
+    };
+}
+exports.default = makeFilter;
+
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var re = new RegExp([
+    '^',
+    'Uncaught\\s',
+    '(.+?)',
+    ':\\s',
+    '(.+)',
+    '$',
+].join(''));
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type !== '' && err.type !== 'Error') {
+        return notice;
+    }
+    var m = err.message.match(re);
+    if (m !== null) {
+        err.type = m[1];
+        err.message = m[2];
+    }
+    return notice;
+}
+exports.default = filter;
+
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -824,55 +1059,20 @@ exports.default = filter;
 
 
 /***/ }),
-/* 6 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function makeFilter() {
-    var lastNoticeJSON;
-    var timeout;
-    return function (notice) {
-        var s = JSON.stringify(notice);
-        if (s === lastNoticeJSON) {
-            return null;
-        }
-        if (timeout) {
-            clearTimeout(timeout);
-        }
-        lastNoticeJSON = s;
-        timeout = setTimeout(function () {
-            lastNoticeJSON = '';
-        }, 1000);
-        return notice;
-    };
-}
-exports.default = makeFilter;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var IGNORED_MESSAGES = [
-    'Script error',
-    'Script error.',
-    'InvalidAccessError',
-];
 function filter(notice) {
-    var err = notice.errors[0];
-    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
-        return null;
+    if (window.navigator && window.navigator.userAgent) {
+        notice.context.userAgent = window.navigator.userAgent;
     }
-    if (err.backtrace) {
-        var frame = err.backtrace[0];
-        if (frame.file === '<anonymous>') {
-            return null;
-        }
+    if (window.location) {
+        notice.context.url = String(window.location);
+        // Set root directory to group errors on different subdomains together.
+        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
     }
     return notice;
 }
@@ -880,7 +1080,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 8 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -932,143 +1132,221 @@ exports.default = filter;
 
 
 /***/ }),
-/* 9 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var re = new RegExp([
-    '^',
-    'Uncaught\\s',
-    '(.+?)',
-    ':\\s',
-    '(.+)',
-    '$',
-].join(''));
-function filter(notice) {
-    var err = notice.errors[0];
-    if (err.type !== '' && err.type !== 'Error') {
-        return notice;
+function detectReporter(_opts) {
+    if (typeof fetch === 'function') {
+        return 'fetch';
     }
-    var m = err.message.match(re);
-    if (m !== null) {
-        err.type = m[1];
-        err.message = m[2];
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
     }
-    return notice;
+    if (typeof window === 'object') {
+        return 'jsonp';
+    }
+    return 'node';
 }
-exports.default = filter;
+exports.detectReporter = detectReporter;
 
 
 /***/ }),
-/* 10 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function filter(notice) {
-    if (window.navigator && window.navigator.userAgent) {
-        notice.context.userAgent = window.navigator.userAgent;
-    }
-    if (window.location) {
-        notice.context.url = String(window.location);
-        // Set root directory to group errors on different subdomains together.
-        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
-    }
-    return notice;
+var jsonify_notice_1 = __webpack_require__(0);
+function report(notice, opts, promise) {
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: payload,
+    }).then(function (req) {
+        if (req.status >= 200 && req.status < 500) {
+            req.json().then(function (resp) {
+                if (resp.id) {
+                    notice.id = resp.id;
+                    promise.resolve(notice);
+                    return;
+                }
+                if (resp.error) {
+                    var err = new Error(resp.error);
+                    promise.reject(err);
+                    return;
+                }
+            });
+            return;
+        }
+        req.text().then(function (body) {
+            var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
+            promise.reject(err);
+        });
+    }).catch(function (err) {
+        promise.reject(err);
+    });
 }
-exports.default = filter;
+exports.default = report;
 
 
 /***/ }),
-/* 11 */
+/* 16 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var elemAttrs = ['type', 'name', 'src'];
-function elemName(elem) {
-    if (!elem) {
-        return '';
-    }
-    var s = [];
-    if (elem.tagName) {
-        s.push(elem.tagName.toLowerCase());
-    }
-    if (elem.id) {
-        s.push('#');
-        s.push(elem.id);
-    }
-    if (elem.className) {
-        s.push('.');
-        s.push(elem.className.split(' ').join('.'));
-    }
-    if (elem.getAttribute) {
-        for (var _i = 0, elemAttrs_1 = elemAttrs; _i < elemAttrs_1.length; _i++) {
-            var attr = elemAttrs_1[_i];
-            var value = elem.getAttribute(attr);
-            if (value) {
-                s.push("[" + attr + "=\"" + value + "\"]");
+var jsonify_notice_1 = __webpack_require__(0);
+var request;
+try {
+    // Use eval to hide import from Webpack.
+    request = eval('require')('request');
+}
+catch (_) { }
+function report(notice, opts, promise) {
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    request({
+        url: url,
+        method: 'POST',
+        body: payload,
+        headers: {
+            'content-type': 'application/json'
+        },
+        timeout: opts.timeout,
+    }, function (error, response, body) {
+        if (error) {
+            promise.reject(error);
+            return;
+        }
+        if (response.statusCode >= 200 && response.statusCode < 500) {
+            var resp = JSON.parse(body);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                var err_1 = new Error(resp.error);
+                promise.reject(err_1);
+                return;
             }
         }
-    }
-    return s.join('');
+        body = body.trim();
+        var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
+        promise.reject(err);
+    });
 }
-function elemPath(elem) {
-    var maxLen = 10;
-    var path = [];
-    var parent = elem;
-    while (parent) {
-        var name_1 = elemName(parent);
-        if (name_1 !== '') {
-            path.push(name_1);
-            if (path.length > maxLen) {
-                break;
+exports.default = report;
+
+
+/***/ }),
+/* 17 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(0);
+function report(notice, opts, promise) {
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    var req = new XMLHttpRequest();
+    req.open('POST', url, true);
+    req.timeout = opts.timeout;
+    req.setRequestHeader('Content-Type', 'application/json');
+    req.onreadystatechange = function () {
+        if (req.readyState !== 4) {
+            return;
+        }
+        if (req.status >= 200 && req.status < 500) {
+            var resp = JSON.parse(req.responseText);
+            if (resp.id) {
+                notice.id = resp.id;
+                promise.resolve(notice);
+                return;
+            }
+            if (resp.error) {
+                var err_1 = new Error(resp.error);
+                promise.reject(err_1);
+                return;
             }
         }
-        parent = parent.parentNode;
-    }
-    if (path.length === 0) {
-        return String(elem);
-    }
-    return path.reverse().join(' > ');
+        var body = req.responseText.trim();
+        var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
+        promise.reject(err);
+    };
+    req.send(payload);
 }
-function makeEventHandler(client) {
-    return function (event) {
-        var target;
+exports.default = report;
+
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(0);
+var cbCount = 0;
+function report(notice, opts, promise) {
+    cbCount++;
+    var cbName = 'airbrakeCb' + String(cbCount);
+    window[cbName] = function (resp) {
         try {
-            target = event.target;
+            delete window[cbName];
         }
         catch (_) {
+            window[cbName] = undefined;
+        }
+        if (resp.id) {
+            notice.id = resp.id;
+            promise.resolve(notice);
             return;
         }
-        if (!target) {
+        if (resp.error) {
+            var err_1 = new Error(resp.error);
+            promise.reject(err_1);
             return;
         }
-        var state = { type: event.type };
-        try {
-            state.target = elemPath(target);
-        }
-        catch (err) {
-            state.target = "<" + err.toString() + ">";
-        }
-        client.pushHistory(state);
+        var err = new Error(resp);
+        promise.reject(err);
     };
+    var payload = encodeURIComponent(jsonify_notice_1.default(notice));
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
+    var document = window.document;
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.src = url;
+    script.onload = function () { return head.removeChild(script); };
+    script.onerror = function () {
+        head.removeChild(script);
+        var err = new Error('airbrake: JSONP script error');
+        promise.reject(err);
+    };
+    head.appendChild(script);
 }
-exports.makeEventHandler = makeEventHandler;
+exports.default = report;
 
 
 /***/ }),
-/* 12 */
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var dom_1 = __webpack_require__(11);
+var dom_1 = __webpack_require__(20);
 var Historian = (function () {
     function Historian() {
         var _this = this;
@@ -1367,359 +1645,82 @@ exports.getHistory = getHistory;
 
 
 /***/ }),
-/* 13 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var ErrorStackParser = __webpack_require__(3);
-var hasConsole = typeof console === 'object' && console.warn;
-function parse(err) {
-    try {
-        return ErrorStackParser.parse(err);
-    }
-    catch (parseErr) {
-        if (hasConsole && err.stack) {
-            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
-        }
-    }
-    if (err.fileName) {
-        return [err];
-    }
-    return [];
-}
-function processor(err, cb) {
-    var backtrace = [];
-    if (!err.noStack) {
-        var frames_1 = parse(err);
-        if (frames_1.length === 0) {
-            try {
-                throw new Error('fake');
-            }
-            catch (fakeErr) {
-                frames_1 = parse(fakeErr);
-                frames_1.shift();
-                frames_1.shift();
-            }
-        }
-        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
-            var frame = frames_2[_i];
-            backtrace.push({
-                function: frame.functionName || '',
-                file: frame.fileName || '<anonymous>',
-                line: frame.lineNumber || 0,
-                column: frame.columnNumber || 0,
-            });
-        }
-    }
-    var type;
-    if (err.name) {
-        type = err.name;
-    }
-    else {
-        type = '';
-    }
-    var msg;
-    if (err.message) {
-        msg = String(err.message);
-    }
-    else {
-        msg = String(err);
-    }
-    cb('stacktracejs', {
-        type: type,
-        message: msg,
-        backtrace: backtrace,
-    });
-}
-exports.default = processor;
-
-
-/***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = (function () {
-    function Promise(executor) {
-        this.onResolved = [];
-        this.onRejected = [];
-        if (executor) {
-            executor(this.resolve.bind(this), this.reject.bind(this));
-        }
-    }
-    Promise.prototype.then = function (onResolved, onRejected) {
-        if (onResolved) {
-            if (this.resolvedWith) {
-                onResolved(this.resolvedWith);
-            }
-            else {
-                this.onResolved.push(onResolved);
-            }
-        }
-        if (onRejected) {
-            if (this.rejectedWith) {
-                onRejected(this.rejectedWith);
-            }
-            else {
-                this.onRejected.push(onRejected);
-            }
-        }
-        return this;
-    };
-    Promise.prototype.catch = function (onRejected) {
-        if (this.rejectedWith) {
-            onRejected(this.rejectedWith);
-        }
-        else {
-            this.onRejected.push(onRejected);
-        }
-        return this;
-    };
-    Promise.prototype.resolve = function (value) {
-        if (this.resolvedWith || this.rejectedWith) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.resolvedWith = value;
-        for (var _i = 0, _a = this.onResolved; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(value);
-        }
-        return this;
-    };
-    Promise.prototype.reject = function (reason) {
-        if (this.resolvedWith || this.rejectedWith) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.rejectedWith = reason;
-        for (var _i = 0, _a = this.onRejected; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(reason);
-        }
-        return this;
-    };
-    return Promise;
-}());
-exports.default = Promise;
-
-
-/***/ }),
-/* 15 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
-function report(notice, opts, promise) {
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-        body: payload,
-    }).then(function (req) {
-        if (req.status >= 200 && req.status < 500) {
-            req.json().then(function (resp) {
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
-                    return;
-                }
-                if (resp.error) {
-                    var err = new Error(resp.error);
-                    promise.reject(err);
-                    return;
-                }
-            });
-            return;
-        }
-        req.text().then(function (body) {
-            var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
-            promise.reject(err);
-        });
-    }).catch(function (err) {
-        promise.reject(err);
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
-var cbCount = 0;
-function report(notice, opts, promise) {
-    cbCount++;
-    var cbName = 'airbrakeCb' + String(cbCount);
-    window[cbName] = function (resp) {
-        try {
-            delete window[cbName];
-        }
-        catch (_) {
-            window[cbName] = undefined;
-        }
-        if (resp.id) {
-            notice.id = resp.id;
-            promise.resolve(notice);
-            return;
-        }
-        if (resp.error) {
-            var err_1 = new Error(resp.error);
-            promise.reject(err_1);
-            return;
-        }
-        var err = new Error(resp);
-        promise.reject(err);
-    };
-    var payload = encodeURIComponent(jsonify_notice_1.default(notice));
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
-    var document = window.document;
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
-    script.src = url;
-    script.onload = function () { return head.removeChild(script); };
-    script.onerror = function () {
-        head.removeChild(script);
-        var err = new Error('airbrake: JSONP script error');
-        promise.reject(err);
-    };
-    head.appendChild(script);
-}
-exports.default = report;
-
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
-var request;
-try {
-    // Use eval to hide import from Webpack.
-    request = eval('require')('request');
-}
-catch (_) { }
-function report(notice, opts, promise) {
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    request({
-        url: url,
-        method: 'POST',
-        body: payload,
-        headers: {
-            'content-type': 'application/json'
-        },
-        timeout: opts.timeout,
-    }, function (error, response, body) {
-        if (error) {
-            promise.reject(error);
-            return;
-        }
-        if (response.statusCode >= 200 && response.statusCode < 500) {
-            var resp = JSON.parse(body);
-            if (resp.id) {
-                notice.id = resp.id;
-                promise.resolve(notice);
-                return;
-            }
-            if (resp.error) {
-                var err_1 = new Error(resp.error);
-                promise.reject(err_1);
-                return;
-            }
-        }
-        body = body.trim();
-        var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
-        promise.reject(err);
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function detectReporter(_opts) {
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
-    return 'node';
-}
-exports.detectReporter = detectReporter;
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
-function report(notice, opts, promise) {
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    var req = new XMLHttpRequest();
-    req.open('POST', url, true);
-    req.timeout = opts.timeout;
-    req.setRequestHeader('Content-Type', 'application/json');
-    req.onreadystatechange = function () {
-        if (req.readyState !== 4) {
-            return;
-        }
-        if (req.status >= 200 && req.status < 500) {
-            var resp = JSON.parse(req.responseText);
-            if (resp.id) {
-                notice.id = resp.id;
-                promise.resolve(notice);
-                return;
-            }
-            if (resp.error) {
-                var err_1 = new Error(resp.error);
-                promise.reject(err_1);
-                return;
-            }
-        }
-        var body = req.responseText.trim();
-        var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
-        promise.reject(err);
-    };
-    req.send(payload);
-}
-exports.default = report;
-
-
-/***/ }),
 /* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(2);
-module.exports = __webpack_require__(1);
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var elemAttrs = ['type', 'name', 'src'];
+function elemName(elem) {
+    if (!elem) {
+        return '';
+    }
+    var s = [];
+    if (elem.tagName) {
+        s.push(elem.tagName.toLowerCase());
+    }
+    if (elem.id) {
+        s.push('#');
+        s.push(elem.id);
+    }
+    if (elem.className) {
+        s.push('.');
+        s.push(elem.className.split(' ').join('.'));
+    }
+    if (elem.getAttribute) {
+        for (var _i = 0, elemAttrs_1 = elemAttrs; _i < elemAttrs_1.length; _i++) {
+            var attr = elemAttrs_1[_i];
+            var value = elem.getAttribute(attr);
+            if (value) {
+                s.push("[" + attr + "=\"" + value + "\"]");
+            }
+        }
+    }
+    return s.join('');
+}
+function elemPath(elem) {
+    var maxLen = 10;
+    var path = [];
+    var parent = elem;
+    while (parent) {
+        var name_1 = elemName(parent);
+        if (name_1 !== '') {
+            path.push(name_1);
+            if (path.length > maxLen) {
+                break;
+            }
+        }
+        parent = parent.parentNode;
+    }
+    if (path.length === 0) {
+        return String(elem);
+    }
+    return path.reverse().join(' > ');
+}
+function makeEventHandler(client) {
+    return function (event) {
+        var target;
+        try {
+            target = event.target;
+        }
+        catch (_) {
+            return;
+        }
+        if (!target) {
+            return;
+        }
+        var state = { type: event.type };
+        try {
+            state.target = elemPath(target);
+        }
+        catch (err) {
+            state.target = "<" + err.toString() + ">";
+        }
+        client.pushHistory(state);
+    };
+}
+exports.makeEventHandler = makeEventHandler;
 
 
 /***/ })
