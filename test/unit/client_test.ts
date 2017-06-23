@@ -171,7 +171,7 @@ describe('Client', () => {
             expect(spy).to.have.been.called;
 
             let err = spy.lastCall.args[0];
-            expect(err.toString()).to.equal('Error: notify: got err="", wanted an Error');
+            expect(err.toString()).to.equal('Error: airbrake-js: got err="", wanted an Error');
         });
 
         it('reporter is called with valid options', () => {
@@ -180,12 +180,10 @@ describe('Client', () => {
 
             expect(reporter).to.have.been.called;
             let opts = reporter.lastCall.args[1];
-            expect(opts).to.deep.equal({
-                projectId: 999,
-                projectKey: 'custom_project_key',
-                host: 'https://api.airbrake.io',
-                timeout: 10000,
-            });
+            expect(opts.projectId).to.equal(999);
+            expect(opts.projectKey).to.equal('custom_project_key');
+            expect(opts.host).to.equal('https://api.airbrake.io');
+            expect(opts.timeout).to.equal(10000);
         });
 
         it('reporter is called with custom host', () => {
@@ -265,7 +263,7 @@ describe('Client', () => {
                 expect(spy).to.have.been.called;
 
                 let err = spy.lastCall.args[0];
-                expect(err.toString()).to.equal('Error: notify: got err=null, wanted an Error');
+                expect(err.toString()).to.equal('Error: airbrake-js: got err=null, wanted an Error');
             });
 
             it('reports custom context', () => {
@@ -489,6 +487,31 @@ describe('Client', () => {
             it('resolves promise', () => {
                 expect(spy).to.have.been.called;
             });
+        });
+    });
+});
+
+describe('ignoreWindowError', () => {
+    let reporter, client: Client;
+
+    beforeEach(() => {
+        reporter = sinon.spy((_, __, promise) => {
+            promise.resolve({id: 1});
+        });
+        client = new Client({reporter: reporter, ignoreWindowError: true});
+    });
+
+    it('ignores context.windowError', (done) => {
+        let promise = client.notify({
+            error: new Error('test'),
+            context: {
+                windowError: true,
+            },
+        });
+        expect(reporter).to.not.have.been.called;
+        promise.catch((err: Error) => {
+            expect(err.toString()).to.equal('Error: airbrake-js: window error is ignored');
+            done();
         });
     });
 });

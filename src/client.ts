@@ -35,10 +35,9 @@ class Client {
     private errors: any[] = [];
 
     constructor(opts: any = {}) {
-        this.opts.projectId = opts.projectId;
-        this.opts.projectKey = opts.projectKey;
-        this.opts.host = opts.host || 'https://api.airbrake.io';
-        this.opts.timeout = opts.timeout || 10000;
+        this.opts = opts;
+        this.opts.host = this.opts.host || 'https://api.airbrake.io';
+        this.opts.timeout = this.opts.timeout || 10000;
 
         this.processor = opts.processor || stacktracejsProcessor;
         this.addReporter(opts.reporter || detectReporter(opts));
@@ -104,7 +103,13 @@ class Client {
 
         if (!err.error) {
             let reason = new Error(
-                `notify: got err=${JSON.stringify(err.error)}, wanted an Error`);
+                `airbrake-js: got err=${JSON.stringify(err.error)}, wanted an Error`);
+            promise.reject(reason);
+            return promise;
+        }
+
+        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
+            let reason = new Error('airbrake-js: window error is ignored');
             promise.reject(reason);
             return promise;
         }
