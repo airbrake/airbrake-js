@@ -218,7 +218,11 @@ if (env === 'development') {
 
 ### window.onerror
 
-airbrake-js automatically setups `window.onerror` handler when script is loaded. It also makes sure to call old error handler if there are any.
+airbrake-js automatically setups `window.onerror` handler when script is loaded. It also makes sure to call old error handler if there are any. Errors reported by `window.onerror` can be ignored using `ignoreWindowError` option:
+
+```js
+var airbrake = new airbrakeJs.Client({ignoreWindowError: true});
+```
 
 ## What does "Script error" mean?
 

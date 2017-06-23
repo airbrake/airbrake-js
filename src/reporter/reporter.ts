@@ -7,6 +7,8 @@ export interface ReporterOptions {
     projectKey: string;
     host: string;
     timeout: number;
+
+    ignoreWindowError?: boolean;
 }
 
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
