@@ -18,5 +18,8 @@ export interface Notice {
     params: any;
     session: any;
     environment: any;
+
+    _json?: string;
 }
+
 export default Notice;
