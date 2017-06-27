@@ -4,6 +4,10 @@ import Notice from './notice';
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 export default function jsonifyNotice(notice: Notice, maxLength = 64000): string {
+    if (notice._json) {
+        return notice._json;
+    }
+
     let s = '';
     for (let level = 0; level < 8; level++) {
         notice.context = truncateObj(notice.context, level);
@@ -13,6 +17,7 @@ export default function jsonifyNotice(notice: Notice, maxLength = 64000): string
 
         s = JSON.stringify(notice);
         if (s.length < maxLength) {
+            notice._json = s;
             return s;
         }
     }
