@@ -63,34 +63,6 @@ describe('Client', () => {
         });
     });
 
-    it('text error is reported', () => {
-        client.notify('hello');
-
-        expect(reporter).to.have.been.called;
-        let notice = reporter.lastCall.args[0];
-        let err = notice.errors[0];
-        expect(err.message).to.equal('hello');
-        expect(err.backtrace.length).to.not.equal(0);
-    });
-
-    it('ignores "Script error" message', () => {
-        client.notify('Script error');
-
-        expect(reporter).not.to.have.been.called;
-    });
-
-    it('ignores "InvalidAccessError" message', () => {
-        client.notify('InvalidAccessError');
-
-        expect(reporter).not.to.have.been.called;
-    });
-
-    it('ignores errors occurred in <anonymous> file', () => {
-        client.notify({message: 'test', fileName: '<anonymous>'});
-
-        expect(reporter).not.to.have.been.called;
-    });
-
     context('"Uncaught ..." error message', () => {
         beforeEach(() => {
             let msg = 'Uncaught SecurityError: Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.';
@@ -179,7 +151,7 @@ describe('Client', () => {
             });
         });
 
-        it('reporter is called with valid options', () => {
+        it('calls reporter with valid options', () => {
             client.setProject(999, 'custom_project_key');
             client.notify(err);
 
@@ -204,6 +176,34 @@ describe('Client', () => {
 
             let reported = reporter.lastCall.args[0];
             expect(reported.context.severity).to.equal('warning');
+        });
+
+        it('reports text error', () => {
+            client.notify('hello');
+
+            expect(reporter).to.have.been.called;
+            let notice = reporter.lastCall.args[0];
+            let err = notice.errors[0];
+            expect(err.message).to.equal('hello');
+            expect(err.backtrace.length).to.not.equal(0);
+        });
+
+        it('ignores "Script error" message', () => {
+            client.notify('Script error');
+
+            expect(reporter).not.to.have.been.called;
+        });
+
+        it('ignores "InvalidAccessError" message', () => {
+            client.notify('InvalidAccessError');
+
+            expect(reporter).not.to.have.been.called;
+        });
+
+        it('ignores errors occurred in <anonymous> file', () => {
+            client.notify({message: 'test', fileName: '<anonymous>'});
+
+            expect(reporter).not.to.have.been.called;
         });
 
         describe('custom data in the filter', () => {
