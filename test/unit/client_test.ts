@@ -155,23 +155,28 @@ describe('Client', () => {
             expect(reporter).to.have.been.called;
         });
 
-        it('does not report same error twice', () => {
+        it('does not report same error twice', (done) => {
             for (let i = 0; i < 10; i++) {
                 client.notify(err);
             }
             expect(reporter).to.have.been.calledOnce;
+
+            let promise = client.notify(err);
+            promise.catch((err: Error) => {
+                expect(err.toString()).to.equal('Error: airbrake-js: error is filtered');
+                done();
+            });
         });
 
-        it('ignores falsey error', () => {
+        it('ignores falsey error', (done) => {
             let promise = client.notify('');
             expect(reporter).not.to.have.been.called;
 
-            let spy = sinon.spy();
-            promise.catch(spy);
-            expect(spy).to.have.been.called;
-
-            let err = spy.lastCall.args[0];
-            expect(err.toString()).to.equal('Error: airbrake-js: got err="", wanted an Error');
+            promise.catch((err: Error) => {
+                expect(err.toString()).to.equal(
+                    'Error: airbrake-js: got err="", wanted an Error');
+                done();
+            });
         });
 
         it('reporter is called with valid options', () => {
@@ -253,17 +258,16 @@ describe('Client', () => {
                 expect(reporter).to.have.been.called;
             });
 
-            it('ignores falsey error', () => {
+            it('ignores falsey error', (done) => {
                 let promise = client.notify({error: null, params: {foo: 'bar'}});
 
                 expect(reporter).not.to.have.been.called;
 
-                let spy = sinon.spy();
-                promise.catch(spy);
-                expect(spy).to.have.been.called;
-
-                let err = spy.lastCall.args[0];
-                expect(err.toString()).to.equal('Error: airbrake-js: got err=null, wanted an Error');
+                promise.catch((err: Error) => {
+                    expect(err.toString()).to.equal(
+                        'Error: airbrake-js: got err=null, wanted an Error');
+                    done();
+                });
             });
 
             it('reports custom context', () => {
@@ -508,6 +512,7 @@ describe('ignoreWindowError', () => {
                 windowError: true,
             },
         });
+
         expect(reporter).to.not.have.been.called;
         promise.catch((err: Error) => {
             expect(err.toString()).to.equal('Error: airbrake-js: window error is ignored');

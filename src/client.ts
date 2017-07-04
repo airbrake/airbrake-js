@@ -151,6 +151,7 @@ class Client {
             for (let filter of this.filters) {
                 let r = filter(notice);
                 if (r === null) {
+                    promise.reject(new Error('airbrake-js: error is filtered'));
                     return;
                 }
                 notice = r;
