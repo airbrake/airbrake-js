@@ -171,11 +171,18 @@ describe('Client', () => {
             expect(opts.host).to.equal('https://custom.domain.com');
         });
 
-        it('sets severity', () => {
+        it('reports severity', () => {
             client.notify({error: err, context: {severity: 'warning'}});
 
-            let reported = reporter.lastCall.args[0];
-            expect(reported.context.severity).to.equal('warning');
+            let notice = reporter.lastCall.args[0];
+            expect(notice.context.severity).to.equal('warning');
+        });
+
+        it('reports userAgent', () => {
+            client.notify(err);
+
+            let notice = reporter.lastCall.args[0];
+            expect(notice.context.userAgent).to.contain('HeadlessChrome');
         });
 
         it('reports text error', () => {
