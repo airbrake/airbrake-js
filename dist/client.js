@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.3 */
+/*! airbrake-js v0.9.4 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -85,9 +85,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // environment and session keys.
 function jsonifyNotice(notice, maxLength) {
     if (maxLength === void 0) { maxLength = 64000; }
-    if (notice._json) {
-        return notice._json;
-    }
     var s = '';
     for (var level = 0; level < 8; level++) {
         notice.context = truncateObj(notice.context, level);
@@ -96,7 +93,6 @@ function jsonifyNotice(notice, maxLength) {
         notice.session = truncateObj(notice.session, level);
         s = JSON.stringify(notice);
         if (s.length < maxLength) {
-            notice._json = s;
             return s;
         }
     }
@@ -397,7 +393,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.3",
+                    version: "0.9.4",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -415,6 +411,7 @@ var Client = (function () {
                 var filter = _a[_i];
                 var r = filter(notice);
                 if (r === null) {
+                    promise.reject(new Error('airbrake-js: error is filtered'));
                     return;
                 }
                 notice = r;
@@ -982,12 +979,11 @@ exports.default = filter;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
 function makeFilter() {
     var lastNoticeJSON;
     var timeout;
     return function (notice) {
-        var s = jsonify_notice_1.default(notice);
+        var s = JSON.stringify(notice.errors);
         if (s === lastNoticeJSON) {
             return null;
         }
