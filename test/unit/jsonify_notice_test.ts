@@ -14,8 +14,6 @@ describe('jsonify_notice', () => {
 
         beforeEach(() => {
             json = jsonifyNotice(obj);
-            expect(obj._json).to.equal(json);
-            delete obj._json;
         });
 
         it('produces valid JSON', () => {
