@@ -1,4 +1,5 @@
 import Promise from '../../src/promise';
+import * as sinon from 'sinon';
 import { expect } from './sinon_chai';
 
 

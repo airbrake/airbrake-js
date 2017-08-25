@@ -16,7 +16,7 @@ export default function makeFilter(): Filter {
         }
 
         lastNoticeJSON = s;
-        timeout = setTimeout(() => {
+        timeout = window.setTimeout(() => {
             lastNoticeJSON = '';
         }, 1000);
 
