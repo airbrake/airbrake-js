@@ -1,4 +1,5 @@
 import processor from '../../../src/processor/stacktracejs';
+import * as sinon from 'sinon';
 import { expect } from '../sinon_chai';
 
 

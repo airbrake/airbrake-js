@@ -1,6 +1,7 @@
 import Promise from '../../../src/promise';
 import Notice from '../../../src/notice';
 import reporter from '../../../src/reporter/xhr';
+import * as sinon from 'sinon';
 import { expect } from '../sinon_chai';
 
 
