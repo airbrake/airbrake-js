@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.4 */
+/*! airbrake-js v0.9.5 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -393,7 +393,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.4",
+                    version: "0.9.5",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -991,7 +991,7 @@ function makeFilter() {
             clearTimeout(timeout);
         }
         lastNoticeJSON = s;
-        timeout = setTimeout(function () {
+        timeout = window.setTimeout(function () {
             lastNoticeJSON = '';
         }, 1000);
         return notice;
@@ -1162,17 +1162,37 @@ exports.detectReporter = detectReporter;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
+var rateLimitReset = 0;
+var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        promise.reject(errIpRateLimited);
+        return;
+    }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
-    fetch(url, {
+    var opt = {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         },
         body: payload,
-    }).then(function (req) {
+    };
+    fetch(url, opt).then(function (req) {
+        if (req.status === 429) {
+            promise.reject(errIpRateLimited);
+            var s = req.headers.get('X-RateLimit-Reset');
+            if (!s) {
+                return;
+            }
+            var n = parseInt(s, 10);
+            if (n > 0) {
+                rateLimitReset = n;
+            }
+            return;
+        }
         if (req.status >= 200 && req.status < 500) {
             req.json().then(function (resp) {
                 if (resp.id) {
@@ -1213,7 +1233,14 @@ try {
     request = eval('require')('request');
 }
 catch (_) { }
+var rateLimitReset = 0;
+var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        promise.reject(errIpRateLimited);
+        return;
+    }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     request({
@@ -1227,6 +1254,32 @@ function report(notice, opts, promise) {
     }, function (error, response, body) {
         if (error) {
             promise.reject(error);
+            return;
+        }
+        if (!response.statusCode) {
+            promise.reject(new Error('airbrake: node: statusCode is undefined'));
+            return;
+        }
+        if (response.statusCode === 429) {
+            promise.reject(errIpRateLimited);
+            var h = response.headers['x-ratelimit-reset'];
+            if (!h) {
+                return;
+            }
+            var s = void 0;
+            if (typeof h === 'string') {
+                s = h;
+            }
+            else if (h instanceof Array) {
+                s = h[0];
+            }
+            else {
+                return;
+            }
+            var n = parseInt(s, 10);
+            if (n > 0) {
+                rateLimitReset = n;
+            }
             return;
         }
         if (response.statusCode >= 200 && response.statusCode < 500) {
@@ -1258,7 +1311,14 @@ exports.default = report;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(0);
+var rateLimitReset = 0;
+var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        promise.reject(errIpRateLimited);
+        return;
+    }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     var req = new XMLHttpRequest();
@@ -1267,6 +1327,18 @@ function report(notice, opts, promise) {
     req.setRequestHeader('Content-Type', 'application/json');
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
+            return;
+        }
+        if (req.status === 429) {
+            promise.reject(errIpRateLimited);
+            var s = req.getResponseHeader('X-RateLimit-Reset');
+            if (!s) {
+                return;
+            }
+            var n = parseInt(s, 10);
+            if (n > 0) {
+                rateLimitReset = n;
+            }
             return;
         }
         if (req.status >= 200 && req.status < 500) {
