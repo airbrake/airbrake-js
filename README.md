@@ -59,7 +59,13 @@ var airbrakeJs = require('airbrake-js');
 var airbrake = new airbrakeJs({projectId: 1, projectKey: 'abc'});
 ```
 
-The simplest method is to report errors directly:
+You can send a textual message to Airbrake:
+
+```js
+airbrake.notify(`user id=${user_id} not found`);
+```
+
+Or report catched errors directly:
 
 ```js
 try {
