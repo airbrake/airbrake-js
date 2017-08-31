@@ -3,7 +3,7 @@ import Notice from '../notice';
 
 export default function makeFilter(): Filter {
     let lastNoticeJSON: string;
-    let timeout: number;
+    let timeout;
 
     return function(notice: Notice): Notice | null {
         let s = JSON.stringify(notice.errors);
@@ -16,7 +16,7 @@ export default function makeFilter(): Filter {
         }
 
         lastNoticeJSON = s;
-        timeout = window.setTimeout(() => {
+        timeout = setTimeout(() => {
             lastNoticeJSON = '';
         }, 1000);
 
