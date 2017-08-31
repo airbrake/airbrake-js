@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.5 */
+/*! airbrake-js v0.9.6 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -393,7 +393,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.5",
+                    version: "0.9.6",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -991,7 +991,7 @@ function makeFilter() {
             clearTimeout(timeout);
         }
         lastNoticeJSON = s;
-        timeout = window.setTimeout(function () {
+        timeout = setTimeout(function () {
             lastNoticeJSON = '';
         }, 1000);
         return notice;
