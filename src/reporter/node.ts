@@ -1,9 +1,11 @@
+import {RequestResponse} from 'request';
+
 import Promise from '../promise';
 import Notice from '../notice';
 import jsonifyNotice from '../jsonify_notice';
 
-import {ReporterOptions} from './reporter';
-import {RequestResponse} from 'request';
+import {ReporterOptions, errors} from './reporter';
+
 
 let request;
 try {
@@ -13,13 +15,12 @@ try {
 
 
 let rateLimitReset = 0;
-let errIpRateLimited = new Error('airbrake: ip is rate limited');
 
 
 export default function report(notice: Notice, opts: ReporterOptions, promise: Promise): void {
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        promise.reject(errIpRateLimited);
+        promise.reject(errors.ipRateLimited);
         return;
     }
 
@@ -45,10 +46,15 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
             return;
         }
 
-        if (response.statusCode === 429) {
-            promise.reject(errIpRateLimited);
+        if (response.statusCode === 401) {
+            promise.reject(errors.unauthorized);
+            return;
+        }
 
-            let h = response.headers['x-ratelimit-reset'];
+        if (response.statusCode === 429) {
+            promise.reject(errors.ipRateLimited);
+
+            let h = response.headers['x-ratelimit-delay'];
             if (!h) {
                 return;
             }
@@ -64,7 +70,7 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
 
             let n = parseInt(s, 10);
             if (n > 0) {
-                rateLimitReset = n;
+                rateLimitReset = Date.now() / 1000 + n;
             }
 
             return;
