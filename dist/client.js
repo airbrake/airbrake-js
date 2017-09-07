@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.6 */
+/*! airbrake-js v0.9.7 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -71,11 +71,37 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function detectReporter(_opts) {
+    if (typeof fetch === 'function') {
+        return 'fetch';
+    }
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
+    }
+    if (typeof window === 'object') {
+        return 'jsonp';
+    }
+    return 'node';
+}
+exports.detectReporter = detectReporter;
+exports.errors = {
+    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
+    ipRateLimited: new Error('airbrake: IP is rate limited'),
+};
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -250,15 +276,15 @@ function objectType(obj) {
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(2);
-module.exports = __webpack_require__(3);
+__webpack_require__(3);
+module.exports = __webpack_require__(4);
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports) {
 
 if (!Object.assign) {
@@ -282,20 +308,20 @@ if (!Object.assign) {
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var promise_1 = __webpack_require__(4);
-var stacktracejs_1 = __webpack_require__(5);
-var ignore_1 = __webpack_require__(8);
-var debounce_1 = __webpack_require__(9);
-var uncaught_message_1 = __webpack_require__(10);
-var angular_message_1 = __webpack_require__(11);
-var window_1 = __webpack_require__(12);
-var node_1 = __webpack_require__(13);
-var reporter_1 = __webpack_require__(14);
+var promise_1 = __webpack_require__(5);
+var stacktracejs_1 = __webpack_require__(6);
+var ignore_1 = __webpack_require__(9);
+var debounce_1 = __webpack_require__(10);
+var uncaught_message_1 = __webpack_require__(11);
+var angular_message_1 = __webpack_require__(12);
+var window_1 = __webpack_require__(13);
+var node_1 = __webpack_require__(14);
+var reporter_1 = __webpack_require__(0);
 var fetch_1 = __webpack_require__(15);
 var node_2 = __webpack_require__(16);
 var xhr_1 = __webpack_require__(17);
@@ -393,7 +419,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.6",
+                    version: "0.9.7",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -483,7 +509,7 @@ module.exports = Client;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -553,13 +579,13 @@ exports.default = Promise;
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var ErrorStackParser = __webpack_require__(6);
+var ErrorStackParser = __webpack_require__(7);
 var hasConsole = typeof console === 'object' && console.warn;
 function parse(err) {
     try {
@@ -623,7 +649,7 @@ exports.default = processor;
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -637,7 +663,7 @@ var define = false;
     if (typeof define === 'function' && define.amd) {
         define('error-stack-parser', ['stackframe'], factory);
     } else if (true) {
-        module.exports = factory(__webpack_require__(7));
+        module.exports = factory(__webpack_require__(8));
     } else {
         root.ErrorStackParser = factory(root.StackFrame);
     }
@@ -824,7 +850,7 @@ var define = false;
 
 
 /***/ }),
-/* 7 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -945,7 +971,7 @@ var define = false;
 
 
 /***/ }),
-/* 8 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -973,7 +999,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1001,7 +1027,7 @@ exports.default = makeFilter;
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1031,7 +1057,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1060,7 +1086,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1081,7 +1107,7 @@ exports.default = filter;
 
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1133,63 +1159,41 @@ exports.default = filter;
 
 
 /***/ }),
-/* 14 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function detectReporter(_opts) {
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
-    return 'node';
-}
-exports.detectReporter = detectReporter;
-
-
-/***/ }),
 /* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
+var jsonify_notice_1 = __webpack_require__(1);
+var reporter_1 = __webpack_require__(0);
 var rateLimitReset = 0;
-var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        promise.reject(errIpRateLimited);
+        promise.reject(reporter_1.errors.ipRateLimited);
         return;
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     var opt = {
         method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
         body: payload,
     };
     fetch(url, opt).then(function (req) {
+        if (req.status === 401) {
+            promise.reject(reporter_1.errors.unauthorized);
+            return;
+        }
         if (req.status === 429) {
-            promise.reject(errIpRateLimited);
-            var s = req.headers.get('X-RateLimit-Reset');
+            promise.reject(reporter_1.errors.ipRateLimited);
+            var s = req.headers.get('X-RateLimit-Delay');
             if (!s) {
                 return;
             }
             var n = parseInt(s, 10);
             if (n > 0) {
-                rateLimitReset = n;
+                rateLimitReset = Date.now() / 1000 + n;
             }
             return;
         }
@@ -1226,7 +1230,8 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
+var jsonify_notice_1 = __webpack_require__(1);
+var reporter_1 = __webpack_require__(0);
 var request;
 try {
     // Use eval to hide import from Webpack.
@@ -1234,11 +1239,10 @@ try {
 }
 catch (_) { }
 var rateLimitReset = 0;
-var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        promise.reject(errIpRateLimited);
+        promise.reject(reporter_1.errors.ipRateLimited);
         return;
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
@@ -1260,9 +1264,13 @@ function report(notice, opts, promise) {
             promise.reject(new Error('airbrake: node: statusCode is undefined'));
             return;
         }
+        if (response.statusCode === 401) {
+            promise.reject(reporter_1.errors.unauthorized);
+            return;
+        }
         if (response.statusCode === 429) {
-            promise.reject(errIpRateLimited);
-            var h = response.headers['x-ratelimit-reset'];
+            promise.reject(reporter_1.errors.ipRateLimited);
+            var h = response.headers['x-ratelimit-delay'];
             if (!h) {
                 return;
             }
@@ -1278,7 +1286,7 @@ function report(notice, opts, promise) {
             }
             var n = parseInt(s, 10);
             if (n > 0) {
-                rateLimitReset = n;
+                rateLimitReset = Date.now() / 1000 + n;
             }
             return;
         }
@@ -1310,13 +1318,13 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
+var jsonify_notice_1 = __webpack_require__(1);
+var reporter_1 = __webpack_require__(0);
 var rateLimitReset = 0;
-var errIpRateLimited = new Error('airbrake: ip is rate limited');
 function report(notice, opts, promise) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        promise.reject(errIpRateLimited);
+        promise.reject(reporter_1.errors.ipRateLimited);
         return;
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
@@ -1324,20 +1332,23 @@ function report(notice, opts, promise) {
     var req = new XMLHttpRequest();
     req.open('POST', url, true);
     req.timeout = opts.timeout;
-    req.setRequestHeader('Content-Type', 'application/json');
     req.onreadystatechange = function () {
         if (req.readyState !== 4) {
             return;
         }
+        if (req.status === 401) {
+            promise.reject(reporter_1.errors.unauthorized);
+            return;
+        }
         if (req.status === 429) {
-            promise.reject(errIpRateLimited);
-            var s = req.getResponseHeader('X-RateLimit-Reset');
+            promise.reject(reporter_1.errors.ipRateLimited);
+            var s = req.getResponseHeader('X-RateLimit-Delay');
             if (!s) {
                 return;
             }
             var n = parseInt(s, 10);
             if (n > 0) {
-                rateLimitReset = n;
+                rateLimitReset = Date.now() / 1000 + n;
             }
             return;
         }
@@ -1370,7 +1381,7 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(0);
+var jsonify_notice_1 = __webpack_require__(1);
 var cbCount = 0;
 function report(notice, opts, promise) {
     cbCount++;
