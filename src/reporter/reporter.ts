@@ -11,8 +11,10 @@ export interface ReporterOptions {
     ignoreWindowError?: boolean;
 }
 
+
 export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
 export default Reporter;
+
 
 export function detectReporter(_opts): string {
     if (typeof fetch === 'function') {
@@ -29,3 +31,9 @@ export function detectReporter(_opts): string {
 
     return 'node';
 }
+
+
+export let errors = {
+    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
+    ipRateLimited: new Error('airbrake: IP is rate limited'),
+};
