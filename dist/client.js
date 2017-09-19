@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.7 */
+/*! airbrake-js v0.9.8 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -419,7 +419,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.7",
+                    version: "0.9.8",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -619,7 +619,7 @@ function processor(err, cb) {
             var frame = frames_2[_i];
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '<anonymous>',
+                file: frame.fileName || '<unknown>',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
@@ -987,7 +987,7 @@ function filter(notice) {
     if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
         return null;
     }
-    if (err.backtrace) {
+    if (err.backtrace && err.backtrace.length > 0) {
         var frame = err.backtrace[0];
         if (frame.file === '<anonymous>') {
             return null;
