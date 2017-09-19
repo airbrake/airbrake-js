@@ -6,14 +6,14 @@ import ErrorStackParser = require('error-stack-parser');
 
 const hasConsole = typeof console === 'object' && console.warn;
 
-interface StackFrame {
+export interface StackFrame {
     functionName?: string;
     fileName?: string;
     lineNumber?: number;
     columnNumber?: number;
 }
 
-interface AirbrakeError extends Error, StackFrame {
+export interface AirbrakeError extends Error, StackFrame {
     noStack?: boolean;
 }
 
@@ -51,7 +51,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         for (let frame of frames) {
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '<anonymous>',
+                file: frame.fileName || '<unknown>',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
