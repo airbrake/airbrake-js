@@ -1,26 +1,45 @@
 # Usage with Angular 2 & TypeScript
 
-An example Angular 2 configuration:
+Create `error_handler.ts`:
 
 ```TypeScript
-class AirbrakeErrorHandler implements ErrorHandler {
-  airbrake: airbrakeJs.Client;
+import { ErrorHandler } from '@angular/core';
+import AirbrakeClient from 'airbrake-js';
+
+export class AirbrakeErrorHandler implements ErrorHandler {
+  airbrake: AirbrakeClient;
 
   constructor() {
-    this.airbrake = new airbrakeJs.Client({
+    this.airbrake = new AirbrakeClient({
       projectId: 1,
       projectKey: 'FIXME'
     });
   }
 
-  handleError(error) {
-    airbrake.notify(error);
+  handleError(error: any): void {
+    this.airbrake.notify(error);
   }
 }
+```
+
+Add `ErrorHandler` provider to your `AppModule`:
+
+```TypeScript
+import { BrowserModule } from '@angular/platform-browser';
+import { NgModule, ErrorHandler } from '@angular/core';
+
+import { AppComponent } from './app.component';
+import { AirbrakeErrorHandler } from './error_handler';
 
 @NgModule({
-  providers: [{provide: ErrorHandler, useClass: AirbrakeErrorHandler}]
+  declarations: [
+    AppComponent
+  ],
+  imports: [
+    BrowserModule
+  ],
+  providers: [{provide: ErrorHandler, useClass: AirbrakeErrorHandler}],
+  bootstrap: [AppComponent]
 })
-
-class MyModule {}
+export class AppModule { }
 ```
