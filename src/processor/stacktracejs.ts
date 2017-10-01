@@ -51,7 +51,7 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         for (let frame of frames) {
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '<unknown>',
+                file: frame.fileName || '',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
