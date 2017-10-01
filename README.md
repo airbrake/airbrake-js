@@ -35,6 +35,7 @@ Example configurations can be found in [examples](examples), including:
 * [Rails](examples/rails)
 * [React](examples/react)
 * [RequireJS](examples/requirejs)
+* [Vue.js](examples/vuejs)
 
 The notifier is built using
 [umd](https://webpack.js.org/concepts/output/#output-librarytarget)
