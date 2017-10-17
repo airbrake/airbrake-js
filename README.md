@@ -45,6 +45,11 @@ If you prefer not to host the library yourself,
 airbrake-js is available on the excellent
 [cdnjs](https://cdnjs.com/libraries/airbrake-js).
 
+If you're running a standalone script or worker on nodejs without a web server and [running into this issue](https://github.com/airbrake/airbrake-js/issues/363), you might need to install the [request](https://github.com/request/request) library too, on which airbrake depends:
+```
+npm install request
+```
+
 ## Basic Usage
 
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
