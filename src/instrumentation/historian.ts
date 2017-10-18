@@ -30,9 +30,14 @@ export default class Historian {
                 }
                 self.onerror.apply(self, arguments);
             };
-        } else {
+        }
+
+        let p;
+        try {
             // Use eval to hide process usage from Webpack and Browserify.
-            let p = eval('process');
+            p = eval('process');
+        } catch {}
+        if (typeof p === 'object') {
             p.on('uncaughtException', (err) => {
                 // TODO: add wait for async notify
                 this.notify(err);
