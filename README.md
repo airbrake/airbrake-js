@@ -62,14 +62,20 @@ var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
 Or if you are using browserify/webpack/etc:
 
 ```js
-var airbrakeJs = require('airbrake-js');
-var airbrake = new airbrakeJs({projectId: 1, projectKey: 'abc'});
+var AirbrakeClient = require('airbrake-js');
+var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
 ```
 
-You can send a textual message to Airbrake:
+Then you can send a textual message to Airbrake:
 
 ```js
-airbrake.notify(`user id=${user_id} not found`);
+var promise = airbrake.notify(`user id=${user_id} not found`);
+promise.then(function(notice) {
+  console.log('notice id', notice.id);
+});
+promise.catch(function(err) {
+  console.log('airbrake error', err);
+});
 ```
 
 Or report catched errors directly:
