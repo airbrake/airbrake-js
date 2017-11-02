@@ -7,15 +7,18 @@ npm install airbrake-js redux-airbrake --save
 
 #### 2. Import dependency
 ``` js
+import AirbrakeClient from 'airbrake-js';
 import airbrakeMiddleware from 'redux-airbrake';
 ```
 
 #### 3. Configure & add middleware
 ``` js
-const errorMiddleware = airbrakeMiddleware({
+const airbrake = new AirbrakeClient({
     projectId: '******',
     projectKey: '**************'
 });
+
+const errorMiddleware = airbrakeMiddleware(airbrake);
 
 export const store = createStore(
     rootReducer,
@@ -27,15 +30,21 @@ export const store = createStore(
 export default store;
 ```
 
-#### Adding notice metadata (optional)
+#### Adding notice annotations (optional)
+
+It's possible to annotate error notices with all sorts of useful information at the time they're captured by supplying it in the object being reported.
 
 ``` js
-const errorMiddleware = airbrakeMiddleware({
-    projectId: '******',
-    projectKey: '**************'
-}, {
+const errorMiddleware = airbrakeMiddleware(airbrake, {
     context: { environment: window.ENV }
 });
 ```
 
-[redux-airbrake](https://github.com/alexcastillo/redux-airbrake) on GitHub.
+#### Adding filters
+
+Since an Airbrake instrace is passed to the middleware, you can simply add
+filters to the instance as described here:
+
+[https://github.com/airbrake/airbrake-js#filtering-errors](https://github.com/airbrake/airbrake-js#filtering-errors)
+
+For more info, visit [redux-airbrake](https://github.com/alexcastillo/redux-airbrake) on GitHub.
