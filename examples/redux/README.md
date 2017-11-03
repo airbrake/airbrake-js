@@ -36,7 +36,7 @@ It's possible to annotate error notices with all sorts of useful information at 
 
 ``` js
 const errorMiddleware = airbrakeMiddleware(airbrake, {
-    context: { environment: window.ENV }
+    noticeAnnotations: { context: { environment: window.ENV } }
 });
 ```
 
@@ -47,4 +47,4 @@ filters to the instance as described here:
 
 [https://github.com/airbrake/airbrake-js#filtering-errors](https://github.com/airbrake/airbrake-js#filtering-errors)
 
-For more info, visit [redux-airbrake](https://github.com/alexcastillo/redux-airbrake) on GitHub.
+For full documentation, visit [redux-airbrake](https://github.com/alexcastillo/redux-airbrake) on GitHub.
