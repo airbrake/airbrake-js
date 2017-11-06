@@ -34,6 +34,7 @@ Example configurations can be found in [examples](examples), including:
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
 * [React](examples/react)
+* [Redux](examples/redux)
 * [RequireJS](examples/requirejs)
 * [Vue.js](examples/vuejs)
 
@@ -277,4 +278,4 @@ The names and logos for Airbrake are trademarks of Airbrake Technologies Inc.
 
 # License
 
-Airbrake is Copyright © 2008-2015 Airbrake Technologies Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
+Airbrake is Copyright © 2008-2017 Airbrake Technologies Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
