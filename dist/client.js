@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.8 */
+/*! airbrake-js v0.9.9 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -138,7 +138,7 @@ function truncateObj(obj, level) {
     }
     return dst;
 }
-var Truncator = (function () {
+var Truncator = /** @class */ (function () {
     function Truncator(level) {
         if (level === void 0) { level = 0; }
         this.maxStringLength = 1024;
@@ -327,7 +327,7 @@ var node_2 = __webpack_require__(16);
 var xhr_1 = __webpack_require__(17);
 var jsonp_1 = __webpack_require__(18);
 var historian_1 = __webpack_require__(19);
-var Client = (function () {
+var Client = /** @class */ (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
         var _this = this;
@@ -419,7 +419,7 @@ var Client = (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.8",
+                    version: "0.9.9",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -515,7 +515,7 @@ module.exports = Client;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = (function () {
+var Promise = /** @class */ (function () {
     function Promise(executor) {
         this.onResolved = [];
         this.onRejected = [];
@@ -619,7 +619,7 @@ function processor(err, cb) {
             var frame = frames_2[_i];
             backtrace.push({
                 function: frame.functionName || '',
-                file: frame.fileName || '<unknown>',
+                file: frame.fileName || '',
                 line: frame.lineNumber || 0,
                 column: frame.columnNumber || 0,
             });
@@ -1431,7 +1431,7 @@ exports.default = report;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var dom_1 = __webpack_require__(20);
-var Historian = (function () {
+var Historian = /** @class */ (function () {
     function Historian() {
         var _this = this;
         this.historyMaxLen = 20;
@@ -1450,13 +1450,15 @@ var Historian = (function () {
                 self_1.onerror.apply(self_1, arguments);
             };
         }
-        else {
+        var p;
+        try {
             // Use eval to hide process usage from Webpack and Browserify.
-            var p = eval('process');
+            p = eval('process');
+        }
+        catch (_a) { }
+        if (typeof p === 'object') {
             p.on('uncaughtException', function (err) {
-                // TODO: add wait for async notify
                 _this.notify(err);
-                throw err;
             });
             p.on('unhandledRejection', function (reason, _p) {
                 _this.notify(reason);
