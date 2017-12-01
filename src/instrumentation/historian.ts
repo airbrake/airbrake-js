@@ -39,9 +39,7 @@ export default class Historian {
         } catch {}
         if (typeof p === 'object') {
             p.on('uncaughtException', (err) => {
-                // TODO: add wait for async notify
                 this.notify(err);
-                throw err;
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
                 this.notify(reason);
