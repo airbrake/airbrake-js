@@ -32,6 +32,7 @@ Example configurations can be found in [examples](examples), including:
 * [Express.js](examples/express)
 * [hapi.js](examples/hapi)
 * [Legacy](examples/legacy)
+* [Node.js](examples/nodejs)
 * [Rails](examples/rails)
 * [React](examples/react)
 * [Redux](examples/redux)
