@@ -1,4 +1,4 @@
-/*! airbrake-js v0.9.9 */
+/*! airbrake-js v1.0.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -8,7 +8,7 @@
 		exports["Client"] = factory();
 	else
 		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory();
-})(this, function() {
+})(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -419,7 +419,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "0.9.9",
+                    version: "1.0.0",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1456,7 +1456,7 @@ var Historian = /** @class */ (function () {
             p = eval('process');
         }
         catch (_a) { }
-        if (typeof p === 'object') {
+        if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', function (err) {
                 _this.notify(err);
             });
