@@ -2,7 +2,6 @@
     "compilerOptions": {
         "lib": ["ES2015", "DOM"],
         "target": "ES5",
-        "module": "None",
         "moduleResolution": "node",
         "strictNullChecks": true,
         "noUnusedLocals": true,
