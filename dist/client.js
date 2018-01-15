@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.1 */
+/*! airbrake-js v1.0.2 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -347,7 +347,7 @@ var Client = /** @class */ (function () {
         this.addFilter(angular_message_1.default);
         if (typeof window === 'object') {
             this.addFilter(window_1.default);
-            if (typeof window.addEventListener === 'function') {
+            if (window.addEventListener) {
                 window.addEventListener('online', this.onOnline.bind(this));
                 window.addEventListener('offline', function () { return _this.offline = true; });
             }
@@ -419,7 +419,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.1",
+                    version: "1.0.2",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1449,6 +1449,7 @@ var Historian = /** @class */ (function () {
                 }
                 self_1.onerror.apply(self_1, arguments);
             };
+            this.domEvents();
         }
         var p;
         try {
@@ -1463,9 +1464,6 @@ var Historian = /** @class */ (function () {
             p.on('unhandledRejection', function (reason, _p) {
                 _this.notify(reason);
             });
-        }
-        if (typeof document === 'object') {
-            this.dom();
         }
         if (typeof console === 'object') {
             this.console();
@@ -1575,18 +1573,24 @@ var Historian = /** @class */ (function () {
         }
         return true;
     };
-    Historian.prototype.dom = function () {
+    Historian.prototype.domEvents = function () {
         var handler = dom_1.makeEventHandler(this);
-        document.addEventListener('DOMContentLoaded', handler);
-        window.addEventListener('load', handler);
-        document.addEventListener('click', handler);
-        document.addEventListener('keypress', handler);
-        window.addEventListener('error', function (event) {
-            if ('error' in event) {
-                return;
-            }
-            handler(event);
-        }, true);
+        var add = window.addEventListener;
+        if (add) {
+            add('load', handler);
+            add('error', function (event) {
+                if ('error' in event) {
+                    return;
+                }
+                handler(event);
+            }, true);
+        }
+        add = document.addEventListener;
+        if (add) {
+            add('DOMContentLoaded', handler);
+            add('click', handler);
+            add('keypress', handler);
+        }
     };
     Historian.prototype.console = function () {
         var client = this;
