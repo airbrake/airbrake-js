@@ -30,6 +30,8 @@ export default class Historian {
                 }
                 self.onerror.apply(self, arguments);
             };
+
+            this.domEvents();
         }
 
         let p;
@@ -46,9 +48,6 @@ export default class Historian {
             });
         }
 
-        if (typeof document === 'object') {
-            this.dom();
-        }
         if (typeof console === 'object') {
             this.console();
         }
@@ -175,18 +174,26 @@ export default class Historian {
         return true;
     }
 
-    dom(): void {
+    domEvents(): void {
         let handler = makeEventHandler(this);
-        document.addEventListener('DOMContentLoaded', handler);
-        window.addEventListener('load', handler);
-        document.addEventListener('click', handler);
-        document.addEventListener('keypress', handler);
-        window.addEventListener('error', function(event: Event): void {
-            if ('error' in event) {
-                return;
-            }
-            handler(event);
-        }, true);
+
+        let add = window.addEventListener;
+        if (add) {
+            add('load', handler);
+            add('error', function(event: Event): void {
+                if ('error' in event) {
+                    return;
+                }
+                handler(event);
+            }, true);
+        }
+
+        add = document.addEventListener;
+        if (add) {
+            add('DOMContentLoaded', handler);
+            add('click', handler);
+            add('keypress', handler);
+        }
     }
 
     console(): void {
