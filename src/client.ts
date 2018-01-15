@@ -50,7 +50,7 @@ class Client {
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
 
-            if (typeof window.addEventListener === 'function') {
+            if (window.addEventListener) {
                 window.addEventListener('online', this.onOnline.bind(this));
                 window.addEventListener('offline', () => this.offline = true);
             }
