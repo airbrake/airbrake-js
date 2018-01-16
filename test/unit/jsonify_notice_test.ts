@@ -55,30 +55,20 @@ describe('jsonify_notice', () => {
     });
 
     context('when called with huge error message', () => {
-        let fn, maxLength = 30000;
+        let json, maxLength = 30000;
 
         beforeEach(() => {
             let obj = {
                 errors: [{
+                    type: Array(100000).join('x'),
                     message: Array(100000).join('x'),
                 }],
             } as Notice;
-            fn = () => {
-                jsonifyNotice(obj, maxLength);
-            };
+            json = jsonifyNotice(obj, maxLength);
         });
 
-        it('throws an exception', () => {
-            expect(fn).to.throw(
-                'airbrake-js: cannot jsonify notice (length=100081 maxLength=30000)');
-        });
-
-        it('throws an exception with `json` property', () => {
-            try {
-                fn();
-            } catch (err) {
-                expect(err.params.json).to.exist;
-            }
+        it('limits json size', () => {
+            expect(json.length).to.be.below(maxLength);
         });
     });
 });

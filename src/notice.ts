@@ -12,14 +12,12 @@ export interface AirbrakeError {
 }
 
 export interface Notice {
-    id: string;
+    id?: string;
     errors: AirbrakeError[];
-    context: any;
-    params: any;
-    session: any;
-    environment: any;
-
-    _json?: string;
+    context?: any;
+    params?: any;
+    session?: any;
+    environment?: any;
 }
 
 export default Notice;
