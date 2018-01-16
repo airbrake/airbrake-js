@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.2 */
+/*! airbrake-js v1.0.3 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -107,50 +107,93 @@ exports.errors = {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var maxObjectLength = 128;
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 function jsonifyNotice(notice, maxLength) {
     if (maxLength === void 0) { maxLength = 64000; }
     var s = '';
+    try {
+        s = JSON.stringify(notice);
+    }
+    catch (_) { }
+    if (s !== '' && s.length < maxLength) {
+        return s;
+    }
+    if (notice.errors) {
+        for (var i in notice.errors) {
+            var t = new Truncator();
+            notice.errors[i] = t.truncate(notice.errors[i]);
+        }
+    }
+    var keys = ['context', 'params', 'environment', 'session'];
     for (var level = 0; level < 8; level++) {
-        notice.context = truncateObj(notice.context, level);
-        notice.params = truncateObj(notice.params, level);
-        notice.environment = truncateObj(notice.environment, level);
-        notice.session = truncateObj(notice.session, level);
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var key = keys_1[_i];
+            var obj = notice[key];
+            if (obj) {
+                notice[key] = truncateObject(obj, level);
+            }
+        }
         s = JSON.stringify(notice);
         if (s.length < maxLength) {
             return s;
         }
     }
-    var err = new Error("airbrake-js: cannot jsonify notice (length=" + s.length + " maxLength=" + maxLength + ")");
-    err.params = {
+    var params = {
         json: s.slice(0, Math.floor(maxLength / 2)) + '...',
     };
+    keys.push('errors');
+    for (var _a = 0, keys_2 = keys; _a < keys_2.length; _a++) {
+        var key = keys_2[_a];
+        var obj = notice[key];
+        if (!obj) {
+            continue;
+        }
+        s = JSON.stringify(obj);
+        params[key] = s.length;
+    }
+    var err = new Error("airbrake-js: notice exceeds max length and can't be truncated");
+    err.params = params;
     throw err;
 }
 exports.default = jsonifyNotice;
-// truncateObj truncates each key in the object separately, which is
+// truncateObject truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObj(obj, level) {
+function truncateObject(obj, level) {
+    var maxLength = scale(maxObjectLength, level);
     var dst = {};
-    for (var attr in obj) {
-        dst[attr] = truncate(obj[attr], level);
+    var length = 0;
+    for (var key in obj) {
+        dst[key] = truncate(obj[key], level);
+        length++;
+        if (length >= maxLength) {
+            break;
+        }
     }
     return dst;
 }
+function scale(num, level) {
+    return (num >> level) || 1;
+}
+function truncate(value, level) {
+    var t = new Truncator(level);
+    return t.truncate(value);
+}
+exports.truncate = truncate;
 var Truncator = /** @class */ (function () {
     function Truncator(level) {
         if (level === void 0) { level = 0; }
         this.maxStringLength = 1024;
-        this.maxObjectLength = 128;
-        this.maxArrayLength = 32;
+        this.maxObjectLength = maxObjectLength;
+        this.maxArrayLength = maxObjectLength;
         this.maxDepth = 8;
         this.keys = [];
         this.seen = [];
-        this.maxStringLength = (this.maxStringLength >> level) || 1;
-        this.maxObjectLength = (this.maxObjectLength >> level) || 1;
-        this.maxArrayLength = (this.maxArrayLength >> level) || 1;
-        this.maxDepth = (this.maxDepth >> level) || 1;
+        this.maxStringLength = scale(this.maxStringLength, level);
+        this.maxObjectLength = scale(this.maxObjectLength, level);
+        this.maxArrayLength = scale(this.maxArrayLength, level);
+        this.maxDepth = scale(this.maxDepth, level);
     }
     Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
@@ -225,19 +268,21 @@ var Truncator = /** @class */ (function () {
         return s;
     };
     Truncator.prototype.truncateArray = function (arr, depth) {
+        if (depth === void 0) { depth = 0; }
         var length = 0;
         var dst = [];
         for (var i in arr) {
             var el = arr[i];
+            dst.push(this.truncate(el, i, depth));
             length++;
             if (length >= this.maxArrayLength) {
                 break;
             }
-            dst.push(this.truncate(el, i, depth));
         }
         return dst;
     };
     Truncator.prototype.truncateObject = function (obj, depth) {
+        if (depth === void 0) { depth = 0; }
         var length = 0;
         var dst = {};
         for (var attr in obj) {
@@ -245,21 +290,16 @@ var Truncator = /** @class */ (function () {
             if (value === undefined || typeof value === 'function') {
                 continue;
             }
+            dst[attr] = this.truncate(value, attr, depth);
             length++;
             if (length >= this.maxObjectLength) {
                 break;
             }
-            dst[attr] = this.truncate(value, attr, depth);
         }
         return dst;
     };
     return Truncator;
 }());
-function truncate(value, level) {
-    var t = new Truncator(level);
-    return t.truncate(value);
-}
-exports.truncate = truncate;
 function getAttr(obj, attr) {
     // Ignore browser specific exception trying to read attribute (#79).
     try {
@@ -419,7 +459,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.2",
+                    version: "1.0.3",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
