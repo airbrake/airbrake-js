@@ -177,10 +177,9 @@ export default class Historian {
     domEvents(): void {
         let handler = makeEventHandler(this);
 
-        let add = window.addEventListener;
-        if (add) {
-            add('load', handler);
-            add('error', function(event: Event): void {
+        if (window.addEventListener) {
+            window.addEventListener('load', handler);
+            window.addEventListener('error', function(event: Event): void {
                 if ('error' in event) {
                     return;
                 }
@@ -188,11 +187,10 @@ export default class Historian {
             }, true);
         }
 
-        add = document.addEventListener;
-        if (add) {
-            add('DOMContentLoaded', handler);
-            add('click', handler);
-            add('keypress', handler);
+        if (document.addEventListener) {
+            document.addEventListener('DOMContentLoaded', handler);
+            document.addEventListener('click', handler);
+            document.addEventListener('keypress', handler);
         }
     }
 
