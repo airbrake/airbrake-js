@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.3 */
+/*! airbrake-js v1.0.4 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -459,7 +459,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.3",
+                    version: "1.0.4",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1615,21 +1615,19 @@ var Historian = /** @class */ (function () {
     };
     Historian.prototype.domEvents = function () {
         var handler = dom_1.makeEventHandler(this);
-        var add = window.addEventListener;
-        if (add) {
-            add('load', handler);
-            add('error', function (event) {
+        if (window.addEventListener) {
+            window.addEventListener('load', handler);
+            window.addEventListener('error', function (event) {
                 if ('error' in event) {
                     return;
                 }
                 handler(event);
             }, true);
         }
-        add = document.addEventListener;
-        if (add) {
-            add('DOMContentLoaded', handler);
-            add('click', handler);
-            add('keypress', handler);
+        if (document.addEventListener) {
+            document.addEventListener('DOMContentLoaded', handler);
+            document.addEventListener('click', handler);
+            document.addEventListener('keypress', handler);
         }
     };
     Historian.prototype.console = function () {
