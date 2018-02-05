@@ -19,6 +19,9 @@ export default class Historian {
     private lastState: any;
     private lastLocation: string | null;
     private ignoreNextXHR = 0;
+    // Add function types for this
+    private uncaughtExceptionHandler: Function; 
+    private unhandledRejectionHandler: Function; 
 
     constructor() {
         if (typeof window === 'object') {
@@ -40,12 +43,16 @@ export default class Historian {
             p = eval('process');
         } catch {}
         if (typeof p === 'object' && typeof p.on === 'function') {
-            p.on('uncaughtException', (err) => {
-                this.notify(err);
-            });
-            p.on('unhandledRejection', (reason: Error, _p) => {
+            const uncaughtExceptionHandler = err => {
+              this.notify(err);
+            };
+            p.on('uncaughtException', uncaughtExceptionHandler);
+            this.uncaughtExceptionHandler = uncaughtExceptionHandler;
+            const unhandledRejectionHandler = (reason: Error, _p) => {
                 this.notify(reason);
-            });
+            };
+            p.on('unhandledRejection', unhandledRejectionHandler);
+            this.unhandledRejectionHandler = unhandledRejectionHandler;
         }
 
         if (typeof console === 'object') {
@@ -59,6 +66,28 @@ export default class Historian {
         }
         if (typeof history === 'object') {
             this.location();
+        }
+    }
+
+    ignoreUncaughtExceptions() {
+        let p;
+        try {
+            // Use eval to hide process usage from Webpack and Browserify.
+            p = eval('process');
+        } catch {}
+        if (typeof p === 'object' && typeof p.on === 'function') {
+          p.removeListener('uncaughtException', this.uncaughtExceptionHandler);
+        }
+    }
+
+    ignoreUnhandledRejections() {
+        let p;
+        try {
+            // Use eval to hide process usage from Webpack and Browserify.
+            p = eval('process');
+        } catch {}
+        if (typeof p === 'object' && typeof p.on === 'function') {
+          p.removeListener('unhandledRejection', this.unhandledRejectionHandler);
         }
     }
 
