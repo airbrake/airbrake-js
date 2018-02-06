@@ -19,8 +19,14 @@ export default class Historian {
     private lastState: any;
     private lastLocation: string | null;
     private ignoreNextXHR = 0;
+    private consoleError: (message?: any, ...optionalParams: any[]) => void;
+
 
     constructor() {
+        if (typeof console === 'object' && console.error) {
+            this.consoleError = console.error;
+        }
+
         if (typeof window === 'object') {
             let self = this;
             let oldHandler = window.onerror;
@@ -44,7 +50,8 @@ export default class Historian {
                 // TODO improve polyfill and use .finally over .then
                 this.notify(err).then(() => {
                     if (p.listeners('uncaughtException').length === 1) {
-                      throw err;
+                      this.consoleError('uncaught exception', err);
+                      p.exit(1);
                     }
                 });
             });

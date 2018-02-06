@@ -1480,6 +1480,9 @@ var Historian = /** @class */ (function () {
         this.ignoreWindowError = 0;
         this.history = [];
         this.ignoreNextXHR = 0;
+        if (typeof console === 'object' && console.error) {
+            this.consoleError = console.error;
+        }
         if (typeof window === 'object') {
             var self_1 = this;
             var oldHandler_1 = window.onerror;
@@ -1502,7 +1505,8 @@ var Historian = /** @class */ (function () {
                 // TODO improve polyfill and use .finally over .then
                 _this.notify(err).then(function () {
                     if (p.listeners('uncaughtException').length === 1) {
-                        throw err;
+                        _this.consoleError('uncaught exception', err);
+                        p.exit(1);
                     }
                 });
             });
