@@ -19,9 +19,8 @@ export default class Historian {
     private lastState: any;
     private lastLocation: string | null;
     private ignoreNextXHR = 0;
-    // Add function types for this
-    private uncaughtExceptionHandler: Function; 
-    private unhandledRejectionHandler: Function; 
+    private uncaughtExceptionHandler: (err: any) => void;
+    private unhandledRejectionHandler: (reason: Error, _p: any) => void;
 
     constructor() {
         if (typeof window === 'object') {
