@@ -543,6 +543,12 @@ var Client = /** @class */ (function () {
         }
         this.errors = [];
     };
+    Client.ignoreUncaughtExceptions = function () {
+        historian_1.historian.ignoreUncaughtExceptions();
+    };
+    Client.ignoreUnhandledRejections = function () {
+        historian_1.historian.ignoreUnhandledRejections();
+    };
     return Client;
 }());
 module.exports = Client;
@@ -915,7 +921,7 @@ var define = false;
     }
 
     function _capitalize(str) {
-        return str[0].toUpperCase() + str.substring(1);
+        return str.charAt(0).toUpperCase() + str.substring(1);
     }
 
     function _getter(p) {
@@ -1498,12 +1504,16 @@ var Historian = /** @class */ (function () {
         }
         catch (_a) { }
         if (typeof p === 'object' && typeof p.on === 'function') {
-            p.on('uncaughtException', function (err) {
+            var uncaughtExceptionHandler = function (err) {
                 _this.notify(err);
-            });
-            p.on('unhandledRejection', function (reason, _p) {
+            };
+            p.on('uncaughtException', uncaughtExceptionHandler);
+            this.uncaughtExceptionHandler = uncaughtExceptionHandler;
+            var unhandledRejectionHandler = function (reason, _p) {
                 _this.notify(reason);
-            });
+            };
+            p.on('unhandledRejection', unhandledRejectionHandler);
+            this.unhandledRejectionHandler = unhandledRejectionHandler;
         }
         if (typeof console === 'object') {
             this.console();
@@ -1518,6 +1528,28 @@ var Historian = /** @class */ (function () {
             this.location();
         }
     }
+    Historian.prototype.ignoreUncaughtExceptions = function () {
+        var p;
+        try {
+            // Use eval to hide process usage from Webpack and Browserify.
+            p = eval('process');
+        }
+        catch (_a) { }
+        if (typeof p === 'object' && typeof p.on === 'function') {
+            p.removeListener('uncaughtException', this.uncaughtExceptionHandler);
+        }
+    };
+    Historian.prototype.ignoreUnhandledRejections = function () {
+        var p;
+        try {
+            // Use eval to hide process usage from Webpack and Browserify.
+            p = eval('process');
+        }
+        catch (_a) { }
+        if (typeof p === 'object' && typeof p.on === 'function') {
+            p.removeListener('unhandledRejection', this.unhandledRejectionHandler);
+        }
+    };
     Historian.prototype.registerNotifier = function (n) {
         this.notifiers.push(n);
         for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
