@@ -20,7 +20,13 @@ export default class Historian {
     private lastLocation: string | null;
     private ignoreNextXHR = 0;
 
+    private consoleError: (message?: any, ...optionalParams: any[]) => void;
+
     constructor() {
+        if (typeof console === 'object' && console.error) {
+            this.consoleError = console.error;
+        }
+
         if (typeof window === 'object') {
             let self = this;
             let oldHandler = window.onerror;
@@ -42,6 +48,9 @@ export default class Historian {
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', (err) => {
                 this.notify(err);
+                if (this.consoleError) {
+                    this.consoleError('uncaught exception', err);
+                }
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
                 this.notify(reason);
