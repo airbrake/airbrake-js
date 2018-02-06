@@ -222,6 +222,14 @@ class Client {
         }
         this.errors = [];
     }
+
+    static ignoreUncaughtExceptions(): void {
+        historian.ignoreUncaughtExceptions();
+    }
+
+    static ignoreUnhandledRejections(): void {
+        historian.ignoreUnhandledRejections();
+    }
 }
 
 export = Client;
