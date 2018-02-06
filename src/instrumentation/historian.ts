@@ -41,7 +41,12 @@ export default class Historian {
         } catch {}
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', (err) => {
-                this.notify(err);
+                // TODO improve polyfill and use .finally over .then
+                this.notify(err).then(() => {
+                    if (p.listeners('uncaughtException').length === 1) {
+                      throw err;
+                    }
+                });
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
                 this.notify(reason);
@@ -71,22 +76,24 @@ export default class Historian {
         this.errors = [];
     }
 
-    notify(err: any): void {
+    notify(err: any): Promise<any> {
         if (this.notifiers.length > 0) {
-            this.notifyNotifiers(err);
-            return;
+            return this.notifyNotifiers(err);
         }
 
         this.errors.push(err);
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
+        // TODO improve polyfill and use polyfill
+        return Promise.resolve();
     }
 
-    private notifyNotifiers(err: any): void {
-        for (let notifier of this.notifiers) {
-            notifier.notify(err);
-        }
+    private notifyNotifiers(err: any): Promise<any> {
+        // TODO improve polyfill and use polyfill
+        return Promise.all(this.notifiers.map(notifier => {
+            return notifier.notify(err);
+        }));
     }
 
     onerror(
