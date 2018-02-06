@@ -1,7 +1,7 @@
 {
   "name": "airbrake-js-example",
   "dependencies": {
-    "airbrake-js": "^0.9.9",
+    "airbrake-js": "^1.0.4",
     "request": "^2.81.0"
   }
 }
