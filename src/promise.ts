@@ -2,7 +2,7 @@ export type OnResolved = (value: any) => void;
 export type OnRejected = (reason: Error) => void;
 export type OnFinally = () => void;
 
-export default class Promise {
+export class Promise {
     private onResolved: OnResolved[] = [];
     private onRejected: OnRejected[] = [];
     private onFinally: OnFinally[] = [];
@@ -111,3 +111,5 @@ export default class Promise {
         }
     }
 }
+
+export default Promise;
