@@ -1,11 +1,13 @@
-export type Resolver = (value: any) => void;
-export type Rejector = (reason: Error) => void;
+export type OnResolved = (value: any) => void;
+export type OnRejected = (reason: Error) => void;
+export type OnFinally = () => void;
 
 export default class Promise {
-    private onResolved: Resolver[] = [];
-    private onRejected: Rejector[] = [];
+    private onResolved: OnResolved[] = [];
+    private onRejected: OnRejected[] = [];
+    private onFinally: OnFinally[] = [];
 
-    private resolvedWith;
+    private resolvedWith: any;
     private rejectedWith: Error;
 
     constructor(executor?) {
@@ -14,7 +16,34 @@ export default class Promise {
         }
     }
 
-    then(onResolved: Resolver, onRejected?: Rejector): Promise {
+    static all(promises: Promise[]): Promise {
+        let promise = new Promise();
+
+        let values: any[] = [];
+        let onResolved = (value: any) => {
+            values.push(value);
+            if (values.length === promises.length) {
+                promise.resolve(values);
+            }
+        };
+
+        let promiseRejected = false;
+        let onRejected = (reason: Error) => {
+            if (promiseRejected) {
+                return;
+            }
+            promiseRejected = true;
+            promise.reject(reason);
+        };
+
+        for (let p of promises) {
+            p.then(onResolved, onRejected);
+        }
+
+        return promise;
+    }
+
+    then(onResolved: OnResolved, onRejected?: OnRejected): Promise {
         if (onResolved) {
             if (this.resolvedWith) {
                 onResolved(this.resolvedWith);
@@ -34,11 +63,20 @@ export default class Promise {
         return this;
     }
 
-    catch(onRejected: Rejector): Promise {
+    catch(onRejected: OnRejected): Promise {
         if (this.rejectedWith) {
             onRejected(this.rejectedWith);
         } else {
             this.onRejected.push(onRejected);
+        }
+        return this;
+    }
+
+    finally(onFinally: OnFinally): Promise {
+        if (this.resolvedWith || this.rejectedWith) {
+            onFinally();
+        } else {
+            this.onFinally.push(onFinally);
         }
         return this;
     }
@@ -51,6 +89,7 @@ export default class Promise {
         for (let fn of this.onResolved) {
             fn(value);
         }
+        this.callOnFinally();
         return this;
     }
 
@@ -62,6 +101,13 @@ export default class Promise {
         for (let fn of this.onRejected) {
             fn(reason);
         }
+        this.callOnFinally();
         return this;
+    }
+
+    private callOnFinally() {
+        for (let fn of this.onFinally) {
+            fn();
+        }
     }
 }
