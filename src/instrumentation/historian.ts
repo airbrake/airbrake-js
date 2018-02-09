@@ -205,7 +205,7 @@ export default class Historian {
             }, true);
         }
 
-        if (document.addEventListener) {
+        if (typeof document === 'object' && document.addEventListener) {
             document.addEventListener('DOMContentLoaded', handler);
             document.addEventListener('click', handler);
             document.addEventListener('keypress', handler);
