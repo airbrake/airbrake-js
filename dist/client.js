@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.4 */
+/*! airbrake-js v1.0.5 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -71,7 +71,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -319,12 +319,124 @@ function objectType(obj) {
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-__webpack_require__(3);
-module.exports = __webpack_require__(4);
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var Promise = /** @class */ (function () {
+    function Promise(executor) {
+        this.onResolved = [];
+        this.onRejected = [];
+        this.onFinally = [];
+        if (executor) {
+            executor(this.resolve.bind(this), this.reject.bind(this));
+        }
+    }
+    Promise.all = function (promises) {
+        var promise = new Promise();
+        var values = [];
+        var onResolved = function (value) {
+            values.push(value);
+            if (values.length === promises.length) {
+                promise.resolve(values);
+            }
+        };
+        var promiseRejected = false;
+        var onRejected = function (reason) {
+            if (promiseRejected) {
+                return;
+            }
+            promiseRejected = true;
+            promise.reject(reason);
+        };
+        for (var _i = 0, promises_1 = promises; _i < promises_1.length; _i++) {
+            var p = promises_1[_i];
+            p.then(onResolved, onRejected);
+        }
+        return promise;
+    };
+    Promise.prototype.then = function (onResolved, onRejected) {
+        if (onResolved) {
+            if (this.resolvedWith) {
+                onResolved(this.resolvedWith);
+            }
+            else {
+                this.onResolved.push(onResolved);
+            }
+        }
+        if (onRejected) {
+            if (this.rejectedWith) {
+                onRejected(this.rejectedWith);
+            }
+            else {
+                this.onRejected.push(onRejected);
+            }
+        }
+        return this;
+    };
+    Promise.prototype.catch = function (onRejected) {
+        if (this.rejectedWith) {
+            onRejected(this.rejectedWith);
+        }
+        else {
+            this.onRejected.push(onRejected);
+        }
+        return this;
+    };
+    Promise.prototype.finally = function (onFinally) {
+        if (this.resolvedWith || this.rejectedWith) {
+            onFinally();
+        }
+        else {
+            this.onFinally.push(onFinally);
+        }
+        return this;
+    };
+    Promise.prototype.resolve = function (value) {
+        if (this.resolvedWith || this.rejectedWith) {
+            throw new Error('Promise is already resolved or rejected');
+        }
+        this.resolvedWith = value;
+        for (var _i = 0, _a = this.onResolved; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn(value);
+        }
+        this.callOnFinally();
+        return this;
+    };
+    Promise.prototype.reject = function (reason) {
+        if (this.resolvedWith || this.rejectedWith) {
+            throw new Error('Promise is already resolved or rejected');
+        }
+        this.rejectedWith = reason;
+        for (var _i = 0, _a = this.onRejected; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn(reason);
+        }
+        this.callOnFinally();
+        return this;
+    };
+    Promise.prototype.callOnFinally = function () {
+        for (var _i = 0, _a = this.onFinally; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn();
+        }
+    };
+    return Promise;
+}());
+exports.Promise = Promise;
+exports.default = Promise;
 
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(4);
+module.exports = __webpack_require__(5);
+
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports) {
 
 if (!Object.assign) {
@@ -348,12 +460,12 @@ if (!Object.assign) {
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-var promise_1 = __webpack_require__(5);
+var promise_1 = __webpack_require__(2);
 var stacktracejs_1 = __webpack_require__(6);
 var ignore_1 = __webpack_require__(9);
 var debounce_1 = __webpack_require__(10);
@@ -459,7 +571,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.4",
+                    version: "1.0.5",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -546,76 +658,6 @@ var Client = /** @class */ (function () {
     return Client;
 }());
 module.exports = Client;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = /** @class */ (function () {
-    function Promise(executor) {
-        this.onResolved = [];
-        this.onRejected = [];
-        if (executor) {
-            executor(this.resolve.bind(this), this.reject.bind(this));
-        }
-    }
-    Promise.prototype.then = function (onResolved, onRejected) {
-        if (onResolved) {
-            if (this.resolvedWith) {
-                onResolved(this.resolvedWith);
-            }
-            else {
-                this.onResolved.push(onResolved);
-            }
-        }
-        if (onRejected) {
-            if (this.rejectedWith) {
-                onRejected(this.rejectedWith);
-            }
-            else {
-                this.onRejected.push(onRejected);
-            }
-        }
-        return this;
-    };
-    Promise.prototype.catch = function (onRejected) {
-        if (this.rejectedWith) {
-            onRejected(this.rejectedWith);
-        }
-        else {
-            this.onRejected.push(onRejected);
-        }
-        return this;
-    };
-    Promise.prototype.resolve = function (value) {
-        if (this.resolvedWith || this.rejectedWith) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.resolvedWith = value;
-        for (var _i = 0, _a = this.onResolved; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(value);
-        }
-        return this;
-    };
-    Promise.prototype.reject = function (reason) {
-        if (this.resolvedWith || this.rejectedWith) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.rejectedWith = reason;
-        for (var _i = 0, _a = this.onRejected; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(reason);
-        }
-        return this;
-    };
-    return Promise;
-}());
-exports.default = Promise;
 
 
 /***/ }),
@@ -1470,6 +1512,7 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var promise_1 = __webpack_require__(2);
 var dom_1 = __webpack_require__(20);
 var Historian = /** @class */ (function () {
     function Historian() {
@@ -1480,6 +1523,9 @@ var Historian = /** @class */ (function () {
         this.ignoreWindowError = 0;
         this.history = [];
         this.ignoreNextXHR = 0;
+        if (typeof console === 'object' && console.error) {
+            this.consoleError = console.error;
+        }
         if (typeof window === 'object') {
             var self_1 = this;
             var oldHandler_1 = window.onerror;
@@ -1499,7 +1545,15 @@ var Historian = /** @class */ (function () {
         catch (_a) { }
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', function (err) {
-                _this.notify(err);
+                _this.notify(err).finally(function () {
+                    if (p.listeners('uncaughtException').length !== 1) {
+                        return;
+                    }
+                    if (_this.consoleError) {
+                        _this.consoleError('uncaught exception', err);
+                    }
+                    p.exit(1);
+                });
             });
             p.on('unhandledRejection', function (reason, _p) {
                 _this.notify(reason);
@@ -1528,19 +1582,21 @@ var Historian = /** @class */ (function () {
     };
     Historian.prototype.notify = function (err) {
         if (this.notifiers.length > 0) {
-            this.notifyNotifiers(err);
-            return;
+            return this.notifyNotifiers(err);
         }
         this.errors.push(err);
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
+        return new promise_1.Promise().resolve(null);
     };
     Historian.prototype.notifyNotifiers = function (err) {
+        var promises = [];
         for (var _i = 0, _a = this.notifiers; _i < _a.length; _i++) {
             var notifier = _a[_i];
-            notifier.notify(err);
+            promises.push(notifier.notify(err));
         }
+        return promise_1.Promise.all(promises);
     };
     Historian.prototype.onerror = function (message, filename, line, column, err) {
         if (this.ignoreWindowError > 0) {
@@ -1624,7 +1680,7 @@ var Historian = /** @class */ (function () {
                 handler(event);
             }, true);
         }
-        if (document.addEventListener) {
+        if (typeof document === 'object' && document.addEventListener) {
             document.addEventListener('DOMContentLoaded', handler);
             document.addEventListener('click', handler);
             document.addEventListener('keypress', handler);
