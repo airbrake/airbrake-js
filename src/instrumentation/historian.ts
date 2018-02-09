@@ -1,5 +1,6 @@
 import FuncWrapper from '../func_wrapper';
 import Notifier from '../notifier';
+import {Promise as MyPromise} from '../promise';
 import {makeEventHandler} from './dom';
 
 
@@ -47,10 +48,15 @@ export default class Historian {
         } catch {}
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', (err) => {
-                this.notify(err);
-                if (this.consoleError) {
-                    this.consoleError('uncaught exception', err);
-                }
+                this.notify(err).finally(() => {
+                    if (p.listeners('uncaughtException').length !== 1) {
+                        return;
+                    }
+                    if (this.consoleError) {
+                        this.consoleError('uncaught exception', err);
+                    }
+                    p.exit(1);
+                });
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
                 this.notify(reason);
@@ -80,22 +86,25 @@ export default class Historian {
         this.errors = [];
     }
 
-    notify(err: any): void {
+    notify(err: any): MyPromise {
         if (this.notifiers.length > 0) {
-            this.notifyNotifiers(err);
-            return;
+            return this.notifyNotifiers(err);
         }
 
         this.errors.push(err);
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
+
+        return new MyPromise().resolve(null);
     }
 
-    private notifyNotifiers(err: any): void {
+    private notifyNotifiers(err: any): MyPromise {
+        let promises: MyPromise[] = [];
         for (let notifier of this.notifiers) {
-            notifier.notify(err);
+            promises.push(notifier.notify(err));
         }
+        return MyPromise.all(promises);
     }
 
     onerror(
