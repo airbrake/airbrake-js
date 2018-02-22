@@ -39,6 +39,12 @@ export default class Historian {
             };
 
             this.domEvents();
+            if (typeof fetch === 'function') {
+                this.fetch();
+            }
+            if (typeof history === 'object') {
+                this.location();
+            }
         }
 
         let p;
@@ -66,14 +72,8 @@ export default class Historian {
         if (typeof console === 'object') {
             this.console();
         }
-        if (typeof fetch === 'function') {
-            this.fetch();
-        }
         if (typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
-        }
-        if (typeof history === 'object') {
-            this.location();
         }
     }
 
