@@ -51,8 +51,8 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
                     promise.resolve(notice);
                     return;
                 }
-                if (resp.error) {
-                    let err = new Error(resp.error);
+                if (resp.message) {
+                    let err = new Error(resp.message);
                     promise.reject(err);
                     return;
                 }
