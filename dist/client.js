@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.5 */
+/*! airbrake-js v1.0.6 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -571,7 +571,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.5",
+                    version: "1.0.6",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -957,7 +957,7 @@ var define = false;
     }
 
     function _capitalize(str) {
-        return str[0].toUpperCase() + str.substring(1);
+        return str.charAt(0).toUpperCase() + str.substring(1);
     }
 
     function _getter(p) {
@@ -1208,22 +1208,24 @@ function filter(notice) {
         notice.context.architecture = os.arch();
         notice.context.hostname = os.hostname();
     }
-    notice.context.platform = myProcess.platform;
-    if (!notice.context.rootDirectory) {
-        notice.context.rootDirectory = myProcess.cwd();
-    }
-    if (myProcess.env.NODE_ENV) {
-        notice.context.environment = myProcess.env.NODE_ENV;
-    }
-    notice.params.process = {
-        pid: myProcess.pid,
-        cwd: myProcess.cwd(),
-        execPath: myProcess.execPath,
-        argv: myProcess.argv,
-    };
-    for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
-        if (myProcess[name_1]) {
-            notice.params.process[name_1] = myProcess[name_1]();
+    if (myProcess) {
+        notice.context.platform = myProcess.platform;
+        if (!notice.context.rootDirectory) {
+            notice.context.rootDirectory = myProcess.cwd();
+        }
+        if (myProcess.env.NODE_ENV) {
+            notice.context.environment = myProcess.env.NODE_ENV;
+        }
+        notice.params.process = {
+            pid: myProcess.pid,
+            cwd: myProcess.cwd(),
+            execPath: myProcess.execPath,
+            argv: myProcess.argv,
+        };
+        for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
+            if (myProcess[name_1]) {
+                notice.params.process[name_1] = myProcess[name_1]();
+            }
         }
     }
     if (os) {
@@ -1286,8 +1288,8 @@ function report(notice, opts, promise) {
                     promise.resolve(notice);
                     return;
                 }
-                if (resp.error) {
-                    var err = new Error(resp.error);
+                if (resp.message) {
+                    var err = new Error(resp.message);
                     promise.reject(err);
                     return;
                 }
@@ -1379,8 +1381,8 @@ function report(notice, opts, promise) {
                 promise.resolve(notice);
                 return;
             }
-            if (resp.error) {
-                var err_1 = new Error(resp.error);
+            if (resp.message) {
+                var err_1 = new Error(resp.message);
                 promise.reject(err_1);
                 return;
             }
@@ -1441,8 +1443,8 @@ function report(notice, opts, promise) {
                 promise.resolve(notice);
                 return;
             }
-            if (resp.error) {
-                var err_1 = new Error(resp.error);
+            if (resp.message) {
+                var err_1 = new Error(resp.message);
                 promise.reject(err_1);
                 return;
             }
@@ -1480,8 +1482,8 @@ function report(notice, opts, promise) {
             promise.resolve(notice);
             return;
         }
-        if (resp.error) {
-            var err_1 = new Error(resp.error);
+        if (resp.message) {
+            var err_1 = new Error(resp.message);
             promise.reject(err_1);
             return;
         }
@@ -1536,6 +1538,12 @@ var Historian = /** @class */ (function () {
                 self_1.onerror.apply(self_1, arguments);
             };
             this.domEvents();
+            if (typeof fetch === 'function') {
+                this.fetch();
+            }
+            if (typeof history === 'object') {
+                this.location();
+            }
         }
         var p;
         try {
@@ -1562,14 +1570,8 @@ var Historian = /** @class */ (function () {
         if (typeof console === 'object') {
             this.console();
         }
-        if (typeof fetch === 'function') {
-            this.fetch();
-        }
         if (typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
-        }
-        if (typeof history === 'object') {
-            this.location();
         }
     }
     Historian.prototype.registerNotifier = function (n) {
