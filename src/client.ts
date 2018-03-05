@@ -1,3 +1,4 @@
+console.log('import client.ts');
 import Promise from './promise';
 import {Notice, AirbrakeError} from './notice';
 import FuncWrapper from './func_wrapper';

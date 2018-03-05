@@ -383,15 +383,18 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.finally = function (onFinally) {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined || this.rejectedWith !== undefined) {
+            console.log('branch 1');
             onFinally();
         }
         else {
+            console.log('branch 2');
             this.onFinally.push(onFinally);
         }
         return this;
     };
     Promise.prototype.resolve = function (value) {
+        console.log('resolve');
         if (this.resolvedWith || this.rejectedWith) {
             throw new Error('Promise is already resolved or rejected');
         }
@@ -400,6 +403,7 @@ var Promise = /** @class */ (function () {
             var fn = _a[_i];
             fn(value);
         }
+        console.log('callOnFinally');
         this.callOnFinally();
         return this;
     };
@@ -416,6 +420,7 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.callOnFinally = function () {
+        console.log('this.onFinally', this.onFinally);
         for (var _i = 0, _a = this.onFinally; _i < _a.length; _i++) {
             var fn = _a[_i];
             fn();
@@ -465,6 +470,7 @@ if (!Object.assign) {
 
 "use strict";
 
+console.log('import client.ts');
 var promise_1 = __webpack_require__(2);
 var stacktracejs_1 = __webpack_require__(6);
 var ignore_1 = __webpack_require__(9);
@@ -1514,6 +1520,7 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+console.log('import historian.ts');
 var promise_1 = __webpack_require__(2);
 var dom_1 = __webpack_require__(20);
 var Historian = /** @class */ (function () {
@@ -1552,8 +1559,11 @@ var Historian = /** @class */ (function () {
         }
         catch (_a) { }
         if (typeof p === 'object' && typeof p.on === 'function') {
+            console.log('uncaught exception handler being created');
             p.on('uncaughtException', function (err) {
+                console.log('uncaughtException caught', err);
                 _this.notify(err).finally(function () {
+                    console.log('finally');
                     if (p.listeners('uncaughtException').length !== 1) {
                         return;
                     }
@@ -1583,13 +1593,16 @@ var Historian = /** @class */ (function () {
         this.errors = [];
     };
     Historian.prototype.notify = function (err) {
+        console.log('0');
         if (this.notifiers.length > 0) {
             return this.notifyNotifiers(err);
         }
+        console.log('1');
         this.errors.push(err);
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
+        console.log('2');
         return new promise_1.Promise().resolve(null);
     };
     Historian.prototype.notifyNotifiers = function (err) {
