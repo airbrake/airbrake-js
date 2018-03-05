@@ -73,15 +73,18 @@ export class Promise {
     }
 
     finally(onFinally: OnFinally): Promise {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined || this.rejectedWith !== undefined) {
+          console.log('branch 1');
             onFinally();
         } else {
+          console.log('branch 2');
             this.onFinally.push(onFinally);
         }
         return this;
     }
 
     resolve(value: any): Promise {
+      console.log('resolve');
         if (this.resolvedWith || this.rejectedWith) {
             throw new Error('Promise is already resolved or rejected');
         }
@@ -89,6 +92,7 @@ export class Promise {
         for (let fn of this.onResolved) {
             fn(value);
         }
+      console.log('callOnFinally');
         this.callOnFinally();
         return this;
     }
@@ -106,6 +110,7 @@ export class Promise {
     }
 
     private callOnFinally() {
+      console.log('this.onFinally', this.onFinally);
         for (let fn of this.onFinally) {
             fn();
         }

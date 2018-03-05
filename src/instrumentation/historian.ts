@@ -1,8 +1,8 @@
+console.log('import historian.ts');
 import FuncWrapper from '../func_wrapper';
 import Notifier from '../notifier';
 import {Promise as MyPromise} from '../promise';
 import {makeEventHandler} from './dom';
-
 
 interface XMLHttpRequestWithState extends XMLHttpRequest {
     __state: any;
@@ -53,8 +53,11 @@ export default class Historian {
             p = eval('process');
         } catch {}
         if (typeof p === 'object' && typeof p.on === 'function') {
+            console.log('uncaught exception handler being created');
             p.on('uncaughtException', (err) => {
+                console.log('uncaughtException caught', err);
                 this.notify(err).finally(() => {
+                    console.log('finally');
                     if (p.listeners('uncaughtException').length !== 1) {
                         return;
                     }
@@ -87,14 +90,17 @@ export default class Historian {
     }
 
     notify(err: any): MyPromise {
+      console.log('0');
         if (this.notifiers.length > 0) {
             return this.notifyNotifiers(err);
         }
+      console.log('1');
 
         this.errors.push(err);
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
+      console.log('2');
 
         return new MyPromise().resolve(null);
     }
