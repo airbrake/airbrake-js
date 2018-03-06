@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.6 */
+/*! airbrake-js v1.0.7 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -356,7 +356,7 @@ var Promise = /** @class */ (function () {
     };
     Promise.prototype.then = function (onResolved, onRejected) {
         if (onResolved) {
-            if (this.resolvedWith) {
+            if (this.resolvedWith !== undefined) {
                 onResolved(this.resolvedWith);
             }
             else {
@@ -364,7 +364,7 @@ var Promise = /** @class */ (function () {
             }
         }
         if (onRejected) {
-            if (this.rejectedWith) {
+            if (this.rejectedWith !== undefined) {
                 onRejected(this.rejectedWith);
             }
             else {
@@ -374,7 +374,7 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.catch = function (onRejected) {
-        if (this.rejectedWith) {
+        if (this.rejectedWith !== undefined) {
             onRejected(this.rejectedWith);
         }
         else {
@@ -383,7 +383,8 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.finally = function (onFinally) {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             onFinally();
         }
         else {
@@ -392,7 +393,8 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.resolve = function (value) {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             throw new Error('Promise is already resolved or rejected');
         }
         this.resolvedWith = value;
@@ -404,7 +406,8 @@ var Promise = /** @class */ (function () {
         return this;
     };
     Promise.prototype.reject = function (reason) {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             throw new Error('Promise is already resolved or rejected');
         }
         this.rejectedWith = reason;
@@ -571,7 +574,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.0.6",
+                    version: "1.0.7",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
