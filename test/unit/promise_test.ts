@@ -37,7 +37,7 @@ describe('Promise', () => {
         });
 
         it('calls onResolved and onFinally when binded after resolve', () => {
-            resolve('hello', 'world');
+            resolve(null);
             onResolved = sinon.spy();
             promise.then(onResolved);
             expect(onResolved).to.have.been.called;

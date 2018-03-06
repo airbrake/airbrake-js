@@ -45,7 +45,7 @@ export class Promise {
 
     then(onResolved: OnResolved, onRejected?: OnRejected): Promise {
         if (onResolved) {
-            if (this.resolvedWith) {
+            if (this.resolvedWith !== undefined) {
                 onResolved(this.resolvedWith);
             } else {
                 this.onResolved.push(onResolved);
@@ -53,7 +53,7 @@ export class Promise {
         }
 
         if (onRejected) {
-            if (this.rejectedWith) {
+            if (this.rejectedWith !== undefined) {
                 onRejected(this.rejectedWith);
             } else {
                 this.onRejected.push(onRejected);
@@ -64,7 +64,7 @@ export class Promise {
     }
 
     catch(onRejected: OnRejected): Promise {
-        if (this.rejectedWith) {
+        if (this.rejectedWith !== undefined) {
             onRejected(this.rejectedWith);
         } else {
             this.onRejected.push(onRejected);
@@ -73,7 +73,8 @@ export class Promise {
     }
 
     finally(onFinally: OnFinally): Promise {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             onFinally();
         } else {
             this.onFinally.push(onFinally);
@@ -82,7 +83,8 @@ export class Promise {
     }
 
     resolve(value: any): Promise {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             throw new Error('Promise is already resolved or rejected');
         }
         this.resolvedWith = value;
@@ -94,7 +96,8 @@ export class Promise {
     }
 
     reject(reason: Error): Promise {
-        if (this.resolvedWith || this.rejectedWith) {
+        if (this.resolvedWith !== undefined ||
+            this.rejectedWith !== undefined) {
             throw new Error('Promise is already resolved or rejected');
         }
         this.rejectedWith = reason;
