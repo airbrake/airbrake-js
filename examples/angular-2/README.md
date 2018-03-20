@@ -1,8 +1,11 @@
-# Usage with Angular 2 & TypeScript
+### Usage with Angular 2 & TypeScript
 
-Create `error_handler.ts`:
+### Create an error handler
+The first step is to create an error handler with an `AirbrakeClient`
+initialized with your `projectId` and `projectKey`. In this example the
+handler will be in a file called `error_handler.ts`.
 
-```TypeScript
+```ts
 import { ErrorHandler } from '@angular/core';
 import AirbrakeClient from 'airbrake-js';
 
@@ -22,9 +25,12 @@ export class AirbrakeErrorHandler implements ErrorHandler {
 }
 ```
 
-Add `ErrorHandler` provider to your `AppModule`:
+### Add the error handler to your `AppModule`
 
-```TypeScript
+The last step is adding the `ErrorHandler` to your `AppModule`, then your app
+will be ready to report errors to Airbrake.
+
+```ts
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule, ErrorHandler } from '@angular/core';
 
@@ -43,3 +49,4 @@ import { AirbrakeErrorHandler } from './error_handler';
 })
 export class AppModule { }
 ```
+
