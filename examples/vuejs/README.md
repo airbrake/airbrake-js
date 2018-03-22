@@ -1,6 +1,8 @@
-# Vue.js error handler
+### Vue.js error handler
 
-You need to define error handler:
+You can start reporting errors from your Vue.js app by configuring an
+[`errorHandler`](https://vuejs.org/v2/api/#errorHandler) that uses an
+`AirbrakeClient` initialized with your `projectId` and `projectKey`.
 
 ```js
 import AirbrakeClient from 'airbrake-js';
@@ -18,4 +20,5 @@ Vue.config.errorHandler = function (err, vm, info) {
 }
 ```
 
-Read [errorHandler documentation](https://vuejs.org/v2/api/#errorHandler) for more details.
+For more information on Vue.js error handling, read the [`errorHandler`
+documentation](https://vuejs.org/v2/api/#errorHandler).
