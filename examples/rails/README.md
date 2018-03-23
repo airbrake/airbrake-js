@@ -1,4 +1,4 @@
-# Usage with Ruby on Rails
+### Usage with Ruby on Rails
 
 In order to include airbrake-js into your Ruby on Rails application,
 place this in your `Gemfile`:
