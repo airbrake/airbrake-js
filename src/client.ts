@@ -53,6 +53,8 @@ class Client {
             if (window.addEventListener) {
                 window.addEventListener('online', this.onOnline.bind(this));
                 window.addEventListener('offline', () => this.offline = true);
+                window.addEventListener(
+                    'unhandledrejection', this.onUnhandledrejection.bind(this));
             }
         } else {
             this.addFilter(nodeFilter);
@@ -221,6 +223,10 @@ class Client {
             this.notify(err);
         }
         this.errors = [];
+    }
+
+    private onUnhandledrejection(event: PromiseRejectionEvent): void {
+        this.notify(event.reason);
     }
 }
 
