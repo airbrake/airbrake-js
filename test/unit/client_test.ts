@@ -501,6 +501,21 @@ describe('Client', () => {
             });
         });
     });
+
+    describe('unhandledrejection event', () => {
+        beforeEach(() => {
+            new Promise((_resolve, reject) => {
+                reject(err);
+            });
+        });
+
+        it('notifies about unhandled rejection', (done) => {
+            setTimeout(() => {
+                expect(reporter).to.have.been.called;
+                done();
+            }, 0);
+        });
+    });
 });
 
 describe('ignoreWindowError', () => {
