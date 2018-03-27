@@ -6,6 +6,8 @@ const pkg = require('./package.json');
 
 function newConfig() {
   return {
+    mode: 'development',
+
     resolve: {
       extensions: ['.js', '.ts', '.tsx']
     },
@@ -37,10 +39,6 @@ function newConfig() {
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(pkg.version)
       }),
-      new webpack.optimize.UglifyJsPlugin({
-        include: /\.min\.js$/,
-        sourceMap: true
-      }),
       new webpack.BannerPlugin({banner: 'airbrake-js v' + pkg.version}),
     ]
   }
@@ -51,10 +49,15 @@ var client = newConfig();
 var clientFiles = ['./src/internal/compat.ts', './src/client.ts'];
 client.entry = {
   'client': clientFiles,
-  'client.min': clientFiles
 };
 client.output.library = ['airbrakeJs', 'Client'];
 
+
+var clientMin = Object.assign({}, client);
+clientMin.mode = 'production';
+clientMin.entry = {
+  'client.min': clientFiles,
+};
 
 var express = newConfig();
 express.entry = {
@@ -70,4 +73,4 @@ hapi.entry = {
 express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
 
 
-module.exports = [client, express, hapi];
+module.exports = [client, clientMin, express, hapi];
