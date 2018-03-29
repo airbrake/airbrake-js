@@ -45,7 +45,14 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
         }
 
         if (req.status >= 200 && req.status < 500) {
-            req.json().then((resp) => {
+            let json;
+            try {
+                json = req.json();
+            } catch (err) {
+                promise.reject(err);
+                return;
+            }
+            json.then((resp) => {
                 if (resp.id) {
                     notice.id = resp.id;
                     promise.resolve(notice);
