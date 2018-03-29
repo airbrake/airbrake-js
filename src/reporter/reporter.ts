@@ -1,4 +1,3 @@
-import Promise from '../promise';
 import Notice from '../notice';
 
 
@@ -12,11 +11,11 @@ export interface ReporterOptions {
 }
 
 
-export type Reporter = (notice: Notice, opts: ReporterOptions, promise: Promise) => void;
+export type Reporter = (notice: Notice, opts: ReporterOptions) => Promise<Notice>;
 export default Reporter;
 
 
-export function detectReporter(_opts): string {
+export function defaultReporter(): string {
     if (typeof fetch === 'function') {
         return 'fetch';
     }

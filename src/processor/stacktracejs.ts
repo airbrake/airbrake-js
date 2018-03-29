@@ -1,5 +1,4 @@
-import {AirbrakeFrame} from '../notice';
-import {Callback} from './processor';
+import {NoticeError, NoticeFrame} from '../notice';
 
 import ErrorStackParser = require('error-stack-parser');
 
@@ -13,11 +12,11 @@ export interface StackFrame {
     columnNumber?: number;
 }
 
-export interface AirbrakeError extends Error, StackFrame {
+export interface MyError extends Error, StackFrame {
     noStack?: boolean;
 }
 
-function parse(err: AirbrakeError): StackFrame[] {
+function parse(err: MyError): StackFrame[] {
     try {
         return ErrorStackParser.parse(err);
     } catch (parseErr) {
@@ -33,8 +32,8 @@ function parse(err: AirbrakeError): StackFrame[] {
     return [];
 }
 
-export default function processor(err: AirbrakeError, cb: Callback): void {
-    let backtrace: AirbrakeFrame[] = [];
+export default function processor(err: MyError): NoticeError {
+    let backtrace: NoticeFrame[] = [];
 
     if (!err.noStack) {
         let frames = parse(err);
@@ -72,9 +71,9 @@ export default function processor(err: AirbrakeError, cb: Callback): void {
         msg = String(err);
     }
 
-    cb('stacktracejs', {
+    return {
         type: type,
         message: msg,
         backtrace: backtrace,
-    });
+    };
 }

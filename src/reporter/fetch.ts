@@ -1,4 +1,3 @@
-import Promise from '../promise';
 import Notice from '../notice';
 import jsonifyNotice from '../jsonify_notice';
 
@@ -8,11 +7,10 @@ import {ReporterOptions, errors} from './reporter';
 let rateLimitReset = 0;
 
 
-export default function report(notice: Notice, opts: ReporterOptions, promise: Promise): void {
+export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        promise.reject(errors.ipRateLimited);
-        return;
+        return Promise.reject(errors.ipRateLimited);
     }
 
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
@@ -23,55 +21,57 @@ export default function report(notice: Notice, opts: ReporterOptions, promise: P
         body: payload,
     };
 
-    fetch(url, opt).then((req: Response) => {
-        if (req.status === 401) {
-            promise.reject(errors.unauthorized);
-            return;
-        }
-
-        if (req.status === 429) {
-            promise.reject(errors.ipRateLimited);
-
-            let s = req.headers.get('X-RateLimit-Delay');
-            if (!s) {
+    return new Promise((resolve, reject) => {
+        fetch(url, opt).then((req: Response) => {
+            if (req.status === 401) {
+                reject(errors.unauthorized);
                 return;
             }
 
-            let n = parseInt(s, 10);
-            if (n > 0) {
-                rateLimitReset = Date.now() / 1000 + n;
-            }
-            return;
-        }
+            if (req.status === 429) {
+                reject(errors.ipRateLimited);
 
-        if (req.status >= 200 && req.status < 500) {
-            let json;
-            try {
-                json = req.json();
-            } catch (err) {
-                promise.reject(err);
+                let s = req.headers.get('X-RateLimit-Delay');
+                if (!s) {
+                    return;
+                }
+
+                let n = parseInt(s, 10);
+                if (n > 0) {
+                    rateLimitReset = Date.now() / 1000 + n;
+                }
                 return;
             }
-            json.then((resp) => {
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
+
+            if (req.status >= 200 && req.status < 500) {
+                let json;
+                try {
+                    json = req.json();
+                } catch (err) {
+                    reject(err);
                     return;
                 }
-                if (resp.message) {
-                    let err = new Error(resp.message);
-                    promise.reject(err);
-                    return;
-                }
+                json.then((resp) => {
+                    if (resp.id) {
+                        notice.id = resp.id;
+                        resolve(notice);
+                        return;
+                    }
+                    if (resp.message) {
+                        let err = new Error(resp.message);
+                        reject(err);
+                        return;
+                    }
+                });
+                return;
+            }
+            req.text().then((body) => {
+                let err = new Error(
+                    `airbrake: fetch: unexpected response: code=${req.status} body='${body}'`);
+                reject(err);
             });
-            return;
-        }
-        req.text().then((body) => {
-            let err = new Error(
-                `airbrake: fetch: unexpected response: code=${req.status} body='${body}'`);
-            promise.reject(err);
+        }).catch((err) => {
+            reject(err);
         });
-    }).catch((err) => {
-        promise.reject(err);
     });
 }

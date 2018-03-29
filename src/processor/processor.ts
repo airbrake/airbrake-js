@@ -1,7 +1,5 @@
-import {AirbrakeError} from '../notice';
+import {NoticeError} from '../notice';
 
 
-export type Callback = (name: string, err: AirbrakeError) => void;
-
-export type Processor = (err: Error, cb: Callback) => void;
+export type Processor = (err: Error) => NoticeError;
 export default Processor;

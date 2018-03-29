@@ -19,11 +19,11 @@ describe('instrumentation', () => {
     let processor, reporter, client;
 
     beforeEach(() => {
-        processor = sinon.spy((data, cb) => {
-            cb('test-processor', data);
+        processor = sinon.spy((data) => {
+            return data;
         });
-        reporter = sinon.spy((_notice, _opts, promise) => {
-            promise.resolve({id: 1});
+        reporter = sinon.spy(() => {
+            return Promise.resolve({id: 1});
         });
         client = new Client({processor: processor, reporter: reporter});
     });

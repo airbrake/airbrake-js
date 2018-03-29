@@ -1,4 +1,3 @@
-import Promise from '../../../src/promise';
 import Notice from '../../../src/notice';
 import reporter from '../../../src/reporter/xhr';
 import * as sinon from 'sinon';
@@ -23,7 +22,7 @@ describe('xhr reporter', () => {
             projectKey: '[project_key]',
             host: 'https://api.airbrake.io',
             timeout: 1000,
-        }, new Promise());
+        });
         expect(spy).to.have.been.calledWith(
             'POST',
             'https://api.airbrake.io/api/v3/projects/123/notices?key=[project_key]',
@@ -37,7 +36,7 @@ describe('xhr reporter', () => {
             projectKey: '[project_key]',
             host: 'https://custom.domain.com',
             timeout: 1000
-        }, new Promise());
+        });
         expect(spy).to.have.been.calledWith(
             'POST',
             'https://custom.domain.com/api/v3/projects/123/notices?key=[project_key]',
