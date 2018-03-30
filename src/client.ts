@@ -46,6 +46,10 @@ class Client {
     private onClose: (() => void)[] = [];
 
     constructor(opts: any = {}) {
+        if (!opts.projectId || !opts.projectKey) {
+            throw new Error('airbrake: projectId and projectKey are required');
+        }
+
         this.opts = opts;
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
@@ -89,15 +93,6 @@ class Client {
         for (let fn of this.onClose) {
             fn();
         }
-    }
-
-    setProject(id: number, key: string): void {
-        this.opts.projectId = id;
-        this.opts.projectKey = key;
-    }
-
-    setHost(host: string) {
-        this.opts.host = host;
     }
 
     private setReporter(name: string|Reporter): void {

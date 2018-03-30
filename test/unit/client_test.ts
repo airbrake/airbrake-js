@@ -4,6 +4,80 @@ import * as sinon from 'sinon';
 import { expect } from './sinon_chai';
 
 
+describe('Client config', () => {
+    let reporter, client: Client;
+    let err = new Error('test');
+
+    beforeEach(() => {
+        reporter = sinon.spy(() => {
+            return Promise.resolve({id: 1});
+        });
+    });
+
+    afterEach(() => {
+        if (client) {
+            client.close();
+        }
+    });
+
+    it('throws when projectId or projectKey are missing', () => {
+        expect(() => {
+            new Client();
+        }).to.throw('airbrake: projectId and projectKey are required');
+    });
+
+    it('calls reporter with valid options', () => {
+        client = new Client({
+            projectId: 999,
+            projectKey: 'custom_project_key',
+            reporter: reporter,
+        });
+        client.notify(err);
+
+        expect(reporter).to.have.been.called;
+        let opts = reporter.lastCall.args[1];
+        expect(opts.projectId).to.equal(999);
+        expect(opts.projectKey).to.equal('custom_project_key');
+        expect(opts.host).to.equal('https://api.airbrake.io');
+        expect(opts.timeout).to.equal(10000);
+    });
+
+    it('reporter is called with custom host', () => {
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            host: 'https://custom.domain.com',
+            reporter: reporter,
+        });
+        client.notify(err);
+
+        let opts = reporter.lastCall.args[1];
+        expect(opts.host).to.equal('https://custom.domain.com');
+    });
+
+    it('supports ignoreWindowError', (done) => {
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            reporter: reporter,
+            ignoreWindowError: true,
+        });
+        let promise = client.notify({
+            error: new Error('test'),
+            context: {
+                windowError: true,
+            },
+        });
+
+        expect(reporter).to.not.have.been.called;
+        promise.catch((err: Error) => {
+            expect(err.toString()).to.equal('Error: airbrake: window error is ignored');
+            done();
+        });
+    });
+});
+
+
 describe('Client', () => {
     let reporter, client: Client;
     let err = new Error('test');
@@ -12,7 +86,11 @@ describe('Client', () => {
         reporter = sinon.spy(() => {
             return Promise.resolve({id: 1});
         });
-        client = new Client({reporter: reporter});
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            reporter: reporter,
+        });
     });
 
     afterEach(() => {
@@ -156,26 +234,6 @@ describe('Client', () => {
                     'Error: airbrake: got err="", wanted an Error');
                 done();
             });
-        });
-
-        it('calls reporter with valid options', () => {
-            client.setProject(999, 'custom_project_key');
-            client.notify(err);
-
-            expect(reporter).to.have.been.called;
-            let opts = reporter.lastCall.args[1];
-            expect(opts.projectId).to.equal(999);
-            expect(opts.projectKey).to.equal('custom_project_key');
-            expect(opts.host).to.equal('https://api.airbrake.io');
-            expect(opts.timeout).to.equal(10000);
-        });
-
-        it('reporter is called with custom host', () => {
-            client.setHost('https://custom.domain.com');
-            client.notify(err);
-
-            let opts = reporter.lastCall.args[1];
-            expect(opts.host).to.equal('https://custom.domain.com');
         });
 
         it('reports severity', () => {
@@ -523,32 +581,6 @@ describe('Client', () => {
                 expect(reporter).not.to.have.been.called;
                 done();
             }, 0);
-        });
-    });
-});
-
-describe('ignoreWindowError', () => {
-    let reporter, client: Client;
-
-    beforeEach(() => {
-        reporter = sinon.spy(() => {
-            return Promise.resolve({id: 1});
-        });
-        client = new Client({reporter: reporter, ignoreWindowError: true});
-    });
-
-    it('ignores context.windowError', (done) => {
-        let promise = client.notify({
-            error: new Error('test'),
-            context: {
-                windowError: true,
-            },
-        });
-
-        expect(reporter).to.not.have.been.called;
-        promise.catch((err: Error) => {
-            expect(err.toString()).to.equal('Error: airbrake: window error is ignored');
-            done();
         });
     });
 });

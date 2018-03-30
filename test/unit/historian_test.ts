@@ -25,7 +25,12 @@ describe('instrumentation', () => {
         reporter = sinon.spy(() => {
             return Promise.resolve({id: 1});
         });
-        client = new Client({processor: processor, reporter: reporter});
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            processor: processor,
+            reporter: reporter,
+        });
     });
 
     describe('location', () => {
