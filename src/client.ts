@@ -1,5 +1,6 @@
-import Promise from './promise';
-import {Notice, AirbrakeError} from './notice';
+import 'promise-polyfill/src/polyfill';
+
+import Notice from './notice';
 import FuncWrapper from './func_wrapper';
 
 import Processor from './processor/processor';
@@ -13,34 +14,48 @@ import angularMessageFilter from './filter/angular_message';
 import windowFilter from './filter/window';
 import nodeFilter from './filter/node';
 
-import {Reporter, ReporterOptions, detectReporter} from './reporter/reporter';
+import {Reporter, ReporterOptions, defaultReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
 import nodeReporter from './reporter/node';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {historian, getHistory} from './instrumentation/historian';
+import {historian, getHistory} from './historian';
 
 
 declare const VERSION: string;
+
+
+interface Todo {
+    err: any;
+    resolve: (Notice) => void;
+    reject: (Error) => void;
+}
+
 
 class Client {
     private opts: ReporterOptions = {} as ReporterOptions;
 
     private processor: Processor;
-    private reporters: Reporter[] = [];
+    private reporter: Reporter;
     private filters: Filter[] = [];
 
     private offline = false;
-    private errors: any[] = [];
+    private todo: Todo[] = [];
+
+    private onClose: (() => void)[] = [];
 
     constructor(opts: any = {}) {
+        if (!opts.projectId || !opts.projectKey) {
+            throw new Error('airbrake: projectId and projectKey are required');
+        }
+
         this.opts = opts;
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
 
         this.processor = opts.processor || stacktracejsProcessor;
-        this.addReporter(opts.reporter || detectReporter(opts));
+        this.setReporter(opts.reporter || defaultReporter());
 
         this.addFilter(ignoreFilter);
         this.addFilter(makeDebounceFilter());
@@ -51,10 +66,21 @@ class Client {
             this.addFilter(windowFilter);
 
             if (window.addEventListener) {
-                window.addEventListener('online', this.onOnline.bind(this));
-                window.addEventListener('offline', () => this.offline = true);
+                this.onOnline = this.onOnline.bind(this);
+                window.addEventListener('online', this.onOnline);
+                this.onOffline = this.onOffline.bind(this);
+                window.addEventListener('offline', this.onOffline);
+
+                this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
                 window.addEventListener(
-                    'unhandledrejection', this.onUnhandledrejection.bind(this));
+                    'unhandledrejection', this.onUnhandledrejection);
+
+                this.onClose.push(() => {
+                    window.removeEventListener('online', this.onOnline);
+                    window.removeEventListener('offline', this.onOffline);
+                    window.removeEventListener(
+                        'unhandledrejection', this.onUnhandledrejection);
+                });
             }
         } else {
             this.addFilter(nodeFilter);
@@ -63,66 +89,67 @@ class Client {
         historian.registerNotifier(this);
     }
 
-    setProject(id: number, key: string): void {
-        this.opts.projectId = id;
-        this.opts.projectKey = key;
+    close(): void {
+        for (let fn of this.onClose) {
+            fn();
+        }
     }
 
-    setHost(host: string) {
-        this.opts.host = host;
-    }
-
-    addReporter(name: string|Reporter): void {
-        let reporter: Reporter;
+    private setReporter(name: string|Reporter): void {
         switch (name) {
         case 'fetch':
-            reporter = fetchReporter;
+            this.reporter = fetchReporter;
             break;
         case 'node':
-            reporter = nodeReporter;
+            this.reporter = nodeReporter;
             break;
         case 'xhr':
-            reporter = xhrReporter;
+            this.reporter = xhrReporter;
             break;
         case 'jsonp':
-            reporter = jsonpReporter;
+            this.reporter = jsonpReporter;
             break;
         default:
-            reporter = name as Reporter;
+            this.reporter = name as Reporter;
         }
-        this.reporters.push(reporter);
     }
 
     addFilter(filter: Filter): void {
         this.filters.push(filter);
     }
 
-    notify(err: any): Promise {
+    notify(err: any): Promise<Notice> {
         if (typeof err !== 'object' || err.error === undefined) {
             err = {error: err};
         }
-        let promise = err.promise || new Promise();
 
         if (!err.error) {
             let reason = new Error(
-                `airbrake-js: got err=${JSON.stringify(err.error)}, wanted an Error`);
-            promise.reject(reason);
-            return promise;
+                `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`);
+            return Promise.reject(reason);
         }
 
         if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
-            let reason = new Error('airbrake-js: window error is ignored');
-            promise.reject(reason);
-            return promise;
+            let reason = new Error('airbrake: window error is ignored');
+            return Promise.reject(reason);
         }
 
         if (this.offline) {
-            err.promise = promise;
-            this.errors.push(err);
-            if (this.errors.length > 100) {
-                this.errors.slice(-100);
-            }
-            return promise;
+            return new Promise((resolve, reject) => {
+                this.todo.push({
+                    err: err,
+                    resolve: resolve,
+                    reject: reject,
+                });
+                while (this.todo.length > 100) {
+                    let j = this.todo.shift();
+                    if (j === undefined) {
+                        break;
+                    }
+                    let reason = new Error('airbrake: offline queue is too large');
+                    j.reject(reason);
+                }
+            });
         }
 
         let notice: Notice = {
@@ -147,24 +174,19 @@ class Client {
             notice.context.history = history;
         }
 
-        this.processor(err.error, (_: string, error: AirbrakeError): void => {
-            notice.errors.push(error);
+        let error = this.processor(err.error);
+        notice.errors.push(error);
 
-            for (let filter of this.filters) {
-                let r = filter(notice);
-                if (r === null) {
-                    promise.reject(new Error('airbrake-js: error is filtered'));
-                    return;
-                }
-                notice = r;
+        for (let filter of this.filters) {
+            let r = filter(notice);
+            if (r === null) {
+                let reason = new Error('airbrake: error is filtered');
+                return Promise.reject(reason);
             }
+            notice = r;
+        }
 
-            for (let reporter of this.reporters) {
-                reporter(notice, this.opts, promise);
-            }
-        });
-
-        return promise;
+        return this.reporter(notice, this.opts);
     }
 
     wrap(fn): FuncWrapper {
@@ -219,14 +241,26 @@ class Client {
     private onOnline(): void {
         this.offline = false;
 
-        for (let err of this.errors) {
-            this.notify(err);
+        for (let j of this.todo) {
+            this.notify(j.err).then((notice) => {
+                j.resolve(notice);
+            }).catch((reason) => {
+                j.reject(reason);
+            });
         }
-        this.errors = [];
+        this.todo = [];
     }
 
-    private onUnhandledrejection(event: PromiseRejectionEvent): void {
-        this.notify(event.reason);
+    private onOffline(): void {
+        this.offline = true;
+    }
+
+    private onUnhandledrejection(e: PromiseRejectionEvent): void {
+        let msg = e.reason.message || String(e.reason);
+        if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
+            return;
+        }
+        this.notify(e.reason);
     }
 }
 

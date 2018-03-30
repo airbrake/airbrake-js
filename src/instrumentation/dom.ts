@@ -1,4 +1,4 @@
-import Historian from './historian';
+import Historian from '../historian';
 
 
 const elemAttrs = ['type', 'name', 'src'];

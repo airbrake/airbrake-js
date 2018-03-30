@@ -1,19 +1,19 @@
-export interface AirbrakeFrame {
+export interface NoticeFrame {
     function: string;
     file: string;
     line: number;
     column: number;
 }
 
-export interface AirbrakeError {
+export interface NoticeError {
     type: string;
     message: string;
-    backtrace: AirbrakeFrame[];
+    backtrace: NoticeFrame[];
 }
 
 export interface Notice {
     id?: string;
-    errors: AirbrakeError[];
+    errors: NoticeError[];
     context?: any;
     params?: any;
     session?: any;

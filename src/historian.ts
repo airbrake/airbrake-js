@@ -1,7 +1,7 @@
-import FuncWrapper from '../func_wrapper';
-import Notifier from '../notifier';
-import {Promise as MyPromise} from '../promise';
-import {makeEventHandler} from './dom';
+import FuncWrapper from './func_wrapper';
+import Notice from './notice';
+import Notifier from './notifier';
+import {makeEventHandler} from './instrumentation/dom';
 
 
 interface XMLHttpRequestWithState extends XMLHttpRequest {
@@ -54,7 +54,7 @@ export default class Historian {
         } catch {}
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', (err) => {
-                this.notify(err).finally(() => {
+                let exit = () => {
                     if (p.listeners('uncaughtException').length !== 1) {
                         return;
                     }
@@ -62,7 +62,8 @@ export default class Historian {
                         this.consoleError('uncaught exception', err);
                     }
                     p.exit(1);
-                });
+                };
+                this.notify(err).then(exit).catch(exit);
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
                 this.notify(reason);
@@ -86,7 +87,7 @@ export default class Historian {
         this.errors = [];
     }
 
-    notify(err: any): MyPromise {
+    notify(err: any): Promise<Notice> {
         if (this.notifiers.length > 0) {
             return this.notifyNotifiers(err);
         }
@@ -96,15 +97,17 @@ export default class Historian {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
 
-        return new MyPromise().resolve(null);
+        return Promise.resolve({} as Notice);
     }
 
-    private notifyNotifiers(err: any): MyPromise {
-        let promises: MyPromise[] = [];
+    private notifyNotifiers(err: any): Promise<Notice> {
+        let promises: Promise<Notice>[] = [];
         for (let notifier of this.notifiers) {
             promises.push(notifier.notify(err));
         }
-        return MyPromise.all(promises);
+        return Promise.all(promises).then((notices) => {
+            return notices[0];
+        });
     }
 
     onerror(

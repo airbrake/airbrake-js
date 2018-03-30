@@ -52,7 +52,7 @@ export default function jsonifyNotice(notice: Notice, maxLength = 64000): string
     }
 
     let err = new Error(
-        `airbrake-js: notice exceeds max length and can't be truncated`);
+        `airbrake: notice exceeds max length and can't be truncated`);
     (err as any).params = params;
     throw err;
 }

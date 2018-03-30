@@ -1,4 +1,3 @@
-import Promise from '../../../src/promise';
 import Notice from '../../../src/notice';
 import reporter from '../../../src/reporter/jsonp';
 import * as sinon from 'sinon';
@@ -24,7 +23,7 @@ describe('JSONP reporter', () => {
             projectKey: '[project_key]',
             host: 'https://custom.domain.com',
             timeout: 1000,
-        }, new Promise());
+        });
         expect(head.appendChild).to.have.been.called;
     });
 });

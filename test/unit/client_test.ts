@@ -1,6 +1,81 @@
 import Client = require('../../src/client');
+
 import * as sinon from 'sinon';
 import { expect } from './sinon_chai';
+
+
+describe('Client config', () => {
+    let reporter, client: Client;
+    let err = new Error('test');
+
+    beforeEach(() => {
+        reporter = sinon.spy(() => {
+            return Promise.resolve({id: 1});
+        });
+    });
+
+    afterEach(() => {
+        if (client) {
+            client.close();
+        }
+    });
+
+    it('throws when projectId or projectKey are missing', () => {
+        expect(() => {
+            new Client();
+        }).to.throw('airbrake: projectId and projectKey are required');
+    });
+
+    it('calls reporter with valid options', () => {
+        client = new Client({
+            projectId: 999,
+            projectKey: 'custom_project_key',
+            reporter: reporter,
+        });
+        client.notify(err);
+
+        expect(reporter).to.have.been.called;
+        let opts = reporter.lastCall.args[1];
+        expect(opts.projectId).to.equal(999);
+        expect(opts.projectKey).to.equal('custom_project_key');
+        expect(opts.host).to.equal('https://api.airbrake.io');
+        expect(opts.timeout).to.equal(10000);
+    });
+
+    it('reporter is called with custom host', () => {
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            host: 'https://custom.domain.com',
+            reporter: reporter,
+        });
+        client.notify(err);
+
+        let opts = reporter.lastCall.args[1];
+        expect(opts.host).to.equal('https://custom.domain.com');
+    });
+
+    it('supports ignoreWindowError', (done) => {
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            reporter: reporter,
+            ignoreWindowError: true,
+        });
+        let promise = client.notify({
+            error: new Error('test'),
+            context: {
+                windowError: true,
+            },
+        });
+
+        expect(reporter).to.not.have.been.called;
+        promise.catch((err: Error) => {
+            expect(err.toString()).to.equal('Error: airbrake: window error is ignored');
+            done();
+        });
+    });
+});
 
 
 describe('Client', () => {
@@ -8,10 +83,18 @@ describe('Client', () => {
     let err = new Error('test');
 
     beforeEach(() => {
-        reporter = sinon.spy((_, __, promise) => {
-            promise.resolve({id: 1});
+        reporter = sinon.spy(() => {
+            return Promise.resolve({id: 1});
         });
-        client = new Client({reporter: reporter});
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            reporter: reporter,
+        });
+    });
+
+    afterEach(() => {
+        client.close();
     });
 
     describe('filter', () => {
@@ -116,27 +199,28 @@ describe('Client', () => {
     });
 
     describe('notify', () => {
-        it('returns promise and resolves it', () => {
-            let promise = client.notify(err);
-            let onResolved = sinon.spy();
-            promise.then(onResolved);
-            expect(onResolved).to.have.been.called;
-        });
-
         it('calls reporter', () => {
             client.notify(err);
             expect(reporter).to.have.been.called;
         });
 
+        it('returns promise and resolves it', (done) => {
+            let promise = client.notify(err);
+            let onResolved = sinon.spy();
+            promise.then(onResolved);
+            setTimeout(() => {
+                expect(onResolved).to.have.been.called;
+                done();
+            }, 0);
+        });
+
         it('does not report same error twice', (done) => {
-            for (let i = 0; i < 10; i++) {
-                client.notify(err);
-            }
+            client.notify(err);
             expect(reporter).to.have.been.calledOnce;
 
             let promise = client.notify(err);
             promise.catch((err: Error) => {
-                expect(err.toString()).to.equal('Error: airbrake-js: error is filtered');
+                expect(err.toString()).to.equal('Error: airbrake: error is filtered');
                 done();
             });
         });
@@ -147,29 +231,9 @@ describe('Client', () => {
 
             promise.catch((err: Error) => {
                 expect(err.toString()).to.equal(
-                    'Error: airbrake-js: got err="", wanted an Error');
+                    'Error: airbrake: got err="", wanted an Error');
                 done();
             });
-        });
-
-        it('calls reporter with valid options', () => {
-            client.setProject(999, 'custom_project_key');
-            client.notify(err);
-
-            expect(reporter).to.have.been.called;
-            let opts = reporter.lastCall.args[1];
-            expect(opts.projectId).to.equal(999);
-            expect(opts.projectKey).to.equal('custom_project_key');
-            expect(opts.host).to.equal('https://api.airbrake.io');
-            expect(opts.timeout).to.equal(10000);
-        });
-
-        it('reporter is called with custom host', () => {
-            client.setHost('https://custom.domain.com');
-            client.notify(err);
-
-            let opts = reporter.lastCall.args[1];
-            expect(opts.host).to.equal('https://custom.domain.com');
         });
 
         it('reports severity', () => {
@@ -273,7 +337,7 @@ describe('Client', () => {
 
                 promise.catch((err: Error) => {
                     expect(err.toString()).to.equal(
-                        'Error: airbrake-js: got err=null, wanted an Error');
+                        'Error: airbrake: got err=null, wanted an Error');
                     done();
                 });
             });
@@ -386,15 +450,6 @@ describe('Client', () => {
         });
     });
 
-    describe('custom reporter', () => {
-        it('is called on error', () => {
-            let custom_reporter = sinon.spy();
-            client.addReporter(custom_reporter);
-            client.notify(err);
-            expect(custom_reporter).to.have.been.called;
-        });
-    });
-
     describe('wrap', () => {
         it('does not invoke function immediately', () => {
             let fn = sinon.spy();
@@ -410,7 +465,7 @@ describe('Client', () => {
             expect(fn.lastCall.args).to.deep.equal(['hello', 'world']);
         });
 
-        it('sets __airbrake and __inner properties', () => {
+        it('sets _airbrake and inner properties', () => {
             let fn = sinon.spy();
             let wrapper = client.wrap(fn);
             expect(wrapper._airbrake).to.equal(true);
@@ -496,50 +551,36 @@ describe('Client', () => {
                 expect(reporter).to.have.been.called;
             });
 
-            it('resolves promise', () => {
-                expect(spy).to.have.been.called;
+            it('resolves promise', (done) => {
+                setTimeout(() => {
+                    expect(spy).to.have.been.called;
+                    done();
+                }, 0);
             });
         });
     });
 
     describe('unhandledrejection event', () => {
-        beforeEach(() => {
+        it('notifies about unhandled rejection', (done) => {
             new Promise((_resolve, reject) => {
                 reject(err);
             });
-        });
 
-        it('notifies about unhandled rejection', (done) => {
             setTimeout(() => {
                 expect(reporter).to.have.been.called;
                 done();
             }, 0);
         });
-    });
-});
 
-describe('ignoreWindowError', () => {
-    let reporter, client: Client;
+        it('does not notify about airbrake rejections', (done) => {
+            new Promise((_resolve, reject) => {
+                reject(new Error('airbrake: test'));
+            });
 
-    beforeEach(() => {
-        reporter = sinon.spy((_, __, promise) => {
-            promise.resolve({id: 1});
-        });
-        client = new Client({reporter: reporter, ignoreWindowError: true});
-    });
-
-    it('ignores context.windowError', (done) => {
-        let promise = client.notify({
-            error: new Error('test'),
-            context: {
-                windowError: true,
-            },
-        });
-
-        expect(reporter).to.not.have.been.called;
-        promise.catch((err: Error) => {
-            expect(err.toString()).to.equal('Error: airbrake-js: window error is ignored');
-            done();
+            setTimeout(() => {
+                expect(reporter).not.to.have.been.called;
+                done();
+            }, 0);
         });
     });
 });
