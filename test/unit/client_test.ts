@@ -582,5 +582,32 @@ describe('Client', () => {
                 done();
             }, 0);
         });
+
+        it('notifies about errors thrown in Promise.then', (done) => {
+            Promise.resolve(null).then(() => {
+                throw err;
+            });
+
+            setTimeout(() => {
+                expect(reporter).to.have.been.called;
+                done();
+            }, 0);
+        });
+
+        it('notifies about errors thrown in Promise.catch', (done) => {
+            let p = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(null);
+                }, 0);
+            });
+            p.catch(() => {
+                throw err;
+            });
+
+            setTimeout(() => {
+                expect(reporter).to.have.been.called;
+                done();
+            }, 10);
+        });
     });
 });

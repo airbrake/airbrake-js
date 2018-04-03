@@ -8,6 +8,7 @@ interface XMLHttpRequestWithState extends XMLHttpRequest {
     __state: any;
 }
 
+
 export default class Historian {
     private historyMaxLen = 20;
 
@@ -78,13 +79,20 @@ export default class Historian {
         }
     }
 
-    registerNotifier(n: Notifier) {
-        this.notifiers.push(n);
+    registerNotifier(notifier: Notifier) {
+        this.notifiers.push(notifier);
 
         for (let err of this.errors) {
             this.notifyNotifiers(err);
         }
         this.errors = [];
+    }
+
+    unregisterNotifier(notifier: Notifier) {
+        let i = this.notifiers.indexOf(notifier);
+        if (i !== -1) {
+            this.notifiers.splice(i, 1);
+        }
     }
 
     notify(err: any): Promise<Notice> {
