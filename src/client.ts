@@ -93,6 +93,7 @@ class Client {
         for (let fn of this.onClose) {
             fn();
         }
+        historian.unregisterNotifier(this);
     }
 
     private setReporter(name: string|Reporter): void {
@@ -189,7 +190,8 @@ class Client {
         return this.reporter(notice, this.opts);
     }
 
-    wrap(fn): FuncWrapper {
+    // TODO: fix wrapping for multiple clients
+    wrap(fn, props: string[] = []): FuncWrapper {
         if (fn._airbrake) {
             return fn;
         }
@@ -208,6 +210,11 @@ class Client {
         } as FuncWrapper;
 
         for (let prop in fn) {
+            if (fn.hasOwnProperty(prop)) {
+                airbrakeWrapper[prop] = fn[prop];
+            }
+        }
+        for (let prop of props) {
             if (fn.hasOwnProperty(prop)) {
                 airbrakeWrapper[prop] = fn[prop];
             }
