@@ -28,7 +28,9 @@ function newConfig() {
     output: {
       filename: '[name].js',
       path: path.resolve(__dirname, 'dist'),
-      libraryTarget: 'umd'
+      libraryTarget: 'umd',
+      // https://github.com/webpack/webpack/issues/6525
+      globalObject: 'typeof self !== \'undefined\' ? self : this',
     },
 
     node: {
