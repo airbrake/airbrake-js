@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "Notify Airbrake on JavaScript exceptions",
   "author": "Airbrake",
   "license": "MIT",
@@ -18,7 +18,7 @@
     "@types/chai": "4.1.2",
     "@types/mocha": "5.0.0",
     "@types/request": "2.47.0",
-    "@types/sinon": "4.3.0",
+    "@types/sinon": "4.3.1",
     "@types/sinon-chai": "2.7.29",
     "chai": "4.1.2",
     "error-stack-parser": "2.0.1",
@@ -31,17 +31,17 @@
     "karma-spec-reporter": "0.0.32",
     "karma-webpack": "3.0.0",
     "mocha": "5.0.5",
-    "promise-polyfill": "^7.1.1",
+    "promise-polyfill": "^7.1.2",
     "puppeteer": "^1.2.0",
-    "sinon": "4.4.9",
+    "sinon": "4.5.0",
     "sinon-chai": "3.0.0",
     "source-map-loader": "0.2.3",
     "ts-loader": "4.1.0",
     "tslint": "5.9.1",
     "tslint-loader": "3.6.0",
     "typescript": "2.8.1",
-    "webpack": "4.4.1",
-    "webpack-cli": "^2.0.13"
+    "webpack": "4.5.0",
+    "webpack-cli": "^2.0.14"
   },
   "main": "dist/client.js",
   "files": [

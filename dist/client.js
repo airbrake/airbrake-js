@@ -1,4 +1,4 @@
-/*! airbrake-js v1.0.7 */
+/*! airbrake-js v1.1.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -55,6 +55,11 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 		}
 /******/ 	};
 /******/
+/******/ 	// define __esModule on exports
+/******/ 	__webpack_require__.r = function(exports) {
+/******/ 		Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 	};
+/******/
 /******/ 	// getDefaultExport function for compatibility with non-harmony modules
 /******/ 	__webpack_require__.n = function(module) {
 /******/ 		var getter = module && module.__esModule ?
@@ -70,671 +75,18 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
+/******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */
-/***/ (function(module, exports, __webpack_require__) {
+/******/ ({
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function detectReporter(_opts) {
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
-    return 'node';
-}
-exports.detectReporter = detectReporter;
-exports.errors = {
-    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
-    ipRateLimited: new Error('airbrake: IP is rate limited'),
-};
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var maxObjectLength = 128;
-// jsonifyNotice serializes notice to JSON and truncates params,
-// environment and session keys.
-function jsonifyNotice(notice, maxLength) {
-    if (maxLength === void 0) { maxLength = 64000; }
-    var s = '';
-    try {
-        s = JSON.stringify(notice);
-    }
-    catch (_) { }
-    if (s !== '' && s.length < maxLength) {
-        return s;
-    }
-    if (notice.errors) {
-        for (var i in notice.errors) {
-            var t = new Truncator();
-            notice.errors[i] = t.truncate(notice.errors[i]);
-        }
-    }
-    var keys = ['context', 'params', 'environment', 'session'];
-    for (var level = 0; level < 8; level++) {
-        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-            var key = keys_1[_i];
-            var obj = notice[key];
-            if (obj) {
-                notice[key] = truncateObject(obj, level);
-            }
-        }
-        s = JSON.stringify(notice);
-        if (s.length < maxLength) {
-            return s;
-        }
-    }
-    var params = {
-        json: s.slice(0, Math.floor(maxLength / 2)) + '...',
-    };
-    keys.push('errors');
-    for (var _a = 0, keys_2 = keys; _a < keys_2.length; _a++) {
-        var key = keys_2[_a];
-        var obj = notice[key];
-        if (!obj) {
-            continue;
-        }
-        s = JSON.stringify(obj);
-        params[key] = s.length;
-    }
-    var err = new Error("airbrake-js: notice exceeds max length and can't be truncated");
-    err.params = params;
-    throw err;
-}
-exports.default = jsonifyNotice;
-// truncateObject truncates each key in the object separately, which is
-// useful for handling circular references.
-function truncateObject(obj, level) {
-    var maxLength = scale(maxObjectLength, level);
-    var dst = {};
-    var length = 0;
-    for (var key in obj) {
-        dst[key] = truncate(obj[key], level);
-        length++;
-        if (length >= maxLength) {
-            break;
-        }
-    }
-    return dst;
-}
-function scale(num, level) {
-    return (num >> level) || 1;
-}
-function truncate(value, level) {
-    var t = new Truncator(level);
-    return t.truncate(value);
-}
-exports.truncate = truncate;
-var Truncator = /** @class */ (function () {
-    function Truncator(level) {
-        if (level === void 0) { level = 0; }
-        this.maxStringLength = 1024;
-        this.maxObjectLength = maxObjectLength;
-        this.maxArrayLength = maxObjectLength;
-        this.maxDepth = 8;
-        this.keys = [];
-        this.seen = [];
-        this.maxStringLength = scale(this.maxStringLength, level);
-        this.maxObjectLength = scale(this.maxObjectLength, level);
-        this.maxArrayLength = scale(this.maxArrayLength, level);
-        this.maxDepth = scale(this.maxDepth, level);
-    }
-    Truncator.prototype.truncate = function (value, key, depth) {
-        if (key === void 0) { key = ''; }
-        if (depth === void 0) { depth = 0; }
-        if (value === null || value === undefined) {
-            return value;
-        }
-        switch (typeof value) {
-            case 'boolean':
-            case 'number':
-            case 'function':
-                return value;
-            case 'string':
-                return this.truncateString(value);
-            case 'object':
-                break;
-            default:
-                return String(value);
-        }
-        if (value instanceof String) {
-            return this.truncateString(value.toString());
-        }
-        if (value instanceof Boolean ||
-            value instanceof Number ||
-            value instanceof Date ||
-            value instanceof RegExp) {
-            return value;
-        }
-        if (value instanceof Error) {
-            return value.toString();
-        }
-        if (this.seen.indexOf(value) >= 0) {
-            return "[Circular " + this.getPath(value) + "]";
-        }
-        var type = objectType(value);
-        depth++;
-        if (depth > this.maxDepth) {
-            return "[Truncated " + type + "]";
-        }
-        this.keys.push(key);
-        this.seen.push(value);
-        switch (type) {
-            case 'Array':
-                return this.truncateArray(value, depth);
-            case 'Object':
-                return this.truncateObject(value, depth);
-            default:
-                var saved = this.maxDepth;
-                this.maxDepth = 0;
-                var obj = this.truncateObject(value, depth);
-                obj.__type = type;
-                this.maxDepth = saved;
-                return obj;
-        }
-    };
-    Truncator.prototype.getPath = function (value) {
-        var index = this.seen.indexOf(value);
-        var path = [this.keys[index]];
-        for (var i = index; i >= 0; i--) {
-            var sub = this.seen[i];
-            if (sub && getAttr(sub, path[0]) === value) {
-                value = sub;
-                path.unshift(this.keys[i]);
-            }
-        }
-        return '~' + path.join('.');
-    };
-    Truncator.prototype.truncateString = function (s) {
-        if (s.length > this.maxStringLength) {
-            return s.slice(0, this.maxStringLength) + '...';
-        }
-        return s;
-    };
-    Truncator.prototype.truncateArray = function (arr, depth) {
-        if (depth === void 0) { depth = 0; }
-        var length = 0;
-        var dst = [];
-        for (var i in arr) {
-            var el = arr[i];
-            dst.push(this.truncate(el, i, depth));
-            length++;
-            if (length >= this.maxArrayLength) {
-                break;
-            }
-        }
-        return dst;
-    };
-    Truncator.prototype.truncateObject = function (obj, depth) {
-        if (depth === void 0) { depth = 0; }
-        var length = 0;
-        var dst = {};
-        for (var attr in obj) {
-            var value = getAttr(obj, attr);
-            if (value === undefined || typeof value === 'function') {
-                continue;
-            }
-            dst[attr] = this.truncate(value, attr, depth);
-            length++;
-            if (length >= this.maxObjectLength) {
-                break;
-            }
-        }
-        return dst;
-    };
-    return Truncator;
-}());
-function getAttr(obj, attr) {
-    // Ignore browser specific exception trying to read attribute (#79).
-    try {
-        return obj[attr];
-    }
-    catch (_) {
-        return;
-    }
-}
-function objectType(obj) {
-    var s = Object.prototype.toString.apply(obj);
-    return s.slice('[object '.length, -1);
-}
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Promise = /** @class */ (function () {
-    function Promise(executor) {
-        this.onResolved = [];
-        this.onRejected = [];
-        this.onFinally = [];
-        if (executor) {
-            executor(this.resolve.bind(this), this.reject.bind(this));
-        }
-    }
-    Promise.all = function (promises) {
-        var promise = new Promise();
-        var values = [];
-        var onResolved = function (value) {
-            values.push(value);
-            if (values.length === promises.length) {
-                promise.resolve(values);
-            }
-        };
-        var promiseRejected = false;
-        var onRejected = function (reason) {
-            if (promiseRejected) {
-                return;
-            }
-            promiseRejected = true;
-            promise.reject(reason);
-        };
-        for (var _i = 0, promises_1 = promises; _i < promises_1.length; _i++) {
-            var p = promises_1[_i];
-            p.then(onResolved, onRejected);
-        }
-        return promise;
-    };
-    Promise.prototype.then = function (onResolved, onRejected) {
-        if (onResolved) {
-            if (this.resolvedWith !== undefined) {
-                onResolved(this.resolvedWith);
-            }
-            else {
-                this.onResolved.push(onResolved);
-            }
-        }
-        if (onRejected) {
-            if (this.rejectedWith !== undefined) {
-                onRejected(this.rejectedWith);
-            }
-            else {
-                this.onRejected.push(onRejected);
-            }
-        }
-        return this;
-    };
-    Promise.prototype.catch = function (onRejected) {
-        if (this.rejectedWith !== undefined) {
-            onRejected(this.rejectedWith);
-        }
-        else {
-            this.onRejected.push(onRejected);
-        }
-        return this;
-    };
-    Promise.prototype.finally = function (onFinally) {
-        if (this.resolvedWith !== undefined ||
-            this.rejectedWith !== undefined) {
-            onFinally();
-        }
-        else {
-            this.onFinally.push(onFinally);
-        }
-        return this;
-    };
-    Promise.prototype.resolve = function (value) {
-        if (this.resolvedWith !== undefined ||
-            this.rejectedWith !== undefined) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.resolvedWith = value;
-        for (var _i = 0, _a = this.onResolved; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(value);
-        }
-        this.callOnFinally();
-        return this;
-    };
-    Promise.prototype.reject = function (reason) {
-        if (this.resolvedWith !== undefined ||
-            this.rejectedWith !== undefined) {
-            throw new Error('Promise is already resolved or rejected');
-        }
-        this.rejectedWith = reason;
-        for (var _i = 0, _a = this.onRejected; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn(reason);
-        }
-        this.callOnFinally();
-        return this;
-    };
-    Promise.prototype.callOnFinally = function () {
-        for (var _i = 0, _a = this.onFinally; _i < _a.length; _i++) {
-            var fn = _a[_i];
-            fn();
-        }
-    };
-    return Promise;
-}());
-exports.Promise = Promise;
-exports.default = Promise;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-__webpack_require__(4);
-module.exports = __webpack_require__(5);
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-if (!Object.assign) {
-    Object.assign = function (target) {
-        var args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            args[_i - 1] = arguments[_i];
-        }
-        var _loop_1 = function (source) {
-            if (source) {
-                Object.keys(source).forEach(function (key) { return target[key] = source[key]; });
-            }
-        };
-        for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
-            var source = args_1[_a];
-            _loop_1(source);
-        }
-        return target;
-    };
-}
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-var promise_1 = __webpack_require__(2);
-var stacktracejs_1 = __webpack_require__(6);
-var ignore_1 = __webpack_require__(9);
-var debounce_1 = __webpack_require__(10);
-var uncaught_message_1 = __webpack_require__(11);
-var angular_message_1 = __webpack_require__(12);
-var window_1 = __webpack_require__(13);
-var node_1 = __webpack_require__(14);
-var reporter_1 = __webpack_require__(0);
-var fetch_1 = __webpack_require__(15);
-var node_2 = __webpack_require__(16);
-var xhr_1 = __webpack_require__(17);
-var jsonp_1 = __webpack_require__(18);
-var historian_1 = __webpack_require__(19);
-var Client = /** @class */ (function () {
-    function Client(opts) {
-        if (opts === void 0) { opts = {}; }
-        var _this = this;
-        this.opts = {};
-        this.reporters = [];
-        this.filters = [];
-        this.offline = false;
-        this.errors = [];
-        this.opts = opts;
-        this.opts.host = this.opts.host || 'https://api.airbrake.io';
-        this.opts.timeout = this.opts.timeout || 10000;
-        this.processor = opts.processor || stacktracejs_1.default;
-        this.addReporter(opts.reporter || reporter_1.detectReporter(opts));
-        this.addFilter(ignore_1.default);
-        this.addFilter(debounce_1.default());
-        this.addFilter(uncaught_message_1.default);
-        this.addFilter(angular_message_1.default);
-        if (typeof window === 'object') {
-            this.addFilter(window_1.default);
-            if (window.addEventListener) {
-                window.addEventListener('online', this.onOnline.bind(this));
-                window.addEventListener('offline', function () { return _this.offline = true; });
-            }
-        }
-        else {
-            this.addFilter(node_1.default);
-        }
-        historian_1.historian.registerNotifier(this);
-    }
-    Client.prototype.setProject = function (id, key) {
-        this.opts.projectId = id;
-        this.opts.projectKey = key;
-    };
-    Client.prototype.setHost = function (host) {
-        this.opts.host = host;
-    };
-    Client.prototype.addReporter = function (name) {
-        var reporter;
-        switch (name) {
-            case 'fetch':
-                reporter = fetch_1.default;
-                break;
-            case 'node':
-                reporter = node_2.default;
-                break;
-            case 'xhr':
-                reporter = xhr_1.default;
-                break;
-            case 'jsonp':
-                reporter = jsonp_1.default;
-                break;
-            default:
-                reporter = name;
-        }
-        this.reporters.push(reporter);
-    };
-    Client.prototype.addFilter = function (filter) {
-        this.filters.push(filter);
-    };
-    Client.prototype.notify = function (err) {
-        var _this = this;
-        if (typeof err !== 'object' || err.error === undefined) {
-            err = { error: err };
-        }
-        var promise = err.promise || new promise_1.default();
-        if (!err.error) {
-            var reason = new Error("airbrake-js: got err=" + JSON.stringify(err.error) + ", wanted an Error");
-            promise.reject(reason);
-            return promise;
-        }
-        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
-            var reason = new Error('airbrake-js: window error is ignored');
-            promise.reject(reason);
-            return promise;
-        }
-        if (this.offline) {
-            err.promise = promise;
-            this.errors.push(err);
-            if (this.errors.length > 100) {
-                this.errors.slice(-100);
-            }
-            return promise;
-        }
-        var notice = {
-            id: '',
-            errors: [],
-            context: Object.assign({
-                language: 'JavaScript',
-                severity: 'error',
-                notifier: {
-                    name: 'airbrake-js',
-                    version: "1.0.7",
-                    url: 'https://github.com/airbrake/airbrake-js',
-                },
-            }, err.context),
-            params: err.params || {},
-            environment: err.environment || {},
-            session: err.session || {},
-        };
-        var history = historian_1.getHistory();
-        if (history.length > 0) {
-            notice.context.history = history;
-        }
-        this.processor(err.error, function (_, error) {
-            notice.errors.push(error);
-            for (var _i = 0, _a = _this.filters; _i < _a.length; _i++) {
-                var filter = _a[_i];
-                var r = filter(notice);
-                if (r === null) {
-                    promise.reject(new Error('airbrake-js: error is filtered'));
-                    return;
-                }
-                notice = r;
-            }
-            for (var _b = 0, _c = _this.reporters; _b < _c.length; _b++) {
-                var reporter = _c[_b];
-                reporter(notice, _this.opts, promise);
-            }
-        });
-        return promise;
-    };
-    Client.prototype.wrap = function (fn) {
-        if (fn._airbrake) {
-            return fn;
-        }
-        var client = this;
-        var airbrakeWrapper = function () {
-            var fnArgs = Array.prototype.slice.call(arguments);
-            var wrappedArgs = client.wrapArguments(fnArgs);
-            try {
-                return fn.apply(this, wrappedArgs);
-            }
-            catch (err) {
-                client.notify({ error: err, params: { arguments: fnArgs } });
-                historian_1.historian.ignoreNextWindowError();
-                throw err;
-            }
-        };
-        for (var prop in fn) {
-            if (fn.hasOwnProperty(prop)) {
-                airbrakeWrapper[prop] = fn[prop];
-            }
-        }
-        airbrakeWrapper._airbrake = true;
-        airbrakeWrapper.inner = fn;
-        return airbrakeWrapper;
-    };
-    Client.prototype.wrapArguments = function (args) {
-        for (var i in args) {
-            var arg = args[i];
-            if (typeof arg === 'function') {
-                args[i] = this.wrap(arg);
-            }
-        }
-        return args;
-    };
-    Client.prototype.call = function (fn) {
-        var _args = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            _args[_i - 1] = arguments[_i];
-        }
-        var wrapper = this.wrap(fn);
-        return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
-    };
-    Client.prototype.onerror = function () {
-        historian_1.historian.onerror.apply(historian_1.historian, arguments);
-    };
-    Client.prototype.onOnline = function () {
-        this.offline = false;
-        for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
-            var err = _a[_i];
-            this.notify(err);
-        }
-        this.errors = [];
-    };
-    return Client;
-}());
-module.exports = Client;
-
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var ErrorStackParser = __webpack_require__(7);
-var hasConsole = typeof console === 'object' && console.warn;
-function parse(err) {
-    try {
-        return ErrorStackParser.parse(err);
-    }
-    catch (parseErr) {
-        if (hasConsole && err.stack) {
-            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
-        }
-    }
-    if (err.fileName) {
-        return [err];
-    }
-    return [];
-}
-function processor(err, cb) {
-    var backtrace = [];
-    if (!err.noStack) {
-        var frames_1 = parse(err);
-        if (frames_1.length === 0) {
-            try {
-                throw new Error('fake');
-            }
-            catch (fakeErr) {
-                frames_1 = parse(fakeErr);
-                frames_1.shift();
-                frames_1.shift();
-            }
-        }
-        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
-            var frame = frames_2[_i];
-            backtrace.push({
-                function: frame.functionName || '',
-                file: frame.fileName || '',
-                line: frame.lineNumber || 0,
-                column: frame.columnNumber || 0,
-            });
-        }
-    }
-    var type;
-    if (err.name) {
-        type = err.name;
-    }
-    else {
-        type = '';
-    }
-    var msg;
-    if (err.message) {
-        msg = String(err.message);
-    }
-    else {
-        msg = String(err);
-    }
-    cb('stacktracejs', {
-        type: type,
-        message: msg,
-        backtrace: backtrace,
-    });
-}
-exports.default = processor;
-
-
-/***/ }),
-/* 7 */
+/***/ "./node_modules/error-stack-parser/error-stack-parser.js":
+/*!***************************************************************!*\
+  !*** ./node_modules/error-stack-parser/error-stack-parser.js ***!
+  \***************************************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -748,10 +100,8 @@ var define = false;
     if (typeof define === 'function' && define.amd) {
         define('error-stack-parser', ['stackframe'], factory);
     } else if (true) {
-        module.exports = factory(__webpack_require__(8));
-    } else {
-        root.ErrorStackParser = factory(root.StackFrame);
-    }
+        module.exports = factory(__webpack_require__(/*! stackframe */ "./node_modules/stackframe/stackframe.js"));
+    } else {}
 }(this, function ErrorStackParser(StackFrame) {
     'use strict';
 
@@ -935,7 +285,572 @@ var define = false;
 
 
 /***/ }),
-/* 8 */
+
+/***/ "./node_modules/node-libs-browser/node_modules/timers-browserify/main.js":
+/*!*******************************************************************************!*\
+  !*** ./node_modules/node-libs-browser/node_modules/timers-browserify/main.js ***!
+  \*******************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {var apply = Function.prototype.apply;
+
+// DOM APIs, for completeness
+
+exports.setTimeout = function() {
+  return new Timeout(apply.call(setTimeout, window, arguments), clearTimeout);
+};
+exports.setInterval = function() {
+  return new Timeout(apply.call(setInterval, window, arguments), clearInterval);
+};
+exports.clearTimeout =
+exports.clearInterval = function(timeout) {
+  if (timeout) {
+    timeout.close();
+  }
+};
+
+function Timeout(id, clearFn) {
+  this._id = id;
+  this._clearFn = clearFn;
+}
+Timeout.prototype.unref = Timeout.prototype.ref = function() {};
+Timeout.prototype.close = function() {
+  this._clearFn.call(window, this._id);
+};
+
+// Does not start the time, just sets up the members needed.
+exports.enroll = function(item, msecs) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = msecs;
+};
+
+exports.unenroll = function(item) {
+  clearTimeout(item._idleTimeoutId);
+  item._idleTimeout = -1;
+};
+
+exports._unrefActive = exports.active = function(item) {
+  clearTimeout(item._idleTimeoutId);
+
+  var msecs = item._idleTimeout;
+  if (msecs >= 0) {
+    item._idleTimeoutId = setTimeout(function onTimeout() {
+      if (item._onTimeout)
+        item._onTimeout();
+    }, msecs);
+  }
+};
+
+// setimmediate attaches itself to the global object
+__webpack_require__(/*! setimmediate */ "./node_modules/setimmediate/setImmediate.js");
+// On some exotic environments, it's not clear which object `setimmeidate` was
+// able to install onto.  Search each possibility in the same order as the
+// `setimmediate` library.
+exports.setImmediate = (typeof self !== "undefined" && self.setImmediate) ||
+                       (typeof global !== "undefined" && global.setImmediate) ||
+                       (this && this.setImmediate);
+exports.clearImmediate = (typeof self !== "undefined" && self.clearImmediate) ||
+                         (typeof global !== "undefined" && global.clearImmediate) ||
+                         (this && this.clearImmediate);
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/promise-polyfill/src/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/promise-polyfill/src/index.js ***!
+  \****************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(setImmediate) {// Store setTimeout reference so promise-polyfill will be unaffected by
+// other code modifying setTimeout (like sinon.useFakeTimers())
+var setTimeoutFunc = setTimeout;
+
+function noop() {}
+
+// Polyfill for Function.prototype.bind
+function bind(fn, thisArg) {
+  return function() {
+    fn.apply(thisArg, arguments);
+  };
+}
+
+function Promise(fn) {
+  if (!(this instanceof Promise))
+    throw new TypeError('Promises must be constructed via new');
+  if (typeof fn !== 'function') throw new TypeError('not a function');
+  this._state = 0;
+  this._handled = false;
+  this._value = undefined;
+  this._deferreds = [];
+
+  doResolve(fn, this);
+}
+
+function handle(self, deferred) {
+  while (self._state === 3) {
+    self = self._value;
+  }
+  if (self._state === 0) {
+    self._deferreds.push(deferred);
+    return;
+  }
+  self._handled = true;
+  Promise._immediateFn(function() {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+    if (cb === null) {
+      (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
+      return;
+    }
+    var ret;
+    try {
+      ret = cb(self._value);
+    } catch (e) {
+      reject(deferred.promise, e);
+      return;
+    }
+    resolve(deferred.promise, ret);
+  });
+}
+
+function resolve(self, newValue) {
+  try {
+    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+    if (newValue === self)
+      throw new TypeError('A promise cannot be resolved with itself.');
+    if (
+      newValue &&
+      (typeof newValue === 'object' || typeof newValue === 'function')
+    ) {
+      var then = newValue.then;
+      if (newValue instanceof Promise) {
+        self._state = 3;
+        self._value = newValue;
+        finale(self);
+        return;
+      } else if (typeof then === 'function') {
+        doResolve(bind(then, newValue), self);
+        return;
+      }
+    }
+    self._state = 1;
+    self._value = newValue;
+    finale(self);
+  } catch (e) {
+    reject(self, e);
+  }
+}
+
+function reject(self, newValue) {
+  self._state = 2;
+  self._value = newValue;
+  finale(self);
+}
+
+function finale(self) {
+  if (self._state === 2 && self._deferreds.length === 0) {
+    Promise._immediateFn(function() {
+      if (!self._handled) {
+        Promise._unhandledRejectionFn(self._value);
+      }
+    });
+  }
+
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    handle(self, self._deferreds[i]);
+  }
+  self._deferreds = null;
+}
+
+function Handler(onFulfilled, onRejected, promise) {
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+  this.promise = promise;
+}
+
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, self) {
+  var done = false;
+  try {
+    fn(
+      function(value) {
+        if (done) return;
+        done = true;
+        resolve(self, value);
+      },
+      function(reason) {
+        if (done) return;
+        done = true;
+        reject(self, reason);
+      }
+    );
+  } catch (ex) {
+    if (done) return;
+    done = true;
+    reject(self, ex);
+  }
+}
+
+Promise.prototype['catch'] = function(onRejected) {
+  return this.then(null, onRejected);
+};
+
+Promise.prototype.then = function(onFulfilled, onRejected) {
+  var prom = new this.constructor(noop);
+
+  handle(this, new Handler(onFulfilled, onRejected, prom));
+  return prom;
+};
+
+Promise.prototype['finally'] = function(callback) {
+  var constructor = this.constructor;
+  return this.then(
+    function(value) {
+      return constructor.resolve(callback()).then(function() {
+        return value;
+      });
+    },
+    function(reason) {
+      return constructor.resolve(callback()).then(function() {
+        return constructor.reject(reason);
+      });
+    }
+  );
+};
+
+Promise.all = function(arr) {
+  return new Promise(function(resolve, reject) {
+    if (!arr || typeof arr.length === 'undefined')
+      throw new TypeError('Promise.all accepts an array');
+    var args = Array.prototype.slice.call(arr);
+    if (args.length === 0) return resolve([]);
+    var remaining = args.length;
+
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then;
+          if (typeof then === 'function') {
+            then.call(
+              val,
+              function(val) {
+                res(i, val);
+              },
+              reject
+            );
+            return;
+          }
+        }
+        args[i] = val;
+        if (--remaining === 0) {
+          resolve(args);
+        }
+      } catch (ex) {
+        reject(ex);
+      }
+    }
+
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i]);
+    }
+  });
+};
+
+Promise.resolve = function(value) {
+  if (value && typeof value === 'object' && value.constructor === Promise) {
+    return value;
+  }
+
+  return new Promise(function(resolve) {
+    resolve(value);
+  });
+};
+
+Promise.reject = function(value) {
+  return new Promise(function(resolve, reject) {
+    reject(value);
+  });
+};
+
+Promise.race = function(values) {
+  return new Promise(function(resolve, reject) {
+    for (var i = 0, len = values.length; i < len; i++) {
+      values[i].then(resolve, reject);
+    }
+  });
+};
+
+// Use polyfill for setImmediate for performance gains
+Promise._immediateFn =
+  (typeof setImmediate === 'function' &&
+    function(fn) {
+      setImmediate(fn);
+    }) ||
+  function(fn) {
+    setTimeoutFunc(fn, 0);
+  };
+
+Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+  if (typeof console !== 'undefined' && console) {
+    console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
+  }
+};
+
+/* harmony default export */ __webpack_exports__["default"] = (Promise);
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../node-libs-browser/node_modules/timers-browserify/main.js */ "./node_modules/node-libs-browser/node_modules/timers-browserify/main.js").setImmediate))
+
+/***/ }),
+
+/***/ "./node_modules/promise-polyfill/src/polyfill.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/promise-polyfill/src/polyfill.js ***!
+  \*******************************************************/
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* WEBPACK VAR INJECTION */(function(global) {/* harmony import */ var _index__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./index */ "./node_modules/promise-polyfill/src/index.js");
+
+
+var globalNS = (function() {
+  // the only reliable means to get the global object is
+  // `Function('return this')()`
+  // However, this causes CSP violations in Chrome apps.
+  if (typeof self !== 'undefined') {
+    return self;
+  }
+  if (typeof window !== 'undefined') {
+    return window;
+  }
+  if (typeof global !== 'undefined') {
+    return global;
+  }
+  throw new Error('unable to locate global object');
+})();
+
+if (!globalNS.Promise) {
+  globalNS.Promise = _index__WEBPACK_IMPORTED_MODULE_0__["default"];
+}
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/setimmediate/setImmediate.js":
+/*!***************************************************!*\
+  !*** ./node_modules/setimmediate/setImmediate.js ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/* WEBPACK VAR INJECTION */(function(global) {(function (global, undefined) {
+    "use strict";
+
+    if (global.setImmediate) {
+        return;
+    }
+
+    var nextHandle = 1; // Spec says greater than zero
+    var tasksByHandle = {};
+    var currentlyRunningATask = false;
+    var doc = global.document;
+    var registerImmediate;
+
+    function setImmediate(callback) {
+      // Callback can either be a function or a string
+      if (typeof callback !== "function") {
+        callback = new Function("" + callback);
+      }
+      // Copy function arguments
+      var args = new Array(arguments.length - 1);
+      for (var i = 0; i < args.length; i++) {
+          args[i] = arguments[i + 1];
+      }
+      // Store and register the task
+      var task = { callback: callback, args: args };
+      tasksByHandle[nextHandle] = task;
+      registerImmediate(nextHandle);
+      return nextHandle++;
+    }
+
+    function clearImmediate(handle) {
+        delete tasksByHandle[handle];
+    }
+
+    function run(task) {
+        var callback = task.callback;
+        var args = task.args;
+        switch (args.length) {
+        case 0:
+            callback();
+            break;
+        case 1:
+            callback(args[0]);
+            break;
+        case 2:
+            callback(args[0], args[1]);
+            break;
+        case 3:
+            callback(args[0], args[1], args[2]);
+            break;
+        default:
+            callback.apply(undefined, args);
+            break;
+        }
+    }
+
+    function runIfPresent(handle) {
+        // From the spec: "Wait until any invocations of this algorithm started before this one have completed."
+        // So if we're currently running a task, we'll need to delay this invocation.
+        if (currentlyRunningATask) {
+            // Delay by doing a setTimeout. setImmediate was tried instead, but in Firefox 7 it generated a
+            // "too much recursion" error.
+            setTimeout(runIfPresent, 0, handle);
+        } else {
+            var task = tasksByHandle[handle];
+            if (task) {
+                currentlyRunningATask = true;
+                try {
+                    run(task);
+                } finally {
+                    clearImmediate(handle);
+                    currentlyRunningATask = false;
+                }
+            }
+        }
+    }
+
+    function installNextTickImplementation() {
+        registerImmediate = function(handle) {
+            process.nextTick(function () { runIfPresent(handle); });
+        };
+    }
+
+    function canUsePostMessage() {
+        // The test against `importScripts` prevents this implementation from being installed inside a web worker,
+        // where `global.postMessage` means something completely different and can't be used for this purpose.
+        if (global.postMessage && !global.importScripts) {
+            var postMessageIsAsynchronous = true;
+            var oldOnMessage = global.onmessage;
+            global.onmessage = function() {
+                postMessageIsAsynchronous = false;
+            };
+            global.postMessage("", "*");
+            global.onmessage = oldOnMessage;
+            return postMessageIsAsynchronous;
+        }
+    }
+
+    function installPostMessageImplementation() {
+        // Installs an event handler on `global` for the `message` event: see
+        // * https://developer.mozilla.org/en/DOM/window.postMessage
+        // * http://www.whatwg.org/specs/web-apps/current-work/multipage/comms.html#crossDocumentMessages
+
+        var messagePrefix = "setImmediate$" + Math.random() + "$";
+        var onGlobalMessage = function(event) {
+            if (event.source === global &&
+                typeof event.data === "string" &&
+                event.data.indexOf(messagePrefix) === 0) {
+                runIfPresent(+event.data.slice(messagePrefix.length));
+            }
+        };
+
+        if (global.addEventListener) {
+            global.addEventListener("message", onGlobalMessage, false);
+        } else {
+            global.attachEvent("onmessage", onGlobalMessage);
+        }
+
+        registerImmediate = function(handle) {
+            global.postMessage(messagePrefix + handle, "*");
+        };
+    }
+
+    function installMessageChannelImplementation() {
+        var channel = new MessageChannel();
+        channel.port1.onmessage = function(event) {
+            var handle = event.data;
+            runIfPresent(handle);
+        };
+
+        registerImmediate = function(handle) {
+            channel.port2.postMessage(handle);
+        };
+    }
+
+    function installReadyStateChangeImplementation() {
+        var html = doc.documentElement;
+        registerImmediate = function(handle) {
+            // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
+            // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
+            var script = doc.createElement("script");
+            script.onreadystatechange = function () {
+                runIfPresent(handle);
+                script.onreadystatechange = null;
+                html.removeChild(script);
+                script = null;
+            };
+            html.appendChild(script);
+        };
+    }
+
+    function installSetTimeoutImplementation() {
+        registerImmediate = function(handle) {
+            setTimeout(runIfPresent, 0, handle);
+        };
+    }
+
+    // If supported, we should attach to the prototype of global, since that is where setTimeout et al. live.
+    var attachTo = Object.getPrototypeOf && Object.getPrototypeOf(global);
+    attachTo = attachTo && attachTo.setTimeout ? attachTo : global;
+
+    // Don't get fooled by e.g. browserify environments.
+    if ({}.toString.call(global.process) === "[object process]") {
+        // For Node.js before 0.9
+        installNextTickImplementation();
+
+    } else if (canUsePostMessage()) {
+        // For non-IE10 modern browsers
+        installPostMessageImplementation();
+
+    } else if (global.MessageChannel) {
+        // For web workers, where supported
+        installMessageChannelImplementation();
+
+    } else if (doc && "onreadystatechange" in doc.createElement("script")) {
+        // For IE 6–8
+        installReadyStateChangeImplementation();
+
+    } else {
+        // For older browsers
+        installSetTimeoutImplementation();
+    }
+
+    attachTo.setImmediate = setImmediate;
+    attachTo.clearImmediate = clearImmediate;
+}(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
+
+/* WEBPACK VAR INJECTION */}.call(this, __webpack_require__(/*! ./../webpack/buildin/global.js */ "./node_modules/webpack/buildin/global.js")))
+
+/***/ }),
+
+/***/ "./node_modules/stackframe/stackframe.js":
+/*!***********************************************!*\
+  !*** ./node_modules/stackframe/stackframe.js ***!
+  \***********************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*** IMPORTS FROM imports-loader ***/
@@ -950,9 +865,7 @@ var define = false;
         define('stackframe', [], factory);
     } else if (true) {
         module.exports = factory();
-    } else {
-        root.StackFrame = factory();
-    }
+    } else {}
 }(this, function() {
     'use strict';
     function _isNumber(n) {
@@ -1056,93 +969,286 @@ var define = false;
 
 
 /***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
+/***/ "./node_modules/webpack/buildin/global.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/global.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-Object.defineProperty(exports, "__esModule", { value: true });
-var IGNORED_MESSAGES = [
-    'Script error',
-    'Script error.',
-    'InvalidAccessError',
-];
-function filter(notice) {
-    var err = notice.errors[0];
-    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
-        return null;
-    }
-    if (err.backtrace && err.backtrace.length > 0) {
-        var frame = err.backtrace[0];
-        if (frame.file === '<anonymous>') {
-            return null;
-        }
-    }
-    return notice;
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1, eval)("this");
+} catch (e) {
+	// This works if the window reference is available
+	if (typeof window === "object") g = window;
 }
-exports.default = filter;
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
 
 
 /***/ }),
-/* 10 */
+
+/***/ "./src/client.ts":
+/*!***********************!*\
+  !*** ./src/client.ts ***!
+  \***********************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-function makeFilter() {
-    var lastNoticeJSON;
-    var timeout;
-    return function (notice) {
-        var s = JSON.stringify(notice.errors);
-        if (s === lastNoticeJSON) {
-            return null;
+__webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
+var stacktracejs_1 = __webpack_require__(/*! ./processor/stacktracejs */ "./src/processor/stacktracejs.ts");
+var ignore_1 = __webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts");
+var debounce_1 = __webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts");
+var uncaught_message_1 = __webpack_require__(/*! ./filter/uncaught_message */ "./src/filter/uncaught_message.ts");
+var angular_message_1 = __webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts");
+var window_1 = __webpack_require__(/*! ./filter/window */ "./src/filter/window.ts");
+var node_1 = __webpack_require__(/*! ./filter/node */ "./src/filter/node.ts");
+var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
+var fetch_1 = __webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts");
+var node_2 = __webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts");
+var xhr_1 = __webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts");
+var jsonp_1 = __webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts");
+var historian_1 = __webpack_require__(/*! ./historian */ "./src/historian.ts");
+var Client = /** @class */ (function () {
+    function Client(opts) {
+        if (opts === void 0) { opts = {}; }
+        var _this = this;
+        this.opts = {};
+        this.filters = [];
+        this.offline = false;
+        this.todo = [];
+        this.onClose = [];
+        if (!opts.projectId || !opts.projectKey) {
+            throw new Error('airbrake: projectId and projectKey are required');
         }
-        if (timeout) {
-            clearTimeout(timeout);
+        this.opts = opts;
+        this.opts.host = this.opts.host || 'https://api.airbrake.io';
+        this.opts.timeout = this.opts.timeout || 10000;
+        this.processor = opts.processor || stacktracejs_1.default;
+        this.setReporter(opts.reporter || reporter_1.defaultReporter());
+        this.addFilter(ignore_1.default);
+        this.addFilter(debounce_1.default());
+        this.addFilter(uncaught_message_1.default);
+        this.addFilter(angular_message_1.default);
+        if (typeof window === 'object') {
+            this.addFilter(window_1.default);
+            if (window.addEventListener) {
+                this.onOnline = this.onOnline.bind(this);
+                window.addEventListener('online', this.onOnline);
+                this.onOffline = this.onOffline.bind(this);
+                window.addEventListener('offline', this.onOffline);
+                this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
+                window.addEventListener('unhandledrejection', this.onUnhandledrejection);
+                this.onClose.push(function () {
+                    window.removeEventListener('online', _this.onOnline);
+                    window.removeEventListener('offline', _this.onOffline);
+                    window.removeEventListener('unhandledrejection', _this.onUnhandledrejection);
+                });
+            }
         }
-        lastNoticeJSON = s;
-        timeout = setTimeout(function () {
-            lastNoticeJSON = '';
-        }, 1000);
-        return notice;
+        else {
+            this.addFilter(node_1.default);
+        }
+        historian_1.historian.registerNotifier(this);
+    }
+    Client.prototype.close = function () {
+        for (var _i = 0, _a = this.onClose; _i < _a.length; _i++) {
+            var fn = _a[_i];
+            fn();
+        }
+        historian_1.historian.unregisterNotifier(this);
     };
-}
-exports.default = makeFilter;
+    Client.prototype.setReporter = function (name) {
+        switch (name) {
+            case 'fetch':
+                this.reporter = fetch_1.default;
+                break;
+            case 'node':
+                this.reporter = node_2.default;
+                break;
+            case 'xhr':
+                this.reporter = xhr_1.default;
+                break;
+            case 'jsonp':
+                this.reporter = jsonp_1.default;
+                break;
+            default:
+                this.reporter = name;
+        }
+    };
+    Client.prototype.addFilter = function (filter) {
+        this.filters.push(filter);
+    };
+    Client.prototype.notify = function (err) {
+        var _this = this;
+        if (typeof err !== 'object' || err.error === undefined) {
+            err = { error: err };
+        }
+        if (!err.error) {
+            var reason = new Error("airbrake: got err=" + JSON.stringify(err.error) + ", wanted an Error");
+            return Promise.reject(reason);
+        }
+        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
+            var reason = new Error('airbrake: window error is ignored');
+            return Promise.reject(reason);
+        }
+        if (this.offline) {
+            return new Promise(function (resolve, reject) {
+                _this.todo.push({
+                    err: err,
+                    resolve: resolve,
+                    reject: reject,
+                });
+                while (_this.todo.length > 100) {
+                    var j = _this.todo.shift();
+                    if (j === undefined) {
+                        break;
+                    }
+                    var reason = new Error('airbrake: offline queue is too large');
+                    j.reject(reason);
+                }
+            });
+        }
+        var notice = {
+            id: '',
+            errors: [],
+            context: Object.assign({
+                language: 'JavaScript',
+                severity: 'error',
+                notifier: {
+                    name: 'airbrake-js',
+                    version: "1.1.0",
+                    url: 'https://github.com/airbrake/airbrake-js',
+                },
+            }, err.context),
+            params: err.params || {},
+            environment: err.environment || {},
+            session: err.session || {},
+        };
+        var history = historian_1.getHistory();
+        if (history.length > 0) {
+            notice.context.history = history;
+        }
+        var error = this.processor(err.error);
+        notice.errors.push(error);
+        for (var _i = 0, _a = this.filters; _i < _a.length; _i++) {
+            var filter = _a[_i];
+            var r = filter(notice);
+            if (r === null) {
+                var reason = new Error('airbrake: error is filtered');
+                return Promise.reject(reason);
+            }
+            notice = r;
+        }
+        return this.reporter(notice, this.opts);
+    };
+    // TODO: fix wrapping for multiple clients
+    Client.prototype.wrap = function (fn, props) {
+        if (props === void 0) { props = []; }
+        if (fn._airbrake) {
+            return fn;
+        }
+        var client = this;
+        var airbrakeWrapper = function () {
+            var fnArgs = Array.prototype.slice.call(arguments);
+            var wrappedArgs = client.wrapArguments(fnArgs);
+            try {
+                return fn.apply(this, wrappedArgs);
+            }
+            catch (err) {
+                client.notify({ error: err, params: { arguments: fnArgs } });
+                historian_1.historian.ignoreNextWindowError();
+                throw err;
+            }
+        };
+        for (var prop in fn) {
+            if (fn.hasOwnProperty(prop)) {
+                airbrakeWrapper[prop] = fn[prop];
+            }
+        }
+        for (var _i = 0, props_1 = props; _i < props_1.length; _i++) {
+            var prop = props_1[_i];
+            if (fn.hasOwnProperty(prop)) {
+                airbrakeWrapper[prop] = fn[prop];
+            }
+        }
+        airbrakeWrapper._airbrake = true;
+        airbrakeWrapper.inner = fn;
+        return airbrakeWrapper;
+    };
+    Client.prototype.wrapArguments = function (args) {
+        for (var i in args) {
+            var arg = args[i];
+            if (typeof arg === 'function') {
+                args[i] = this.wrap(arg);
+            }
+        }
+        return args;
+    };
+    Client.prototype.call = function (fn) {
+        var _args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            _args[_i - 1] = arguments[_i];
+        }
+        var wrapper = this.wrap(fn);
+        return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    };
+    Client.prototype.onerror = function () {
+        historian_1.historian.onerror.apply(historian_1.historian, arguments);
+    };
+    Client.prototype.onOnline = function () {
+        this.offline = false;
+        var _loop_1 = function (j) {
+            this_1.notify(j.err).then(function (notice) {
+                j.resolve(notice);
+            }).catch(function (reason) {
+                j.reject(reason);
+            });
+        };
+        var this_1 = this;
+        for (var _i = 0, _a = this.todo; _i < _a.length; _i++) {
+            var j = _a[_i];
+            _loop_1(j);
+        }
+        this.todo = [];
+    };
+    Client.prototype.onOffline = function () {
+        this.offline = true;
+    };
+    Client.prototype.onUnhandledrejection = function (e) {
+        var msg = e.reason.message || String(e.reason);
+        if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
+            return;
+        }
+        this.notify(e.reason);
+    };
+    return Client;
+}());
+module.exports = Client;
 
 
 /***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var re = new RegExp([
-    '^',
-    'Uncaught\\s',
-    '(.+?)',
-    ':\\s',
-    '(.+)',
-    '$',
-].join(''));
-function filter(notice) {
-    var err = notice.errors[0];
-    if (err.type !== '' && err.type !== 'Error') {
-        return notice;
-    }
-    var m = err.message.match(re);
-    if (m !== null) {
-        err.type = m[1];
-        err.message = m[2];
-    }
-    return notice;
-}
-exports.default = filter;
-
-
-/***/ }),
-/* 12 */
+/***/ "./src/filter/angular_message.ts":
+/*!***************************************!*\
+  !*** ./src/filter/angular_message.ts ***!
+  \***************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1171,20 +1277,65 @@ exports.default = filter;
 
 
 /***/ }),
-/* 13 */
+
+/***/ "./src/filter/debounce.ts":
+/*!********************************!*\
+  !*** ./src/filter/debounce.ts ***!
+  \********************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+function makeFilter() {
+    var lastNoticeJSON;
+    var timeout;
+    return function (notice) {
+        var s = JSON.stringify(notice.errors);
+        if (s === lastNoticeJSON) {
+            return null;
+        }
+        if (timeout) {
+            clearTimeout(timeout);
+        }
+        lastNoticeJSON = s;
+        timeout = setTimeout(function () {
+            lastNoticeJSON = '';
+        }, 1000);
+        return notice;
+    };
+}
+exports.default = makeFilter;
+
+
+/***/ }),
+
+/***/ "./src/filter/ignore.ts":
+/*!******************************!*\
+  !*** ./src/filter/ignore.ts ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var IGNORED_MESSAGES = [
+    'Script error',
+    'Script error.',
+    'InvalidAccessError',
+];
 function filter(notice) {
-    if (window.navigator && window.navigator.userAgent) {
-        notice.context.userAgent = window.navigator.userAgent;
+    var err = notice.errors[0];
+    if (err.type === '' && IGNORED_MESSAGES.indexOf(err.message) !== -1) {
+        return null;
     }
-    if (window.location) {
-        notice.context.url = String(window.location);
-        // Set root directory to group errors on different subdomains together.
-        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
+    if (err.backtrace && err.backtrace.length > 0) {
+        var frame = err.backtrace[0];
+        if (frame.file === '<anonymous>') {
+            return null;
+        }
     }
     return notice;
 }
@@ -1192,7 +1343,12 @@ exports.default = filter;
 
 
 /***/ }),
-/* 14 */
+
+/***/ "./src/filter/node.ts":
+/*!****************************!*\
+  !*** ./src/filter/node.ts ***!
+  \****************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1246,279 +1402,79 @@ exports.default = filter;
 
 
 /***/ }),
-/* 15 */
+
+/***/ "./src/filter/uncaught_message.ts":
+/*!****************************************!*\
+  !*** ./src/filter/uncaught_message.ts ***!
+  \****************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(1);
-var reporter_1 = __webpack_require__(0);
-var rateLimitReset = 0;
-function report(notice, opts, promise) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        promise.reject(reporter_1.errors.ipRateLimited);
-        return;
+var re = new RegExp([
+    '^',
+    'Uncaught\\s',
+    '(.+?)',
+    ':\\s',
+    '(.+)',
+    '$',
+].join(''));
+function filter(notice) {
+    var err = notice.errors[0];
+    if (err.type !== '' && err.type !== 'Error') {
+        return notice;
     }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    var opt = {
-        method: 'POST',
-        body: payload,
-    };
-    fetch(url, opt).then(function (req) {
-        if (req.status === 401) {
-            promise.reject(reporter_1.errors.unauthorized);
-            return;
-        }
-        if (req.status === 429) {
-            promise.reject(reporter_1.errors.ipRateLimited);
-            var s = req.headers.get('X-RateLimit-Delay');
-            if (!s) {
-                return;
-            }
-            var n = parseInt(s, 10);
-            if (n > 0) {
-                rateLimitReset = Date.now() / 1000 + n;
-            }
-            return;
-        }
-        if (req.status >= 200 && req.status < 500) {
-            req.json().then(function (resp) {
-                if (resp.id) {
-                    notice.id = resp.id;
-                    promise.resolve(notice);
-                    return;
-                }
-                if (resp.message) {
-                    var err = new Error(resp.message);
-                    promise.reject(err);
-                    return;
-                }
-            });
-            return;
-        }
-        req.text().then(function (body) {
-            var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
-            promise.reject(err);
-        });
-    }).catch(function (err) {
-        promise.reject(err);
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-/* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(1);
-var reporter_1 = __webpack_require__(0);
-var request;
-try {
-    // Use eval to hide import from Webpack.
-    request = eval('require')('request');
-}
-catch (_) { }
-var rateLimitReset = 0;
-function report(notice, opts, promise) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        promise.reject(reporter_1.errors.ipRateLimited);
-        return;
+    var m = err.message.match(re);
+    if (m !== null) {
+        err.type = m[1];
+        err.message = m[2];
     }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    request({
-        url: url,
-        method: 'POST',
-        body: payload,
-        headers: {
-            'content-type': 'application/json'
-        },
-        timeout: opts.timeout,
-    }, function (error, response, body) {
-        if (error) {
-            promise.reject(error);
-            return;
-        }
-        if (!response.statusCode) {
-            promise.reject(new Error('airbrake: node: statusCode is undefined'));
-            return;
-        }
-        if (response.statusCode === 401) {
-            promise.reject(reporter_1.errors.unauthorized);
-            return;
-        }
-        if (response.statusCode === 429) {
-            promise.reject(reporter_1.errors.ipRateLimited);
-            var h = response.headers['x-ratelimit-delay'];
-            if (!h) {
-                return;
-            }
-            var s = void 0;
-            if (typeof h === 'string') {
-                s = h;
-            }
-            else if (h instanceof Array) {
-                s = h[0];
-            }
-            else {
-                return;
-            }
-            var n = parseInt(s, 10);
-            if (n > 0) {
-                rateLimitReset = Date.now() / 1000 + n;
-            }
-            return;
-        }
-        if (response.statusCode >= 200 && response.statusCode < 500) {
-            var resp = JSON.parse(body);
-            if (resp.id) {
-                notice.id = resp.id;
-                promise.resolve(notice);
-                return;
-            }
-            if (resp.message) {
-                var err_1 = new Error(resp.message);
-                promise.reject(err_1);
-                return;
-            }
-        }
-        body = body.trim();
-        var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
-        promise.reject(err);
-    });
+    return notice;
 }
-exports.default = report;
+exports.default = filter;
 
 
 /***/ }),
-/* 17 */
+
+/***/ "./src/filter/window.ts":
+/*!******************************!*\
+  !*** ./src/filter/window.ts ***!
+  \******************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(1);
-var reporter_1 = __webpack_require__(0);
-var rateLimitReset = 0;
-function report(notice, opts, promise) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        promise.reject(reporter_1.errors.ipRateLimited);
-        return;
+function filter(notice) {
+    if (window.navigator && window.navigator.userAgent) {
+        notice.context.userAgent = window.navigator.userAgent;
     }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
-    var req = new XMLHttpRequest();
-    req.open('POST', url, true);
-    req.timeout = opts.timeout;
-    req.onreadystatechange = function () {
-        if (req.readyState !== 4) {
-            return;
-        }
-        if (req.status === 401) {
-            promise.reject(reporter_1.errors.unauthorized);
-            return;
-        }
-        if (req.status === 429) {
-            promise.reject(reporter_1.errors.ipRateLimited);
-            var s = req.getResponseHeader('X-RateLimit-Delay');
-            if (!s) {
-                return;
-            }
-            var n = parseInt(s, 10);
-            if (n > 0) {
-                rateLimitReset = Date.now() / 1000 + n;
-            }
-            return;
-        }
-        if (req.status >= 200 && req.status < 500) {
-            var resp = JSON.parse(req.responseText);
-            if (resp.id) {
-                notice.id = resp.id;
-                promise.resolve(notice);
-                return;
-            }
-            if (resp.message) {
-                var err_1 = new Error(resp.message);
-                promise.reject(err_1);
-                return;
-            }
-        }
-        var body = req.responseText.trim();
-        var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
-        promise.reject(err);
-    };
-    req.send(payload);
+    if (window.location) {
+        notice.context.url = String(window.location);
+        // Set root directory to group errors on different subdomains together.
+        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
+    }
+    return notice;
 }
-exports.default = report;
+exports.default = filter;
 
 
 /***/ }),
-/* 18 */
+
+/***/ "./src/historian.ts":
+/*!**************************!*\
+  !*** ./src/historian.ts ***!
+  \**************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(1);
-var cbCount = 0;
-function report(notice, opts, promise) {
-    cbCount++;
-    var cbName = 'airbrakeCb' + String(cbCount);
-    window[cbName] = function (resp) {
-        try {
-            delete window[cbName];
-        }
-        catch (_) {
-            window[cbName] = undefined;
-        }
-        if (resp.id) {
-            notice.id = resp.id;
-            promise.resolve(notice);
-            return;
-        }
-        if (resp.message) {
-            var err_1 = new Error(resp.message);
-            promise.reject(err_1);
-            return;
-        }
-        var err = new Error(resp);
-        promise.reject(err);
-    };
-    var payload = encodeURIComponent(jsonify_notice_1.default(notice));
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
-    var document = window.document;
-    var head = document.getElementsByTagName('head')[0];
-    var script = document.createElement('script');
-    script.src = url;
-    script.onload = function () { return head.removeChild(script); };
-    script.onerror = function () {
-        head.removeChild(script);
-        var err = new Error('airbrake: JSONP script error');
-        promise.reject(err);
-    };
-    head.appendChild(script);
-}
-exports.default = report;
-
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var promise_1 = __webpack_require__(2);
-var dom_1 = __webpack_require__(20);
+var dom_1 = __webpack_require__(/*! ./instrumentation/dom */ "./src/instrumentation/dom.ts");
 var Historian = /** @class */ (function () {
     function Historian() {
         var _this = this;
@@ -1556,7 +1512,7 @@ var Historian = /** @class */ (function () {
         catch (_a) { }
         if (typeof p === 'object' && typeof p.on === 'function') {
             p.on('uncaughtException', function (err) {
-                _this.notify(err).finally(function () {
+                var exit = function () {
                     if (p.listeners('uncaughtException').length !== 1) {
                         return;
                     }
@@ -1564,7 +1520,8 @@ var Historian = /** @class */ (function () {
                         _this.consoleError('uncaught exception', err);
                     }
                     p.exit(1);
-                });
+                };
+                _this.notify(err).then(exit).catch(exit);
             });
             p.on('unhandledRejection', function (reason, _p) {
                 _this.notify(reason);
@@ -1577,13 +1534,19 @@ var Historian = /** @class */ (function () {
             this.xhr();
         }
     }
-    Historian.prototype.registerNotifier = function (n) {
-        this.notifiers.push(n);
+    Historian.prototype.registerNotifier = function (notifier) {
+        this.notifiers.push(notifier);
         for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
             var err = _a[_i];
             this.notifyNotifiers(err);
         }
         this.errors = [];
+    };
+    Historian.prototype.unregisterNotifier = function (notifier) {
+        var i = this.notifiers.indexOf(notifier);
+        if (i !== -1) {
+            this.notifiers.splice(i, 1);
+        }
     };
     Historian.prototype.notify = function (err) {
         if (this.notifiers.length > 0) {
@@ -1593,7 +1556,7 @@ var Historian = /** @class */ (function () {
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
-        return new promise_1.Promise().resolve(null);
+        return Promise.resolve({});
     };
     Historian.prototype.notifyNotifiers = function (err) {
         var promises = [];
@@ -1601,7 +1564,9 @@ var Historian = /** @class */ (function () {
             var notifier = _a[_i];
             promises.push(notifier.notify(err));
         }
-        return promise_1.Promise.all(promises);
+        return Promise.all(promises).then(function (notices) {
+            return notices[0];
+        });
     };
     Historian.prototype.onerror = function (message, filename, line, column, err) {
         if (this.ignoreWindowError > 0) {
@@ -1834,7 +1799,12 @@ exports.getHistory = getHistory;
 
 
 /***/ }),
-/* 20 */
+
+/***/ "./src/instrumentation/dom.ts":
+/*!************************************!*\
+  !*** ./src/instrumentation/dom.ts ***!
+  \************************************/
+/*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -1912,7 +1882,689 @@ function makeEventHandler(client) {
 exports.makeEventHandler = makeEventHandler;
 
 
+/***/ }),
+
+/***/ "./src/internal/compat.ts":
+/*!********************************!*\
+  !*** ./src/internal/compat.ts ***!
+  \********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+if (!Object.assign) {
+    Object.assign = function (target) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        var _loop_1 = function (source) {
+            if (source) {
+                Object.keys(source).forEach(function (key) { return target[key] = source[key]; });
+            }
+        };
+        for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
+            var source = args_1[_a];
+            _loop_1(source);
+        }
+        return target;
+    };
+}
+
+
+/***/ }),
+
+/***/ "./src/jsonify_notice.ts":
+/*!*******************************!*\
+  !*** ./src/jsonify_notice.ts ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var maxObjectLength = 128;
+// jsonifyNotice serializes notice to JSON and truncates params,
+// environment and session keys.
+function jsonifyNotice(notice, maxLength) {
+    if (maxLength === void 0) { maxLength = 64000; }
+    var s = '';
+    try {
+        s = JSON.stringify(notice);
+    }
+    catch (_) { }
+    if (s !== '' && s.length < maxLength) {
+        return s;
+    }
+    if (notice.errors) {
+        for (var i in notice.errors) {
+            var t = new Truncator();
+            notice.errors[i] = t.truncate(notice.errors[i]);
+        }
+    }
+    var keys = ['context', 'params', 'environment', 'session'];
+    for (var level = 0; level < 8; level++) {
+        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
+            var key = keys_1[_i];
+            var obj = notice[key];
+            if (obj) {
+                notice[key] = truncateObject(obj, level);
+            }
+        }
+        s = JSON.stringify(notice);
+        if (s.length < maxLength) {
+            return s;
+        }
+    }
+    var params = {
+        json: s.slice(0, Math.floor(maxLength / 2)) + '...',
+    };
+    keys.push('errors');
+    for (var _a = 0, keys_2 = keys; _a < keys_2.length; _a++) {
+        var key = keys_2[_a];
+        var obj = notice[key];
+        if (!obj) {
+            continue;
+        }
+        s = JSON.stringify(obj);
+        params[key] = s.length;
+    }
+    var err = new Error("airbrake: notice exceeds max length and can't be truncated");
+    err.params = params;
+    throw err;
+}
+exports.default = jsonifyNotice;
+// truncateObject truncates each key in the object separately, which is
+// useful for handling circular references.
+function truncateObject(obj, level) {
+    var maxLength = scale(maxObjectLength, level);
+    var dst = {};
+    var length = 0;
+    for (var key in obj) {
+        dst[key] = truncate(obj[key], level);
+        length++;
+        if (length >= maxLength) {
+            break;
+        }
+    }
+    return dst;
+}
+function scale(num, level) {
+    return (num >> level) || 1;
+}
+function truncate(value, level) {
+    var t = new Truncator(level);
+    return t.truncate(value);
+}
+exports.truncate = truncate;
+var Truncator = /** @class */ (function () {
+    function Truncator(level) {
+        if (level === void 0) { level = 0; }
+        this.maxStringLength = 1024;
+        this.maxObjectLength = maxObjectLength;
+        this.maxArrayLength = maxObjectLength;
+        this.maxDepth = 8;
+        this.keys = [];
+        this.seen = [];
+        this.maxStringLength = scale(this.maxStringLength, level);
+        this.maxObjectLength = scale(this.maxObjectLength, level);
+        this.maxArrayLength = scale(this.maxArrayLength, level);
+        this.maxDepth = scale(this.maxDepth, level);
+    }
+    Truncator.prototype.truncate = function (value, key, depth) {
+        if (key === void 0) { key = ''; }
+        if (depth === void 0) { depth = 0; }
+        if (value === null || value === undefined) {
+            return value;
+        }
+        switch (typeof value) {
+            case 'boolean':
+            case 'number':
+            case 'function':
+                return value;
+            case 'string':
+                return this.truncateString(value);
+            case 'object':
+                break;
+            default:
+                return String(value);
+        }
+        if (value instanceof String) {
+            return this.truncateString(value.toString());
+        }
+        if (value instanceof Boolean ||
+            value instanceof Number ||
+            value instanceof Date ||
+            value instanceof RegExp) {
+            return value;
+        }
+        if (value instanceof Error) {
+            return value.toString();
+        }
+        if (this.seen.indexOf(value) >= 0) {
+            return "[Circular " + this.getPath(value) + "]";
+        }
+        var type = objectType(value);
+        depth++;
+        if (depth > this.maxDepth) {
+            return "[Truncated " + type + "]";
+        }
+        this.keys.push(key);
+        this.seen.push(value);
+        switch (type) {
+            case 'Array':
+                return this.truncateArray(value, depth);
+            case 'Object':
+                return this.truncateObject(value, depth);
+            default:
+                var saved = this.maxDepth;
+                this.maxDepth = 0;
+                var obj = this.truncateObject(value, depth);
+                obj.__type = type;
+                this.maxDepth = saved;
+                return obj;
+        }
+    };
+    Truncator.prototype.getPath = function (value) {
+        var index = this.seen.indexOf(value);
+        var path = [this.keys[index]];
+        for (var i = index; i >= 0; i--) {
+            var sub = this.seen[i];
+            if (sub && getAttr(sub, path[0]) === value) {
+                value = sub;
+                path.unshift(this.keys[i]);
+            }
+        }
+        return '~' + path.join('.');
+    };
+    Truncator.prototype.truncateString = function (s) {
+        if (s.length > this.maxStringLength) {
+            return s.slice(0, this.maxStringLength) + '...';
+        }
+        return s;
+    };
+    Truncator.prototype.truncateArray = function (arr, depth) {
+        if (depth === void 0) { depth = 0; }
+        var length = 0;
+        var dst = [];
+        for (var i in arr) {
+            var el = arr[i];
+            dst.push(this.truncate(el, i, depth));
+            length++;
+            if (length >= this.maxArrayLength) {
+                break;
+            }
+        }
+        return dst;
+    };
+    Truncator.prototype.truncateObject = function (obj, depth) {
+        if (depth === void 0) { depth = 0; }
+        var length = 0;
+        var dst = {};
+        for (var attr in obj) {
+            var value = getAttr(obj, attr);
+            if (value === undefined || typeof value === 'function') {
+                continue;
+            }
+            dst[attr] = this.truncate(value, attr, depth);
+            length++;
+            if (length >= this.maxObjectLength) {
+                break;
+            }
+        }
+        return dst;
+    };
+    return Truncator;
+}());
+function getAttr(obj, attr) {
+    // Ignore browser specific exception trying to read attribute (#79).
+    try {
+        return obj[attr];
+    }
+    catch (_) {
+        return;
+    }
+}
+function objectType(obj) {
+    var s = Object.prototype.toString.apply(obj);
+    return s.slice('[object '.length, -1);
+}
+
+
+/***/ }),
+
+/***/ "./src/processor/stacktracejs.ts":
+/*!***************************************!*\
+  !*** ./src/processor/stacktracejs.ts ***!
+  \***************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var ErrorStackParser = __webpack_require__(/*! error-stack-parser */ "./node_modules/error-stack-parser/error-stack-parser.js");
+var hasConsole = typeof console === 'object' && console.warn;
+function parse(err) {
+    try {
+        return ErrorStackParser.parse(err);
+    }
+    catch (parseErr) {
+        if (hasConsole && err.stack) {
+            console.warn('ErrorStackParser:', parseErr.toString(), err.stack);
+        }
+    }
+    if (err.fileName) {
+        return [err];
+    }
+    return [];
+}
+function processor(err) {
+    var backtrace = [];
+    if (!err.noStack) {
+        var frames_1 = parse(err);
+        if (frames_1.length === 0) {
+            try {
+                throw new Error('fake');
+            }
+            catch (fakeErr) {
+                frames_1 = parse(fakeErr);
+                frames_1.shift();
+                frames_1.shift();
+            }
+        }
+        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
+            var frame = frames_2[_i];
+            backtrace.push({
+                function: frame.functionName || '',
+                file: frame.fileName || '',
+                line: frame.lineNumber || 0,
+                column: frame.columnNumber || 0,
+            });
+        }
+    }
+    var type;
+    if (err.name) {
+        type = err.name;
+    }
+    else {
+        type = '';
+    }
+    var msg;
+    if (err.message) {
+        msg = String(err.message);
+    }
+    else {
+        msg = String(err);
+    }
+    return {
+        type: type,
+        message: msg,
+        backtrace: backtrace,
+    };
+}
+exports.default = processor;
+
+
+/***/ }),
+
+/***/ "./src/reporter/fetch.ts":
+/*!*******************************!*\
+  !*** ./src/reporter/fetch.ts ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
+var rateLimitReset = 0;
+function report(notice, opts) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        return Promise.reject(reporter_1.errors.ipRateLimited);
+    }
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    var opt = {
+        method: 'POST',
+        body: payload,
+    };
+    return new Promise(function (resolve, reject) {
+        fetch(url, opt).then(function (req) {
+            if (req.status === 401) {
+                reject(reporter_1.errors.unauthorized);
+                return;
+            }
+            if (req.status === 429) {
+                reject(reporter_1.errors.ipRateLimited);
+                var s = req.headers.get('X-RateLimit-Delay');
+                if (!s) {
+                    return;
+                }
+                var n = parseInt(s, 10);
+                if (n > 0) {
+                    rateLimitReset = Date.now() / 1000 + n;
+                }
+                return;
+            }
+            if (req.status >= 200 && req.status < 500) {
+                var json = void 0;
+                try {
+                    json = req.json();
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                json.then(function (resp) {
+                    if (resp.id) {
+                        notice.id = resp.id;
+                        resolve(notice);
+                        return;
+                    }
+                    if (resp.message) {
+                        var err = new Error(resp.message);
+                        reject(err);
+                        return;
+                    }
+                });
+                return;
+            }
+            req.text().then(function (body) {
+                var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
+                reject(err);
+            });
+        }).catch(function (err) {
+            reject(err);
+        });
+    });
+}
+exports.default = report;
+
+
+/***/ }),
+
+/***/ "./src/reporter/jsonp.ts":
+/*!*******************************!*\
+  !*** ./src/reporter/jsonp.ts ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var cbCount = 0;
+function report(notice, opts) {
+    return new Promise(function (resolve, reject) {
+        cbCount++;
+        var cbName = 'airbrakeCb' + String(cbCount);
+        window[cbName] = function (resp) {
+            try {
+                delete window[cbName];
+            }
+            catch (_) { // IE
+                window[cbName] = undefined;
+            }
+            if (resp.id) {
+                notice.id = resp.id;
+                resolve(notice);
+                return;
+            }
+            if (resp.message) {
+                var err_1 = new Error(resp.message);
+                reject(err_1);
+                return;
+            }
+            var err = new Error(resp);
+            reject(err);
+        };
+        var payload = encodeURIComponent(jsonify_notice_1.default(notice));
+        var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
+        var document = window.document;
+        var head = document.getElementsByTagName('head')[0];
+        var script = document.createElement('script');
+        script.src = url;
+        script.onload = function () { return head.removeChild(script); };
+        script.onerror = function () {
+            head.removeChild(script);
+            var err = new Error('airbrake: JSONP script error');
+            reject(err);
+        };
+        head.appendChild(script);
+    });
+}
+exports.default = report;
+
+
+/***/ }),
+
+/***/ "./src/reporter/node.ts":
+/*!******************************!*\
+  !*** ./src/reporter/node.ts ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
+var request;
+try {
+    // Use eval to hide import from Webpack.
+    request = eval('require')('request');
+}
+catch (_) { }
+var rateLimitReset = 0;
+function report(notice, opts) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        return Promise.reject(reporter_1.errors.ipRateLimited);
+    }
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    return new Promise(function (resolve, reject) {
+        request({
+            url: url,
+            method: 'POST',
+            body: payload,
+            headers: {
+                'content-type': 'application/json'
+            },
+            timeout: opts.timeout,
+        }, function (error, response, body) {
+            if (error) {
+                reject(error);
+                return;
+            }
+            if (!response.statusCode) {
+                var err_1 = new Error('airbrake: node: statusCode is null or undefined');
+                reject(err_1);
+                return;
+            }
+            if (response.statusCode === 401) {
+                reject(reporter_1.errors.unauthorized);
+                return;
+            }
+            if (response.statusCode === 429) {
+                reject(reporter_1.errors.ipRateLimited);
+                var h = response.headers['x-ratelimit-delay'];
+                if (!h) {
+                    return;
+                }
+                var s = void 0;
+                if (typeof h === 'string') {
+                    s = h;
+                }
+                else if (h instanceof Array) {
+                    s = h[0];
+                }
+                else {
+                    return;
+                }
+                var n = parseInt(s, 10);
+                if (n > 0) {
+                    rateLimitReset = Date.now() / 1000 + n;
+                }
+                return;
+            }
+            if (response.statusCode >= 200 && response.statusCode < 500) {
+                var resp = void 0;
+                try {
+                    resp = JSON.parse(body);
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                if (resp.id) {
+                    notice.id = resp.id;
+                    resolve(notice);
+                    return;
+                }
+                if (resp.message) {
+                    var err_2 = new Error(resp.message);
+                    reject(err_2);
+                    return;
+                }
+            }
+            body = body.trim();
+            var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
+            reject(err);
+        });
+    });
+}
+exports.default = report;
+
+
+/***/ }),
+
+/***/ "./src/reporter/reporter.ts":
+/*!**********************************!*\
+  !*** ./src/reporter/reporter.ts ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function defaultReporter() {
+    if (typeof fetch === 'function') {
+        return 'fetch';
+    }
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
+    }
+    if (typeof window === 'object') {
+        return 'jsonp';
+    }
+    return 'node';
+}
+exports.defaultReporter = defaultReporter;
+exports.errors = {
+    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
+    ipRateLimited: new Error('airbrake: IP is rate limited'),
+};
+
+
+/***/ }),
+
+/***/ "./src/reporter/xhr.ts":
+/*!*****************************!*\
+  !*** ./src/reporter/xhr.ts ***!
+  \*****************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
+var rateLimitReset = 0;
+function report(notice, opts) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        return Promise.reject(reporter_1.errors.ipRateLimited);
+    }
+    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
+    var payload = jsonify_notice_1.default(notice);
+    return new Promise(function (resolve, reject) {
+        var req = new XMLHttpRequest();
+        req.open('POST', url, true);
+        req.timeout = opts.timeout;
+        req.onreadystatechange = function () {
+            if (req.readyState !== 4) {
+                return;
+            }
+            if (req.status === 401) {
+                reject(reporter_1.errors.unauthorized);
+                return;
+            }
+            if (req.status === 429) {
+                reject(reporter_1.errors.ipRateLimited);
+                var s = req.getResponseHeader('X-RateLimit-Delay');
+                if (!s) {
+                    return;
+                }
+                var n = parseInt(s, 10);
+                if (n > 0) {
+                    rateLimitReset = Date.now() / 1000 + n;
+                }
+                return;
+            }
+            if (req.status >= 200 && req.status < 500) {
+                var resp = void 0;
+                try {
+                    resp = JSON.parse(req.responseText);
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                if (resp.id) {
+                    notice.id = resp.id;
+                    resolve(notice);
+                    return;
+                }
+                if (resp.message) {
+                    var err_1 = new Error(resp.message);
+                    reject(err_1);
+                    return;
+                }
+            }
+            var body = req.responseText.trim();
+            var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
+            reject(err);
+        };
+        req.send(payload);
+    });
+}
+exports.default = report;
+
+
+/***/ }),
+
+/***/ 0:
+/*!******************************************************!*\
+  !*** multi ./src/internal/compat.ts ./src/client.ts ***!
+  \******************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+__webpack_require__(/*! ./src/internal/compat.ts */"./src/internal/compat.ts");
+module.exports = __webpack_require__(/*! ./src/client.ts */"./src/client.ts");
+
+
 /***/ })
-/******/ ]);
+
+/******/ });
 });
 //# sourceMappingURL=client.js.map
