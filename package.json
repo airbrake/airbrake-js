@@ -44,13 +44,19 @@
     "webpack-cli": "^2.0.14"
   },
   "main": "dist/client.js",
+  "module": "esm/src/client.js",
+  "typings": "dist/src/client.d.ts",
   "files": [
     "dist/",
+    "esm/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "webpack",
+    "build:dts": "tsc -p ./tsconfig.json --declaration --emitDeclarationOnly --ourDir ./dist",
+    "build:esm": "tsc -p ./tsconfig.json --target ES6 --module commonjs --outDir ./esm",
+    "prepublishOnly": "npm run build:dts && npm run build:esm",
     "test": "karma start"
   }
 }
