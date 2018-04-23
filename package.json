@@ -44,6 +44,7 @@
     "webpack-cli": "^2.0.14"
   },
   "main": "dist/client.js",
+  "types": "dist/client.d.ts",
   "files": [
     "dist/",
     "README.md",
