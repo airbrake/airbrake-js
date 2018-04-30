@@ -166,7 +166,7 @@ In the following example all errors triggered by admins will be ignored:
 
 ```js
 airbrake.addFilter(function(notice) {
-  if (notice.sessions.admin) {
+  if (notice.params.admin) {
     // Ignore errors from admin sessions.
     return null;
   }
