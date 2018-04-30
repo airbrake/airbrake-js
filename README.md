@@ -206,20 +206,6 @@ airbrake.addFilter(function(notice) {
 });
 ```
 
-### Custom reporters
-
-If you're interested in inspecting the information reported to Airbrake in your own code, you can register your own error reporter. Note that reporters added this way may be executed out-of-order.
-
-In this example, reported errors are also logged to the console.
-
-```html
-<script>
-  airbrake.addReporter(function(notice) {
-    console.log(notice);
-  });
-</script>
-```
-
 ### Unwrapping console
 
 airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using following code:
