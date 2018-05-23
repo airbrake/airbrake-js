@@ -181,8 +181,8 @@ class Client {
         for (let filter of this.filters) {
             let r = filter(notice);
             if (r === null) {
-                let reason = new Error('airbrake: error is filtered');
-                return Promise.reject(reason);
+                // airbrake was filtered. this is a feature, not an error.
+                return Promise.resolve({ errors: [] });
             }
             notice = r;
         }
