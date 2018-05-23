@@ -67,7 +67,8 @@ export default class Historian {
                 this.notify(err).then(exit).catch(exit);
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
-                this.notify(reason);
+                // ignore notify errors which will just cause more unhandledRejection errors
+                this.notify(reason).catch(_ => { });
             });
         }
 
