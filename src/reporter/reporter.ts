@@ -1,3 +1,5 @@
+import * as request from 'request';
+
 import Notice from '../notice';
 
 
@@ -7,6 +9,7 @@ export interface ReporterOptions {
     host: string;
     timeout: number;
 
+    request?: request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl>;
     ignoreWindowError?: boolean;
 }
 
@@ -15,19 +18,19 @@ export type Reporter = (notice: Notice, opts: ReporterOptions) => Promise<Notice
 export default Reporter;
 
 
-export function defaultReporter(): string {
+export function defaultReporter(opts: any): string {
+    if (opts.request) {
+        return 'node';
+    }
     if (typeof fetch === 'function') {
         return 'fetch';
     }
-
     if (typeof XMLHttpRequest === 'function') {
         return 'xhr';
     }
-
     if (typeof window === 'object') {
         return 'jsonp';
     }
-
     return 'node';
 }
 

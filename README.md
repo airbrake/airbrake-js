@@ -58,14 +58,14 @@ npm install request
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
-var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'abc'});
+var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'REPLACE_ME'});
 ```
 
 Or if you are using browserify/webpack/etc:
 
 ```js
 var AirbrakeClient = require('airbrake-js');
-var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'abc'});
+var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'REPLACE_ME'});
 ```
 
 Then you can send a textual message to Airbrake:
@@ -219,6 +219,17 @@ if (env === 'development') {
         }
     }
 }
+```
+
+### Node.js request and proxy
+
+In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
+
+```js
+var airbrake = new AirbrakeClient({
+  ...
+  request: request.defaults({'proxy':'http://localproxy.com'})
+});
 ```
 
 ## Integration
