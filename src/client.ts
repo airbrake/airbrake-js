@@ -55,7 +55,7 @@ class Client {
         this.opts.timeout = this.opts.timeout || 10000;
 
         this.processor = opts.processor || stacktracejsProcessor;
-        this.setReporter(opts.reporter || defaultReporter());
+        this.setReporter(opts.reporter || defaultReporter(opts));
 
         this.addFilter(ignoreFilter);
         this.addFilter(makeDebounceFilter());

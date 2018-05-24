@@ -1,4 +1,4 @@
-import {RequestResponse} from 'request';
+import * as request from 'request';
 
 import Notice from '../notice';
 import jsonifyNotice from '../jsonify_notice';
@@ -6,10 +6,10 @@ import jsonifyNotice from '../jsonify_notice';
 import {ReporterOptions, errors} from './reporter';
 
 
-let request;
+let requestLib: request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl>;
 try {
     // Use eval to hide import from Webpack.
-    request = eval('require')('request');
+    requestLib = eval('require')('request');
 } catch (_) {}
 
 
@@ -26,15 +26,16 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
     let payload = jsonifyNotice(notice);
 
     return new Promise((resolve, reject) => {
-        request({
+        let requestWrapper = opts.request || requestLib;
+        requestWrapper({
             url: url,
             method: 'POST',
             body: payload,
             headers: {
                 'content-type': 'application/json'
             },
-            timeout: opts.timeout,
-        }, function (error: any, response: RequestResponse, body: any): void {
+            timeout: opts.timeout
+        }, function (error: any, response: request.RequestResponse, body: any): void {
             if (error) {
                 reject(error);
                 return;
