@@ -1,4 +1,4 @@
-/*! airbrake-js v1.1.0 */
+/*! airbrake-js v1.1.1 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -1040,7 +1040,7 @@ var Client = /** @class */ (function () {
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
         this.processor = opts.processor || stacktracejs_1.default;
-        this.setReporter(opts.reporter || reporter_1.defaultReporter());
+        this.setReporter(opts.reporter || reporter_1.defaultReporter(opts));
         this.addFilter(ignore_1.default);
         this.addFilter(debounce_1.default());
         this.addFilter(uncaught_message_1.default);
@@ -1132,7 +1132,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.1.0",
+                    version: "1.1.1",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1524,6 +1524,10 @@ var Historian = /** @class */ (function () {
                 _this.notify(err).then(exit).catch(exit);
             });
             p.on('unhandledRejection', function (reason, _p) {
+                var msg = reason.message || String(reason);
+                if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
+                    return;
+                }
                 _this.notify(reason);
             });
         }
@@ -2355,10 +2359,10 @@ exports.default = report;
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
-var request;
+var requestLib;
 try {
     // Use eval to hide import from Webpack.
-    request = eval('require')('request');
+    requestLib = eval('require')('request');
 }
 catch (_) { }
 var rateLimitReset = 0;
@@ -2370,14 +2374,15 @@ function report(notice, opts) {
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     return new Promise(function (resolve, reject) {
-        request({
+        var requestWrapper = opts.request || requestLib;
+        requestWrapper({
             url: url,
             method: 'POST',
             body: payload,
             headers: {
                 'content-type': 'application/json'
             },
-            timeout: opts.timeout,
+            timeout: opts.timeout
         }, function (error, response, body) {
             if (error) {
                 reject(error);
@@ -2455,7 +2460,10 @@ exports.default = report;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-function defaultReporter() {
+function defaultReporter(opts) {
+    if (opts.request) {
+        return 'node';
+    }
     if (typeof fetch === 'function') {
         return 'fetch';
     }
