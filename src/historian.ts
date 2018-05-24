@@ -67,6 +67,10 @@ export default class Historian {
                 this.notify(err).then(exit).catch(exit);
             });
             p.on('unhandledRejection', (reason: Error, _p) => {
+                let msg = reason.message || String(reason);
+                if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
+                    return;
+                }
                 this.notify(reason);
             });
         }
