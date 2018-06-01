@@ -1,4 +1,4 @@
-/*! airbrake-js v1.1.1 */
+/*! airbrake-js v1.1.2 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -1132,7 +1132,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.1.1",
+                    version: "1.1.2",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1231,11 +1231,15 @@ var Client = /** @class */ (function () {
         this.offline = true;
     };
     Client.prototype.onUnhandledrejection = function (e) {
-        var msg = e.reason.message || String(e.reason);
+        // Handle native or bluebird Promise rejections
+        // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
+        // http://bluebirdjs.com/docs/api/error-management-configuration.html
+        var reason = e.reason || e.detail.reason;
+        var msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
         }
-        this.notify(e.reason);
+        this.notify(reason);
     };
     return Client;
 }());
