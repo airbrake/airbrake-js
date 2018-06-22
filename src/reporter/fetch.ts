@@ -10,7 +10,8 @@ let rateLimitReset = 0;
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(errors.ipRateLimited);
+        notice.error = errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
 
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
@@ -21,15 +22,17 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
         body: payload,
     };
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         fetch(url, opt).then((req: Response) => {
             if (req.status === 401) {
-                reject(errors.unauthorized);
+                notice.error = errors.unauthorized;
+                resolve(notice);
                 return;
             }
 
             if (req.status === 429) {
-                reject(errors.ipRateLimited);
+                notice.error = errors.ipRateLimited;
+                resolve(notice);
 
                 let s = req.headers.get('X-RateLimit-Delay');
                 if (!s) {
@@ -48,7 +51,8 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                 try {
                     json = req.json();
                 } catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 json.then((resp) => {
@@ -58,20 +62,21 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                         return;
                     }
                     if (resp.message) {
-                        let err = new Error(resp.message);
-                        reject(err);
+                        notice.error = new Error(resp.message);
+                        resolve(notice);
                         return;
                     }
                 });
                 return;
             }
             req.text().then((body) => {
-                let err = new Error(
+                notice.error = new Error(
                     `airbrake: fetch: unexpected response: code=${req.status} body='${body}'`);
-                reject(err);
+                resolve(notice);
             });
         }).catch((err) => {
-            reject(err);
+            notice.error = err;
+            resolve(notice);
         });
     });
 }

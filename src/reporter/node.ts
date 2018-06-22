@@ -19,13 +19,14 @@ let rateLimitReset = 0;
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(errors.ipRateLimited);
+        notice.error = errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
 
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
     let payload = jsonifyNotice(notice);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         let requestWrapper = opts.request || requestLib;
         requestWrapper({
             url: url,
@@ -37,23 +38,27 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
             timeout: opts.timeout
         }, function (error: any, response: request.RequestResponse, body: any): void {
             if (error) {
-                reject(error);
+                notice.error = error;
+                resolve(notice);
                 return;
             }
 
             if (!response.statusCode) {
-                let err = new Error('airbrake: node: statusCode is null or undefined');
-                reject(err);
+                notice.error = new Error(
+                    'airbrake: node: statusCode is null or undefined');
+                resolve(notice);
                 return;
             }
 
             if (response.statusCode === 401) {
-                reject(errors.unauthorized);
+                notice.error = errors.unauthorized;
+                resolve(notice);
                 return;
             }
 
             if (response.statusCode === 429) {
-                reject(errors.ipRateLimited);
+                notice.error = errors.ipRateLimited;
+                resolve(notice);
 
                 let h = response.headers['x-ratelimit-delay'];
                 if (!h) {
@@ -82,7 +87,8 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                 try {
                     resp = JSON.parse(body);
                 } catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 if (resp.id) {
@@ -91,16 +97,16 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                     return;
                 }
                 if (resp.message) {
-                    let err = new Error(resp.message);
-                    reject(err);
+                    notice.error = new Error(resp.message);
+                    resolve(notice);
                     return;
                 }
             }
 
             body = body.trim();
-            let err = new Error(
+            notice.error = new Error(
                 `airbrake: node: unexpected response: code=${response.statusCode} body='${body}'`);
-            reject(err);
+            resolve(notice);
         });
     });
 }

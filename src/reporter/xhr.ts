@@ -10,13 +10,14 @@ let rateLimitReset = 0;
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(errors.ipRateLimited);
+        notice.error = errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
 
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
     let payload = jsonifyNotice(notice);
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         let req = new XMLHttpRequest();
         req.open('POST', url, true);
         req.timeout = opts.timeout;
@@ -26,12 +27,14 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
             }
 
             if (req.status === 401) {
-                reject(errors.unauthorized);
+                notice.error = errors.unauthorized;
+                resolve(notice);
                 return;
             }
 
             if (req.status === 429) {
-                reject(errors.ipRateLimited);
+                notice.error = errors.ipRateLimited;
+                resolve(notice);
 
                 let s = req.getResponseHeader('X-RateLimit-Delay');
                 if (!s) {
@@ -50,7 +53,8 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                 try {
                     resp = JSON.parse(req.responseText);
                 } catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 if (resp.id) {
@@ -59,16 +63,16 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                     return;
                 }
                 if (resp.message) {
-                    let err = new Error(resp.message);
-                    reject(err);
+                    notice.error = new Error(resp.message);
+                    resolve(notice);
                     return;
                 }
             }
 
             let body = req.responseText.trim();
-            let err = new Error(
+            notice.error = new Error(
                 `airbrake: xhr: unexpected response: code=${req.status} body='${body}'`);
-            reject(err);
+            resolve(notice);
         };
         req.send(payload);
     });

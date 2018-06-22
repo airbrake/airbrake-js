@@ -70,8 +70,9 @@ describe('Client config', () => {
         });
 
         expect(reporter).to.not.have.been.called;
-        promise.catch((err: Error) => {
-            expect(err.toString()).to.equal('Error: airbrake: window error is ignored');
+        promise.then((notice: any) => {
+            expect(notice.error.toString()).to.equal(
+                'Error: airbrake: window error is ignored');
             done();
         });
     });
@@ -219,8 +220,9 @@ describe('Client', () => {
             expect(reporter).to.have.been.calledOnce;
 
             let promise = client.notify(err);
-            promise.catch((err: Error) => {
-                expect(err.toString()).to.equal('Error: airbrake: error is filtered');
+            promise.then((notice: any) => {
+                expect(notice.error.toString()).to.equal(
+                    'Error: airbrake: error is filtered');
                 done();
             });
         });
@@ -229,8 +231,8 @@ describe('Client', () => {
             let promise = client.notify('');
             expect(reporter).not.to.have.been.called;
 
-            promise.catch((err: Error) => {
-                expect(err.toString()).to.equal(
+            promise.then((notice: any) => {
+                expect(notice.error.toString()).to.equal(
                     'Error: airbrake: got err="", wanted an Error');
                 done();
             });
@@ -335,8 +337,8 @@ describe('Client', () => {
 
                 expect(reporter).not.to.have.been.called;
 
-                promise.catch((err: Error) => {
-                    expect(err.toString()).to.equal(
+                promise.then((notice: any) => {
+                    expect(notice.error.toString()).to.equal(
                         'Error: airbrake: got err=null, wanted an Error');
                     done();
                 });
