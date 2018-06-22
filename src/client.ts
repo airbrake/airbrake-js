@@ -120,6 +120,10 @@ class Client {
     }
 
     notify(err: any): Promise<Notice> {
+        return this._notify(err).catch(() => {}) as Promise<Notice>;
+    }
+
+    private _notify(err: any): Promise<Notice> {
         if (typeof err !== 'object' || err.error === undefined) {
             err = {error: err};
         }
