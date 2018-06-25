@@ -73,10 +73,11 @@ Then you can send a textual message to Airbrake:
 ```js
 var promise = airbrake.notify(`user id=${user_id} not found`);
 promise.then(function(notice) {
-  console.log('notice id', notice.id);
-});
-promise.catch(function(err) {
-  console.log('airbrake error', err);
+  if (notice.id) {
+    console.log('notice id', notice.id);
+  } else {
+    console.log('notify failed', notice.error);
+  }
 });
 ```
 

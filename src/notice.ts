@@ -13,6 +13,8 @@ export interface NoticeError {
 
 export interface Notice {
     id?: string;
+    error?: Error;
+
     errors: NoticeError[];
     context?: any;
     params?: any;

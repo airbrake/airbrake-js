@@ -7,7 +7,7 @@ import {ReporterOptions} from './reporter';
 let cbCount = 0;
 
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
         cbCount++;
 
         let cbName = 'airbrakeCb' + String(cbCount);
@@ -24,13 +24,13 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
                 return;
             }
             if (resp.message) {
-                let err = new Error(resp.message);
-                reject(err);
+                notice.error = new Error(resp.message);
+                resolve(notice);
                 return;
             }
 
-            let err = new Error(resp);
-            reject(err);
+            notice.error = new Error(resp);
+            resolve(notice);
         };
 
         let payload = encodeURIComponent(jsonifyNotice(notice));
@@ -43,8 +43,8 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
         script.onload = () => head.removeChild(script);
         script.onerror = () => {
             head.removeChild(script);
-            let err = new Error('airbrake: JSONP script error');
-            reject(err);
+            notice.error = new Error('airbrake: JSONP script error');
+            resolve(notice);
         };
         head.appendChild(script);
     });

@@ -120,39 +120,6 @@ class Client {
     }
 
     notify(err: any): Promise<Notice> {
-        if (typeof err !== 'object' || err.error === undefined) {
-            err = {error: err};
-        }
-
-        if (!err.error) {
-            let reason = new Error(
-                `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`);
-            return Promise.reject(reason);
-        }
-
-        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
-            let reason = new Error('airbrake: window error is ignored');
-            return Promise.reject(reason);
-        }
-
-        if (this.offline) {
-            return new Promise((resolve, reject) => {
-                this.todo.push({
-                    err: err,
-                    resolve: resolve,
-                    reject: reject,
-                });
-                while (this.todo.length > 100) {
-                    let j = this.todo.shift();
-                    if (j === undefined) {
-                        break;
-                    }
-                    let reason = new Error('airbrake: offline queue is too large');
-                    j.reject(reason);
-                }
-            });
-        }
-
         let notice: Notice = {
             id: '',
             errors: [],
@@ -170,6 +137,39 @@ class Client {
             session: err.session || {},
         };
 
+        if (typeof err !== 'object' || err.error === undefined) {
+            err = {error: err};
+        }
+
+        if (!err.error) {
+            notice.error = new Error(
+                `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`);
+            return Promise.resolve(notice);
+        }
+
+        if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
+            notice.error = new Error('airbrake: window error is ignored');
+            return Promise.resolve(notice);
+        }
+
+        if (this.offline) {
+            return new Promise((resolve, reject) => {
+                this.todo.push({
+                    err: err,
+                    resolve: resolve,
+                    reject: reject,
+                });
+                while (this.todo.length > 100) {
+                    let j = this.todo.shift();
+                    if (j === undefined) {
+                        break;
+                    }
+                    notice.error = new Error('airbrake: offline queue is too large');
+                    j.resolve(notice);
+                }
+            });
+        }
+
         let history = getHistory();
         if (history.length > 0) {
             notice.context.history = history;
@@ -181,8 +181,8 @@ class Client {
         for (let filter of this.filters) {
             let r = filter(notice);
             if (r === null) {
-                let reason = new Error('airbrake: error is filtered');
-                return Promise.reject(reason);
+                notice.error = new Error('airbrake: error is filtered');
+                return Promise.resolve(notice);
             }
             notice = r;
         }
@@ -251,8 +251,6 @@ class Client {
         for (let j of this.todo) {
             this.notify(j.err).then((notice) => {
                 j.resolve(notice);
-            }).catch((reason) => {
-                j.reject(reason);
             });
         }
         this.todo = [];
