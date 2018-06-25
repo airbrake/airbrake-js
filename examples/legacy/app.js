@@ -20,11 +20,12 @@ function start() {
   try {
     throw new Error('hello from airbrake-js');
   } catch (err) {
-    promise = airbrake.notify(err);
-    promise.then(function(notice) {
-      console.log('notice id:', notice.id);
-    }, function(err) {
-      console.log('airbrake failed:', err);
+    airbrake.notify(err).then(function(notice) {
+      if (notice.id) {
+        console.log('notice id:', notice.id);
+      } else {
+        console.log('notify failed:', notice.error);
+      }
     });
   }
 }

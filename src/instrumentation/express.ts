@@ -21,9 +21,7 @@ function makeErrorHandler(client: Notifier) {
             notice.context.referer = referer;
         }
 
-        client.notify(notice).catch(function(err) {
-            console.log('airbrake failed:', err.toString());
-        });
+        client.notify(notice);
         next(err);
     };
 }
