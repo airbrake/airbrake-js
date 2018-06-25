@@ -1,4 +1,4 @@
-/*! airbrake-js v1.1.2 */
+/*! airbrake-js v1.2.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -1096,16 +1096,32 @@ var Client = /** @class */ (function () {
     };
     Client.prototype.notify = function (err) {
         var _this = this;
+        var notice = {
+            id: '',
+            errors: [],
+            context: Object.assign({
+                language: 'JavaScript',
+                severity: 'error',
+                notifier: {
+                    name: 'airbrake-js',
+                    version: "1.2.0",
+                    url: 'https://github.com/airbrake/airbrake-js',
+                },
+            }, err.context),
+            params: err.params || {},
+            environment: err.environment || {},
+            session: err.session || {},
+        };
         if (typeof err !== 'object' || err.error === undefined) {
             err = { error: err };
         }
         if (!err.error) {
-            var reason = new Error("airbrake: got err=" + JSON.stringify(err.error) + ", wanted an Error");
-            return Promise.reject(reason);
+            notice.error = new Error("airbrake: got err=" + JSON.stringify(err.error) + ", wanted an Error");
+            return Promise.resolve(notice);
         }
         if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
-            var reason = new Error('airbrake: window error is ignored');
-            return Promise.reject(reason);
+            notice.error = new Error('airbrake: window error is ignored');
+            return Promise.resolve(notice);
         }
         if (this.offline) {
             return new Promise(function (resolve, reject) {
@@ -1119,27 +1135,11 @@ var Client = /** @class */ (function () {
                     if (j === undefined) {
                         break;
                     }
-                    var reason = new Error('airbrake: offline queue is too large');
-                    j.reject(reason);
+                    notice.error = new Error('airbrake: offline queue is too large');
+                    j.resolve(notice);
                 }
             });
         }
-        var notice = {
-            id: '',
-            errors: [],
-            context: Object.assign({
-                language: 'JavaScript',
-                severity: 'error',
-                notifier: {
-                    name: 'airbrake-js',
-                    version: "1.1.2",
-                    url: 'https://github.com/airbrake/airbrake-js',
-                },
-            }, err.context),
-            params: err.params || {},
-            environment: err.environment || {},
-            session: err.session || {},
-        };
         var history = historian_1.getHistory();
         if (history.length > 0) {
             notice.context.history = history;
@@ -1150,8 +1150,8 @@ var Client = /** @class */ (function () {
             var filter = _a[_i];
             var r = filter(notice);
             if (r === null) {
-                var reason = new Error('airbrake: error is filtered');
-                return Promise.reject(reason);
+                notice.error = new Error('airbrake: error is filtered');
+                return Promise.resolve(notice);
             }
             notice = r;
         }
@@ -1216,8 +1216,6 @@ var Client = /** @class */ (function () {
         var _loop_1 = function (j) {
             this_1.notify(j.err).then(function (notice) {
                 j.resolve(notice);
-            }).catch(function (reason) {
-                j.reject(reason);
             });
         };
         var this_1 = this;
@@ -2170,19 +2168,19 @@ function parse(err) {
 function processor(err) {
     var backtrace = [];
     if (!err.noStack) {
-        var frames_1 = parse(err);
-        if (frames_1.length === 0) {
+        var frames_2 = parse(err);
+        if (frames_2.length === 0) {
             try {
                 throw new Error('fake');
             }
             catch (fakeErr) {
-                frames_1 = parse(fakeErr);
-                frames_1.shift();
-                frames_1.shift();
+                frames_2 = parse(fakeErr);
+                frames_2.shift();
+                frames_2.shift();
             }
         }
-        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
-            var frame = frames_2[_i];
+        for (var _i = 0, frames_1 = frames_2; _i < frames_1.length; _i++) {
+            var frame = frames_1[_i];
             backtrace.push({
                 function: frame.functionName || '',
                 file: frame.fileName || '',
@@ -2232,7 +2230,8 @@ var rateLimitReset = 0;
 function report(notice, opts) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(reporter_1.errors.ipRateLimited);
+        notice.error = reporter_1.errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
@@ -2240,14 +2239,16 @@ function report(notice, opts) {
         method: 'POST',
         body: payload,
     };
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, _reject) {
         fetch(url, opt).then(function (req) {
             if (req.status === 401) {
-                reject(reporter_1.errors.unauthorized);
+                notice.error = reporter_1.errors.unauthorized;
+                resolve(notice);
                 return;
             }
             if (req.status === 429) {
-                reject(reporter_1.errors.ipRateLimited);
+                notice.error = reporter_1.errors.ipRateLimited;
+                resolve(notice);
                 var s = req.headers.get('X-RateLimit-Delay');
                 if (!s) {
                     return;
@@ -2264,7 +2265,8 @@ function report(notice, opts) {
                     json = req.json();
                 }
                 catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 json.then(function (resp) {
@@ -2274,19 +2276,20 @@ function report(notice, opts) {
                         return;
                     }
                     if (resp.message) {
-                        var err = new Error(resp.message);
-                        reject(err);
+                        notice.error = new Error(resp.message);
+                        resolve(notice);
                         return;
                     }
                 });
                 return;
             }
             req.text().then(function (body) {
-                var err = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
-                reject(err);
+                notice.error = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
+                resolve(notice);
             });
         }).catch(function (err) {
-            reject(err);
+            notice.error = err;
+            resolve(notice);
         });
     });
 }
@@ -2308,7 +2311,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
 var cbCount = 0;
 function report(notice, opts) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, _reject) {
         cbCount++;
         var cbName = 'airbrakeCb' + String(cbCount);
         window[cbName] = function (resp) {
@@ -2324,12 +2327,12 @@ function report(notice, opts) {
                 return;
             }
             if (resp.message) {
-                var err_1 = new Error(resp.message);
-                reject(err_1);
+                notice.error = new Error(resp.message);
+                resolve(notice);
                 return;
             }
-            var err = new Error(resp);
-            reject(err);
+            notice.error = new Error(resp);
+            resolve(notice);
         };
         var payload = encodeURIComponent(jsonify_notice_1.default(notice));
         var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
@@ -2340,8 +2343,8 @@ function report(notice, opts) {
         script.onload = function () { return head.removeChild(script); };
         script.onerror = function () {
             head.removeChild(script);
-            var err = new Error('airbrake: JSONP script error');
-            reject(err);
+            notice.error = new Error('airbrake: JSONP script error');
+            resolve(notice);
         };
         head.appendChild(script);
     });
@@ -2373,11 +2376,12 @@ var rateLimitReset = 0;
 function report(notice, opts) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(reporter_1.errors.ipRateLimited);
+        notice.error = reporter_1.errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, _reject) {
         var requestWrapper = opts.request || requestLib;
         requestWrapper({
             url: url,
@@ -2389,20 +2393,23 @@ function report(notice, opts) {
             timeout: opts.timeout
         }, function (error, response, body) {
             if (error) {
-                reject(error);
+                notice.error = error;
+                resolve(notice);
                 return;
             }
             if (!response.statusCode) {
-                var err_1 = new Error('airbrake: node: statusCode is null or undefined');
-                reject(err_1);
+                notice.error = new Error('airbrake: node: statusCode is null or undefined');
+                resolve(notice);
                 return;
             }
             if (response.statusCode === 401) {
-                reject(reporter_1.errors.unauthorized);
+                notice.error = reporter_1.errors.unauthorized;
+                resolve(notice);
                 return;
             }
             if (response.statusCode === 429) {
-                reject(reporter_1.errors.ipRateLimited);
+                notice.error = reporter_1.errors.ipRateLimited;
+                resolve(notice);
                 var h = response.headers['x-ratelimit-delay'];
                 if (!h) {
                     return;
@@ -2429,7 +2436,8 @@ function report(notice, opts) {
                     resp = JSON.parse(body);
                 }
                 catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 if (resp.id) {
@@ -2438,14 +2446,14 @@ function report(notice, opts) {
                     return;
                 }
                 if (resp.message) {
-                    var err_2 = new Error(resp.message);
-                    reject(err_2);
+                    notice.error = new Error(resp.message);
+                    resolve(notice);
                     return;
                 }
             }
             body = body.trim();
-            var err = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
-            reject(err);
+            notice.error = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
+            resolve(notice);
         });
     });
 }
@@ -2504,11 +2512,12 @@ var rateLimitReset = 0;
 function report(notice, opts) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
-        return Promise.reject(reporter_1.errors.ipRateLimited);
+        notice.error = reporter_1.errors.ipRateLimited;
+        return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
-    return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, _reject) {
         var req = new XMLHttpRequest();
         req.open('POST', url, true);
         req.timeout = opts.timeout;
@@ -2517,11 +2526,13 @@ function report(notice, opts) {
                 return;
             }
             if (req.status === 401) {
-                reject(reporter_1.errors.unauthorized);
+                notice.error = reporter_1.errors.unauthorized;
+                resolve(notice);
                 return;
             }
             if (req.status === 429) {
-                reject(reporter_1.errors.ipRateLimited);
+                notice.error = reporter_1.errors.ipRateLimited;
+                resolve(notice);
                 var s = req.getResponseHeader('X-RateLimit-Delay');
                 if (!s) {
                     return;
@@ -2538,7 +2549,8 @@ function report(notice, opts) {
                     resp = JSON.parse(req.responseText);
                 }
                 catch (err) {
-                    reject(err);
+                    notice.error = err;
+                    resolve(notice);
                     return;
                 }
                 if (resp.id) {
@@ -2547,14 +2559,14 @@ function report(notice, opts) {
                     return;
                 }
                 if (resp.message) {
-                    var err_1 = new Error(resp.message);
-                    reject(err_1);
+                    notice.error = new Error(resp.message);
+                    resolve(notice);
                     return;
                 }
             }
             var body = req.responseText.trim();
-            var err = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
-            reject(err);
+            notice.error = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
+            resolve(notice);
         };
         req.send(payload);
     });

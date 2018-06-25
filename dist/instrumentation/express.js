@@ -1,4 +1,4 @@
-/*! airbrake-js v1.1.2 */
+/*! airbrake-js v1.2.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -110,9 +110,7 @@ function makeErrorHandler(client) {
         if (referer) {
             notice.context.referer = referer;
         }
-        client.notify(notice).catch(function (err) {
-            console.log('airbrake failed:', err.toString());
-        });
+        client.notify(notice);
         next(err);
     };
 }
