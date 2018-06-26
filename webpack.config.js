@@ -23,6 +23,18 @@ function newConfig() {
       ]
     },
 
+    externals: {
+      request: {
+        commonjs: 'request',
+        commonjs2: 'request'
+      },
+      os: {
+        commonjs: 'os',
+        commonjs2: 'os'
+      },
+      process: 'process'
+    },
+
     devtool: 'nosources-source-map',
 
     output: {

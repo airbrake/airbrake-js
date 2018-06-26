@@ -48,25 +48,20 @@ export default class Historian {
             }
         }
 
-        let p;
-        try {
-            // Use eval to hide process usage from Webpack and Browserify.
-            p = eval('process');
-        } catch {}
-        if (typeof p === 'object' && typeof p.on === 'function') {
-            p.on('uncaughtException', (err) => {
+        if (typeof process === 'object' && typeof process.on === 'function') {
+            process.on('uncaughtException', (err) => {
                 let exit = () => {
-                    if (p.listeners('uncaughtException').length !== 1) {
+                    if (process.listeners('uncaughtException').length !== 1) {
                         return;
                     }
                     if (this.consoleError) {
                         this.consoleError('uncaught exception', err);
                     }
-                    p.exit(1);
+                    process.exit(1);
                 };
                 this.notify(err).then(exit).catch(exit);
             });
-            p.on('unhandledRejection', (reason: Error, _p) => {
+            process.on('unhandledRejection', (reason: Error, _p) => {
                 let msg = reason.message || String(reason);
                 if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
                     return;
