@@ -10,7 +10,10 @@ let rateLimitReset = 0;
 
 
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
-    let request = require('request');
+    let request;
+    try {
+        request = require('request');
+    } catch (_) {}
 
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
