@@ -6,17 +6,12 @@ import jsonifyNotice from '../jsonify_notice';
 import {ReporterOptions, errors} from './reporter';
 
 
-let requestLib: request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl>;
-try {
-    // Use eval to hide import from Webpack.
-    requestLib = eval('require')('request');
-} catch (_) {}
-
-
 let rateLimitReset = 0;
 
 
 export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
+    let request = require('request');
+
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = errors.ipRateLimited;
@@ -27,7 +22,7 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
     let payload = jsonifyNotice(notice);
 
     return new Promise((resolve, _reject) => {
-        let requestWrapper = opts.request || requestLib;
+        let requestWrapper = opts.request || request;
         requestWrapper({
             url: url,
             method: 'POST',
