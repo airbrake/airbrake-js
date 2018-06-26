@@ -1,14 +1,14 @@
-/*! airbrake-js v1.2.0 */
+/*! airbrake-js v1.3.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
+		module.exports = factory(require("request"), (function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()));
 	else if(typeof define === 'function' && define.amd)
-		define([], factory);
+		define([, ], factory);
 	else if(typeof exports === 'object')
-		exports["Client"] = factory();
+		exports["Client"] = factory(require("request"), (function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()));
 	else
-		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory();
-})(typeof self !== 'undefined' ? self : this, function() {
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory(root[undefined], root[undefined]);
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_request__, __WEBPACK_EXTERNAL_MODULE_os__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -1104,7 +1104,7 @@ var Client = /** @class */ (function () {
                 severity: 'error',
                 notifier: {
                     name: 'airbrake-js',
-                    version: "1.2.0",
+                    version: "1.3.0",
                     url: 'https://github.com/airbrake/airbrake-js',
                 },
             }, err.context),
@@ -1356,40 +1356,16 @@ exports.default = filter;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var myProcess, os;
-try {
-    // Use eval to hide import from Webpack and browserify.
-    myProcess = eval('process');
-    os = eval('require')('os');
-}
-catch (_) { }
 function filter(notice) {
+    var os;
+    try {
+        os = __webpack_require__(/*! os */ "os");
+    }
+    catch (_) { }
     if (os) {
         notice.context.os = os.type() + "/" + os.release();
         notice.context.architecture = os.arch();
         notice.context.hostname = os.hostname();
-    }
-    if (myProcess) {
-        notice.context.platform = myProcess.platform;
-        if (!notice.context.rootDirectory) {
-            notice.context.rootDirectory = myProcess.cwd();
-        }
-        if (myProcess.env.NODE_ENV) {
-            notice.context.environment = myProcess.env.NODE_ENV;
-        }
-        notice.params.process = {
-            pid: myProcess.pid,
-            cwd: myProcess.cwd(),
-            execPath: myProcess.execPath,
-            argv: myProcess.argv,
-        };
-        for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
-            if (myProcess[name_1]) {
-                notice.params.process[name_1] = myProcess[name_1]();
-            }
-        }
-    }
-    if (os) {
         notice.params.os = {
             homedir: os.homedir(),
             uptime: os.uptime(),
@@ -1397,6 +1373,26 @@ function filter(notice) {
             totalmem: os.totalmem(),
             loadavg: os.loadavg(),
         };
+    }
+    if (process) {
+        notice.context.platform = process.platform;
+        if (!notice.context.rootDirectory) {
+            notice.context.rootDirectory = process.cwd();
+        }
+        if (true) {
+            notice.context.environment = "development";
+        }
+        notice.params.process = {
+            pid: process.pid,
+            cwd: process.cwd(),
+            execPath: process.execPath,
+            argv: process.argv,
+        };
+        for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
+            if (process[name_1]) {
+                notice.params.process[name_1] = process[name_1]();
+            }
+        }
     }
     return notice;
 }
@@ -1506,26 +1502,20 @@ var Historian = /** @class */ (function () {
                 this.location();
             }
         }
-        var p;
-        try {
-            // Use eval to hide process usage from Webpack and Browserify.
-            p = eval('process');
-        }
-        catch (_a) { }
-        if (typeof p === 'object' && typeof p.on === 'function') {
-            p.on('uncaughtException', function (err) {
+        if (typeof process === 'object' && typeof process.on === 'function') {
+            process.on('uncaughtException', function (err) {
                 var exit = function () {
-                    if (p.listeners('uncaughtException').length !== 1) {
+                    if (process.listeners('uncaughtException').length !== 1) {
                         return;
                     }
                     if (_this.consoleError) {
                         _this.consoleError('uncaught exception', err);
                     }
-                    p.exit(1);
+                    process.exit(1);
                 };
                 _this.notify(err).then(exit).catch(exit);
             });
-            p.on('unhandledRejection', function (reason, _p) {
+            process.on('unhandledRejection', function (reason, _p) {
                 var msg = reason.message || String(reason);
                 if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
                     return;
@@ -2168,19 +2158,19 @@ function parse(err) {
 function processor(err) {
     var backtrace = [];
     if (!err.noStack) {
-        var frames_2 = parse(err);
-        if (frames_2.length === 0) {
+        var frames_1 = parse(err);
+        if (frames_1.length === 0) {
             try {
                 throw new Error('fake');
             }
             catch (fakeErr) {
-                frames_2 = parse(fakeErr);
-                frames_2.shift();
-                frames_2.shift();
+                frames_1 = parse(fakeErr);
+                frames_1.shift();
+                frames_1.shift();
             }
         }
-        for (var _i = 0, frames_1 = frames_2; _i < frames_1.length; _i++) {
-            var frame = frames_1[_i];
+        for (var _i = 0, frames_2 = frames_1; _i < frames_2.length; _i++) {
+            var frame = frames_2[_i];
             backtrace.push({
                 function: frame.functionName || '',
                 file: frame.fileName || '',
@@ -2366,14 +2356,9 @@ exports.default = report;
 Object.defineProperty(exports, "__esModule", { value: true });
 var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
-var requestLib;
-try {
-    // Use eval to hide import from Webpack.
-    requestLib = eval('require')('request');
-}
-catch (_) { }
 var rateLimitReset = 0;
 function report(notice, opts) {
+    var request = __webpack_require__(/*! request */ "request");
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = reporter_1.errors.ipRateLimited;
@@ -2382,7 +2367,7 @@ function report(notice, opts) {
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     var payload = jsonify_notice_1.default(notice);
     return new Promise(function (resolve, _reject) {
-        var requestWrapper = opts.request || requestLib;
+        var requestWrapper = opts.request || request;
         requestWrapper({
             url: url,
             method: 'POST',
@@ -2586,6 +2571,29 @@ exports.default = report;
 __webpack_require__(/*! ./src/internal/compat.ts */"./src/internal/compat.ts");
 module.exports = __webpack_require__(/*! ./src/client.ts */"./src/client.ts");
 
+
+/***/ }),
+
+/***/ "os":
+/*!***************************************************!*\
+  !*** external {"commonjs":"os","commonjs2":"os"} ***!
+  \***************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+if(typeof __WEBPACK_EXTERNAL_MODULE_os__ === 'undefined') {var e = new Error("Cannot find module \"undefined\""); e.code = 'MODULE_NOT_FOUND'; throw e;}
+module.exports = __WEBPACK_EXTERNAL_MODULE_os__;
+
+/***/ }),
+
+/***/ "request":
+/*!*************************************************************!*\
+  !*** external {"commonjs":"request","commonjs2":"request"} ***!
+  \*************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_request__;
 
 /***/ })
 

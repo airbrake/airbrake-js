@@ -1,4 +1,6 @@
-# v1.2.0
+Please note that this file only lists backwards incompatible changes. For full list of changes please check https://github.com/airbrake/airbrake-js/commits/master
+
+### v1.2.0
 
 - airbrake-js no longer rejects promises returned by `notify` to not trigger unhandled rejection warnings. Instead error is stored in `notice.error` and promise is resolved. For example:
 
