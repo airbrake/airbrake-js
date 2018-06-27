@@ -1,4 +1,4 @@
-/*! airbrake-js v1.3.1 */
+/*! airbrake-js v1.4.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()));
@@ -1010,19 +1010,22 @@ module.exports = g;
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 __webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
-var stacktracejs_1 = __webpack_require__(/*! ./processor/stacktracejs */ "./src/processor/stacktracejs.ts");
-var ignore_1 = __webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts");
-var debounce_1 = __webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts");
-var uncaught_message_1 = __webpack_require__(/*! ./filter/uncaught_message */ "./src/filter/uncaught_message.ts");
-var angular_message_1 = __webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts");
-var window_1 = __webpack_require__(/*! ./filter/window */ "./src/filter/window.ts");
-var node_1 = __webpack_require__(/*! ./filter/node */ "./src/filter/node.ts");
+var stacktracejs_1 = __importDefault(__webpack_require__(/*! ./processor/stacktracejs */ "./src/processor/stacktracejs.ts"));
+var ignore_1 = __importDefault(__webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts"));
+var debounce_1 = __importDefault(__webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts"));
+var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaught_message */ "./src/filter/uncaught_message.ts"));
+var angular_message_1 = __importDefault(__webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts"));
+var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
+var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
-var fetch_1 = __webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts");
-var node_2 = __webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts");
-var xhr_1 = __webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts");
-var jsonp_1 = __webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts");
+var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts"));
+var node_2 = __importDefault(__webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts"));
+var xhr_1 = __importDefault(__webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts"));
+var jsonp_1 = __importDefault(__webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts"));
 var historian_1 = __webpack_require__(/*! ./historian */ "./src/historian.ts");
 var Client = /** @class */ (function () {
     function Client(opts) {
@@ -1100,13 +1103,7 @@ var Client = /** @class */ (function () {
             id: '',
             errors: [],
             context: Object.assign({
-                language: 'JavaScript',
-                severity: 'error',
-                notifier: {
-                    name: 'airbrake-js',
-                    version: "1.3.1",
-                    url: 'https://github.com/airbrake/airbrake-js',
-                },
+                severity: 'error'
             }, err.context),
             params: err.params || {},
             environment: err.environment || {},
@@ -1155,6 +1152,15 @@ var Client = /** @class */ (function () {
             }
             notice = r;
         }
+        if (!notice.context) {
+            notice.context = {};
+        }
+        notice.context.language = 'JavaScript';
+        notice.context.notifier = {
+            name: 'airbrake-js',
+            version: "1.4.0",
+            url: 'https://github.com/airbrake/airbrake-js'
+        };
         return this.reporter(notice, this.opts);
     };
     // TODO: fix wrapping for multiple clients
@@ -2213,8 +2219,11 @@ exports.default = processor;
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
 function report(notice, opts) {
@@ -2297,8 +2306,11 @@ exports.default = report;
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var cbCount = 0;
 function report(notice, opts) {
     return new Promise(function (resolve, _reject) {
@@ -2353,8 +2365,11 @@ exports.default = report;
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
 function report(notice, opts) {
@@ -2494,8 +2509,11 @@ exports.errors = {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts");
+var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
 function report(notice, opts) {
