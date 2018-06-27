@@ -109,8 +109,8 @@ describe('Client', () => {
             expect(reporter).not.to.have.been.called;
         });
 
-        it('returns true to keep notice', () => {
-            let filter = sinon.spy((_) => true);
+        it('returns notice to keep it', () => {
+            let filter = sinon.spy((notice) => notice);
             client.addFilter(filter);
 
             client.notify({});

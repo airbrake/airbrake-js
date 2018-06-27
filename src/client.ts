@@ -124,13 +124,7 @@ class Client {
             id: '',
             errors: [],
             context: Object.assign({
-                language: 'JavaScript',
-                severity: 'error',
-                notifier: {
-                    name: 'airbrake-js',
-                    version: VERSION,
-                    url: 'https://github.com/airbrake/airbrake-js',
-                },
+                severity: 'error'
             }, err.context),
             params: err.params || {},
             environment: err.environment || {},
@@ -186,6 +180,16 @@ class Client {
             }
             notice = r;
         }
+
+        if (!notice.context) {
+            notice.context = {};
+        }
+        notice.context.language = 'JavaScript';
+        notice.context.notifier = {
+            name: 'airbrake-js',
+            version: VERSION,
+            url: 'https://github.com/airbrake/airbrake-js'
+        };
 
         return this.reporter(notice, this.opts);
     }
