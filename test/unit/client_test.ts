@@ -1,4 +1,4 @@
-import Client = require('../../src/client');
+import Client from '../../src/client';
 
 import * as sinon from 'sinon';
 import { expect } from './sinon_chai';
