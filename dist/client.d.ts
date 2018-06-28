@@ -1,5 +1,5 @@
 declare module 'airbrake-js' {
-  class Client {
+  export default class Client {
     constructor(opts?: any);
     public addFilter(filter: Filter): void;
     public notify(err: any): Promise<Notice>;
@@ -36,6 +36,4 @@ declare module 'airbrake-js' {
     message: string;
     backtrace: AirbrakeFrame[];
   }
-
-  export = Client;
 }
