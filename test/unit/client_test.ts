@@ -76,6 +76,42 @@ describe('Client config', () => {
             done();
         });
     });
+
+    describe('keysBlacklist', () => {
+        function test(keysBlacklist: any[]) {
+            client = new Client({
+                projectId: 1,
+                projectKey: 'abc',
+                reporter: reporter,
+                keysBlacklist: keysBlacklist,
+            });
+
+            client.notify({
+                error: new Error('test'),
+                params: {
+                    key1: 'value1',
+                    key2: 'value2',
+                    key3: {'key1': 'value1'},
+                },
+            });
+
+            expect(reporter).to.have.been.called;
+            let notice = reporter.lastCall.args[0];
+            expect(notice.params).to.deep.equal({
+                key1: '[Filtered]',
+                key2: 'value2',
+                key3: {key1: '[Filtered]'},
+            });
+        };
+
+        it('support exact match', () => {
+            test(['key1']);
+        });
+
+        it('support regexp match', () => {
+            test([/key1/]);
+        });
+    });
 });
 
 

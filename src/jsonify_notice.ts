@@ -1,12 +1,14 @@
 import Notice from './notice';
 
 
-const maxObjectLength = 128;
+const MAX_OBJ_LENGTH = 128;
 
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
-export default function jsonifyNotice(notice: Notice, maxLength = 64000): string {
+export default function jsonifyNotice(
+    notice: Notice, maxLength = 64000): string {
     let s = '';
+
     try {
         s = JSON.stringify(notice);
     } catch (_) {}
@@ -59,8 +61,8 @@ export default function jsonifyNotice(notice: Notice, maxLength = 64000): string
 
 // truncateObject truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObject(obj: any, level: number): any {
-    const maxLength = scale(maxObjectLength, level);
+function truncateObject(obj: any, level = 0): any {
+    const maxLength = scale(MAX_OBJ_LENGTH, level);
 
     let dst = {};
     let length = 0;
@@ -78,15 +80,15 @@ function scale(num: number, level: number): number {
     return (num >> level) || 1;
 }
 
-export function truncate(value: any, level?: number): any {
+export function truncate(value: any, level = 0): any {
     let t = new Truncator(level);
     return t.truncate(value);
 }
 
 class Truncator {
     private maxStringLength = 1024;
-    private maxObjectLength = maxObjectLength;
-    private maxArrayLength = maxObjectLength;
+    private maxObjectLength = MAX_OBJ_LENGTH;
+    private maxArrayLength = MAX_OBJ_LENGTH;
     private maxDepth = 8;
 
     private keys: string[] = [];
@@ -105,16 +107,16 @@ class Truncator {
         }
 
         switch (typeof value) {
-        case 'boolean':
-        case 'number':
-        case 'function':
-            return value;
-        case 'string':
-            return this.truncateString(value);
-        case 'object':
-            break;
-        default:
-            return String(value);
+            case 'boolean':
+            case 'number':
+            case 'function':
+                return value;
+            case 'string':
+                return this.truncateString(value);
+            case 'object':
+                break;
+            default:
+                return this.truncateString(String(value));
         }
 
         if (value instanceof String) {
@@ -129,7 +131,7 @@ class Truncator {
         }
 
         if (value instanceof Error) {
-            return value.toString();
+            return this.truncateString(value.toString());
         }
 
         if (this.seen.indexOf(value) >= 0) {
@@ -147,20 +149,20 @@ class Truncator {
         this.seen.push(value);
 
         switch (type) {
-        case 'Array':
-            return this.truncateArray(value, depth);
-        case 'Object':
-            return this.truncateObject(value, depth);
-        default:
-            let saved = this.maxDepth;
-            this.maxDepth = 0;
+            case 'Array':
+                return this.truncateArray(value, depth);
+            case 'Object':
+                return this.truncateObject(value, depth);
+            default:
+                let saved = this.maxDepth;
+                this.maxDepth = 0;
 
-            let obj = this.truncateObject(value, depth);
-            obj.__type = type;
+                let obj = this.truncateObject(value, depth);
+                obj.__type = type;
 
-            this.maxDepth = saved;
+                this.maxDepth = saved;
 
-            return obj;
+                return obj;
         }
     }
 
@@ -203,14 +205,13 @@ class Truncator {
     private truncateObject(obj: any, depth = 0): any {
         let length = 0;
         let dst = {};
-        for (let attr in obj) {
-            let value = getAttr(obj, attr);
+        for (let key in obj) {
+            let value = getAttr(obj, key);
 
             if (value === undefined || typeof value === 'function') {
                 continue;
             }
-
-            dst[attr] = this.truncate(value, attr, depth);
+            dst[key] = this.truncate(value, key, depth);
 
             length++;
             if (length >= this.maxObjectLength) {
@@ -222,7 +223,7 @@ class Truncator {
 }
 
 function getAttr(obj: any, attr: string): any {
-    // Ignore browser specific exception trying to read attribute (#79).
+    // Ignore browser specific exception trying to read an attribute (#79).
     try {
         return obj[attr];
     } catch (_) {
