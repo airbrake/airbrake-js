@@ -63,7 +63,7 @@ describe('Client config', () => {
             ignoreWindowError: true,
         });
         let promise = client.notify({
-            error: new Error('test'),
+            error: err,
             context: {
                 windowError: true,
             },
@@ -77,6 +77,21 @@ describe('Client config', () => {
         });
     });
 
+    it('supports environment', () => {
+        client = new Client({
+            projectId: 1,
+            projectKey: 'abc',
+            reporter: reporter,
+            environment: 'production',
+        });
+
+        client.notify(err);
+
+        expect(reporter).to.have.been.called;
+        let notice = reporter.lastCall.args[0];
+        expect(notice.context.environment).to.equal('production');
+    });
+
     describe('keysBlacklist', () => {
         function test(keysBlacklist: any[]) {
             client = new Client({
@@ -87,7 +102,7 @@ describe('Client config', () => {
             });
 
             client.notify({
-                error: new Error('test'),
+                error: err,
                 params: {
                     key1: 'value1',
                     key2: 'value2',

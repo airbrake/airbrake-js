@@ -58,14 +58,18 @@ npm install request
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
-var airbrake = new airbrakeJs.Client({projectId: 1, projectKey: 'REPLACE_ME'});
+var airbrake = new airbrakeJs.Client({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
 ```
 
 Or if you are using browserify/webpack/etc:
 
 ```js
 var AirbrakeClient = require('airbrake-js');
-var airbrake = new AirbrakeClient({projectId: 1, projectKey: 'REPLACE_ME'});
+var airbrake = new AirbrakeClient({...});
 ```
 
 Then you can send a textual message to Airbrake:
@@ -223,17 +227,13 @@ airbrake.addFilter(function(notice) {
 
 ### Unwrapping console
 
-airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using following code:
+airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using `unwrapConsole` option:
 
 ```js
-if (env === 'development') {
-    let methods = ['debug', 'log', 'info', 'warn', 'error'];
-    for (let m of methods) {
-        if (m in console && console[m].inner) {
-            console[m] = console[m].inner;
-        }
-    }
-}
+var airbrake = new airbrakeJs.Client({
+  ...
+  unwrapConsole: true,
+});
 ```
 
 ### Node.js request and proxy

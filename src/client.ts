@@ -69,6 +69,13 @@ class Client {
         ];
         this.addFilter(makeBlacklistFilter(keysBlacklist));
 
+        if (opts.environment) {
+            this.addFilter((notice: Notice): Notice | null => {
+                notice.context.environment = opts.environment;
+                return notice;
+            });
+        }
+
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
 
@@ -94,6 +101,9 @@ class Client {
         }
 
         historian.registerNotifier(this);
+        if (opts.unwrapConsole || isDevEnv(opts)) {
+            historian.unwrapConsole();
+        }
     }
 
     close(): void {
@@ -282,6 +292,11 @@ class Client {
         }
         this.notify(reason);
     }
+}
+
+function isDevEnv(opts: any): boolean {
+    let env = opts.environment;
+    return env && env.startsWith && env.startsWith('dev');
 }
 
 export = Client;
