@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.0 */
+/*! airbrake-js v1.4.1 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()));
@@ -1021,6 +1021,7 @@ var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaug
 var angular_message_1 = __importDefault(__webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts"));
 var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
 var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
+var blacklist_1 = __importDefault(__webpack_require__(/*! ./filter/blacklist */ "./src/filter/blacklist.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
 var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts"));
 var node_2 = __importDefault(__webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts"));
@@ -1048,6 +1049,17 @@ var Client = /** @class */ (function () {
         this.addFilter(debounce_1.default());
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
+        var keysBlacklist = opts.keysBlacklist || [
+            /password/,
+            /secret/,
+        ];
+        this.addFilter(blacklist_1.default(keysBlacklist));
+        if (opts.environment) {
+            this.addFilter(function (notice) {
+                notice.context.environment = opts.environment;
+                return notice;
+            });
+        }
         if (typeof window === 'object') {
             this.addFilter(window_1.default);
             if (window.addEventListener) {
@@ -1068,6 +1080,9 @@ var Client = /** @class */ (function () {
             this.addFilter(node_1.default);
         }
         historian_1.historian.registerNotifier(this);
+        if (opts.unwrapConsole || isDevEnv(opts)) {
+            historian_1.historian.unwrapConsole();
+        }
     }
     Client.prototype.close = function () {
         for (var _i = 0, _a = this.onClose; _i < _a.length; _i++) {
@@ -1158,7 +1173,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.0",
+            version: "1.4.1",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.reporter(notice, this.opts);
@@ -1247,6 +1262,10 @@ var Client = /** @class */ (function () {
     };
     return Client;
 }());
+function isDevEnv(opts) {
+    var env = opts.environment;
+    return env && env.startsWith && env.startsWith('dev');
+}
 module.exports = Client;
 
 
@@ -1282,6 +1301,70 @@ function filter(notice) {
     return notice;
 }
 exports.default = filter;
+
+
+/***/ }),
+
+/***/ "./src/filter/blacklist.ts":
+/*!*********************************!*\
+  !*** ./src/filter/blacklist.ts ***!
+  \*********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var FILTERED = '[Filtered]';
+var KEYS = ['context', 'params', 'environment', 'session'];
+function makeFilter(keysBlacklist) {
+    return function (notice) {
+        for (var _i = 0, KEYS_1 = KEYS; _i < KEYS_1.length; _i++) {
+            var key = KEYS_1[_i];
+            var obj = notice[key];
+            if (obj) {
+                filterObject(obj, keysBlacklist);
+            }
+        }
+        return notice;
+    };
+}
+exports.default = makeFilter;
+function filterObject(obj, keysBlacklist) {
+    for (var key in obj) {
+        if (isBlacklisted(key, keysBlacklist)) {
+            obj[key] = FILTERED;
+            continue;
+        }
+        var value = getAttr(obj, key);
+        if (typeof value === 'object') {
+            filterObject(value, keysBlacklist);
+        }
+    }
+}
+function getAttr(obj, attr) {
+    // Ignore browser specific exception trying to read an attribute (#79).
+    try {
+        return obj[attr];
+    }
+    catch (_) {
+        return;
+    }
+}
+function isBlacklisted(key, keysBlacklist) {
+    for (var _i = 0, keysBlacklist_1 = keysBlacklist; _i < keysBlacklist_1.length; _i++) {
+        var v = keysBlacklist_1[_i];
+        if (v === key) {
+            return true;
+        }
+        if (v instanceof RegExp) {
+            if (key.match(v)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 
 /***/ }),
@@ -1479,6 +1562,7 @@ exports.default = filter;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 var dom_1 = __webpack_require__(/*! ./instrumentation/dom */ "./src/instrumentation/dom.ts");
+var CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
 var Historian = /** @class */ (function () {
     function Historian() {
         var _this = this;
@@ -1660,7 +1744,6 @@ var Historian = /** @class */ (function () {
     };
     Historian.prototype.console = function () {
         var client = this;
-        var methods = ['debug', 'log', 'info', 'warn', 'error'];
         var _loop_1 = function (m) {
             if (!(m in console)) {
                 return "continue";
@@ -1677,9 +1760,17 @@ var Historian = /** @class */ (function () {
             newFn.inner = oldFn;
             console[m] = newFn;
         };
-        for (var _i = 0, methods_1 = methods; _i < methods_1.length; _i++) {
-            var m = methods_1[_i];
+        for (var _i = 0, CONSOLE_METHODS_1 = CONSOLE_METHODS; _i < CONSOLE_METHODS_1.length; _i++) {
+            var m = CONSOLE_METHODS_1[_i];
             _loop_1(m);
+        }
+    };
+    Historian.prototype.unwrapConsole = function () {
+        for (var _i = 0, CONSOLE_METHODS_2 = CONSOLE_METHODS; _i < CONSOLE_METHODS_2.length; _i++) {
+            var m = CONSOLE_METHODS_2[_i];
+            if (m in console && console[m].inner) {
+                console[m] = console[m].inner;
+            }
         }
     };
     Historian.prototype.fetch = function () {
@@ -1925,7 +2016,7 @@ if (!Object.assign) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var maxObjectLength = 128;
+var MAX_OBJ_LENGTH = 128;
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 function jsonifyNotice(notice, maxLength) {
@@ -1979,7 +2070,8 @@ exports.default = jsonifyNotice;
 // truncateObject truncates each key in the object separately, which is
 // useful for handling circular references.
 function truncateObject(obj, level) {
-    var maxLength = scale(maxObjectLength, level);
+    if (level === void 0) { level = 0; }
+    var maxLength = scale(MAX_OBJ_LENGTH, level);
     var dst = {};
     var length = 0;
     for (var key in obj) {
@@ -1995,6 +2087,7 @@ function scale(num, level) {
     return (num >> level) || 1;
 }
 function truncate(value, level) {
+    if (level === void 0) { level = 0; }
     var t = new Truncator(level);
     return t.truncate(value);
 }
@@ -2003,8 +2096,8 @@ var Truncator = /** @class */ (function () {
     function Truncator(level) {
         if (level === void 0) { level = 0; }
         this.maxStringLength = 1024;
-        this.maxObjectLength = maxObjectLength;
-        this.maxArrayLength = maxObjectLength;
+        this.maxObjectLength = MAX_OBJ_LENGTH;
+        this.maxArrayLength = MAX_OBJ_LENGTH;
         this.maxDepth = 8;
         this.keys = [];
         this.seen = [];
@@ -2029,7 +2122,7 @@ var Truncator = /** @class */ (function () {
             case 'object':
                 break;
             default:
-                return String(value);
+                return this.truncateString(String(value));
         }
         if (value instanceof String) {
             return this.truncateString(value.toString());
@@ -2041,7 +2134,7 @@ var Truncator = /** @class */ (function () {
             return value;
         }
         if (value instanceof Error) {
-            return value.toString();
+            return this.truncateString(value.toString());
         }
         if (this.seen.indexOf(value) >= 0) {
             return "[Circular " + this.getPath(value) + "]";
@@ -2103,12 +2196,12 @@ var Truncator = /** @class */ (function () {
         if (depth === void 0) { depth = 0; }
         var length = 0;
         var dst = {};
-        for (var attr in obj) {
-            var value = getAttr(obj, attr);
+        for (var key in obj) {
+            var value = getAttr(obj, key);
             if (value === undefined || typeof value === 'function') {
                 continue;
             }
-            dst[attr] = this.truncate(value, attr, depth);
+            dst[key] = this.truncate(value, key, depth);
             length++;
             if (length >= this.maxObjectLength) {
                 break;
@@ -2119,7 +2212,7 @@ var Truncator = /** @class */ (function () {
     return Truncator;
 }());
 function getAttr(obj, attr) {
-    // Ignore browser specific exception trying to read attribute (#79).
+    // Ignore browser specific exception trying to read an attribute (#79).
     try {
         return obj[attr];
     }
