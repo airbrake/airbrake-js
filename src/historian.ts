@@ -4,6 +4,9 @@ import Notifier from './notifier';
 import {makeEventHandler} from './instrumentation/dom';
 
 
+const CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
+
+
 interface XMLHttpRequestWithState extends XMLHttpRequest {
     __state: any;
 }
@@ -224,8 +227,7 @@ export default class Historian {
 
     console(): void {
         let client = this;
-        let methods = ['debug', 'log', 'info', 'warn', 'error'];
-        for (let m of methods) {
+        for (let m of CONSOLE_METHODS) {
             if (!(m in console)) {
                 continue;
             }
@@ -241,6 +243,14 @@ export default class Historian {
             } as FuncWrapper;
             newFn.inner = oldFn;
             console[m] = newFn;
+        }
+    }
+
+    unwrapConsole(): void {
+        for (let m of CONSOLE_METHODS) {
+            if (m in console && console[m].inner) {
+                console[m] = console[m].inner;
+            }
         }
     }
 
