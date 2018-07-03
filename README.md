@@ -185,6 +185,20 @@ airbrake.addFilter(function(notice) {
 });
 ```
 
+### Filtering keys
+
+With `keysBlacklist` option you can specify list of keys containing sensitive information that must be filtered out, e.g.:
+
+```js
+var airbrake = new AirbrakeClient({
+    ...
+    keysBlacklist: [
+      'password', // exact match
+      /secret/, // regexp match
+    ],
+});
+```
+
 ### Source map
 
 In order to enable source map support you have to specify the path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has the following line:

@@ -3,7 +3,6 @@
         "lib": ["ES2015", "DOM"],
         "target": "ES5",
         "moduleResolution": "node",
-        "strictNullChecks": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noImplicitReturns": true,

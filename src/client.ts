@@ -13,6 +13,7 @@ import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
 import windowFilter from './filter/window';
 import nodeFilter from './filter/node';
+import makeBlacklistFilter from './filter/blacklist';
 
 import {Reporter, ReporterOptions, defaultReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
@@ -61,6 +62,12 @@ class Client {
         this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
+
+        let keysBlacklist = opts.keysBlacklist || [
+            /password/,
+            /secret/,
+        ];
+        this.addFilter(makeBlacklistFilter(keysBlacklist));
 
         if (typeof window === 'object') {
             this.addFilter(windowFilter);
