@@ -7,6 +7,7 @@ const pkg = require('./package.json');
 function newConfig() {
   return {
     mode: 'development',
+    optimization: {nodeEnv: false},
 
     resolve: {
       extensions: ['.js', '.ts', '.tsx']
