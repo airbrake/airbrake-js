@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.1 */
+/*! airbrake-js v1.4.2 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()));
@@ -1173,7 +1173,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.1",
+            version: "1.4.2",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.reporter(notice, this.opts);
@@ -1468,8 +1468,8 @@ function filter(notice) {
         if (!notice.context.rootDirectory) {
             notice.context.rootDirectory = process.cwd();
         }
-        if (true) {
-            notice.context.environment = "development";
+        if (process.env.NODE_ENV) {
+            notice.context.environment = process.env.NODE_ENV;
         }
         notice.params.process = {
             pid: process.pid,
