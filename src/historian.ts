@@ -53,7 +53,7 @@ export default class Historian {
 
         if (typeof process === 'object' && typeof process.on === 'function') {
             process.on('uncaughtException', (err) => {
-                let exit = () => {
+                this.notify(err).then(() => {
                     if (process.listeners('uncaughtException').length !== 1) {
                         return;
                     }
@@ -61,15 +61,23 @@ export default class Historian {
                         this.consoleError('uncaught exception', err);
                     }
                     process.exit(1);
-                };
-                this.notify(err).then(exit).catch(exit);
+                });
             });
             process.on('unhandledRejection', (reason: Error, _p) => {
                 let msg = reason.message || String(reason);
                 if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
                     return;
                 }
-                this.notify(reason);
+
+                this.notify(reason).then(() => {
+                    if (process.listeners('unhandledRejection').length !== 1) {
+                        return;
+                    }
+                    if (this.consoleError) {
+                        this.consoleError('unhandled rejection', reason);
+                    }
+                    process.exit(1);
+                });
             });
         }
 
