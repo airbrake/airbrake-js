@@ -53,6 +53,8 @@ If you're using Node.js you might need to install the [request](https://github.c
 npm install request
 ```
 
+If you're using Webpack you might need to [mark certain packages](https://github.com/airbrake/airbrake-js/blob/95fa74aab2c6e90a08174b4d8c55c68d96496cf5/webpack.config.js#L27-L37) as [external dependencies](https://webpack.js.org/configuration/externals/).
+
 ## Basic Usage
 
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
