@@ -13,7 +13,9 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
     let request;
     try {
         request = require('request');
-    } catch (_) {}
+    } catch (_) {
+        console.log('airbrake-js: please install request package');
+    }
 
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
