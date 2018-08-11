@@ -205,27 +205,12 @@ var airbrake = new AirbrakeClient({
 });
 ```
 
-### Source map
+### Source maps
 
-In order to enable source map support you have to specify the path to the source map file according to the [source map specification](https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit#heading=h.lmz475t4mvbx). For example, airbrake.min.js has the following line:
+Airbrake supports using private and public source maps. Check out our docs for more info:
+- [Private source maps](https://airbrake.io/docs/features/private-sourcemaps/)
+- [Public source maps](https://airbrake.io/docs/features/public-sourcemaps/)
 
-```js
-//# sourceMappingURL=airbrake.min.map
-```
-
-*Please note* that the Airbrake backend downloads the source map file to process the backtrace. This means that the source map should be publicly accessible via HTTP. So, for example, don't expect source map support to work on your local webserver running on `localhost`.
-
-Custom source map URLs are supported by assigning a special property of `notice.context` called `sourceMaps`. The keys of the `sourceMaps` object represent shell filename patterns and the values are URLs of your source maps.
-
-```js
-airbrake.addFilter(function(notice) {
-  notice.context.sourceMaps = {
-    '*': 'https://domain.com/path/to/source.map', // for all files
-    'https://domain.com/path/to/file.min.js': 'https://domain.com/path/to/source.map'
-  };
-  return notice;
-});
-```
 
 ### Unwrapping console
 
