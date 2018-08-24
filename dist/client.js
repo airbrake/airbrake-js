@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.3 */
+/*! airbrake-js v1.4.5 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
@@ -1213,7 +1213,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.3",
+            version: "1.4.5",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.reporter(notice, this.opts);
@@ -2517,7 +2517,9 @@ function report(notice, opts) {
     try {
         request = __webpack_require__(/*! request */ "request");
     }
-    catch (_) { }
+    catch (_) {
+        console.log('airbrake-js: please install request package');
+    }
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = reporter_1.errors.ipRateLimited;
