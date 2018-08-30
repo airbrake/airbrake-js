@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.5 */
+/*! airbrake-js v1.4.6 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
@@ -1211,7 +1211,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.5",
+            version: "1.4.6",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
@@ -2004,20 +2004,13 @@ var MAX_OBJ_LENGTH = 128;
 // environment and session keys.
 function jsonifyNotice(notice, _a) {
     var _b = _a === void 0 ? {} : _a, _c = _b.maxLength, maxLength = _c === void 0 ? 64000 : _c, _d = _b.keysBlacklist, keysBlacklist = _d === void 0 ? [] : _d;
-    var s = '';
-    try {
-        s = JSON.stringify(notice);
-    }
-    catch (_) { }
-    if (s !== '' && s.length < maxLength) {
-        return s;
-    }
     if (notice.errors) {
         for (var i in notice.errors) {
             var t = new Truncator({ keysBlacklist: keysBlacklist });
             notice.errors[i] = t.truncate(notice.errors[i]);
         }
     }
+    var s = '';
     var keys = ['context', 'params', 'environment', 'session'];
     for (var level = 0; level < 8; level++) {
         var opts = { level: level, keysBlacklist: keysBlacklist };
@@ -2025,7 +2018,7 @@ function jsonifyNotice(notice, _a) {
             var key = keys_1[_i];
             var obj = notice[key];
             if (obj) {
-                notice[key] = truncateObject(obj, opts);
+                notice[key] = truncate(obj, opts);
             }
         }
         s = JSON.stringify(notice);
@@ -2051,21 +2044,6 @@ function jsonifyNotice(notice, _a) {
     throw err;
 }
 exports.default = jsonifyNotice;
-// truncateObject truncates each key in the object separately, which is
-// useful for handling circular references.
-function truncateObject(obj, opts) {
-    var maxLength = scale(MAX_OBJ_LENGTH, opts.level);
-    var dst = {};
-    var length = 0;
-    for (var key in obj) {
-        dst[key] = truncate(obj[key], opts);
-        length++;
-        if (length >= maxLength) {
-            break;
-        }
-    }
-    return dst;
-}
 function scale(num, level) {
     return (num >> level) || 1;
 }
@@ -2078,11 +2056,12 @@ var Truncator = /** @class */ (function () {
         this.keys = [];
         this.keysBlacklist = [];
         this.seen = [];
-        this.keysBlacklist = opts.keysBlacklist;
-        this.maxStringLength = scale(this.maxStringLength, opts.level);
-        this.maxObjectLength = scale(this.maxObjectLength, opts.level);
-        this.maxArrayLength = scale(this.maxArrayLength, opts.level);
-        this.maxDepth = scale(this.maxDepth, opts.level);
+        var level = opts.level || 0;
+        this.keysBlacklist = opts.keysBlacklist || [];
+        this.maxStringLength = scale(this.maxStringLength, level);
+        this.maxObjectLength = scale(this.maxObjectLength, level);
+        this.maxArrayLength = scale(this.maxArrayLength, level);
+        this.maxDepth = scale(this.maxDepth, level);
     }
     Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
