@@ -14,7 +14,7 @@ export interface ReporterOptions {
 }
 
 
-export type Reporter = (notice: Notice, opts: ReporterOptions) => Promise<Notice>;
+export type Reporter = (notice: Notice, payload: string, opts: ReporterOptions) => Promise<Notice>;
 export default Reporter;
 
 

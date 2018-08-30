@@ -1,12 +1,11 @@
 import Notice from '../notice';
-import jsonifyNotice from '../jsonify_notice';
 
 import {ReporterOptions} from './reporter';
 
 
 let cbCount = 0;
 
-export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
+export default function report(notice: Notice, payload: string, opts: ReporterOptions): Promise<Notice> {
     return new Promise((resolve, _reject) => {
         cbCount++;
 
@@ -33,7 +32,7 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
             resolve(notice);
         };
 
-        let payload = encodeURIComponent(jsonifyNotice(notice));
+        payload = encodeURIComponent(payload);
         let url = `${opts.host}/api/v3/projects/${opts.projectId}/create-notice?key=${opts.projectKey}&callback=${cbName}&body=${payload}`;
 
         let document = window.document;

@@ -2,36 +2,37 @@ import Notice from '../../src/notice';
 import jsonifyNotice from '../../src/jsonify_notice';
 import { expect } from './sinon_chai';
 
-
 describe('jsonify_notice', () => {
+    const maxLength = 30000;
+
     context('when called with notice', () => {
-        let obj = {
+        let notice = {
             params: {arguments: []},
             environment: {env1: 'value1'},
             session: {session1: 'value1'},
-        } as Notice;
+        };
         let json;
 
         beforeEach(() => {
-            json = jsonifyNotice(obj);
+            json = jsonifyNotice(notice as Notice);
         });
 
         it('produces valid JSON', () => {
-            expect(JSON.parse(json)).to.deep.equal(obj);
+            expect(JSON.parse(json)).to.deep.equal(notice);
         });
     });
 
     context('when called with huge notice', () => {
-        let obj, json, maxLength = 30000;
+        let json;
 
         beforeEach(() => {
-            obj = {
+            let notice = {
                 params: {arr: []},
             };
             for (let i = 0; i < 100; i++) {
-                obj.params.arr.push(Array(100).join('x'));
+                notice.params.arr.push(Array(100).join('x'));
             }
-            json = jsonifyNotice(obj, maxLength);
+            json = jsonifyNotice(notice as Notice, {maxLength});
         });
 
         it('limits json size', () => {
@@ -40,13 +41,13 @@ describe('jsonify_notice', () => {
     });
 
     context('when called with one huge string', () => {
-        let json, maxLength = 30000;
+        let json;
 
         beforeEach(() => {
-            let obj = {
+            let notice = {
                 params: {str: Array(100000).join('x')},
-            } as Notice;
-            json = jsonifyNotice(obj, maxLength);
+            };
+            json = jsonifyNotice(notice as Notice, {maxLength});
         });
 
         it('limits json size', () => {
@@ -55,16 +56,16 @@ describe('jsonify_notice', () => {
     });
 
     context('when called with huge error message', () => {
-        let json, maxLength = 30000;
+        let json;
 
         beforeEach(() => {
-            let obj = {
+            let notice = {
                 errors: [{
                     type: Array(100000).join('x'),
                     message: Array(100000).join('x'),
                 }],
-            } as Notice;
-            json = jsonifyNotice(obj, maxLength);
+            } ;
+            json = jsonifyNotice(notice as Notice, {maxLength});
         });
 
         it('limits json size', () => {

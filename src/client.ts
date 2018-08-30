@@ -2,6 +2,7 @@ import 'promise-polyfill/src/polyfill';
 
 import Notice from './notice';
 import FuncWrapper from './func_wrapper';
+import jsonifyNotice from './jsonify_notice';
 
 import Processor from './processor/processor';
 import stacktracejsProcessor from './processor/stacktracejs';
@@ -13,9 +14,8 @@ import uncaughtMessageFilter from './filter/uncaught_message';
 import angularMessageFilter from './filter/angular_message';
 import windowFilter from './filter/window';
 import nodeFilter from './filter/node';
-import makeBlacklistFilter from './filter/blacklist';
 
-import {Reporter, ReporterOptions, defaultReporter} from './reporter/reporter';
+import {Reporter, defaultReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
 import nodeReporter from './reporter/node';
 import xhrReporter from './reporter/xhr';
@@ -35,7 +35,7 @@ interface Todo {
 
 
 class Client {
-    private opts: ReporterOptions = {} as ReporterOptions;
+    private opts: any;
 
     private processor: Processor;
     private reporter: Reporter;
@@ -54,6 +54,10 @@ class Client {
         this.opts = opts;
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
+        this.opts.keysBlacklist = this.opts.keysBlacklist || [
+            /password/,
+            /secret/,
+        ];
 
         this.processor = opts.processor || stacktracejsProcessor;
         this.setReporter(opts.reporter || defaultReporter(opts));
@@ -62,12 +66,6 @@ class Client {
         this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
-
-        let keysBlacklist = opts.keysBlacklist || [
-            /password/,
-            /secret/,
-        ];
-        this.addFilter(makeBlacklistFilter(keysBlacklist));
 
         if (opts.environment) {
             this.addFilter((notice: Notice): Notice | null => {
@@ -208,7 +206,8 @@ class Client {
             url: 'https://github.com/airbrake/airbrake-js'
         };
 
-        return this.reporter(notice, this.opts);
+        let payload = jsonifyNotice(notice, {keysBlacklist: this.opts.keysBlacklist});
+        return this.reporter(notice, payload, this.opts);
     }
 
     // TODO: fix wrapping for multiple clients

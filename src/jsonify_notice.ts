@@ -1,35 +1,29 @@
 import Notice from './notice';
 
 
+const FILTERED = '[Filtered]';
 const MAX_OBJ_LENGTH = 128;
 
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
 export default function jsonifyNotice(
-    notice: Notice, maxLength = 64000): string {
-    let s = '';
-
-    try {
-        s = JSON.stringify(notice);
-    } catch (_) {}
-
-    if (s !== '' && s.length < maxLength) {
-        return s;
-    }
+    notice: Notice, {maxLength = 64000, keysBlacklist = []} = {}): string {
 
     if (notice.errors) {
         for (let i in notice.errors) {
-            let t = new Truncator();
+            let t = new Truncator({keysBlacklist: keysBlacklist});
             notice.errors[i] = t.truncate(notice.errors[i]);
         }
     }
 
+    let s = '';
     let keys = ['context', 'params', 'environment', 'session'];
     for (let level = 0; level < 8; level++) {
+        let opts = {level: level, keysBlacklist: keysBlacklist};
         for (let key of keys) {
             let obj = notice[key];
             if (obj) {
-                notice[key] = truncateObject(obj, level);
+                notice[key] = truncate(obj, opts);
             }
         }
 
@@ -59,30 +53,13 @@ export default function jsonifyNotice(
     throw err;
 }
 
-// truncateObject truncates each key in the object separately, which is
-// useful for handling circular references.
-function truncateObject(obj: any, level = 0): any {
-    const maxLength = scale(MAX_OBJ_LENGTH, level);
-
-    let dst = {};
-    let length = 0;
-    for (let key in obj) {
-        dst[key] = truncate(obj[key], level);
-        length++;
-        if (length >= maxLength) {
-            break;
-        }
-    }
-    return dst;
-}
-
 function scale(num: number, level: number): number {
     return (num >> level) || 1;
 }
 
-export function truncate(value: any, level = 0): any {
-    let t = new Truncator(level);
-    return t.truncate(value);
+interface TruncatorOptions {
+    level?: number;
+    keysBlacklist?: any[];
 }
 
 class Truncator {
@@ -92,9 +69,13 @@ class Truncator {
     private maxDepth = 8;
 
     private keys: string[] = [];
+    private keysBlacklist: any[] = [];
     private seen: any[] = [];
 
-    constructor(level = 0) {
+    constructor(opts: TruncatorOptions) {
+        let level = opts.level || 0;
+        this.keysBlacklist = opts.keysBlacklist || [];
+
         this.maxStringLength = scale(this.maxStringLength, level);
         this.maxObjectLength = scale(this.maxObjectLength, level);
         this.maxArrayLength = scale(this.maxArrayLength, level);
@@ -206,6 +187,11 @@ class Truncator {
         let length = 0;
         let dst = {};
         for (let key in obj) {
+            if (isBlacklisted(key, this.keysBlacklist)) {
+                dst[key] = FILTERED;
+                continue;
+            }
+
             let value = getAttr(obj, key);
 
             if (value === undefined || typeof value === 'function') {
@@ -222,6 +208,11 @@ class Truncator {
     }
 }
 
+export function truncate(value: any, opts: TruncatorOptions = {}): any {
+    let t = new Truncator(opts);
+    return t.truncate(value);
+}
+
 function getAttr(obj: any, attr: string): any {
     // Ignore browser specific exception trying to read an attribute (#79).
     try {
@@ -234,4 +225,18 @@ function getAttr(obj: any, attr: string): any {
 function objectType(obj: any): string {
     let s = Object.prototype.toString.apply(obj);
     return s.slice('[object '.length, -1);
+}
+
+function isBlacklisted(key: string, keysBlacklist: any[]): boolean {
+    for (let v of keysBlacklist) {
+        if (v === key) {
+            return true;
+        }
+        if (v instanceof RegExp) {
+            if (key.match(v)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }

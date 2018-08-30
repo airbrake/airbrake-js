@@ -1054,6 +1054,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 __webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
+var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ./jsonify_notice */ "./src/jsonify_notice.ts"));
 var stacktracejs_1 = __importDefault(__webpack_require__(/*! ./processor/stacktracejs */ "./src/processor/stacktracejs.ts"));
 var ignore_1 = __importDefault(__webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts"));
 var debounce_1 = __importDefault(__webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts"));
@@ -1061,7 +1062,6 @@ var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaug
 var angular_message_1 = __importDefault(__webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts"));
 var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
 var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
-var blacklist_1 = __importDefault(__webpack_require__(/*! ./filter/blacklist */ "./src/filter/blacklist.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
 var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts"));
 var node_2 = __importDefault(__webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts"));
@@ -1072,7 +1072,6 @@ var Client = /** @class */ (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
         var _this = this;
-        this.opts = {};
         this.filters = [];
         this.offline = false;
         this.todo = [];
@@ -1083,17 +1082,16 @@ var Client = /** @class */ (function () {
         this.opts = opts;
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
+        this.opts.keysBlacklist = this.opts.keysBlacklist || [
+            /password/,
+            /secret/,
+        ];
         this.processor = opts.processor || stacktracejs_1.default;
         this.setReporter(opts.reporter || reporter_1.defaultReporter(opts));
         this.addFilter(ignore_1.default);
         this.addFilter(debounce_1.default());
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
-        var keysBlacklist = opts.keysBlacklist || [
-            /password/,
-            /secret/,
-        ];
-        this.addFilter(blacklist_1.default(keysBlacklist));
         if (opts.environment) {
             this.addFilter(function (notice) {
                 notice.context.environment = opts.environment;
@@ -1216,7 +1214,8 @@ var Client = /** @class */ (function () {
             version: "1.4.5",
             url: 'https://github.com/airbrake/airbrake-js'
         };
-        return this.reporter(notice, this.opts);
+        var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
+        return this.reporter(notice, payload, this.opts);
     };
     // TODO: fix wrapping for multiple clients
     Client.prototype.wrap = function (fn, props) {
@@ -1341,70 +1340,6 @@ function filter(notice) {
     return notice;
 }
 exports.default = filter;
-
-
-/***/ }),
-
-/***/ "./src/filter/blacklist.ts":
-/*!*********************************!*\
-  !*** ./src/filter/blacklist.ts ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var FILTERED = '[Filtered]';
-var KEYS = ['context', 'params', 'environment', 'session'];
-function makeFilter(keysBlacklist) {
-    return function (notice) {
-        for (var _i = 0, KEYS_1 = KEYS; _i < KEYS_1.length; _i++) {
-            var key = KEYS_1[_i];
-            var obj = notice[key];
-            if (obj) {
-                filterObject(obj, keysBlacklist);
-            }
-        }
-        return notice;
-    };
-}
-exports.default = makeFilter;
-function filterObject(obj, keysBlacklist) {
-    for (var key in obj) {
-        if (isBlacklisted(key, keysBlacklist)) {
-            obj[key] = FILTERED;
-            continue;
-        }
-        var value = getAttr(obj, key);
-        if (typeof value === 'object') {
-            filterObject(value, keysBlacklist);
-        }
-    }
-}
-function getAttr(obj, attr) {
-    // Ignore browser specific exception trying to read an attribute (#79).
-    try {
-        return obj[attr];
-    }
-    catch (_) {
-        return;
-    }
-}
-function isBlacklisted(key, keysBlacklist) {
-    for (var _i = 0, keysBlacklist_1 = keysBlacklist; _i < keysBlacklist_1.length; _i++) {
-        var v = keysBlacklist_1[_i];
-        if (v === key) {
-            return true;
-        }
-        if (v instanceof RegExp) {
-            if (key.match(v)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
 
 
 /***/ }),
@@ -2063,11 +1998,12 @@ if (!Object.assign) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+var FILTERED = '[Filtered]';
 var MAX_OBJ_LENGTH = 128;
 // jsonifyNotice serializes notice to JSON and truncates params,
 // environment and session keys.
-function jsonifyNotice(notice, maxLength) {
-    if (maxLength === void 0) { maxLength = 64000; }
+function jsonifyNotice(notice, _a) {
+    var _b = _a === void 0 ? {} : _a, _c = _b.maxLength, maxLength = _c === void 0 ? 64000 : _c, _d = _b.keysBlacklist, keysBlacklist = _d === void 0 ? [] : _d;
     var s = '';
     try {
         s = JSON.stringify(notice);
@@ -2078,17 +2014,18 @@ function jsonifyNotice(notice, maxLength) {
     }
     if (notice.errors) {
         for (var i in notice.errors) {
-            var t = new Truncator();
+            var t = new Truncator({ keysBlacklist: keysBlacklist });
             notice.errors[i] = t.truncate(notice.errors[i]);
         }
     }
     var keys = ['context', 'params', 'environment', 'session'];
     for (var level = 0; level < 8; level++) {
+        var opts = { level: level, keysBlacklist: keysBlacklist };
         for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
             var key = keys_1[_i];
             var obj = notice[key];
             if (obj) {
-                notice[key] = truncateObject(obj, level);
+                notice[key] = truncateObject(obj, opts);
             }
         }
         s = JSON.stringify(notice);
@@ -2100,8 +2037,8 @@ function jsonifyNotice(notice, maxLength) {
         json: s.slice(0, Math.floor(maxLength / 2)) + '...',
     };
     keys.push('errors');
-    for (var _a = 0, keys_2 = keys; _a < keys_2.length; _a++) {
-        var key = keys_2[_a];
+    for (var _e = 0, keys_2 = keys; _e < keys_2.length; _e++) {
+        var key = keys_2[_e];
         var obj = notice[key];
         if (!obj) {
             continue;
@@ -2116,13 +2053,12 @@ function jsonifyNotice(notice, maxLength) {
 exports.default = jsonifyNotice;
 // truncateObject truncates each key in the object separately, which is
 // useful for handling circular references.
-function truncateObject(obj, level) {
-    if (level === void 0) { level = 0; }
-    var maxLength = scale(MAX_OBJ_LENGTH, level);
+function truncateObject(obj, opts) {
+    var maxLength = scale(MAX_OBJ_LENGTH, opts.level);
     var dst = {};
     var length = 0;
     for (var key in obj) {
-        dst[key] = truncate(obj[key], level);
+        dst[key] = truncate(obj[key], opts);
         length++;
         if (length >= maxLength) {
             break;
@@ -2133,25 +2069,20 @@ function truncateObject(obj, level) {
 function scale(num, level) {
     return (num >> level) || 1;
 }
-function truncate(value, level) {
-    if (level === void 0) { level = 0; }
-    var t = new Truncator(level);
-    return t.truncate(value);
-}
-exports.truncate = truncate;
 var Truncator = /** @class */ (function () {
-    function Truncator(level) {
-        if (level === void 0) { level = 0; }
+    function Truncator(opts) {
         this.maxStringLength = 1024;
         this.maxObjectLength = MAX_OBJ_LENGTH;
         this.maxArrayLength = MAX_OBJ_LENGTH;
         this.maxDepth = 8;
         this.keys = [];
+        this.keysBlacklist = [];
         this.seen = [];
-        this.maxStringLength = scale(this.maxStringLength, level);
-        this.maxObjectLength = scale(this.maxObjectLength, level);
-        this.maxArrayLength = scale(this.maxArrayLength, level);
-        this.maxDepth = scale(this.maxDepth, level);
+        this.keysBlacklist = opts.keysBlacklist;
+        this.maxStringLength = scale(this.maxStringLength, opts.level);
+        this.maxObjectLength = scale(this.maxObjectLength, opts.level);
+        this.maxArrayLength = scale(this.maxArrayLength, opts.level);
+        this.maxDepth = scale(this.maxDepth, opts.level);
     }
     Truncator.prototype.truncate = function (value, key, depth) {
         if (key === void 0) { key = ''; }
@@ -2244,6 +2175,10 @@ var Truncator = /** @class */ (function () {
         var length = 0;
         var dst = {};
         for (var key in obj) {
+            if (isBlacklisted(key, this.keysBlacklist)) {
+                dst[key] = FILTERED;
+                continue;
+            }
             var value = getAttr(obj, key);
             if (value === undefined || typeof value === 'function') {
                 continue;
@@ -2258,6 +2193,12 @@ var Truncator = /** @class */ (function () {
     };
     return Truncator;
 }());
+function truncate(value, opts) {
+    if (opts === void 0) { opts = {}; }
+    var t = new Truncator(opts);
+    return t.truncate(value);
+}
+exports.truncate = truncate;
 function getAttr(obj, attr) {
     // Ignore browser specific exception trying to read an attribute (#79).
     try {
@@ -2270,6 +2211,20 @@ function getAttr(obj, attr) {
 function objectType(obj) {
     var s = Object.prototype.toString.apply(obj);
     return s.slice('[object '.length, -1);
+}
+function isBlacklisted(key, keysBlacklist) {
+    for (var _i = 0, keysBlacklist_1 = keysBlacklist; _i < keysBlacklist_1.length; _i++) {
+        var v = keysBlacklist_1[_i];
+        if (v === key) {
+            return true;
+        }
+        if (v instanceof RegExp) {
+            if (key.match(v)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 
@@ -2359,21 +2314,16 @@ exports.default = processor;
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
-function report(notice, opts) {
+function report(notice, payload, opts) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = reporter_1.errors.ipRateLimited;
         return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
     var opt = {
         method: 'POST',
         body: payload,
@@ -2446,13 +2396,9 @@ exports.default = report;
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var cbCount = 0;
-function report(notice, opts) {
+function report(notice, payload, opts) {
     return new Promise(function (resolve, _reject) {
         cbCount++;
         var cbName = 'airbrakeCb' + String(cbCount);
@@ -2476,7 +2422,7 @@ function report(notice, opts) {
             notice.error = new Error(resp);
             resolve(notice);
         };
-        var payload = encodeURIComponent(jsonify_notice_1.default(notice));
+        payload = encodeURIComponent(payload);
         var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
         var document = window.document;
         var head = document.getElementsByTagName('head')[0];
@@ -2505,14 +2451,10 @@ exports.default = report;
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
-function report(notice, opts) {
+function report(notice, payload, opts) {
     var request;
     try {
         request = __webpack_require__(/*! request */ "request");
@@ -2526,7 +2468,6 @@ function report(notice, opts) {
         return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
     return new Promise(function (resolve, _reject) {
         var requestWrapper = opts.request || request;
         requestWrapper({
@@ -2651,21 +2592,16 @@ exports.errors = {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ../jsonify_notice */ "./src/jsonify_notice.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
-function report(notice, opts) {
+function report(notice, payload, opts) {
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = reporter_1.errors.ipRateLimited;
         return Promise.resolve(notice);
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var payload = jsonify_notice_1.default(notice);
     return new Promise(function (resolve, _reject) {
         var req = new XMLHttpRequest();
         req.open('POST', url, true);
