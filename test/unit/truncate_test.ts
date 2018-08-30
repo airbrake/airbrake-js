@@ -116,7 +116,7 @@ describe('truncate', () => {
         let truncated;
 
         beforeEach(() => {
-            truncated = truncate(obj, 1);
+            truncated = truncate(obj, {level: 1});
         });
 
         it('produces truncated object', () => {
@@ -131,6 +131,31 @@ describe('truncate', () => {
                             'obj': '[Truncated Object]',
                         },
                     },
+                },
+            });
+        });
+    });
+
+    describe('keysBlacklist', () => {
+        it('filters blacklisted keys', () => {
+            let obj = {
+                params: {
+                    password: '123',
+                    sub: {
+                        secret: '123',
+                    },
+                },
+            };
+            let keysBlacklist = [
+                /password/,
+                /secret/,
+            ];
+            let truncated = truncate(obj, {keysBlacklist});
+
+            expect(truncated).to.deep.equal({
+                'params': {
+                    'password': '[Filtered]',
+                    'sub': {'secret': '[Filtered]'},
                 },
             });
         });

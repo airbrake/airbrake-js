@@ -35,7 +35,7 @@ describe('Client config', () => {
         client.notify(err);
 
         expect(reporter).to.have.been.called;
-        let opts = reporter.lastCall.args[1];
+        let opts = reporter.lastCall.args[2];
         expect(opts.projectId).to.equal(999);
         expect(opts.projectKey).to.equal('custom_project_key');
         expect(opts.host).to.equal('https://api.airbrake.io');
@@ -51,7 +51,7 @@ describe('Client config', () => {
         });
         client.notify(err);
 
-        let opts = reporter.lastCall.args[1];
+        let opts = reporter.lastCall.args[2];
         expect(opts.host).to.equal('https://custom.domain.com');
     });
 

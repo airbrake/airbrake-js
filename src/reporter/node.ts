@@ -1,7 +1,6 @@
 import * as request from 'request';
 
 import Notice from '../notice';
-import jsonifyNotice from '../jsonify_notice';
 
 import {ReporterOptions, errors} from './reporter';
 
@@ -9,7 +8,7 @@ import {ReporterOptions, errors} from './reporter';
 let rateLimitReset = 0;
 
 
-export default function report(notice: Notice, opts: ReporterOptions): Promise<Notice> {
+export default function report(notice: Notice, payload: string, opts: ReporterOptions): Promise<Notice> {
     let request;
     try {
         request = require('request');
@@ -24,7 +23,6 @@ export default function report(notice: Notice, opts: ReporterOptions): Promise<N
     }
 
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
-    let payload = jsonifyNotice(notice);
 
     return new Promise((resolve, _reject) => {
         let requestWrapper = opts.request || request;

@@ -17,7 +17,7 @@ describe('xhr reporter', () => {
     });
 
     it('opens async POST to default url', () => {
-        reporter(notice, {
+        reporter(notice, '', {
             projectId: 123,
             projectKey: '[project_key]',
             host: 'https://api.airbrake.io',
@@ -31,7 +31,7 @@ describe('xhr reporter', () => {
     });
 
     it('opens POST to custom url', () => {
-        reporter(notice, {
+        reporter(notice, '', {
             projectId: 123,
             projectKey: '[project_key]',
             host: 'https://custom.domain.com',

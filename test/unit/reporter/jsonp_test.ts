@@ -18,7 +18,7 @@ describe('JSONP reporter', () => {
     });
 
     it('report creates script tag with custom host', () => {
-        reporter(notice, {
+        reporter(notice, '', {
             projectId: 123,
             projectKey: '[project_key]',
             host: 'https://custom.domain.com',
