@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.6 */
+/*! airbrake-js v1.4.7 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
@@ -311,7 +311,10 @@ var define = false;
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony default export */ __webpack_exports__["default"] = (function(callback) {
+/**
+ * @this {Promise}
+ */
+function finallyConstructor(callback) {
   var constructor = this.constructor;
   return this.then(
     function(value) {
@@ -325,7 +328,9 @@ __webpack_require__.r(__webpack_exports__);
       });
     }
   );
-});
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (finallyConstructor);
 
 
 /***/ }),
@@ -355,13 +360,21 @@ function bind(fn, thisArg) {
   };
 }
 
+/**
+ * @constructor
+ * @param {Function} fn
+ */
 function Promise(fn) {
   if (!(this instanceof Promise))
     throw new TypeError('Promises must be constructed via new');
   if (typeof fn !== 'function') throw new TypeError('not a function');
+  /** @type {!number} */
   this._state = 0;
+  /** @type {!boolean} */
   this._handled = false;
+  /** @type {Promise|undefined} */
   this._value = undefined;
+  /** @type {!Array<!Function>} */
   this._deferreds = [];
 
   doResolve(fn, this);
@@ -442,6 +455,9 @@ function finale(self) {
   self._deferreds = null;
 }
 
+/**
+ * @constructor
+ */
 function Handler(onFulfilled, onRejected, promise) {
   this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
   this.onRejected = typeof onRejected === 'function' ? onRejected : null;
@@ -481,6 +497,7 @@ Promise.prototype['catch'] = function(onRejected) {
 };
 
 Promise.prototype.then = function(onFulfilled, onRejected) {
+  // @ts-ignore
   var prom = new this.constructor(noop);
 
   handle(this, new Handler(onFulfilled, onRejected, prom));
@@ -587,6 +604,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+/** @suppress {undefinedVars} */
 var globalNS = (function() {
   // the only reliable means to get the global object is
   // `Function('return this')()`
@@ -603,8 +621,8 @@ var globalNS = (function() {
   throw new Error('unable to locate global object');
 })();
 
-if (!globalNS.Promise) {
-  globalNS.Promise = _index__WEBPACK_IMPORTED_MODULE_0__["default"];
+if (!('Promise' in globalNS)) {
+  globalNS['Promise'] = _index__WEBPACK_IMPORTED_MODULE_0__["default"];
 } else if (!globalNS.Promise.prototype['finally']) {
   globalNS.Promise.prototype['finally'] = _finally__WEBPACK_IMPORTED_MODULE_1__["default"];
 }
@@ -1211,7 +1229,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.6",
+            version: "1.4.7",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
@@ -1757,7 +1775,7 @@ var Historian = /** @class */ (function () {
     };
     Historian.prototype.fetch = function () {
         var client = this;
-        var oldFetch = fetch;
+        var oldFetch = window.fetch;
         window.fetch = function (input, init) {
             var state = {
                 type: 'xhr',
@@ -1778,13 +1796,19 @@ var Historian = /** @class */ (function () {
             // Some platforms (e.g. react-native) implement fetch via XHR.
             client.ignoreNextXHR++;
             setTimeout(function () { return client.ignoreNextXHR--; });
-            var promise = oldFetch.apply(this, arguments);
-            promise.then(function (req) {
-                state.statusCode = req.status;
+            return oldFetch.apply(this, arguments)
+                .then(function (resp) {
+                state.statusCode = resp.status;
                 state.duration = new Date().getTime() - state.date.getTime();
                 client.pushHistory(state);
+                return resp;
+            })
+                .catch(function (err) {
+                state.error = err;
+                state.duration = new Date().getTime() - state.date.getTime();
+                client.pushHistory(state);
+                throw err;
             });
-            return promise;
         };
     };
     Historian.prototype.xhr = function () {
@@ -1866,7 +1890,10 @@ var Historian = /** @class */ (function () {
     return Historian;
 }());
 exports.default = Historian;
-exports.historian = new Historian();
+if (!window._airbrakeHistorian) {
+    window._airbrakeHistorian = new Historian();
+}
+exports.historian = window._airbrakeHistorian;
 function getHistory() {
     return exports.historian.getHistory();
 }

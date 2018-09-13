@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js-client",
-  "version": "1.4.6",
+  "version": "1.4.7",
   "homepage": "https://github.com/airbrake/airbrake-js",
   "authors": ["Airbrake"],
   "description": "Notify Airbrake on JavaScript exceptions",
