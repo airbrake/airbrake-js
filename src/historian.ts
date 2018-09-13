@@ -264,7 +264,7 @@ export default class Historian {
 
     fetch(): void {
         let client = this;
-        let oldFetch = fetch;
+        let oldFetch = window.fetch;
         window.fetch = function(input: RequestInfo, init?: RequestInit): Promise<Response> {
             let state: any = {
                 type: 'xhr',
@@ -287,13 +287,18 @@ export default class Historian {
             client.ignoreNextXHR++;
             setTimeout(() => client.ignoreNextXHR--);
 
-            let promise = oldFetch.apply(this, arguments);
-            promise.then(function(req) {
-                state.statusCode = req.status;
-                state.duration = new Date().getTime() - state.date.getTime();
-                client.pushHistory(state);
-            });
-            return promise;
+            return oldFetch.apply(this, arguments)
+                .then(function(resp) {
+                    state.statusCode = resp.status;
+                    state.duration = new Date().getTime() - state.date.getTime();
+                    client.pushHistory(state);
+                })
+                .catch(function(err) {
+                    state.error = err;
+                    state.duration = new Date().getTime() - state.date.getTime();
+                    client.pushHistory(state);
+                    throw err;
+                });
         };
     }
 
@@ -388,7 +393,14 @@ export default class Historian {
     }
 }
 
-export let historian = new Historian();
+declare global {
+    interface Window { _airbrakeHistorian: Historian; }
+}
+
+if (!window._airbrakeHistorian) {
+    window._airbrakeHistorian = new Historian();
+}
+export let historian = window._airbrakeHistorian;
 
 export function getHistory(): any[] {
     return historian.getHistory();
