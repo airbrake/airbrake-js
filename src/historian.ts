@@ -288,10 +288,11 @@ export default class Historian {
             setTimeout(() => client.ignoreNextXHR--);
 
             return oldFetch.apply(this, arguments)
-                .then(function(resp) {
+                .then(function(resp: Response) {
                     state.statusCode = resp.status;
                     state.duration = new Date().getTime() - state.date.getTime();
                     client.pushHistory(state);
+                    return resp;
                 })
                 .catch(function(err) {
                     state.error = err;
