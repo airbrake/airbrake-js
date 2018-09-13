@@ -26,7 +26,7 @@ describe('stacktracejs processor', () => {
             expect(backtrace.length).to.equal(6);
 
             let frame = backtrace[0];
-            expect(frame.file).to.contain('test/unit/processor/stacktracejs_test.ts');
+            expect(frame.file).to.contain('test/unit/processor/stacktracejs_test');
             expect(frame.function).to.equal('Context.<anonymous>');
             expect(frame.line).to.be.a('number');
             expect(frame.column).to.be.a('number');
