@@ -394,14 +394,7 @@ export default class Historian {
     }
 }
 
-declare global {
-    interface Window { _airbrakeHistorian: Historian; }
-}
-
-if (!window._airbrakeHistorian) {
-    window._airbrakeHistorian = new Historian();
-}
-export let historian = window._airbrakeHistorian;
+export let historian = new Historian();
 
 export function getHistory(): any[] {
     return historian.getHistory();
