@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.8 */
+/*! airbrake-js v1.4.9 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();

@@ -1,4 +1,4 @@
-/*! airbrake-js v1.4.8 */
+/*! airbrake-js v1.4.9 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
@@ -1085,7 +1085,7 @@ var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src
 var node_2 = __importDefault(__webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts"));
 var xhr_1 = __importDefault(__webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts"));
 var jsonp_1 = __importDefault(__webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts"));
-var historian_1 = __webpack_require__(/*! ./historian */ "./src/historian.ts");
+var historian_1 = __importDefault(__webpack_require__(/*! ./historian */ "./src/historian.ts"));
 var Client = /** @class */ (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
@@ -1135,9 +1135,10 @@ var Client = /** @class */ (function () {
         else {
             this.addFilter(node_1.default);
         }
-        historian_1.historian.registerNotifier(this);
+        this.historian = historian_1.default.instance();
+        this.historian.registerNotifier(this);
         if (opts.unwrapConsole || isDevEnv(opts)) {
-            historian_1.historian.unwrapConsole();
+            this.historian.unwrapConsole();
         }
     }
     Client.prototype.close = function () {
@@ -1145,7 +1146,7 @@ var Client = /** @class */ (function () {
             var fn = _a[_i];
             fn();
         }
-        historian_1.historian.unregisterNotifier(this);
+        this.historian.unregisterNotifier(this);
     };
     Client.prototype.setReporter = function (name) {
         switch (name) {
@@ -1208,7 +1209,7 @@ var Client = /** @class */ (function () {
                 }
             });
         }
-        var history = historian_1.getHistory();
+        var history = this.historian.getHistory();
         if (history.length > 0) {
             notice.context.history = history;
         }
@@ -1229,7 +1230,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.8",
+            version: "1.4.9",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
@@ -1250,7 +1251,7 @@ var Client = /** @class */ (function () {
             }
             catch (err) {
                 client.notify({ error: err, params: { arguments: fnArgs } });
-                historian_1.historian.ignoreNextWindowError();
+                this.historian.ignoreNextWindowError();
                 throw err;
             }
         };
@@ -1287,7 +1288,7 @@ var Client = /** @class */ (function () {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     };
     Client.prototype.onerror = function () {
-        historian_1.historian.onerror.apply(historian_1.historian, arguments);
+        this.historian.onerror.apply(this.historian, arguments);
     };
     Client.prototype.onOnline = function () {
         this.offline = false;
@@ -1620,6 +1621,12 @@ var Historian = /** @class */ (function () {
             this.xhr();
         }
     }
+    Historian.instance = function () {
+        if (!Historian._instance) {
+            Historian._instance = new Historian();
+        }
+        return Historian._instance;
+    };
     Historian.prototype.registerNotifier = function (notifier) {
         this.notifiers.push(notifier);
         for (var _i = 0, _a = this.errors; _i < _a.length; _i++) {
@@ -1890,11 +1897,6 @@ var Historian = /** @class */ (function () {
     return Historian;
 }());
 exports.default = Historian;
-exports.historian = new Historian();
-function getHistory() {
-    return exports.historian.getHistory();
-}
-exports.getHistory = getHistory;
 
 
 /***/ }),
