@@ -13,6 +13,8 @@ interface XMLHttpRequestWithState extends XMLHttpRequest {
 
 
 export default class Historian {
+    private static _instance: Historian;
+
     private historyMaxLen = 20;
 
     private notifiers: Notifier[] = [];
@@ -87,6 +89,13 @@ export default class Historian {
         if (typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
         }
+    }
+
+    static instance(): Historian {
+        if (!Historian._instance) {
+            Historian._instance = new Historian();
+        }
+        return Historian._instance;
     }
 
     registerNotifier(notifier: Notifier) {
@@ -392,10 +401,4 @@ export default class Historian {
         });
         this.lastLocation = url;
     }
-}
-
-export let historian = new Historian();
-
-export function getHistory(): any[] {
-    return historian.getHistory();
 }

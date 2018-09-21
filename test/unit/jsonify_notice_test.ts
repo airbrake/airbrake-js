@@ -2,6 +2,7 @@ import Notice from '../../src/notice';
 import jsonifyNotice from '../../src/jsonify_notice';
 import { expect } from './sinon_chai';
 
+
 describe('jsonify_notice', () => {
     const maxLength = 30000;
 

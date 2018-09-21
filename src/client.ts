@@ -21,7 +21,7 @@ import nodeReporter from './reporter/node';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import {historian, getHistory} from './historian';
+import Historian from './historian';
 
 
 declare const VERSION: string;
@@ -36,6 +36,7 @@ interface Todo {
 
 class Client {
     private opts: any;
+    private historian: Historian;
 
     private processor: Processor;
     private reporter: Reporter;
@@ -98,9 +99,10 @@ class Client {
             this.addFilter(nodeFilter);
         }
 
-        historian.registerNotifier(this);
+        this.historian = Historian.instance();
+        this.historian.registerNotifier(this);
         if (opts.unwrapConsole || isDevEnv(opts)) {
-            historian.unwrapConsole();
+            this.historian.unwrapConsole();
         }
     }
 
@@ -108,7 +110,7 @@ class Client {
         for (let fn of this.onClose) {
             fn();
         }
-        historian.unregisterNotifier(this);
+        this.historian.unregisterNotifier(this);
     }
 
     private setReporter(name: string|Reporter): void {
@@ -179,7 +181,7 @@ class Client {
             });
         }
 
-        let history = getHistory();
+        let history = this.historian.getHistory();
         if (history.length > 0) {
             notice.context.history = history;
         }
@@ -224,7 +226,7 @@ class Client {
                 return fn.apply(this, wrappedArgs);
             } catch (err) {
                 client.notify({error: err, params: {arguments: fnArgs}});
-                historian.ignoreNextWindowError();
+                this.historian.ignoreNextWindowError();
                 throw err;
             }
         } as FuncWrapper;
@@ -262,7 +264,7 @@ class Client {
     }
 
     onerror(): void {
-        historian.onerror.apply(historian, arguments);
+        this.historian.onerror.apply(this.historian, arguments);
     }
 
     private onOnline(): void {
