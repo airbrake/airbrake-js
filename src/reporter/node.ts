@@ -1,5 +1,3 @@
-import * as request from 'request';
-
 import Notice from '../notice';
 
 import {ReporterOptions, errors} from './reporter';
@@ -9,13 +7,6 @@ let rateLimitReset = 0;
 
 
 export default function report(notice: Notice, payload: string, opts: ReporterOptions): Promise<Notice> {
-    let request;
-    try {
-        request = require('request');
-    } catch (_) {
-        console.log('airbrake-js: please install request package');
-    }
-
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = errors.ipRateLimited;
@@ -25,7 +16,7 @@ export default function report(notice: Notice, payload: string, opts: ReporterOp
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
 
     return new Promise((resolve, _reject) => {
-        let requestWrapper = opts.request || request;
+        let requestWrapper = opts.request;
         requestWrapper({
             url: url,
             method: 'POST',
@@ -34,7 +25,7 @@ export default function report(notice: Notice, payload: string, opts: ReporterOp
                 'content-type': 'application/json'
             },
             timeout: opts.timeout
-        }, function (error: any, response: request.RequestResponse, body: any): void {
+        }, function (error: any, response: any, body: any): void {
             if (error) {
                 notice.error = error;
                 resolve(notice);

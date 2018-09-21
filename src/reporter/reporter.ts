@@ -1,5 +1,4 @@
-import * as request from 'request';
-
+import 'isomorphic-fetch';
 import Notice from '../notice';
 
 
@@ -9,7 +8,7 @@ export interface ReporterOptions {
     host: string;
     timeout: number;
 
-    request?: request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl>;
+    request?: any;
     ignoreWindowError?: boolean;
 }
 
@@ -31,7 +30,7 @@ export function defaultReporter(opts: any): string {
     if (typeof window === 'object') {
         return 'jsonp';
     }
-    return 'node';
+    return 'fetch';
 }
 
 
