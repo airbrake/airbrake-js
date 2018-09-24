@@ -1,13 +1,12 @@
-const path = require('path');
-const webpack = require('webpack');
-const glob = require('glob');
-const pkg = require('./package.json');
-
+const path = require('path')
+const webpack = require('webpack')
+const glob = require('glob')
+const pkg = require('./package.json')
 
 function newConfig() {
   return {
     mode: 'development',
-    optimization: {nodeEnv: false},
+    optimization: { nodeEnv: false },
 
     resolve: {
       extensions: ['.js', '.ts', '.tsx']
@@ -15,25 +14,38 @@ function newConfig() {
 
     module: {
       rules: [
-        {test: /\.tsx?$/, loader: 'ts-loader'},
-        {test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre'},
-        {test: /\.js$/, loader: 'source-map-loader', enforce: 'pre'},
+        { test: /\.tsx?$/, loader: 'ts-loader' },
+        { test: /\.tsx?$/, loader: 'tslint-loader', enforce: 'pre' },
+        { test: /\.js$/, loader: 'source-map-loader', enforce: 'pre' },
         // Disable AMD.
-        {test: require.resolve('error-stack-parser'), use: 'imports-loader?define=>false'},
-        {test: require.resolve('stackframe'), use: 'imports-loader?define=>false'},
+        {
+          test: require.resolve('error-stack-parser'),
+          use: 'imports-loader?define=>false'
+        },
+        {
+          test: require.resolve('stackframe'),
+          use: 'imports-loader?define=>false'
+        }
       ]
     },
 
     externals: {
-      request: {
-        commonjs: 'request',
-        commonjs2: 'request'
+      'isomorphic-fetch': {
+        commonjs: 'isomorphic-fetch',
+        commonjs2: 'isomorphic-fetch',
+        amd: 'isomorphic-fetch',
+        root: 'fetch'
       },
       os: {
         commonjs: 'os',
-        commonjs2: 'os'
+        commonjs2: 'os',
+        amd: 'os'
       },
-      process: 'process'
+      process: {
+        commonjs: 'process',
+        commonjs2: 'process',
+        amd: 'process'
+      }
     },
 
     devtool: 'nosources-source-map',
@@ -43,7 +55,7 @@ function newConfig() {
       path: path.resolve(__dirname, 'dist'),
       libraryTarget: 'umd',
       // https://github.com/webpack/webpack/issues/6525
-      globalObject: 'typeof self !== \'undefined\' ? self : this',
+      globalObject: "typeof self !== 'undefined' ? self : this"
     },
 
     node: {
@@ -54,38 +66,34 @@ function newConfig() {
       new webpack.DefinePlugin({
         VERSION: JSON.stringify(pkg.version)
       }),
-      new webpack.BannerPlugin({banner: 'airbrake-js v' + pkg.version}),
+      new webpack.BannerPlugin({ banner: 'airbrake-js v' + pkg.version })
     ]
   }
-};
+}
 
-
-var client = newConfig();
-var clientFiles = ['./src/internal/compat.ts', './src/client.ts'];
+var client = newConfig()
+var clientFiles = ['./src/internal/compat.ts', './src/client.ts']
 client.entry = {
-  'client': clientFiles,
-};
-client.output.library = ['airbrakeJs', 'Client'];
+  client: clientFiles
+}
+client.output.library = ['airbrakeJs', 'Client']
 
-
-var clientMin = Object.assign({}, client);
-clientMin.mode = 'production';
+var clientMin = Object.assign({}, client)
+clientMin.mode = 'production'
 clientMin.entry = {
-  'client.min': clientFiles,
-};
+  'client.min': clientFiles
+}
 
-var express = newConfig();
+var express = newConfig()
 express.entry = {
   'instrumentation/express': './src/instrumentation/express.ts'
-};
-express.output.library = ['airbrakeJs', 'instrumentation', 'express'];
+}
+express.output.library = ['airbrakeJs', 'instrumentation', 'express']
 
-
-var hapi = newConfig();
+var hapi = newConfig()
 hapi.entry = {
   'instrumentation/hapi': './src/instrumentation/hapi.ts'
-};
-express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
+}
+express.output.library = ['airbrakeJs', 'instrumentation', 'hapi']
 
-
-module.exports = [client, clientMin, express, hapi];
+module.exports = [client, clientMin, express, hapi]

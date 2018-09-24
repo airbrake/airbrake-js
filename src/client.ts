@@ -17,7 +17,7 @@ import nodeFilter from './filter/node';
 
 import {Reporter, defaultReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
-import nodeReporter from './reporter/node';
+import requestReporter from './reporter/request';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
@@ -119,7 +119,10 @@ class Client {
             this.reporter = fetchReporter;
             break;
         case 'node':
-            this.reporter = nodeReporter;
+            this.reporter = fetchReporter;
+            break;
+        case 'request':
+            this.reporter = requestReporter;
             break;
         case 'xhr':
             this.reporter = xhrReporter;
