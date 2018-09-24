@@ -1,14 +1,14 @@
-/*! airbrake-js v1.4.9 */
+/*! airbrake-js v1.5.0-beta */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
+		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
 	else if(typeof define === 'function' && define.amd)
-		define([, ], factory);
+		define(["os", "isomorphic-fetch"], factory);
 	else if(typeof exports === 'object')
-		exports["Client"] = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), (function webpackLoadOptionalExternalModule() { try { return require("request"); } catch(e) {} }()));
+		exports["Client"] = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
 	else
-		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory(root[undefined], root[undefined]);
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_os__, __WEBPACK_EXTERNAL_MODULE_request__) {
+		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory(root[undefined], root["fetch"]);
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_os__, __WEBPACK_EXTERNAL_MODULE_isomorphic_fetch__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -1082,7 +1082,7 @@ var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src
 var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
 var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
 var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts"));
-var node_2 = __importDefault(__webpack_require__(/*! ./reporter/node */ "./src/reporter/node.ts"));
+var request_1 = __importDefault(__webpack_require__(/*! ./reporter/request */ "./src/reporter/request.ts"));
 var xhr_1 = __importDefault(__webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts"));
 var jsonp_1 = __importDefault(__webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts"));
 var historian_1 = __importDefault(__webpack_require__(/*! ./historian */ "./src/historian.ts"));
@@ -1154,7 +1154,10 @@ var Client = /** @class */ (function () {
                 this.reporter = fetch_1.default;
                 break;
             case 'node':
-                this.reporter = node_2.default;
+                this.reporter = fetch_1.default;
+                break;
+            case 'request':
+                this.reporter = request_1.default;
                 break;
             case 'xhr':
                 this.reporter = xhr_1.default;
@@ -1230,7 +1233,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.4.9",
+            version: "1.5.0-beta",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
@@ -2320,6 +2323,7 @@ exports.default = processor;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+__webpack_require__(/*! isomorphic-fetch */ "isomorphic-fetch");
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
 function report(notice, payload, opts) {
@@ -2447,10 +2451,44 @@ exports.default = report;
 
 /***/ }),
 
-/***/ "./src/reporter/node.ts":
-/*!******************************!*\
-  !*** ./src/reporter/node.ts ***!
-  \******************************/
+/***/ "./src/reporter/reporter.ts":
+/*!**********************************!*\
+  !*** ./src/reporter/reporter.ts ***!
+  \**********************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+function defaultReporter(opts) {
+    if (opts.request) {
+        return 'request';
+    }
+    if (typeof fetch === 'function') {
+        return 'fetch';
+    }
+    if (typeof XMLHttpRequest === 'function') {
+        return 'xhr';
+    }
+    if (typeof window === 'object') {
+        return 'jsonp';
+    }
+    return 'fetch';
+}
+exports.defaultReporter = defaultReporter;
+exports.errors = {
+    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
+    ipRateLimited: new Error('airbrake: IP is rate limited'),
+};
+
+
+/***/ }),
+
+/***/ "./src/reporter/request.ts":
+/*!*********************************!*\
+  !*** ./src/reporter/request.ts ***!
+  \*********************************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -2460,13 +2498,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
 var rateLimitReset = 0;
 function report(notice, payload, opts) {
-    var request;
-    try {
-        request = __webpack_require__(/*! request */ "request");
-    }
-    catch (_) {
-        console.log('airbrake-js: please install request package');
-    }
     var utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = reporter_1.errors.ipRateLimited;
@@ -2474,8 +2505,7 @@ function report(notice, payload, opts) {
     }
     var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
     return new Promise(function (resolve, _reject) {
-        var requestWrapper = opts.request || request;
-        requestWrapper({
+        opts.request({
             url: url,
             method: 'POST',
             body: payload,
@@ -2550,40 +2580,6 @@ function report(notice, payload, opts) {
     });
 }
 exports.default = report;
-
-
-/***/ }),
-
-/***/ "./src/reporter/reporter.ts":
-/*!**********************************!*\
-  !*** ./src/reporter/reporter.ts ***!
-  \**********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function defaultReporter(opts) {
-    if (opts.request) {
-        return 'node';
-    }
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
-    return 'node';
-}
-exports.defaultReporter = defaultReporter;
-exports.errors = {
-    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
-    ipRateLimited: new Error('airbrake: IP is rate limited'),
-};
 
 
 /***/ }),
@@ -2679,27 +2675,26 @@ module.exports = __webpack_require__(/*! ./src/client.ts */"./src/client.ts");
 
 /***/ }),
 
+/***/ "isomorphic-fetch":
+/*!***********************************************************************************************************************!*\
+  !*** external {"commonjs":"isomorphic-fetch","commonjs2":"isomorphic-fetch","amd":"isomorphic-fetch","root":"fetch"} ***!
+  \***********************************************************************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+module.exports = __WEBPACK_EXTERNAL_MODULE_isomorphic_fetch__;
+
+/***/ }),
+
 /***/ "os":
-/*!***************************************************!*\
-  !*** external {"commonjs":"os","commonjs2":"os"} ***!
-  \***************************************************/
+/*!**************************************************************!*\
+  !*** external {"commonjs":"os","commonjs2":"os","amd":"os"} ***!
+  \**************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
 if(typeof __WEBPACK_EXTERNAL_MODULE_os__ === 'undefined') {var e = new Error("Cannot find module 'undefined'"); e.code = 'MODULE_NOT_FOUND'; throw e;}
 module.exports = __WEBPACK_EXTERNAL_MODULE_os__;
-
-/***/ }),
-
-/***/ "request":
-/*!*************************************************************!*\
-  !*** external {"commonjs":"request","commonjs2":"request"} ***!
-  \*************************************************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
-
-if(typeof __WEBPACK_EXTERNAL_MODULE_request__ === 'undefined') {var e = new Error("Cannot find module 'undefined'"); e.code = 'MODULE_NOT_FOUND'; throw e;}
-module.exports = __WEBPACK_EXTERNAL_MODULE_request__;
 
 /***/ })
 
