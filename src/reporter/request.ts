@@ -9,13 +9,6 @@ let rateLimitReset = 0;
 
 
 export default function report(notice: Notice, payload: string, opts: ReporterOptions): Promise<Notice> {
-    let request;
-    try {
-        request = require('request');
-    } catch (_) {
-        console.log('airbrake-js: please install request package');
-    }
-
     let utime = Date.now() / 1000;
     if (utime < rateLimitReset) {
         notice.error = errors.ipRateLimited;
@@ -25,8 +18,7 @@ export default function report(notice: Notice, payload: string, opts: ReporterOp
     let url = `${opts.host}/api/v3/projects/${opts.projectId}/notices?key=${opts.projectKey}`;
 
     return new Promise((resolve, _reject) => {
-        let requestWrapper = opts.request || request;
-        requestWrapper({
+        opts.request({
             url: url,
             method: 'POST',
             body: payload,

@@ -20,7 +20,7 @@ export default Reporter;
 
 export function defaultReporter(opts: any): string {
     if (opts.request) {
-        return 'node';
+        return 'request';
     }
     if (typeof fetch === 'function') {
         return 'fetch';
@@ -31,7 +31,7 @@ export function defaultReporter(opts: any): string {
     if (typeof window === 'object') {
         return 'jsonp';
     }
-    return 'node';
+    return 'fetch';
 }
 
 

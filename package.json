@@ -14,6 +14,9 @@
     "airbrake",
     "notifier"
   ],
+  "dependencies": {
+    "isomorphic-fetch": "^2.2.1"
+  },
   "devDependencies": {
     "@types/chai": "4.1.4",
     "@types/mocha": "5.2.5",

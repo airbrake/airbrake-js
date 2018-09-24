@@ -47,13 +47,7 @@ If you prefer not to host the library yourself,
 airbrake-js is available on the excellent
 [cdnjs](https://cdnjs.com/libraries/airbrake-js).
 
-If you're using Node.js you might need to install the [request](https://github.com/request/request) library too, on which Airbrake depends:
-
-```shell
-npm install request
-```
-
-If you're using Webpack you might need to [mark certain packages](https://github.com/airbrake/airbrake-js/blob/95fa74aab2c6e90a08174b4d8c55c68d96496cf5/webpack.config.js#L27-L37) as [external dependencies](https://webpack.js.org/configuration/externals/).
+If you're using Webpack in browser context you might need to mark certain [Node.js packages](https://github.com/airbrake/airbrake-js/blob/83197fa170c1456bbcdcb48ca67a68d7a829865a/webpack.config.js#L32-L39) as [external dependencies](https://webpack.js.org/configuration/externals/) to decrease bundle size.
 
 ## Basic Usage
 

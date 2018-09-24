@@ -660,7 +660,7 @@ describe('Client', () => {
             setTimeout(() => {
                 expect(reporter).to.have.been.called;
                 done();
-            }, 10);
+            }, 50);
         });
     });
 });
