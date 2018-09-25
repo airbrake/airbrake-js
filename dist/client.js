@@ -1,4 +1,4 @@
-/*! airbrake-js v1.5.0-beta */
+/*! airbrake-js v1.5.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
@@ -1233,7 +1233,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.5.0-beta",
+            version: "1.5.0",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
