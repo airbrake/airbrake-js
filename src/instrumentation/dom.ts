@@ -20,7 +20,7 @@ function elemName(elem: HTMLElement): string {
         s.push(elem.id);
     }
 
-    if (elem.className) {
+    if (typeof elem.className === 'string') {
         s.push('.');
         s.push(elem.className.split(' ').join('.'));
     }
