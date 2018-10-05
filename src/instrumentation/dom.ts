@@ -20,9 +20,15 @@ function elemName(elem: HTMLElement): string {
         s.push(elem.id);
     }
 
-    if (typeof elem.className === 'string') {
+    if (elem.classList) {
         s.push('.');
-        s.push(elem.className.split(' ').join('.'));
+        s.push(Array.from(elem.classList).join('.'));
+    } else if (elem.className) {
+        let str = classNameString(elem.className);
+        if (str !== '') {
+            s.push('.');
+            s.push(str)
+        }
     }
 
     if (elem.getAttribute) {
@@ -37,6 +43,17 @@ function elemName(elem: HTMLElement): string {
     return s.join('');
 }
 
+function classNameString(name: any): string {
+    if (name.split) {
+        return name.split(' ').join('.')
+    }
+    if (name.baseVal && name.baseVal.split) { // SVGAnimatedString
+        return name.baseVal.split(' ').join('.')
+    }
+    console.log('unsupported HTMLElement.className type',
+                typeof(name))
+    return ''
+}
 
 function elemPath(elem: HTMLElement): string {
     const maxLen = 10;
