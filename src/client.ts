@@ -21,7 +21,7 @@ import requestReporter from './reporter/request';
 import xhrReporter from './reporter/xhr';
 import jsonpReporter from './reporter/jsonp';
 
-import Historian from './historian';
+import {Historian, HistorianOptions} from './historian';
 
 
 declare const VERSION: string;
@@ -33,6 +33,18 @@ interface Todo {
     reject: (Error) => void;
 }
 
+interface Options {
+    projectId: number;
+    projectKey: string;
+    environment?: string;
+    host?: string;
+    timeout?: number;
+    keysBlacklist?: any[];
+    ignoreWindowError?: boolean;
+    processor?: Processor;
+    reporter?: Reporter;
+    instrumentation?: HistorianOptions;
+}
 
 class Client {
     private opts: any;
@@ -47,7 +59,7 @@ class Client {
 
     private onClose: (() => void)[] = [];
 
-    constructor(opts: any = {}) {
+    constructor(opts: Options = {} as Options) {
         if (!opts.projectId || !opts.projectKey) {
             throw new Error('airbrake: projectId and projectKey are required');
         }
@@ -68,6 +80,9 @@ class Client {
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
+        if (!opts.environment && process && process.env.NODE_ENV) {
+            opts.environment = process.env.NODE_ENV;
+        }
         if (opts.environment) {
             this.addFilter((notice: Notice): Notice | null => {
                 notice.context.environment = opts.environment;
@@ -99,11 +114,13 @@ class Client {
             this.addFilter(nodeFilter);
         }
 
-        this.historian = Historian.instance();
-        this.historian.registerNotifier(this);
-        if (opts.unwrapConsole || isDevEnv(opts)) {
-            this.historian.unwrapConsole();
+        let historianOpts = opts.instrumentation || {};
+        if (typeof historianOpts.console === undefined) {
+            historianOpts.console = !isDevEnv(opts.environment);
         }
+
+        this.historian = Historian.instance(historianOpts);
+        this.historian.registerNotifier(this);
     }
 
     close(): void {
@@ -298,8 +315,7 @@ class Client {
     }
 }
 
-function isDevEnv(opts: any): boolean {
-    let env = opts.environment;
+function isDevEnv(env: any): boolean {
     return env && env.startsWith && env.startsWith('dev');
 }
 
