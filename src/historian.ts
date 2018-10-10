@@ -11,8 +11,15 @@ interface XMLHttpRequestWithState extends XMLHttpRequest {
     __state: any;
 }
 
+export interface HistorianOptions {
+    onerror?: boolean;
+    fetch?: boolean;
+    history?: boolean;
+    console?: boolean;
+    xhr?: boolean;
+}
 
-export default class Historian {
+export class Historian {
     private static _instance: Historian;
 
     private historyMaxLen = 20;
@@ -29,26 +36,28 @@ export default class Historian {
 
     private consoleError: (message?: any, ...optionalParams: any[]) => void;
 
-    constructor() {
-        if (typeof console === 'object' && console.error) {
+    constructor(opts: HistorianOptions = {} as HistorianOptions) {
+        if (enabled(opts.console) && typeof console === 'object' && console.error) {
             this.consoleError = console.error;
         }
 
         if (typeof window === 'object') {
-            let self = this;
-            let oldHandler = window.onerror;
-            window.onerror = function() {
-                if (oldHandler) {
-                    oldHandler.apply(this, arguments);
-                }
-                self.onerror.apply(self, arguments);
-            };
+            if (enabled(opts.onerror)) {
+                let self = this;
+                let oldHandler = window.onerror;
+                window.onerror = function() {
+                    if (oldHandler) {
+                        oldHandler.apply(this, arguments);
+                    }
+                    self.onerror.apply(self, arguments);
+                };
+            }
 
             this.domEvents();
-            if (typeof fetch === 'function') {
+            if (enabled(opts.fetch) && typeof fetch === 'function') {
                 this.fetch();
             }
-            if (typeof history === 'object') {
+            if (enabled(opts.history) && typeof history === 'object') {
                 this.location();
             }
         }
@@ -83,17 +92,17 @@ export default class Historian {
             });
         }
 
-        if (typeof console === 'object') {
+        if (enabled(opts.console) && typeof console === 'object') {
             this.console();
         }
-        if (typeof XMLHttpRequest !== 'undefined') {
+        if (enabled(opts.xhr) && typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
         }
     }
 
-    static instance(): Historian {
+    static instance(opts: HistorianOptions = {} as HistorianOptions): Historian {
         if (!Historian._instance) {
-            Historian._instance = new Historian();
+            Historian._instance = new Historian(opts);
         }
         return Historian._instance;
     }
@@ -401,4 +410,8 @@ export default class Historian {
         });
         this.lastLocation = url;
     }
+}
+
+function enabled(v: undefined|boolean): boolean {
+    return v === undefined || v === true
 }

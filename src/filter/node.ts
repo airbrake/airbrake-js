@@ -26,9 +26,6 @@ export default function filter(notice: Notice): Notice {
         if (!notice.context.rootDirectory) {
             notice.context.rootDirectory = process.cwd();
         }
-        if (process.env.NODE_ENV) {
-            notice.context.environment = process.env.NODE_ENV;
-        }
 
         notice.params.process = {
             pid: process.pid,

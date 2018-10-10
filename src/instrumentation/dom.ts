@@ -1,4 +1,4 @@
-import Historian from '../historian';
+import {Historian} from '../historian';
 
 
 const elemAttrs = ['type', 'name', 'src'];
@@ -27,7 +27,7 @@ function elemName(elem: HTMLElement): string {
         let str = classNameString(elem.className);
         if (str !== '') {
             s.push('.');
-            s.push(str)
+            s.push(str);
         }
     }
 
@@ -45,14 +45,14 @@ function elemName(elem: HTMLElement): string {
 
 function classNameString(name: any): string {
     if (name.split) {
-        return name.split(' ').join('.')
+        return name.split(' ').join('.');
     }
     if (name.baseVal && name.baseVal.split) { // SVGAnimatedString
-        return name.baseVal.split(' ').join('.')
+        return name.baseVal.split(' ').join('.');
     }
     console.log('unsupported HTMLElement.className type',
-                typeof(name))
-    return ''
+                typeof(name));
+    return '';
 }
 
 function elemPath(elem: HTMLElement): string {
