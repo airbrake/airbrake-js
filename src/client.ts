@@ -18,8 +18,6 @@ import nodeFilter from './filter/node';
 import {Reporter, defaultReporter} from './reporter/reporter';
 import fetchReporter from './reporter/fetch';
 import requestReporter from './reporter/request';
-import xhrReporter from './reporter/xhr';
-import jsonpReporter from './reporter/jsonp';
 
 import {Historian, HistorianOptions} from './historian';
 
@@ -135,17 +133,8 @@ class Client {
         case 'fetch':
             this.reporter = fetchReporter;
             break;
-        case 'node':
-            this.reporter = fetchReporter;
-            break;
         case 'request':
             this.reporter = requestReporter;
-            break;
-        case 'xhr':
-            this.reporter = xhrReporter;
-            break;
-        case 'jsonp':
-            this.reporter = jsonpReporter;
             break;
         default:
             this.reporter = name as Reporter;
