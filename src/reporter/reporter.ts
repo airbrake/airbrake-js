@@ -22,15 +22,6 @@ export function defaultReporter(opts: any): string {
     if (opts.request) {
         return 'request';
     }
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
     return 'fetch';
 }
 

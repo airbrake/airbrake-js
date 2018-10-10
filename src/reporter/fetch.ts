@@ -1,7 +1,6 @@
 require('isomorphic-fetch');
 
 import Notice from '../notice';
-
 import {ReporterOptions, errors} from './reporter';
 
 
