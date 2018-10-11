@@ -15,11 +15,11 @@ import angularMessageFilter from './filter/angular_message';
 import windowFilter from './filter/window';
 import nodeFilter from './filter/node';
 
-import {Reporter, defaultReporter} from './reporter/reporter';
-import fetchReporter from './reporter/fetch';
-import requestReporter from './reporter/request';
+import {Requester, makeRequester} from './http_req';
 
-import {Historian, HistorianOptions} from './historian';
+import Options from './options';
+import {Historian} from './historian';
+import {Routes} from './routes';
 
 
 declare const VERSION: string;
@@ -31,29 +31,19 @@ interface Todo {
     reject: (Error) => void;
 }
 
-interface Options {
-    projectId: number;
-    projectKey: string;
-    environment?: string;
-    host?: string;
-    timeout?: number;
-    keysBlacklist?: any[];
-    ignoreWindowError?: boolean;
-    processor?: Processor;
-    reporter?: Reporter;
-    instrumentation?: HistorianOptions;
-}
-
 class Client {
-    private opts: any;
+    private opts: Options;
+    private url: string;
     private historian: Historian;
 
     private processor: Processor;
-    private reporter: Reporter;
+    private requester: Requester;
     private filters: Filter[] = [];
 
     private offline = false;
     private todo: Todo[] = [];
+
+    private routes: Routes;
 
     private onClose: (() => void)[] = [];
 
@@ -69,21 +59,24 @@ class Client {
             /password/,
             /secret/,
         ];
+        this.url = `${this.opts.host}/api/v3/projects/${this.opts.projectId}/notices?key=${this.opts.projectKey}`;
 
-        this.processor = opts.processor || stacktracejsProcessor;
-        this.setReporter(opts.reporter || defaultReporter(opts));
+        this.processor = this.opts.processor || stacktracejsProcessor;
+        this.requester = makeRequester(this.opts);
 
         this.addFilter(ignoreFilter);
         this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
 
-        if (!opts.environment && process && process.env.NODE_ENV) {
-            opts.environment = process.env.NODE_ENV;
+        if (!this.opts.environment &&
+            typeof process !== 'undefined' &&
+            process.env.NODE_ENV) {
+            this.opts.environment = process.env.NODE_ENV;
         }
-        if (opts.environment) {
+        if (this.opts.environment) {
             this.addFilter((notice: Notice): Notice | null => {
-                notice.context.environment = opts.environment;
+                notice.context.environment = this.opts.environment;
                 return notice;
             });
         }
@@ -126,19 +119,6 @@ class Client {
             fn();
         }
         this.historian.unregisterNotifier(this);
-    }
-
-    private setReporter(name: string|Reporter): void {
-        switch (name) {
-        case 'fetch':
-            this.reporter = fetchReporter;
-            break;
-        case 'request':
-            this.reporter = requestReporter;
-            break;
-        default:
-            this.reporter = name as Reporter;
-        }
     }
 
     addFilter(filter: Filter): void {
@@ -216,9 +196,27 @@ class Client {
             version: VERSION,
             url: 'https://github.com/airbrake/airbrake-js'
         };
+        return this.sendNotice(notice);
+    }
 
-        let payload = jsonifyNotice(notice, {keysBlacklist: this.opts.keysBlacklist});
-        return this.reporter(notice, payload, this.opts);
+    private sendNotice(notice: Notice): Promise<Notice> {
+        let body = jsonifyNotice(notice, {keysBlacklist: this.opts.keysBlacklist});
+        if (this.opts.reporter) {
+            return this.opts.reporter(notice);
+        }
+
+        let req = {
+            method: 'POST',
+            url: this.url,
+            body: body,
+        };
+        return this.requester(req).then((resp) => {
+            notice.id = resp.json.id;
+            return notice;
+        }).catch((err) => {
+            notice.error = err;
+            return notice;
+        });
     }
 
     // TODO: fix wrapping for multiple clients
@@ -274,6 +272,13 @@ class Client {
 
     onerror(): void {
         this.historian.onerror.apply(this.historian, arguments);
+    }
+
+    incRequest(method: string, route: string, statusCode: number, time: Date, ms: number): void {
+        if (!this.routes) {
+            this.routes = new Routes(this.opts);
+        }
+        this.routes.incRequest(method, route, statusCode, time, ms);
     }
 
     private onOnline(): void {
