@@ -413,5 +413,5 @@ export class Historian {
 }
 
 function enabled(v: undefined|boolean): boolean {
-    return v === undefined || v === true
+    return v === undefined || v === true;
 }

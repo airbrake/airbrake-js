@@ -26,33 +26,15 @@ describe('Client config', () => {
         }).to.throw('airbrake: projectId and projectKey are required');
     });
 
-    it('calls reporter with valid options', () => {
+    it('calls a reporter', () => {
         client = new Client({
-            projectId: 999,
-            projectKey: 'custom_project_key',
+            projectId: 1,
+            projectKey: 'abc',
             reporter: reporter,
         });
         client.notify(err);
 
         expect(reporter).to.have.been.called;
-        let opts = reporter.lastCall.args[2];
-        expect(opts.projectId).to.equal(999);
-        expect(opts.projectKey).to.equal('custom_project_key');
-        expect(opts.host).to.equal('https://api.airbrake.io');
-        expect(opts.timeout).to.equal(10000);
-    });
-
-    it('reporter is called with custom host', () => {
-        client = new Client({
-            projectId: 1,
-            projectKey: 'abc',
-            host: 'https://custom.domain.com',
-            reporter: reporter,
-        });
-        client.notify(err);
-
-        let opts = reporter.lastCall.args[2];
-        expect(opts.host).to.equal('https://custom.domain.com');
     });
 
     it('supports ignoreWindowError', (done) => {
