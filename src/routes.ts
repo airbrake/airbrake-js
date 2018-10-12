@@ -65,7 +65,7 @@ export class Routes {
         if (this.timer) {
             return;
         }
-        this.timer = setTimeout(() => { this.flush(); }, 1000);
+        this.timer = setTimeout(() => { this.flush(); }, 5000);
     }
 
     private flush() {
