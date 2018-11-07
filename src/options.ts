@@ -20,5 +20,5 @@ export default interface Options {
     instrumentation?: HistorianOptions;
 
     request?: request.RequestAPI<request.Request, request.CoreOptions, request.RequiredUriUrl>;
-    tdigest?: TDigestConstructor;
+    TDigest?: TDigestConstructor;
 }

@@ -45,6 +45,14 @@ interface RouteStat {
     tdigest_centroids?: TDigestCentroids;
 }
 
+export interface RequestInfo {
+    method: string;
+    route: string;
+    statusCode: number;
+    start: Date;
+    end: Date;
+}
+
 export class Routes {
     private opts: Options;
     private url: string;
@@ -60,15 +68,19 @@ export class Routes {
         this.requester = makeRequester(this.opts);
     }
 
-    incRequest(method: string, route: string, statusCode: number, time: Date, ms: number): void {
+    incRequest(req: RequestInfo): void {
+        let startTime = toTime(req.start);
+        let endTime = toTime(req.end);
+        let ms = endTime - startTime;
+
         const minute = 60 * 1000;
-        time = new Date(Math.floor(time.getTime() / minute) * minute);
+        req.start = new Date(Math.floor(startTime / minute) * minute);
 
         let key: RouteKey = {
-            method: method,
-            route: route,
-            status_code: statusCode,
-            time: time
+            method: req.method,
+            route: req.route,
+            status_code: req.statusCode,
+            time: req.start
         };
         let keyStr = JSON.stringify(key);
 
@@ -81,8 +93,8 @@ export class Routes {
                 sum: 0,
                 sumsq: 0
             };
-            if (this.opts.tdigest) {
-                stat.tdigest = new this.opts.tdigest();
+            if (this.opts.TDigest) {
+                stat.tdigest = new this.opts.TDigest();
             }
 
             this.m[keyStr] = stat;
@@ -144,4 +156,11 @@ export class Routes {
             count: counts,
         };
     }
+}
+
+function toTime(date: any): number {
+    if (date.getTime) {
+        return date.getTime();
+    }
+    return date;
 }

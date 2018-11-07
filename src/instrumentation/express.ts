@@ -4,9 +4,15 @@ function makeMiddleware(client: Client) {
     return function airbrakeMiddleware(req, res, next): void {
         let start = new Date();
         next();
-        let ms = new Date().getTime() - start.getTime();
+        let end = new Date();
         let route = req.route ? req.route.path : req.url;
-        client.incRequest(req.method, route, res.statusCode, start, ms);
+        client.incRequest({
+            method: req.method,
+            route: route,
+            statusCode: res.statusCode,
+            start: start,
+            end: end,
+        });
     };
 }
 

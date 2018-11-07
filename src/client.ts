@@ -19,7 +19,7 @@ import {Requester, makeRequester} from './http_req';
 
 import Options from './options';
 import {Historian} from './historian';
-import {Routes} from './routes';
+import {Routes, RequestInfo} from './routes';
 
 
 declare const VERSION: string;
@@ -275,11 +275,11 @@ class Client {
         this.historian.onerror.apply(this.historian, arguments);
     }
 
-    incRequest(method: string, route: string, statusCode: number, time: Date, ms: number): void {
+    incRequest(req: RequestInfo): void {
         if (!this.routes) {
             this.routes = new Routes(this.opts);
         }
-        this.routes.incRequest(method, route, statusCode, time, ms);
+        this.routes.incRequest(req);
     }
 
     private onOnline(): void {
