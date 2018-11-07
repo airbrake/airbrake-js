@@ -2,10 +2,38 @@ import Options from './options';
 import {Requester, makeRequester} from './http_req';
 
 
+const FLUSH_INTERVAL = 15000;
+
+
+interface Centroid {
+    mean: number;
+    n: number;
+}
+
+interface Centroids {
+    each(fn: (c: Centroid) => void): void;
+}
+
+interface TDigest {
+    centroids: Centroids;
+
+    push(x: number);
+    compress();
+}
+
+export interface TDigestConstructor {
+    new(): TDigest;
+}
+
+interface TDigestCentroids {
+    mean: number[];
+    count: number[];
+}
+
 interface RouteKey {
     method: string;
     route: string;
-    statusCode: number;
+    status_code: number;
     time: Date;
 }
 
@@ -13,8 +41,8 @@ interface RouteStat {
     count: number;
     sum: number;
     sumsq: number;
-    min: number;
-    max: number;
+    tdigest?: TDigest;
+    tdigest_centroids?: TDigestCentroids;
 }
 
 export class Routes {
@@ -28,7 +56,7 @@ export class Routes {
 
     constructor(opts: Options) {
         this.opts = opts;
-        this.url = `${this.opts.host}/api/v4/projects/${this.opts.projectId}/routes-stats?key=${this.opts.projectKey}`;
+        this.url = `${this.opts.host}/api/v5/projects/${this.opts.projectId}/routes-stats?key=${this.opts.projectKey}`;
         this.requester = makeRequester(this.opts);
     }
 
@@ -39,8 +67,8 @@ export class Routes {
         let key: RouteKey = {
             method: method,
             route: route,
-            statusCode: statusCode,
-            time: time,
+            status_code: statusCode,
+            time: time
         };
         let keyStr = JSON.stringify(key);
 
@@ -48,34 +76,44 @@ export class Routes {
         if (keyStr in this.m) {
             stat = this.m[keyStr];
         } else {
-            stat = {count: 0, sum: 0, sumsq: 0, min: 0, max: 0};
+            stat = {
+                count: 0,
+                sum: 0,
+                sumsq: 0
+            };
+            if (this.opts.tdigest) {
+                stat.tdigest = new this.opts.tdigest();
+            }
+
             this.m[keyStr] = stat;
         }
 
         stat.count++;
         stat.sum += ms;
         stat.sumsq += ms * ms;
-        if (ms < stat.min || stat.min === 0) {
-            stat.min = ms;
-        }
-        if (ms > stat.max) {
-            stat.max = ms;
+        if (stat.tdigest) {
+            stat.tdigest.push(ms);
         }
 
         if (this.timer) {
             return;
         }
-        this.timer = setTimeout(() => { this.flush(); }, 5000);
+        this.timer = setTimeout(() => { this.flush(); }, FLUSH_INTERVAL);
     }
 
-    private flush() {
+    private flush(): void {
         let routes = [];
         for (let keyStr in this.m) {
             let key: RouteKey = JSON.parse(keyStr);
-            routes.push({
+            let v = {
                 ...key,
                 ...this.m[keyStr]
-            });
+            };
+            if (v.tdigest) {
+                v.tdigest_centroids = this.tdigestCentroids(v.tdigest);
+                delete v.tdigest;
+            }
+            routes.push(v);
         }
 
         this.m = {};
@@ -89,9 +127,21 @@ export class Routes {
         this.requester(req).then((_resp) => {
             // nothing
         }).catch((err) => {
-            if (console.log) {
-                console.log('can not report routes stats', err);
+            if (console.error) {
+                console.error('can not report routes stats', err);
             }
         });
+    }
+
+    private tdigestCentroids(td: TDigest): TDigestCentroids {
+        let means: number[] = [], counts: number[] = [];
+        td.centroids.each((c: Centroid) => {
+            means.push(c.mean);
+            counts.push(c.n);
+        });
+        return {
+            mean: means,
+            count: counts,
+        };
     }
 }

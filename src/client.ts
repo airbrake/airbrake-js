@@ -31,6 +31,7 @@ interface Todo {
     reject: (Error) => void;
 }
 
+
 class Client {
     private opts: Options;
     private url: string;
