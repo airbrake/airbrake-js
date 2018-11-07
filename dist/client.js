@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.0-beta */
+/*! airbrake-js v1.6.0-beta.1 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
@@ -1216,7 +1216,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.0-beta",
+            version: "1.6.0-beta.1",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.sendNotice(notice);
@@ -1293,11 +1293,11 @@ var Client = /** @class */ (function () {
     Client.prototype.onerror = function () {
         this.historian.onerror.apply(this.historian, arguments);
     };
-    Client.prototype.incRequest = function (method, route, statusCode, time, ms) {
+    Client.prototype.incRequest = function (req) {
         if (!this.routes) {
             this.routes = new routes_1.Routes(this.opts);
         }
-        this.routes.incRequest(method, route, statusCode, time, ms);
+        this.routes.incRequest(req);
     };
     Client.prototype.onOnline = function () {
         this.offline = false;
@@ -2566,15 +2566,18 @@ var Routes = /** @class */ (function () {
         this.url = this.opts.host + "/api/v5/projects/" + this.opts.projectId + "/routes-stats?key=" + this.opts.projectKey;
         this.requester = http_req_1.makeRequester(this.opts);
     }
-    Routes.prototype.incRequest = function (method, route, statusCode, time, ms) {
+    Routes.prototype.incRequest = function (req) {
         var _this = this;
+        var startTime = toTime(req.start);
+        var endTime = toTime(req.end);
+        var ms = endTime - startTime;
         var minute = 60 * 1000;
-        time = new Date(Math.floor(time.getTime() / minute) * minute);
+        req.start = new Date(Math.floor(startTime / minute) * minute);
         var key = {
-            method: method,
-            route: route,
-            status_code: statusCode,
-            time: time
+            method: req.method,
+            route: req.route,
+            status_code: req.statusCode,
+            time: req.start
         };
         var keyStr = JSON.stringify(key);
         var stat;
@@ -2587,8 +2590,8 @@ var Routes = /** @class */ (function () {
                 sum: 0,
                 sumsq: 0
             };
-            if (this.opts.tdigest) {
-                stat.tdigest = new this.opts.tdigest();
+            if (this.opts.TDigest) {
+                stat.tdigest = new this.opts.TDigest();
             }
             this.m[keyStr] = stat;
         }
@@ -2643,6 +2646,12 @@ var Routes = /** @class */ (function () {
     return Routes;
 }());
 exports.Routes = Routes;
+function toTime(date) {
+    if (date.getTime) {
+        return date.getTime();
+    }
+    return date;
+}
 
 
 /***/ }),
