@@ -1,4 +1,4 @@
-/*! airbrake-js v1.5.0 */
+/*! airbrake-js v1.6.0-beta */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -106,9 +106,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
+function makeMiddleware(client) {
+    return function airbrakeMiddleware(req, res, next) {
+        var start = new Date();
+        next();
+        var ms = new Date().getTime() - start.getTime();
+        var route = req.route ? req.route.path : req.url;
+        client.incRequest(req.method, route, res.statusCode, start, ms);
+    };
+}
 function makeErrorHandler(client) {
-    return function errorHandler(err, req, _res, next) {
+    return function airbrakeErrorHandler(err, req, _res, next) {
         var url = req.protocol + '://' + req.headers['host'] + req.path;
+        var action = req.route ? req.route.stack[0].name : '';
         var notice = {
             error: err,
             context: {
@@ -118,7 +128,7 @@ function makeErrorHandler(client) {
                 route: req.route.path,
                 httpMethod: req.method,
                 component: 'express',
-                action: req.route.stack[0].name,
+                action: action,
             },
         };
         var referer = req.headers['referer'];
@@ -129,6 +139,9 @@ function makeErrorHandler(client) {
         next(err);
     };
 }
+// Hack to preserve backwards compatibility.
+makeErrorHandler.makeMiddleware = makeMiddleware;
+makeErrorHandler.makeErrorHandler = makeErrorHandler;
 module.exports = makeErrorHandler;
 
 

@@ -1,4 +1,4 @@
-/*! airbrake-js v1.5.0 */
+/*! airbrake-js v1.6.0-beta */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
@@ -1080,12 +1080,9 @@ var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaug
 var angular_message_1 = __importDefault(__webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts"));
 var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
 var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
-var reporter_1 = __webpack_require__(/*! ./reporter/reporter */ "./src/reporter/reporter.ts");
-var fetch_1 = __importDefault(__webpack_require__(/*! ./reporter/fetch */ "./src/reporter/fetch.ts"));
-var request_1 = __importDefault(__webpack_require__(/*! ./reporter/request */ "./src/reporter/request.ts"));
-var xhr_1 = __importDefault(__webpack_require__(/*! ./reporter/xhr */ "./src/reporter/xhr.ts"));
-var jsonp_1 = __importDefault(__webpack_require__(/*! ./reporter/jsonp */ "./src/reporter/jsonp.ts"));
-var historian_1 = __importDefault(__webpack_require__(/*! ./historian */ "./src/historian.ts"));
+var http_req_1 = __webpack_require__(/*! ./http_req */ "./src/http_req/index.ts");
+var historian_1 = __webpack_require__(/*! ./historian */ "./src/historian.ts");
+var routes_1 = __webpack_require__(/*! ./routes */ "./src/routes.ts");
 var Client = /** @class */ (function () {
     function Client(opts) {
         if (opts === void 0) { opts = {}; }
@@ -1104,15 +1101,21 @@ var Client = /** @class */ (function () {
             /password/,
             /secret/,
         ];
-        this.processor = opts.processor || stacktracejs_1.default;
-        this.setReporter(opts.reporter || reporter_1.defaultReporter(opts));
+        this.url = this.opts.host + "/api/v3/projects/" + this.opts.projectId + "/notices?key=" + this.opts.projectKey;
+        this.processor = this.opts.processor || stacktracejs_1.default;
+        this.requester = http_req_1.makeRequester(this.opts);
         this.addFilter(ignore_1.default);
         this.addFilter(debounce_1.default());
         this.addFilter(uncaught_message_1.default);
         this.addFilter(angular_message_1.default);
-        if (opts.environment) {
+        if (!this.opts.environment &&
+            typeof process !== 'undefined' &&
+            process.env.NODE_ENV) {
+            this.opts.environment = process.env.NODE_ENV;
+        }
+        if (this.opts.environment) {
             this.addFilter(function (notice) {
-                notice.context.environment = opts.environment;
+                notice.context.environment = _this.opts.environment;
                 return notice;
             });
         }
@@ -1135,11 +1138,12 @@ var Client = /** @class */ (function () {
         else {
             this.addFilter(node_1.default);
         }
-        this.historian = historian_1.default.instance();
-        this.historian.registerNotifier(this);
-        if (opts.unwrapConsole || isDevEnv(opts)) {
-            this.historian.unwrapConsole();
+        var historianOpts = opts.instrumentation || {};
+        if (typeof historianOpts.console === undefined) {
+            historianOpts.console = !isDevEnv(opts.environment);
         }
+        this.historian = historian_1.Historian.instance(historianOpts);
+        this.historian.registerNotifier(this);
     }
     Client.prototype.close = function () {
         for (var _i = 0, _a = this.onClose; _i < _a.length; _i++) {
@@ -1147,27 +1151,6 @@ var Client = /** @class */ (function () {
             fn();
         }
         this.historian.unregisterNotifier(this);
-    };
-    Client.prototype.setReporter = function (name) {
-        switch (name) {
-            case 'fetch':
-                this.reporter = fetch_1.default;
-                break;
-            case 'node':
-                this.reporter = fetch_1.default;
-                break;
-            case 'request':
-                this.reporter = request_1.default;
-                break;
-            case 'xhr':
-                this.reporter = xhr_1.default;
-                break;
-            case 'jsonp':
-                this.reporter = jsonp_1.default;
-                break;
-            default:
-                this.reporter = name;
-        }
     };
     Client.prototype.addFilter = function (filter) {
         this.filters.push(filter);
@@ -1233,11 +1216,28 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.5.0",
+            version: "1.6.0-beta",
             url: 'https://github.com/airbrake/airbrake-js'
         };
-        var payload = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
-        return this.reporter(notice, payload, this.opts);
+        return this.sendNotice(notice);
+    };
+    Client.prototype.sendNotice = function (notice) {
+        var body = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
+        if (this.opts.reporter) {
+            return this.opts.reporter(notice);
+        }
+        var req = {
+            method: 'POST',
+            url: this.url,
+            body: body,
+        };
+        return this.requester(req).then(function (resp) {
+            notice.id = resp.json.id;
+            return notice;
+        }).catch(function (err) {
+            notice.error = err;
+            return notice;
+        });
     };
     // TODO: fix wrapping for multiple clients
     Client.prototype.wrap = function (fn, props) {
@@ -1293,6 +1293,12 @@ var Client = /** @class */ (function () {
     Client.prototype.onerror = function () {
         this.historian.onerror.apply(this.historian, arguments);
     };
+    Client.prototype.incRequest = function (method, route, statusCode, time, ms) {
+        if (!this.routes) {
+            this.routes = new routes_1.Routes(this.opts);
+        }
+        this.routes.incRequest(method, route, statusCode, time, ms);
+    };
     Client.prototype.onOnline = function () {
         this.offline = false;
         var _loop_1 = function (j) {
@@ -1323,8 +1329,7 @@ var Client = /** @class */ (function () {
     };
     return Client;
 }());
-function isDevEnv(opts) {
-    var env = opts.environment;
+function isDevEnv(env) {
     return env && env.startsWith && env.startsWith('dev');
 }
 module.exports = Client;
@@ -1465,9 +1470,6 @@ function filter(notice) {
         if (!notice.context.rootDirectory) {
             notice.context.rootDirectory = process.cwd();
         }
-        if (process.env.NODE_ENV) {
-            notice.context.environment = process.env.NODE_ENV;
-        }
         notice.params.process = {
             pid: process.pid,
             cwd: process.cwd(),
@@ -1561,7 +1563,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var dom_1 = __webpack_require__(/*! ./instrumentation/dom */ "./src/instrumentation/dom.ts");
 var CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
 var Historian = /** @class */ (function () {
-    function Historian() {
+    function Historian(opts) {
+        if (opts === void 0) { opts = {}; }
         var _this = this;
         this.historyMaxLen = 20;
         this.notifiers = [];
@@ -1569,23 +1572,25 @@ var Historian = /** @class */ (function () {
         this.ignoreWindowError = 0;
         this.history = [];
         this.ignoreNextXHR = 0;
-        if (typeof console === 'object' && console.error) {
+        if (enabled(opts.console) && typeof console === 'object' && console.error) {
             this.consoleError = console.error;
         }
         if (typeof window === 'object') {
-            var self_1 = this;
-            var oldHandler_1 = window.onerror;
-            window.onerror = function () {
-                if (oldHandler_1) {
-                    oldHandler_1.apply(this, arguments);
-                }
-                self_1.onerror.apply(self_1, arguments);
-            };
+            if (enabled(opts.onerror)) {
+                var self_1 = this;
+                var oldHandler_1 = window.onerror;
+                window.onerror = function () {
+                    if (oldHandler_1) {
+                        oldHandler_1.apply(this, arguments);
+                    }
+                    self_1.onerror.apply(self_1, arguments);
+                };
+            }
             this.domEvents();
-            if (typeof fetch === 'function') {
+            if (enabled(opts.fetch) && typeof fetch === 'function') {
                 this.fetch();
             }
-            if (typeof history === 'object') {
+            if (enabled(opts.history) && typeof history === 'object') {
                 this.location();
             }
         }
@@ -1617,16 +1622,17 @@ var Historian = /** @class */ (function () {
                 });
             });
         }
-        if (typeof console === 'object') {
+        if (enabled(opts.console) && typeof console === 'object') {
             this.console();
         }
-        if (typeof XMLHttpRequest !== 'undefined') {
+        if (enabled(opts.xhr) && typeof XMLHttpRequest !== 'undefined') {
             this.xhr();
         }
     }
-    Historian.instance = function () {
+    Historian.instance = function (opts) {
+        if (opts === void 0) { opts = {}; }
         if (!Historian._instance) {
-            Historian._instance = new Historian();
+            Historian._instance = new Historian(opts);
         }
         return Historian._instance;
     };
@@ -1899,7 +1905,206 @@ var Historian = /** @class */ (function () {
     };
     return Historian;
 }());
-exports.default = Historian;
+exports.Historian = Historian;
+function enabled(v) {
+    return v === undefined || v === true;
+}
+
+
+/***/ }),
+
+/***/ "./src/http_req/fetch.ts":
+/*!*******************************!*\
+  !*** ./src/http_req/fetch.ts ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+__webpack_require__(/*! isomorphic-fetch */ "isomorphic-fetch");
+var index_1 = __webpack_require__(/*! ./index */ "./src/http_req/index.ts");
+var rateLimitReset = 0;
+function request(req) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        return Promise.reject(index_1.errors.ipRateLimited);
+    }
+    var opt = {
+        method: req.method,
+        body: req.body,
+    };
+    return fetch(req.url, opt).then(function (resp) {
+        if (resp.status === 401) {
+            throw index_1.errors.unauthorized;
+        }
+        if (resp.status === 429) {
+            var s = resp.headers.get('X-RateLimit-Delay');
+            if (!s) {
+                throw index_1.errors.ipRateLimited;
+            }
+            var n = parseInt(s, 10);
+            if (n > 0) {
+                rateLimitReset = Date.now() / 1000 + n;
+            }
+            throw index_1.errors.ipRateLimited;
+        }
+        if (resp.status === 204) {
+            return { json: null };
+        }
+        if (resp.status >= 200 && resp.status < 300) {
+            return resp.json().then(function (json) {
+                return { json: json };
+            });
+        }
+        if (resp.status >= 400 && resp.status < 500) {
+            return resp.json().then(function (json) {
+                var err = new Error(json.message);
+                throw err;
+            });
+        }
+        return resp.text().then(function (body) {
+            var err = new Error("airbrake: fetch: unexpected response: code=" + resp.status + " body='" + body + "'");
+            throw err;
+        });
+    });
+}
+exports.request = request;
+
+
+/***/ }),
+
+/***/ "./src/http_req/index.ts":
+/*!*******************************!*\
+  !*** ./src/http_req/index.ts ***!
+  \*******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var fetch_1 = __webpack_require__(/*! ./fetch */ "./src/http_req/fetch.ts");
+var node_1 = __webpack_require__(/*! ./node */ "./src/http_req/node.ts");
+function makeRequester(opts) {
+    if (opts.request) {
+        return node_1.makeRequester(opts.request);
+    }
+    return fetch_1.request;
+}
+exports.makeRequester = makeRequester;
+exports.errors = {
+    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
+    ipRateLimited: new Error('airbrake: IP is rate limited'),
+};
+
+
+/***/ }),
+
+/***/ "./src/http_req/node.ts":
+/*!******************************!*\
+  !*** ./src/http_req/node.ts ***!
+  \******************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+var index_1 = __webpack_require__(/*! ./index */ "./src/http_req/index.ts");
+function makeRequester(api) {
+    return function (req) {
+        return request(req, api);
+    };
+}
+exports.makeRequester = makeRequester;
+var rateLimitReset = 0;
+function request(req, api) {
+    var utime = Date.now() / 1000;
+    if (utime < rateLimitReset) {
+        return Promise.reject(index_1.errors.ipRateLimited);
+    }
+    return new Promise(function (resolve, reject) {
+        api({
+            url: req.url,
+            method: req.method,
+            body: req.body,
+            headers: {
+                'content-type': 'application/json'
+            },
+            timeout: req.timeout
+        }, function (error, resp, body) {
+            if (error) {
+                reject(error);
+                return;
+            }
+            if (!resp.statusCode) {
+                var err_1 = new Error("airbrake: request: response statusCode is " + resp.statusCode);
+                reject(err_1);
+                return;
+            }
+            if (resp.statusCode === 401) {
+                reject(index_1.errors.unauthorized);
+                return;
+            }
+            if (resp.statusCode === 429) {
+                reject(index_1.errors.ipRateLimited);
+                var h = resp.headers['x-ratelimit-delay'];
+                if (!h) {
+                    return;
+                }
+                var s = void 0;
+                if (typeof h === 'string') {
+                    s = h;
+                }
+                else if (h instanceof Array) {
+                    s = h[0];
+                }
+                else {
+                    return;
+                }
+                var n = parseInt(s, 10);
+                if (n > 0) {
+                    rateLimitReset = Date.now() / 1000 + n;
+                }
+                return;
+            }
+            if (resp.statusCode === 204) {
+                resolve({ json: null });
+                return;
+            }
+            if (resp.statusCode >= 200 && resp.statusCode < 300) {
+                var json = void 0;
+                try {
+                    json = JSON.parse(body);
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                resolve(json);
+                return;
+            }
+            if (resp.statusCode >= 400 && resp.statusCode < 500) {
+                var json = void 0;
+                try {
+                    json = JSON.parse(body);
+                }
+                catch (err) {
+                    reject(err);
+                    return;
+                }
+                var err_2 = new Error(json.message);
+                reject(err_2);
+                return;
+            }
+            body = body.trim();
+            var err = new Error("airbrake: node: unexpected response: code=" + resp.statusCode + " body='" + body + "'");
+            reject(err);
+        });
+    });
+}
 
 
 /***/ }),
@@ -1927,9 +2132,16 @@ function elemName(elem) {
         s.push('#');
         s.push(elem.id);
     }
-    if (elem.className) {
+    if (elem.classList) {
         s.push('.');
-        s.push(elem.className.split(' ').join('.'));
+        s.push(Array.from(elem.classList).join('.'));
+    }
+    else if (elem.className) {
+        var str = classNameString(elem.className);
+        if (str !== '') {
+            s.push('.');
+            s.push(str);
+        }
     }
     if (elem.getAttribute) {
         for (var _i = 0, elemAttrs_1 = elemAttrs; _i < elemAttrs_1.length; _i++) {
@@ -1941,6 +2153,16 @@ function elemName(elem) {
         }
     }
     return s.join('');
+}
+function classNameString(name) {
+    if (name.split) {
+        return name.split(' ').join('.');
+    }
+    if (name.baseVal && name.baseVal.split) { // SVGAnimatedString
+        return name.baseVal.split(' ').join('.');
+    }
+    console.log('unsupported HTMLElement.className type', typeof (name));
+    return '';
 }
 function elemPath(elem) {
     var maxLen = 10;
@@ -2313,351 +2535,114 @@ exports.default = processor;
 
 /***/ }),
 
-/***/ "./src/reporter/fetch.ts":
-/*!*******************************!*\
-  !*** ./src/reporter/fetch.ts ***!
-  \*******************************/
+/***/ "./src/routes.ts":
+/*!***********************!*\
+  !*** ./src/routes.ts ***!
+  \***********************/
 /*! no static exports found */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
 
-Object.defineProperty(exports, "__esModule", { value: true });
-__webpack_require__(/*! isomorphic-fetch */ "isomorphic-fetch");
-var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
-var rateLimitReset = 0;
-function report(notice, payload, opts) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        notice.error = reporter_1.errors.ipRateLimited;
-        return Promise.resolve(notice);
-    }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    var opt = {
-        method: 'POST',
-        body: payload,
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
     };
-    return new Promise(function (resolve, _reject) {
-        fetch(url, opt).then(function (req) {
-            if (req.status === 401) {
-                notice.error = reporter_1.errors.unauthorized;
-                resolve(notice);
-                return;
-            }
-            if (req.status === 429) {
-                notice.error = reporter_1.errors.ipRateLimited;
-                resolve(notice);
-                var s = req.headers.get('X-RateLimit-Delay');
-                if (!s) {
-                    return;
-                }
-                var n = parseInt(s, 10);
-                if (n > 0) {
-                    rateLimitReset = Date.now() / 1000 + n;
-                }
-                return;
-            }
-            if (req.status >= 200 && req.status < 500) {
-                var json = void 0;
-                try {
-                    json = req.json();
-                }
-                catch (err) {
-                    notice.error = err;
-                    resolve(notice);
-                    return;
-                }
-                json.then(function (resp) {
-                    if (resp.id) {
-                        notice.id = resp.id;
-                        resolve(notice);
-                        return;
-                    }
-                    if (resp.message) {
-                        notice.error = new Error(resp.message);
-                        resolve(notice);
-                        return;
-                    }
-                });
-                return;
-            }
-            req.text().then(function (body) {
-                notice.error = new Error("airbrake: fetch: unexpected response: code=" + req.status + " body='" + body + "'");
-                resolve(notice);
-            });
-        }).catch(function (err) {
-            notice.error = err;
-            resolve(notice);
-        });
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-
-/***/ "./src/reporter/jsonp.ts":
-/*!*******************************!*\
-  !*** ./src/reporter/jsonp.ts ***!
-  \*******************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var cbCount = 0;
-function report(notice, payload, opts) {
-    return new Promise(function (resolve, _reject) {
-        cbCount++;
-        var cbName = 'airbrakeCb' + String(cbCount);
-        window[cbName] = function (resp) {
-            try {
-                delete window[cbName];
-            }
-            catch (_) { // IE
-                window[cbName] = undefined;
-            }
-            if (resp.id) {
-                notice.id = resp.id;
-                resolve(notice);
-                return;
-            }
-            if (resp.message) {
-                notice.error = new Error(resp.message);
-                resolve(notice);
-                return;
-            }
-            notice.error = new Error(resp);
-            resolve(notice);
-        };
-        payload = encodeURIComponent(payload);
-        var url = opts.host + "/api/v3/projects/" + opts.projectId + "/create-notice?key=" + opts.projectKey + "&callback=" + cbName + "&body=" + payload;
-        var document = window.document;
-        var head = document.getElementsByTagName('head')[0];
-        var script = document.createElement('script');
-        script.src = url;
-        script.onload = function () { return head.removeChild(script); };
-        script.onerror = function () {
-            head.removeChild(script);
-            notice.error = new Error('airbrake: JSONP script error');
-            resolve(notice);
-        };
-        head.appendChild(script);
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-
-/***/ "./src/reporter/reporter.ts":
-/*!**********************************!*\
-  !*** ./src/reporter/reporter.ts ***!
-  \**********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-function defaultReporter(opts) {
-    if (opts.request) {
-        return 'request';
-    }
-    if (typeof fetch === 'function') {
-        return 'fetch';
-    }
-    if (typeof XMLHttpRequest === 'function') {
-        return 'xhr';
-    }
-    if (typeof window === 'object') {
-        return 'jsonp';
-    }
-    return 'fetch';
-}
-exports.defaultReporter = defaultReporter;
-exports.errors = {
-    unauthorized: new Error('airbrake: unauthorized: project id or key are wrong'),
-    ipRateLimited: new Error('airbrake: IP is rate limited'),
+    return __assign.apply(this, arguments);
 };
-
-
-/***/ }),
-
-/***/ "./src/reporter/request.ts":
-/*!*********************************!*\
-  !*** ./src/reporter/request.ts ***!
-  \*********************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
 Object.defineProperty(exports, "__esModule", { value: true });
-var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
-var rateLimitReset = 0;
-function report(notice, payload, opts) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        notice.error = reporter_1.errors.ipRateLimited;
-        return Promise.resolve(notice);
+var http_req_1 = __webpack_require__(/*! ./http_req */ "./src/http_req/index.ts");
+var FLUSH_INTERVAL = 15000;
+var Routes = /** @class */ (function () {
+    function Routes(opts) {
+        // TODO: use RouteKey as map key
+        this.m = {};
+        this.opts = opts;
+        this.url = this.opts.host + "/api/v5/projects/" + this.opts.projectId + "/routes-stats?key=" + this.opts.projectKey;
+        this.requester = http_req_1.makeRequester(this.opts);
     }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    return new Promise(function (resolve, _reject) {
-        opts.request({
-            url: url,
-            method: 'POST',
-            body: payload,
-            headers: {
-                'content-type': 'application/json'
-            },
-            timeout: opts.timeout
-        }, function (error, response, body) {
-            if (error) {
-                notice.error = error;
-                resolve(notice);
-                return;
-            }
-            if (!response.statusCode) {
-                notice.error = new Error('airbrake: node: statusCode is null or undefined');
-                resolve(notice);
-                return;
-            }
-            if (response.statusCode === 401) {
-                notice.error = reporter_1.errors.unauthorized;
-                resolve(notice);
-                return;
-            }
-            if (response.statusCode === 429) {
-                notice.error = reporter_1.errors.ipRateLimited;
-                resolve(notice);
-                var h = response.headers['x-ratelimit-delay'];
-                if (!h) {
-                    return;
-                }
-                var s = void 0;
-                if (typeof h === 'string') {
-                    s = h;
-                }
-                else if (h instanceof Array) {
-                    s = h[0];
-                }
-                else {
-                    return;
-                }
-                var n = parseInt(s, 10);
-                if (n > 0) {
-                    rateLimitReset = Date.now() / 1000 + n;
-                }
-                return;
-            }
-            if (response.statusCode >= 200 && response.statusCode < 500) {
-                var resp = void 0;
-                try {
-                    resp = JSON.parse(body);
-                }
-                catch (err) {
-                    notice.error = err;
-                    resolve(notice);
-                    return;
-                }
-                if (resp.id) {
-                    notice.id = resp.id;
-                    resolve(notice);
-                    return;
-                }
-                if (resp.message) {
-                    notice.error = new Error(resp.message);
-                    resolve(notice);
-                    return;
-                }
-            }
-            body = body.trim();
-            notice.error = new Error("airbrake: node: unexpected response: code=" + response.statusCode + " body='" + body + "'");
-            resolve(notice);
-        });
-    });
-}
-exports.default = report;
-
-
-/***/ }),
-
-/***/ "./src/reporter/xhr.ts":
-/*!*****************************!*\
-  !*** ./src/reporter/xhr.ts ***!
-  \*****************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var reporter_1 = __webpack_require__(/*! ./reporter */ "./src/reporter/reporter.ts");
-var rateLimitReset = 0;
-function report(notice, payload, opts) {
-    var utime = Date.now() / 1000;
-    if (utime < rateLimitReset) {
-        notice.error = reporter_1.errors.ipRateLimited;
-        return Promise.resolve(notice);
-    }
-    var url = opts.host + "/api/v3/projects/" + opts.projectId + "/notices?key=" + opts.projectKey;
-    return new Promise(function (resolve, _reject) {
-        var req = new XMLHttpRequest();
-        req.open('POST', url, true);
-        req.timeout = opts.timeout;
-        req.onreadystatechange = function () {
-            if (req.readyState !== 4) {
-                return;
-            }
-            if (req.status === 401) {
-                notice.error = reporter_1.errors.unauthorized;
-                resolve(notice);
-                return;
-            }
-            if (req.status === 429) {
-                notice.error = reporter_1.errors.ipRateLimited;
-                resolve(notice);
-                var s = req.getResponseHeader('X-RateLimit-Delay');
-                if (!s) {
-                    return;
-                }
-                var n = parseInt(s, 10);
-                if (n > 0) {
-                    rateLimitReset = Date.now() / 1000 + n;
-                }
-                return;
-            }
-            if (req.status >= 200 && req.status < 500) {
-                var resp = void 0;
-                try {
-                    resp = JSON.parse(req.responseText);
-                }
-                catch (err) {
-                    notice.error = err;
-                    resolve(notice);
-                    return;
-                }
-                if (resp.id) {
-                    notice.id = resp.id;
-                    resolve(notice);
-                    return;
-                }
-                if (resp.message) {
-                    notice.error = new Error(resp.message);
-                    resolve(notice);
-                    return;
-                }
-            }
-            var body = req.responseText.trim();
-            notice.error = new Error("airbrake: xhr: unexpected response: code=" + req.status + " body='" + body + "'");
-            resolve(notice);
+    Routes.prototype.incRequest = function (method, route, statusCode, time, ms) {
+        var _this = this;
+        var minute = 60 * 1000;
+        time = new Date(Math.floor(time.getTime() / minute) * minute);
+        var key = {
+            method: method,
+            route: route,
+            status_code: statusCode,
+            time: time
         };
-        req.send(payload);
-    });
-}
-exports.default = report;
+        var keyStr = JSON.stringify(key);
+        var stat;
+        if (keyStr in this.m) {
+            stat = this.m[keyStr];
+        }
+        else {
+            stat = {
+                count: 0,
+                sum: 0,
+                sumsq: 0
+            };
+            if (this.opts.tdigest) {
+                stat.tdigest = new this.opts.tdigest();
+            }
+            this.m[keyStr] = stat;
+        }
+        stat.count++;
+        stat.sum += ms;
+        stat.sumsq += ms * ms;
+        if (stat.tdigest) {
+            stat.tdigest.push(ms);
+        }
+        if (this.timer) {
+            return;
+        }
+        this.timer = setTimeout(function () { _this.flush(); }, FLUSH_INTERVAL);
+    };
+    Routes.prototype.flush = function () {
+        var routes = [];
+        for (var keyStr in this.m) {
+            var key = JSON.parse(keyStr);
+            var v = __assign({}, key, this.m[keyStr]);
+            if (v.tdigest) {
+                v.tdigest_centroids = this.tdigestCentroids(v.tdigest);
+                delete v.tdigest;
+            }
+            routes.push(v);
+        }
+        this.m = {};
+        this.timer = null;
+        var req = {
+            method: 'POST',
+            url: this.url,
+            body: JSON.stringify({ routes: routes }),
+        };
+        this.requester(req).then(function (_resp) {
+            // nothing
+        }).catch(function (err) {
+            if (console.error) {
+                console.error('can not report routes stats', err);
+            }
+        });
+    };
+    Routes.prototype.tdigestCentroids = function (td) {
+        var means = [], counts = [];
+        td.centroids.each(function (c) {
+            means.push(c.mean);
+            counts.push(c.n);
+        });
+        return {
+            mean: means,
+            count: counts,
+        };
+    };
+    return Routes;
+}());
+exports.Routes = Routes;
 
 
 /***/ }),

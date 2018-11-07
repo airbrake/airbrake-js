@@ -61,7 +61,7 @@ export class Routes {
     }
 
     incRequest(method: string, route: string, statusCode: number, time: Date, ms: number): void {
-        let minute = 60 * 1000;
+        const minute = 60 * 1000;
         time = new Date(Math.floor(time.getTime() / minute) * minute);
 
         let key: RouteKey = {
