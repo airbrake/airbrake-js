@@ -1,17 +1,19 @@
 import Client from '../client';
 
 function makeMiddleware(client: Client) {
-    return function(req, res, next): void {
+    return function airbrakeMiddleware(req, res, next): void {
         let start = new Date();
         next();
         let ms = new Date().getTime() - start.getTime();
-        client.incRequest(req.method, req.route.path, res.statusCode, start, ms);
+        let route = req.route ? req.route.path : req.url;
+        client.incRequest(req.method, route, res.statusCode, start, ms);
     };
 }
 
 function makeErrorHandler(client: Client) {
-    return function errorHandler(err: Error, req, _res, next): void {
+    return function airbrakeErrorHandler(err: Error, req, _res, next): void {
         let url = req.protocol + '://' + req.headers['host'] + req.path;
+        let action = req.route ? req.route.stack[0].name : '';
         let notice: any = {
             error: err,
             context: {
@@ -21,7 +23,7 @@ function makeErrorHandler(client: Client) {
                 route: req.route.path,
                 httpMethod: req.method,
                 component: 'express',
-                action: req.route.stack[0].name,
+                action: action,
             },
         };
         let referer = req.headers['referer'];
@@ -34,6 +36,7 @@ function makeErrorHandler(client: Client) {
     };
 }
 
+// Hack to preserve backwards compatibility.
 (makeErrorHandler as any).makeMiddleware = makeMiddleware;
 (makeErrorHandler as any).makeErrorHandler = makeErrorHandler;
 
