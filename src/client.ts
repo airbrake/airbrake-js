@@ -275,11 +275,11 @@ class Client {
         this.historian.onerror.apply(this.historian, arguments);
     }
 
-    incRequest(req: RequestInfo): void {
+    notifyRequest(req: RequestInfo): void {
         if (!this.routes) {
             this.routes = new Routes(this.opts);
         }
-        this.routes.incRequest(req);
+        this.routes.notifyRequest(req);
     }
 
     private onOnline(): void {

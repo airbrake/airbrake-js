@@ -68,7 +68,7 @@ export class Routes {
         this.requester = makeRequester(this.opts);
     }
 
-    incRequest(req: RequestInfo): void {
+    notifyRequest(req: RequestInfo): void {
         let startTime = toTime(req.start);
         let endTime = toTime(req.end);
         let ms = endTime - startTime;

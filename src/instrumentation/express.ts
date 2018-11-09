@@ -6,7 +6,7 @@ function makeMiddleware(client: Client) {
         next();
         let end = new Date();
         let route = req.route ? req.route.path : req.url;
-        client.incRequest({
+        client.notifyRequest({
             method: req.method,
             route: route,
             statusCode: res.statusCode,
