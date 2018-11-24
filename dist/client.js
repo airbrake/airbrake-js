@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.0-beta.1 */
+/*! airbrake-js v1.6.0-beta.2 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
@@ -1216,7 +1216,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.0-beta.1",
+            version: "1.6.0-beta.2",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.sendNotice(notice);
@@ -1293,11 +1293,11 @@ var Client = /** @class */ (function () {
     Client.prototype.onerror = function () {
         this.historian.onerror.apply(this.historian, arguments);
     };
-    Client.prototype.incRequest = function (req) {
+    Client.prototype.notifyRequest = function (req) {
         if (!this.routes) {
             this.routes = new routes_1.Routes(this.opts);
         }
-        this.routes.incRequest(req);
+        this.routes.notifyRequest(req);
     };
     Client.prototype.onOnline = function () {
         this.offline = false;
@@ -2566,7 +2566,7 @@ var Routes = /** @class */ (function () {
         this.url = this.opts.host + "/api/v5/projects/" + this.opts.projectId + "/routes-stats?key=" + this.opts.projectKey;
         this.requester = http_req_1.makeRequester(this.opts);
     }
-    Routes.prototype.incRequest = function (req) {
+    Routes.prototype.notifyRequest = function (req) {
         var _this = this;
         var startTime = toTime(req.start);
         var endTime = toTime(req.end);
@@ -2576,7 +2576,7 @@ var Routes = /** @class */ (function () {
         var key = {
             method: req.method,
             route: req.route,
-            status_code: req.statusCode,
+            statusCode: req.statusCode,
             time: req.start
         };
         var keyStr = JSON.stringify(key);
@@ -2612,7 +2612,7 @@ var Routes = /** @class */ (function () {
             var key = JSON.parse(keyStr);
             var v = __assign({}, key, this.m[keyStr]);
             if (v.tdigest) {
-                v.tdigest_centroids = this.tdigestCentroids(v.tdigest);
+                v.tdigestCentroids = this.tdigestCentroids(v.tdigest);
                 delete v.tdigest;
             }
             routes.push(v);
