@@ -33,7 +33,7 @@ interface TDigestCentroids {
 interface RouteKey {
     method: string;
     route: string;
-    status_code: number;
+    statusCode: number;
     time: Date;
 }
 
@@ -42,7 +42,7 @@ interface RouteStat {
     sum: number;
     sumsq: number;
     tdigest?: TDigest;
-    tdigest_centroids?: TDigestCentroids;
+    tdigestCentroids?: TDigestCentroids;
 }
 
 export interface RequestInfo {
@@ -79,7 +79,7 @@ export class Routes {
         let key: RouteKey = {
             method: req.method,
             route: req.route,
-            status_code: req.statusCode,
+            statusCode: req.statusCode,
             time: req.start
         };
         let keyStr = JSON.stringify(key);
@@ -122,7 +122,7 @@ export class Routes {
                 ...this.m[keyStr]
             };
             if (v.tdigest) {
-                v.tdigest_centroids = this.tdigestCentroids(v.tdigest);
+                v.tdigestCentroids = this.tdigestCentroids(v.tdigest);
                 delete v.tdigest;
             }
             routes.push(v);
