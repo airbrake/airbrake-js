@@ -9,12 +9,14 @@ const MAX_OBJ_LENGTH = 128;
 export default function jsonifyNotice(
     notice: Notice, {maxLength = 64000, keysBlacklist = []} = {}): string {
 
+    let truncatedArray = [];
     if (notice.errors) {
-        for (let i in notice.errors) {
+        for (let err of notice.errors) {
             let t = new Truncator({keysBlacklist: keysBlacklist});
-            notice.errors[i] = t.truncate(notice.errors[i]);
+            truncatedArray.push(t.truncate(err));
         }
     }
+    notice.errors = truncatedArray;
 
     let s = '';
     let keys = ['context', 'params', 'environment', 'session'];
@@ -170,10 +172,8 @@ class Truncator {
     private truncateArray(arr: any[], depth = 0): any[] {
         let length = 0;
         let dst: any = [];
-        for (let i in arr) {
-            let el = arr[i];
-
-            dst.push(this.truncate(el, i, depth));
+        for (let el of arr) {
+            dst.push(this.truncate(el, length.toString(), depth));
 
             length++;
             if (length >= this.maxArrayLength) {

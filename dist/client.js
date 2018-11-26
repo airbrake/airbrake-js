@@ -2033,18 +2033,21 @@ var MAX_OBJ_LENGTH = 128;
 // environment and session keys.
 function jsonifyNotice(notice, _a) {
     var _b = _a === void 0 ? {} : _a, _c = _b.maxLength, maxLength = _c === void 0 ? 64000 : _c, _d = _b.keysBlacklist, keysBlacklist = _d === void 0 ? [] : _d;
+    var truncatedArray = [];
     if (notice.errors) {
-        for (var i in notice.errors) {
+        for (var _i = 0, _e = notice.errors; _i < _e.length; _i++) {
+            var err_1 = _e[_i];
             var t = new Truncator({ keysBlacklist: keysBlacklist });
-            notice.errors[i] = t.truncate(notice.errors[i]);
+            truncatedArray.push(t.truncate(err_1));
         }
     }
+    notice.errors = truncatedArray;
     var s = '';
     var keys = ['context', 'params', 'environment', 'session'];
     for (var level = 0; level < 8; level++) {
         var opts = { level: level, keysBlacklist: keysBlacklist };
-        for (var _i = 0, keys_1 = keys; _i < keys_1.length; _i++) {
-            var key = keys_1[_i];
+        for (var _f = 0, keys_1 = keys; _f < keys_1.length; _f++) {
+            var key = keys_1[_f];
             var obj = notice[key];
             if (obj) {
                 notice[key] = truncate(obj, opts);
@@ -2059,8 +2062,8 @@ function jsonifyNotice(notice, _a) {
         json: s.slice(0, Math.floor(maxLength / 2)) + '...',
     };
     keys.push('errors');
-    for (var _e = 0, keys_2 = keys; _e < keys_2.length; _e++) {
-        var key = keys_2[_e];
+    for (var _g = 0, keys_2 = keys; _g < keys_2.length; _g++) {
+        var key = keys_2[_g];
         var obj = notice[key];
         if (!obj) {
             continue;
@@ -2168,9 +2171,9 @@ var Truncator = /** @class */ (function () {
         if (depth === void 0) { depth = 0; }
         var length = 0;
         var dst = [];
-        for (var i in arr) {
-            var el = arr[i];
-            dst.push(this.truncate(el, i, depth));
+        for (var _i = 0, arr_1 = arr; _i < arr_1.length; _i++) {
+            var el = arr_1[_i];
+            dst.push(this.truncate(el, length.toString(), depth));
             length++;
             if (length >= this.maxArrayLength) {
                 break;
