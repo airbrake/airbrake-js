@@ -629,6 +629,17 @@ describe('Client', () => {
             }, 0);
         });
 
+        it('notifies about rejections with no reason', (done) => {
+            new Promise((_resolve, reject) => {
+                reject();
+            });
+
+            setTimeout(() => {
+                expect(reporter).to.have.been.called;
+                done();
+            }, 0);
+        });
+
         it('notifies about errors thrown in Promise.catch', (done) => {
             let p = new Promise((_, reject) => {
                 setTimeout(() => {

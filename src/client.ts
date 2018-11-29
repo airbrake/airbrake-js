@@ -301,7 +301,7 @@ class Client {
         // Handle native or bluebird Promise rejections
         // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
         // http://bluebirdjs.com/docs/api/error-management-configuration.html
-        let reason = (<PromiseRejectionEvent>e).reason || (<CustomEvent>e).detail.reason;
+        let reason = (<PromiseRejectionEvent>e).reason || (<CustomEvent>e).detail && (<CustomEvent>e).detail.reason || 'unhandled rejection with no reason given';
         let msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
