@@ -119,6 +119,9 @@ export class Routes {
     private flush(): void {
         let routes = [];
         for (let keyStr in this.m) {
+            if (!this.m.hasOwnProperty(keyStr)) {
+                continue;
+            }
             let key: RouteKey = JSON.parse(keyStr);
             let v = {
                 ...key,

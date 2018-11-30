@@ -257,7 +257,7 @@ class Client {
     }
 
     private wrapArguments(args: any[]): any[] {
-        for (let i in args) {
+        for (let i = 0; i < args.length; i++) {
             let arg = args[i];
             if (typeof arg === 'function') {
                 args[i] = this.wrap(arg);
