@@ -33,11 +33,11 @@ export default function filter(notice: Notice): Notice {
             execPath: process.execPath,
             argv: process.argv,
         };
-        for (let name in ['uptime', 'cpuUsage', 'memoryUsage']) {
+        ['uptime', 'cpuUsage', 'memoryUsage'].map((name) => {
             if (process[name]) {
                 notice.params.process[name] = process[name]();
             }
-        }
+        });
     }
 
     return notice;

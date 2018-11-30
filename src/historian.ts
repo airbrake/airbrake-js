@@ -221,7 +221,7 @@ export class Historian {
             return false;
         }
         for (let key in state) {
-            if (key === 'date') {
+            if (!state.hasOwnProperty(key) || key === 'date') {
                 continue;
             }
             if (state[key] !== this.lastState[key]) {

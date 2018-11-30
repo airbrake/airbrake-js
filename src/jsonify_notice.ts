@@ -10,7 +10,7 @@ export default function jsonifyNotice(
     notice: Notice, {maxLength = 64000, keysBlacklist = []} = {}): string {
 
     if (notice.errors) {
-        for (let i in notice.errors) {
+        for (let i = 0; i < notice.errors.length; i++) {
             let t = new Truncator({keysBlacklist: keysBlacklist});
             notice.errors[i] = t.truncate(notice.errors[i]);
         }
@@ -170,10 +170,9 @@ class Truncator {
     private truncateArray(arr: any[], depth = 0): any[] {
         let length = 0;
         let dst: any = [];
-        for (let i in arr) {
+        for (let i = 0; i < arr.length; i++) {
             let el = arr[i];
-
-            dst.push(this.truncate(el, i, depth));
+            dst.push(this.truncate(el, i.toString(), depth));
 
             length++;
             if (length >= this.maxArrayLength) {
@@ -187,6 +186,9 @@ class Truncator {
         let length = 0;
         let dst = {};
         for (let key in obj) {
+            if (!obj.hasOwnProperty(key)) {
+                continue;
+            }
             if (isBlacklisted(key, this.keysBlacklist)) {
                 dst[key] = FILTERED;
                 continue;

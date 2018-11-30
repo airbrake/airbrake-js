@@ -65,7 +65,7 @@ describe('jsonify_notice', () => {
                     type: Array(100000).join('x'),
                     message: Array(100000).join('x'),
                 }],
-            } ;
+            };
             json = jsonifyNotice(notice as Notice, {maxLength});
         });
 
@@ -73,4 +73,19 @@ describe('jsonify_notice', () => {
             expect(json.length).to.be.below(maxLength);
         });
     });
+
+    context('when called with huger array', () => {
+        let json;
+
+        beforeEach(() => {
+            let notice = {
+                params: {param1: Array(100000)},
+            };
+            json = jsonifyNotice(notice as Notice, {maxLength});
+        });
+
+        it('limits json size', () => {
+            expect(json.length).to.be.below(maxLength);
+        });
+    })
 });
