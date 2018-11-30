@@ -1,10 +1,17 @@
 import Client from '../client';
 
+function now() {
+    if (process && process.hrtime) {
+        return process.hrtime();
+    }
+    return Date.now();
+}
+
 function makeMiddleware(client: Client) {
     return function airbrakeMiddleware(req, res, next): void {
-        let start = new Date();
+        let start = now();
         next();
-        let end = new Date();
+        let end = now();
         let route = req.route ? req.route.path : req.url;
         client.notifyRequest({
             method: req.method,

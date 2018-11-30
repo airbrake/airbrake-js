@@ -2,7 +2,7 @@ import Options from './options';
 import {Requester, makeRequester} from './http_req';
 
 
-const FLUSH_INTERVAL = 15000;
+const FLUSH_INTERVAL = 15000; // 15 seconds
 
 
 interface Centroid {
@@ -45,12 +45,14 @@ interface RouteStat {
     tdigestCentroids?: TDigestCentroids;
 }
 
+type time = Date | number | [number, number];
+
 export interface RequestInfo {
     method: string;
     route: string;
     statusCode: number;
-    start: Date;
-    end: Date;
+    start: time;
+    end: time;
 }
 
 export class Routes {
@@ -69,12 +71,13 @@ export class Routes {
     }
 
     notifyRequest(req: RequestInfo): void {
-        let startTime = toTime(req.start);
-        let endTime = toTime(req.end);
-        let ms = endTime - startTime;
+        let ms = durationMs(req.start, req.end);
+        if (ms === 0) {
+            ms = 0.1;
+        }
 
         const minute = 60 * 1000;
-        req.start = new Date(Math.floor(startTime / minute) * minute);
+        req.start = new Date(Math.floor(toTime(req.start) / minute) * minute);
 
         let key: RouteKey = {
             method: req.method,
@@ -158,9 +161,32 @@ export class Routes {
     }
 }
 
-function toTime(date: any): number {
-    if (date.getTime) {
-        return date.getTime();
+const NS_PER_MS = 1e6;
+
+function toTime(time: time): number {
+    if (time instanceof Date) {
+        return time.getTime();
     }
-    return date;
+    if (typeof time === 'number') {
+        return time;
+    }
+    if (time instanceof Array) {
+        return time[0] + (time[1] / NS_PER_MS);
+    }
+    throw new Error(`unsupported type: ${typeof time}`);
+}
+
+function durationMs(start: time, end: time): number {
+    if (start instanceof Date && end instanceof Date) {
+        return end.getTime() - start.getTime();
+    }
+    if (typeof start === 'number' && typeof end === 'number') {
+        return end - start;
+    }
+    if (start instanceof Array && end instanceof Array) {
+        let ms = end[0] - start[0];
+        ms += (end[1] - start[1]) / NS_PER_MS;
+        return ms;
+    }
+    throw new Error(`unsupported type: ${typeof start}`);
 }
