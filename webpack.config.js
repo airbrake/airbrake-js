@@ -72,7 +72,7 @@ function newConfig() {
 }
 
 var client = newConfig()
-var clientFiles = ['./src/internal/compat.ts', './src/client.ts']
+var clientFiles = ['./src/client.ts']
 client.entry = {
   client: clientFiles,
 }
