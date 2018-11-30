@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.0-beta.2 */
+/*! airbrake-js v1.6.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -106,11 +106,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 
+function now() {
+    if (process && process.hrtime) {
+        return process.hrtime();
+    }
+    return Date.now();
+}
 function makeMiddleware(client) {
     return function airbrakeMiddleware(req, res, next) {
-        var start = new Date();
+        var start = now();
         next();
-        var end = new Date();
+        var end = now();
         var route = req.route ? req.route.path : req.url;
         client.notifyRequest({
             method: req.method,

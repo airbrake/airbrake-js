@@ -1,14 +1,14 @@
-/*! airbrake-js v1.6.0-beta.2 */
+/*! airbrake-js v1.6.0 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
+		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
 	else if(typeof define === 'function' && define.amd)
-		define(["os", "isomorphic-fetch"], factory);
+		define(["os", "cross-fetch"], factory);
 	else if(typeof exports === 'object')
-		exports["Client"] = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("isomorphic-fetch"));
+		exports["Client"] = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
 	else
 		root["airbrakeJs"] = root["airbrakeJs"] || {}, root["airbrakeJs"]["Client"] = factory(root[undefined], root["fetch"]);
-})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_os__, __WEBPACK_EXTERNAL_MODULE_isomorphic_fetch__) {
+})(typeof self !== 'undefined' ? self : this, function(__WEBPACK_EXTERNAL_MODULE_os__, __WEBPACK_EXTERNAL_MODULE_cross_fetch__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -1044,7 +1044,7 @@ g = (function() {
 
 try {
 	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1, eval)("this");
+	g = g || new Function("return this")();
 } catch (e) {
 	// This works if the window reference is available
 	if (typeof window === "object") g = window;
@@ -1216,7 +1216,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.0-beta.2",
+            version: "1.6.0",
             url: 'https://github.com/airbrake/airbrake-js'
         };
         return this.sendNotice(notice);
@@ -1274,7 +1274,7 @@ var Client = /** @class */ (function () {
         return airbrakeWrapper;
     };
     Client.prototype.wrapArguments = function (args) {
-        for (var i in args) {
+        for (var i = 0; i < args.length; i++) {
             var arg = args[i];
             if (typeof arg === 'function') {
                 args[i] = this.wrap(arg);
@@ -1320,7 +1320,7 @@ var Client = /** @class */ (function () {
         // Handle native or bluebird Promise rejections
         // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
         // http://bluebirdjs.com/docs/api/error-management-configuration.html
-        var reason = e.reason || e.detail.reason;
+        var reason = e.reason || e.detail && e.detail.reason || 'unhandled rejection with no reason given';
         var msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
@@ -1476,11 +1476,11 @@ function filter(notice) {
             execPath: process.execPath,
             argv: process.argv,
         };
-        for (var name_1 in ['uptime', 'cpuUsage', 'memoryUsage']) {
-            if (process[name_1]) {
-                notice.params.process[name_1] = process[name_1]();
+        ['uptime', 'cpuUsage', 'memoryUsage'].map(function (name) {
+            if (process[name]) {
+                notice.params.process[name] = process[name]();
             }
-        }
+        });
     }
     return notice;
 }
@@ -1732,7 +1732,7 @@ var Historian = /** @class */ (function () {
             return false;
         }
         for (var key in state) {
-            if (key === 'date') {
+            if (!state.hasOwnProperty(key) || key === 'date') {
                 continue;
             }
             if (state[key] !== this.lastState[key]) {
@@ -1922,8 +1922,11 @@ function enabled(v) {
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-__webpack_require__(/*! isomorphic-fetch */ "isomorphic-fetch");
+var cross_fetch_1 = __importDefault(__webpack_require__(/*! cross-fetch */ "cross-fetch"));
 var index_1 = __webpack_require__(/*! ./index */ "./src/http_req/index.ts");
 var rateLimitReset = 0;
 function request(req) {
@@ -1935,7 +1938,7 @@ function request(req) {
         method: req.method,
         body: req.body,
     };
-    return fetch(req.url, opt).then(function (resp) {
+    return cross_fetch_1.default(req.url, opt).then(function (resp) {
         if (resp.status === 401) {
             throw index_1.errors.unauthorized;
         }
@@ -2256,7 +2259,7 @@ var MAX_OBJ_LENGTH = 128;
 function jsonifyNotice(notice, _a) {
     var _b = _a === void 0 ? {} : _a, _c = _b.maxLength, maxLength = _c === void 0 ? 64000 : _c, _d = _b.keysBlacklist, keysBlacklist = _d === void 0 ? [] : _d;
     if (notice.errors) {
-        for (var i in notice.errors) {
+        for (var i = 0; i < notice.errors.length; i++) {
             var t = new Truncator({ keysBlacklist: keysBlacklist });
             notice.errors[i] = t.truncate(notice.errors[i]);
         }
@@ -2390,9 +2393,9 @@ var Truncator = /** @class */ (function () {
         if (depth === void 0) { depth = 0; }
         var length = 0;
         var dst = [];
-        for (var i in arr) {
+        for (var i = 0; i < arr.length; i++) {
             var el = arr[i];
-            dst.push(this.truncate(el, i, depth));
+            dst.push(this.truncate(el, i.toString(), depth));
             length++;
             if (length >= this.maxArrayLength) {
                 break;
@@ -2405,6 +2408,9 @@ var Truncator = /** @class */ (function () {
         var length = 0;
         var dst = {};
         for (var key in obj) {
+            if (!obj.hasOwnProperty(key)) {
+                continue;
+            }
             if (isBlacklisted(key, this.keysBlacklist)) {
                 dst[key] = FILTERED;
                 continue;
@@ -2557,7 +2563,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var http_req_1 = __webpack_require__(/*! ./http_req */ "./src/http_req/index.ts");
-var FLUSH_INTERVAL = 15000;
+var FLUSH_INTERVAL = 15000; // 15 seconds
 var Routes = /** @class */ (function () {
     function Routes(opts) {
         // TODO: use RouteKey as map key
@@ -2568,11 +2574,12 @@ var Routes = /** @class */ (function () {
     }
     Routes.prototype.notifyRequest = function (req) {
         var _this = this;
-        var startTime = toTime(req.start);
-        var endTime = toTime(req.end);
-        var ms = endTime - startTime;
+        var ms = durationMs(req.start, req.end);
+        if (ms === 0) {
+            ms = 0.1;
+        }
         var minute = 60 * 1000;
-        req.start = new Date(Math.floor(startTime / minute) * minute);
+        req.start = new Date(Math.floor(toTime(req.start) / minute) * minute);
         var key = {
             method: req.method,
             route: req.route,
@@ -2609,6 +2616,9 @@ var Routes = /** @class */ (function () {
     Routes.prototype.flush = function () {
         var routes = [];
         for (var keyStr in this.m) {
+            if (!this.m.hasOwnProperty(keyStr)) {
+                continue;
+            }
             var key = JSON.parse(keyStr);
             var v = __assign({}, key, this.m[keyStr]);
             if (v.tdigest) {
@@ -2646,11 +2656,32 @@ var Routes = /** @class */ (function () {
     return Routes;
 }());
 exports.Routes = Routes;
-function toTime(date) {
-    if (date.getTime) {
-        return date.getTime();
+var NS_PER_MS = 1e6;
+function toTime(time) {
+    if (time instanceof Date) {
+        return time.getTime();
     }
-    return date;
+    if (typeof time === 'number') {
+        return time;
+    }
+    if (time instanceof Array) {
+        return time[0] + (time[1] / NS_PER_MS);
+    }
+    throw new Error("unsupported type: " + typeof time);
+}
+function durationMs(start, end) {
+    if (start instanceof Date && end instanceof Date) {
+        return end.getTime() - start.getTime();
+    }
+    if (typeof start === 'number' && typeof end === 'number') {
+        return end - start;
+    }
+    if (start instanceof Array && end instanceof Array) {
+        var ms = end[0] - start[0];
+        ms += (end[1] - start[1]) / NS_PER_MS;
+        return ms;
+    }
+    throw new Error("unsupported type: " + typeof start);
 }
 
 
@@ -2669,14 +2700,14 @@ module.exports = __webpack_require__(/*! ./src/client.ts */"./src/client.ts");
 
 /***/ }),
 
-/***/ "isomorphic-fetch":
-/*!***********************************************************************************************************************!*\
-  !*** external {"commonjs":"isomorphic-fetch","commonjs2":"isomorphic-fetch","amd":"isomorphic-fetch","root":"fetch"} ***!
-  \***********************************************************************************************************************/
+/***/ "cross-fetch":
+/*!********************************************************************************************************!*\
+  !*** external {"commonjs":"cross-fetch","commonjs2":"cross-fetch","amd":"cross-fetch","root":"fetch"} ***!
+  \********************************************************************************************************/
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = __WEBPACK_EXTERNAL_MODULE_isomorphic_fetch__;
+module.exports = __WEBPACK_EXTERNAL_MODULE_cross_fetch__;
 
 /***/ }),
 
