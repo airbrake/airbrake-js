@@ -1,4 +1,4 @@
-require('isomorphic-fetch');
+import fetch from 'cross-fetch';
 
 import {HttpRequest, HttpResponse, errors} from './index';
 
