@@ -15,7 +15,7 @@
     "notifier"
   ],
   "dependencies": {
-    "isomorphic-fetch": "^2.2.1"
+    "cross-fetch": "^2.2.3"
   },
   "devDependencies": {
     "@types/chai": "4.1.7",
