@@ -1,4 +1,4 @@
-import 'cross-fetch/polyfill';
+let fetch = require('cross-fetch');
 
 import {HttpRequest, HttpResponse, errors} from './index';
 
