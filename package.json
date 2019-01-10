@@ -15,7 +15,7 @@
     "notifier"
   ],
   "peerDependencies": {
-    "cross-fetch": "2.2.x"
+    "cross-fetch": ">=2"
   },
   "devDependencies": {
     "@types/chai": "4.1.7",
