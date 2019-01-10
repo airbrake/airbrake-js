@@ -186,7 +186,7 @@ class Truncator {
         let length = 0;
         let dst = {};
         for (let key in obj) {
-            if (!obj.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(obj, key)) {
                 continue;
             }
             if (isBlacklisted(key, this.keysBlacklist)) {

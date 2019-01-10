@@ -136,6 +136,14 @@ describe('truncate', () => {
         });
     });
 
+    context('when called with object created with Object.create(null)', () => {
+        it('works', () => {
+            let obj: any = Object.create(null);
+            obj.foo = 'bar';
+            expect(truncate(obj)).to.deep.equal({ foo: 'bar' });
+        });
+    });
+
     describe('keysBlacklist', () => {
         it('filters blacklisted keys', () => {
             let obj = {
