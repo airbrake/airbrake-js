@@ -1,151 +1,145 @@
-import Client from '../../src/client';
 import * as sinon from 'sinon';
+import Client from '../../src/client';
 import { expect } from './sinon_chai';
 
-
 class Location {
-    private s: string;
+  private s: string;
 
-    constructor(s: string) {
-        this.s = s;
-    }
+  constructor(s: string) {
+    this.s = s;
+  }
 
-    toString(): string {
-        return this.s;
-    }
+  public toString(): string {
+    return this.s;
+  }
 }
 
 describe('instrumentation', () => {
-    let processor, reporter, client;
+  let processor, reporter, client;
 
+  beforeEach(() => {
+    processor = sinon.spy((data) => {
+      return data;
+    });
+    reporter = sinon.spy(() => {
+      return Promise.resolve({ id: 1 });
+    });
+    client = new Client({
+      projectId: 1,
+      projectKey: 'abc',
+      processor,
+      reporter,
+    });
+  });
+
+  describe('location', () => {
     beforeEach(() => {
-        processor = sinon.spy((data) => {
-            return data;
-        });
-        reporter = sinon.spy(() => {
-            return Promise.resolve({id: 1});
-        });
-        client = new Client({
-            projectId: 1,
-            projectKey: 'abc',
-            processor: processor,
-            reporter: reporter,
-        });
+      let locations = ['', 'http://hello/world', 'foo', new Location('/')];
+      for (let loc of locations) {
+        try {
+          window.history.pushState(null, '', loc as string);
+        } catch (_) {}
+      }
+      client.notify(new Error('test'));
     });
 
-    describe('location', () => {
-        beforeEach(() => {
-            let locations = [
-                '',
-                'http://hello/world',
-                'foo',
-                new Location('/'),
-            ];
-            for (let loc of locations) {
-                try {
-                    window.history.pushState(null, '', loc as string);
-                } catch (_) {}
-            }
-            client.notify(new Error('test'));
-        });
+    it('records browser history', () => {
+      expect(reporter).to.have.been.called;
+      let notice = reporter.lastCall.args[0];
+      let history = notice.context.history;
 
-        it('records browser history', () => {
-            expect(reporter).to.have.been.called;
-            let notice = reporter.lastCall.args[0];
-            let history = notice.context.history;
+      let state = history[history.length - 3];
+      delete state.date;
+      expect(state).to.deep.equal({
+        type: 'location',
+        from: '/context.html',
+        to: '/world',
+      });
 
-            let state = history[history.length - 3];
-            delete state.date;
-            expect(state).to.deep.equal({
-                type: 'location',
-                from: '/context.html',
-                to: '/world',
-            });
+      state = history[history.length - 2];
+      delete state.date;
+      expect(state).to.deep.equal({
+        type: 'location',
+        from: '/world',
+        to: '/foo',
+      });
 
-            state = history[history.length - 2];
-            delete state.date;
-            expect(state).to.deep.equal({
-                type: 'location',
-                from: '/world',
-                to: '/foo',
-            });
+      state = history[history.length - 1];
+      delete state.date;
+      expect(state).to.deep.equal({
+        type: 'location',
+        from: '/foo',
+        to: '/',
+      });
+    });
+  });
 
-            state = history[history.length - 1];
-            delete state.date;
-            expect(state).to.deep.equal({
-                type: 'location',
-                from: '/foo',
-                to: '/',
-            });
-        });
+  describe('XHR', () => {
+    beforeEach(() => {
+      let req = new XMLHttpRequest();
+      req.open('GET', 'http://ip2c.org/self', false);
+      req.send();
+      client.notify(new Error('test'));
     });
 
-    describe('XHR', () => {
-        beforeEach(() => {
-            let req = new XMLHttpRequest();
-            req.open('GET', 'http://ip2c.org/self', false);
-            req.send();
-            client.notify(new Error('test'));
-        });
+    it('records request', () => {
+      expect(reporter).to.have.been.called;
+      let notice = reporter.lastCall.args[0];
+      let history = notice.context.history;
 
-        it('records request', () => {
-            expect(reporter).to.have.been.called;
-            let notice = reporter.lastCall.args[0];
-            let history = notice.context.history;
+      let state = history[history.length - 1];
+      expect(state.type).to.equal('xhr');
+      expect(state.method).to.equal('GET');
+      expect(state.url).to.equal('http://ip2c.org/self');
+      expect(state.statusCode).to.equal(200);
+      expect(state.duration).to.be.a('number');
+    });
+  });
 
-            let state = history[history.length - 1];
-            expect(state.type).to.equal('xhr');
-            expect(state.method).to.equal('GET');
-            expect(state.url).to.equal('http://ip2c.org/self');
-            expect(state.statusCode).to.equal(200);
-            expect(state.duration).to.be.a('number');
-        });
+  describe('fetch', () => {
+    beforeEach(() => {
+      let promise = fetch('http://ip2c.org/4.4.4.4');
+      promise.then(() => {
+        client.notify(new Error('test'));
+      });
+      return promise;
     });
 
-    describe('fetch', () => {
-        beforeEach(() => {
-            let promise = fetch('http://ip2c.org/4.4.4.4');
-            promise.then(() => {
-                client.notify(new Error('test'));
-            });
-            return promise;
-        });
+    it('records request', () => {
+      expect(reporter).to.have.been.called;
+      let notice = reporter.lastCall.args[0];
+      let history = notice.context.history;
 
-        it('records request', () => {
-            expect(reporter).to.have.been.called;
-            let notice = reporter.lastCall.args[0];
-            let history = notice.context.history;
+      let state = history[history.length - 1];
+      expect(state.type).to.equal('xhr');
+      expect(state.method).to.equal('GET');
+      expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
+      expect(state.statusCode).to.equal(200);
+      expect(state.duration).to.be.a('number');
+    });
+  });
 
-            let state = history[history.length - 1];
-            expect(state.type).to.equal('xhr');
-            expect(state.method).to.equal('GET');
-            expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
-            expect(state.statusCode).to.equal(200);
-            expect(state.duration).to.be.a('number');
-        });
+  describe('console', () => {
+    beforeEach(() => {
+      for (let i = 0; i < 25; i++) {
+        console.log(i);
+      }
+      client.notify(new Error('test'));
     });
 
-    describe('console', () => {
-        beforeEach(() => {
-            for (let i = 0; i < 25; i++) {
-                console.log(i);
-            }
-            client.notify(new Error('test'));
-        });
+    it('records log message', () => {
+      expect(reporter).to.have.been.called;
+      let notice = reporter.lastCall.args[0];
+      let history = notice.context.history;
+      expect(history).to.have.length(20);
 
-        it('records log message', () => {
-            expect(reporter).to.have.been.called;
-            let notice = reporter.lastCall.args[0];
-            let history = notice.context.history;
-            expect(history).to.have.length(20);
-
-            for (let i in history) {
-                let state = history[i];
-                expect(state.type).to.equal('log');
-                expect(state.severity).to.equal('log');
-                expect(state.arguments).to.deep.equal([+i + 5]);
-                expect(state.date).to.exist;
-            }
-        });
+      for (let i in history) {
+        let state = history[i];
+        expect(state.type).to.equal('log');
+        expect(state.severity).to.equal('log');
+        expect(state.arguments).to.deep.equal([+i + 5]);
+        expect(state.date).to.exist;
+      }
     });
+  });
 });

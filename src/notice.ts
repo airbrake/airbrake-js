@@ -1,25 +1,25 @@
 export interface NoticeFrame {
-    function: string;
-    file: string;
-    line: number;
-    column: number;
+  function: string;
+  file: string;
+  line: number;
+  column: number;
 }
 
 export interface NoticeError {
-    type: string;
-    message: string;
-    backtrace: NoticeFrame[];
+  type: string;
+  message: string;
+  backtrace: NoticeFrame[];
 }
 
 export interface Notice {
-    id?: string;
-    error?: Error;
+  id?: string;
+  error?: Error;
 
-    errors: NoticeError[];
-    context?: any;
-    params?: any;
-    session?: any;
-    environment?: any;
+  errors: NoticeError[];
+  context?: any;
+  params?: any;
+  session?: any;
+  environment?: any;
 }
 
 export default Notice;
