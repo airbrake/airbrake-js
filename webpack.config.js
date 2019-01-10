@@ -1,7 +1,7 @@
-const path = require('path')
-const webpack = require('webpack')
-const glob = require('glob')
-const pkg = require('./package.json')
+const path = require('path');
+const webpack = require('webpack');
+const glob = require('glob');
+const pkg = require('./package.json');
 
 function newConfig() {
   return {
@@ -68,32 +68,32 @@ function newConfig() {
       }),
       new webpack.BannerPlugin({ banner: 'airbrake-js v' + pkg.version }),
     ],
-  }
+  };
 }
 
-var client = newConfig()
-var clientFiles = ['./src/client.ts']
+var client = newConfig();
+var clientFiles = ['./src/client.ts'];
 client.entry = {
   client: clientFiles,
-}
-client.output.library = ['airbrakeJs', 'Client']
+};
+client.output.library = ['airbrakeJs', 'Client'];
 
-var clientMin = Object.assign({}, client)
-clientMin.mode = 'production'
+var clientMin = Object.assign({}, client);
+clientMin.mode = 'production';
 clientMin.entry = {
   'client.min': clientFiles,
-}
+};
 
-var express = newConfig()
+var express = newConfig();
 express.entry = {
   'instrumentation/express': './src/instrumentation/express.ts',
-}
-express.output.library = ['airbrakeJs', 'instrumentation', 'express']
+};
+express.output.library = ['airbrakeJs', 'instrumentation', 'express'];
 
-var hapi = newConfig()
+var hapi = newConfig();
 hapi.entry = {
   'instrumentation/hapi': './src/instrumentation/hapi.ts',
-}
-express.output.library = ['airbrakeJs', 'instrumentation', 'hapi']
+};
+express.output.library = ['airbrakeJs', 'instrumentation', 'hapi'];
 
-module.exports = [client, clientMin, express, hapi]
+module.exports = [client, clientMin, express, hapi];
