@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.2 */
+/*! airbrake-js v1.6.3 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1068,24 +1068,34 @@ module.exports = g;
 
 "use strict";
 
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 __webpack_require__(/*! promise-polyfill/src/polyfill */ "./node_modules/promise-polyfill/src/polyfill.js");
 var jsonify_notice_1 = __importDefault(__webpack_require__(/*! ./jsonify_notice */ "./src/jsonify_notice.ts"));
 var stacktracejs_1 = __importDefault(__webpack_require__(/*! ./processor/stacktracejs */ "./src/processor/stacktracejs.ts"));
-var ignore_1 = __importDefault(__webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts"));
-var debounce_1 = __importDefault(__webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts"));
-var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaught_message */ "./src/filter/uncaught_message.ts"));
 var angular_message_1 = __importDefault(__webpack_require__(/*! ./filter/angular_message */ "./src/filter/angular_message.ts"));
-var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
+var debounce_1 = __importDefault(__webpack_require__(/*! ./filter/debounce */ "./src/filter/debounce.ts"));
+var ignore_1 = __importDefault(__webpack_require__(/*! ./filter/ignore */ "./src/filter/ignore.ts"));
 var node_1 = __importDefault(__webpack_require__(/*! ./filter/node */ "./src/filter/node.ts"));
+var uncaught_message_1 = __importDefault(__webpack_require__(/*! ./filter/uncaught_message */ "./src/filter/uncaught_message.ts"));
+var window_1 = __importDefault(__webpack_require__(/*! ./filter/window */ "./src/filter/window.ts"));
 var http_req_1 = __webpack_require__(/*! ./http_req */ "./src/http_req/index.ts");
 var historian_1 = __webpack_require__(/*! ./historian */ "./src/historian.ts");
 var routes_1 = __webpack_require__(/*! ./routes */ "./src/routes.ts");
 var Client = /** @class */ (function () {
     function Client(opts) {
-        if (opts === void 0) { opts = {}; }
         var _this = this;
         this.filters = [];
         this.offline = false;
@@ -1097,10 +1107,7 @@ var Client = /** @class */ (function () {
         this.opts = opts;
         this.opts.host = this.opts.host || 'https://api.airbrake.io';
         this.opts.timeout = this.opts.timeout || 10000;
-        this.opts.keysBlacklist = this.opts.keysBlacklist || [
-            /password/,
-            /secret/,
-        ];
+        this.opts.keysBlacklist = this.opts.keysBlacklist || [/password/, /secret/];
         this.url = this.opts.host + "/api/v3/projects/" + this.opts.projectId + "/notices?key=" + this.opts.projectKey;
         this.processor = this.opts.processor || stacktracejs_1.default;
         this.requester = http_req_1.makeRequester(this.opts);
@@ -1160,9 +1167,7 @@ var Client = /** @class */ (function () {
         var notice = {
             id: '',
             errors: [],
-            context: Object.assign({
-                severity: 'error'
-            }, err.context),
+            context: __assign({ severity: 'error' }, err.context),
             params: err.params || {},
             environment: err.environment || {},
             session: err.session || {},
@@ -1216,13 +1221,15 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.2",
-            url: 'https://github.com/airbrake/airbrake-js'
+            version: "1.6.3",
+            url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
     };
     Client.prototype.sendNotice = function (notice) {
-        var body = jsonify_notice_1.default(notice, { keysBlacklist: this.opts.keysBlacklist });
+        var body = jsonify_notice_1.default(notice, {
+            keysBlacklist: this.opts.keysBlacklist,
+        });
         if (this.opts.reporter) {
             return this.opts.reporter(notice);
         }
@@ -1231,10 +1238,12 @@ var Client = /** @class */ (function () {
             url: this.url,
             body: body,
         };
-        return this.requester(req).then(function (resp) {
+        return this.requester(req)
+            .then(function (resp) {
             notice.id = resp.json.id;
             return notice;
-        }).catch(function (err) {
+        })
+            .catch(function (err) {
             notice.error = err;
             return notice;
         });
@@ -1245,6 +1254,7 @@ var Client = /** @class */ (function () {
         if (fn._airbrake) {
             return fn;
         }
+        // tslint:disable-next-line:no-this-assignment
         var client = this;
         var airbrakeWrapper = function () {
             var fnArgs = Array.prototype.slice.call(arguments);
@@ -1320,7 +1330,9 @@ var Client = /** @class */ (function () {
         // Handle native or bluebird Promise rejections
         // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
         // http://bluebirdjs.com/docs/api/error-management-configuration.html
-        var reason = e.reason || e.detail && e.detail.reason || 'unhandled rejection with no reason given';
+        var reason = e.reason ||
+            (e.detail && e.detail.reason) ||
+            'unhandled rejection with no reason given';
         var msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
@@ -1452,7 +1464,9 @@ function filter(notice) {
     try {
         os = __webpack_require__(/*! os */ "os");
     }
-    catch (_) { }
+    catch (_) {
+        // ignore
+    }
     if (os) {
         notice.context.os = os.type() + "/" + os.release();
         notice.context.architecture = os.arch();
@@ -1541,7 +1555,8 @@ function filter(notice) {
     if (window.location) {
         notice.context.url = String(window.location);
         // Set root directory to group errors on different subdomains together.
-        notice.context.rootDirectory = window.location.protocol + '//' + window.location.host;
+        notice.context.rootDirectory =
+            window.location.protocol + '//' + window.location.host;
     }
     return notice;
 }
@@ -1577,6 +1592,7 @@ var Historian = /** @class */ (function () {
         }
         if (typeof window === 'object') {
             if (enabled(opts.onerror)) {
+                // tslint:disable-next-line:no-this-assignment
                 var self_1 = this;
                 var oldHandler_1 = window.onerror;
                 window.onerror = function () {
@@ -1658,7 +1674,7 @@ var Historian = /** @class */ (function () {
         if (this.errors.length > this.historyMaxLen) {
             this.errors = this.errors.slice(-this.historyMaxLen);
         }
-        return Promise.resolve({});
+        return Promise.resolve(null);
     };
     Historian.prototype.notifyNotifiers = function (err) {
         var promises = [];
@@ -1759,20 +1775,25 @@ var Historian = /** @class */ (function () {
         }
     };
     Historian.prototype.console = function () {
+        // tslint:disable-next-line:no-this-assignment
         var client = this;
         var _loop_1 = function (m) {
             if (!(m in console)) {
                 return "continue";
             }
             var oldFn = console[m];
-            var newFn = function () {
-                oldFn.apply(console, arguments);
+            var newFn = (function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                oldFn.apply(console, args);
                 client.pushHistory({
                     type: 'log',
                     severity: m,
-                    arguments: Array.prototype.slice.call(arguments),
+                    arguments: args,
                 });
-            };
+            });
             newFn.inner = oldFn;
             console[m] = newFn;
         };
@@ -1790,6 +1811,7 @@ var Historian = /** @class */ (function () {
         }
     };
     Historian.prototype.fetch = function () {
+        // tslint:disable-next-line:no-this-assignment
         var client = this;
         var oldFetch = window.fetch;
         window.fetch = function (input, init) {
@@ -1797,22 +1819,13 @@ var Historian = /** @class */ (function () {
                 type: 'xhr',
                 date: new Date(),
             };
-            if (typeof input === 'string') {
-                state.url = input;
-            }
-            else {
-                state.url = input.url;
-            }
-            if (init && init.method) {
-                state.method = init.method;
-            }
-            else {
-                state.method = 'GET';
-            }
+            state.url = typeof input === 'string' ? input : input.url;
+            state.method = init && init.method ? init.method : 'GET';
             // Some platforms (e.g. react-native) implement fetch via XHR.
             client.ignoreNextXHR++;
             setTimeout(function () { return client.ignoreNextXHR--; });
-            return oldFetch.apply(this, arguments)
+            return oldFetch
+                .apply(this, arguments)
                 .then(function (resp) {
                 state.statusCode = resp.status;
                 state.duration = new Date().getTime() - state.date.getTime();
@@ -1828,6 +1841,7 @@ var Historian = /** @class */ (function () {
         };
     };
     Historian.prototype.xhr = function () {
+        // tslint:disable-next-line:no-this-assignment
         var client = this;
         var oldOpen = XMLHttpRequest.prototype.open;
         XMLHttpRequest.prototype.open = function (method, url, _async, _user, _password) {
@@ -1865,6 +1879,7 @@ var Historian = /** @class */ (function () {
     };
     Historian.prototype.location = function () {
         this.lastLocation = document.location.pathname;
+        // tslint:disable-next-line:no-this-assignment
         var client = this;
         var oldFn = window.onpopstate;
         window.onpopstate = function (_event) {
@@ -1886,12 +1901,7 @@ var Historian = /** @class */ (function () {
         if (index >= 0) {
             url = url.slice(index + 3);
             index = url.indexOf('/');
-            if (index >= 0) {
-                url = url.slice(index);
-            }
-            else {
-                url = '/';
-            }
+            url = index >= 0 ? url.slice(index) : '/';
         }
         else if (url.charAt(0) !== '/') {
             url = '/' + url;
@@ -1923,6 +1933,7 @@ function enabled(v) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
+// tslint:disable-next-line:no-var-requires
 var fetch = __webpack_require__(/*! cross-fetch */ "cross-fetch");
 var index_1 = __webpack_require__(/*! ./index */ "./src/http_req/index.ts");
 var rateLimitReset = 0;
@@ -2031,17 +2042,17 @@ function request(req, api) {
             method: req.method,
             body: req.body,
             headers: {
-                'content-type': 'application/json'
+                'content-type': 'application/json',
             },
-            timeout: req.timeout
+            timeout: req.timeout,
         }, function (error, resp, body) {
             if (error) {
                 reject(error);
                 return;
             }
             if (!resp.statusCode) {
-                var err_1 = new Error("airbrake: request: response statusCode is " + resp.statusCode);
-                reject(err_1);
+                error = new Error("airbrake: request: response statusCode is " + resp.statusCode);
+                reject(error);
                 return;
             }
             if (resp.statusCode === 401) {
@@ -2095,13 +2106,13 @@ function request(req, api) {
                     reject(err);
                     return;
                 }
-                var err_2 = new Error(json.message);
-                reject(err_2);
+                error = new Error(json.message);
+                reject(error);
                 return;
             }
             body = body.trim();
-            var err = new Error("airbrake: node: unexpected response: code=" + resp.statusCode + " body='" + body + "'");
-            reject(err);
+            error = new Error("airbrake: node: unexpected response: code=" + resp.statusCode + " body='" + body + "'");
+            reject(error);
         });
     });
 }
@@ -2158,10 +2169,11 @@ function classNameString(name) {
     if (name.split) {
         return name.split(' ').join('.');
     }
-    if (name.baseVal && name.baseVal.split) { // SVGAnimatedString
+    if (name.baseVal && name.baseVal.split) {
+        // SVGAnimatedString
         return name.baseVal.split(' ').join('.');
     }
-    console.log('unsupported HTMLElement.className type', typeof (name));
+    console.error('unsupported HTMLElement.className type', typeof name);
     return '';
 }
 function elemPath(elem) {
@@ -2267,7 +2279,7 @@ function jsonifyNotice(notice, _a) {
 }
 exports.default = jsonifyNotice;
 function scale(num, level) {
-    return (num >> level) || 1;
+    return num >> level || 1;
 }
 var Truncator = /** @class */ (function () {
     function Truncator(opts) {
@@ -2376,7 +2388,7 @@ var Truncator = /** @class */ (function () {
         var length = 0;
         var dst = {};
         for (var key in obj) {
-            if (!obj.hasOwnProperty(key)) {
+            if (!Object.prototype.hasOwnProperty.call(obj, key)) {
                 continue;
             }
             if (isBlacklisted(key, this.keysBlacklist)) {
@@ -2484,20 +2496,8 @@ function processor(err) {
             });
         }
     }
-    var type;
-    if (err.name) {
-        type = err.name;
-    }
-    else {
-        type = '';
-    }
-    var msg;
-    if (err.message) {
-        msg = String(err.message);
-    }
-    else {
-        msg = String(err);
-    }
+    var type = err.name ? err.name : '';
+    var msg = err.message ? String(err.message) : String(err);
     return {
         type: type,
         message: msg,
@@ -2552,7 +2552,7 @@ var Routes = /** @class */ (function () {
             method: req.method,
             route: req.route,
             statusCode: req.statusCode,
-            time: req.start
+            time: req.start,
         };
         var keyStr = JSON.stringify(key);
         var stat;
@@ -2563,7 +2563,7 @@ var Routes = /** @class */ (function () {
             stat = {
                 count: 0,
                 sum: 0,
-                sumsq: 0
+                sumsq: 0,
             };
             if (this.opts.TDigest) {
                 stat.tdigest = new this.opts.TDigest();
@@ -2579,7 +2579,9 @@ var Routes = /** @class */ (function () {
         if (this.timer) {
             return;
         }
-        this.timer = setTimeout(function () { _this.flush(); }, FLUSH_INTERVAL);
+        this.timer = setTimeout(function () {
+            _this.flush();
+        }, FLUSH_INTERVAL);
     };
     Routes.prototype.flush = function () {
         var routes = [];
@@ -2602,16 +2604,19 @@ var Routes = /** @class */ (function () {
             url: this.url,
             body: JSON.stringify({ routes: routes }),
         };
-        this.requester(req).then(function (_resp) {
+        this.requester(req)
+            .then(function (_resp) {
             // nothing
-        }).catch(function (err) {
+        })
+            .catch(function (err) {
             if (console.error) {
                 console.error('can not report routes stats', err);
             }
         });
     };
     Routes.prototype.tdigestCentroids = function (td) {
-        var means = [], counts = [];
+        var means = [];
+        var counts = [];
         td.centroids.each(function (c) {
             means.push(c.mean);
             counts.push(c.n);
@@ -2625,17 +2630,17 @@ var Routes = /** @class */ (function () {
 }());
 exports.Routes = Routes;
 var NS_PER_MS = 1e6;
-function toTime(time) {
-    if (time instanceof Date) {
-        return time.getTime();
+function toTime(tm) {
+    if (tm instanceof Date) {
+        return tm.getTime();
     }
-    if (typeof time === 'number') {
-        return time;
+    if (typeof tm === 'number') {
+        return tm;
     }
-    if (time instanceof Array) {
-        return time[0] + (time[1] / NS_PER_MS);
+    if (tm instanceof Array) {
+        return tm[0] + tm[1] / NS_PER_MS;
     }
-    throw new Error("unsupported type: " + typeof time);
+    throw new Error("unsupported type: " + typeof tm);
 }
 function durationMs(start, end) {
     if (start instanceof Date && end instanceof Date) {

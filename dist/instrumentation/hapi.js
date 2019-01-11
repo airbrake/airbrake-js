@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.2 */
+/*! airbrake-js v1.6.3 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -109,9 +109,7 @@ return /******/ (function(modules) { // webpackBootstrap
 function makeHandler(client) {
     var fn = function (server, _options, next) {
         server.on('request-error', function (req, err) {
-            var url = req.connection.info.protocol + '://' +
-                req.headers['host'] +
-                req.path;
+            var url = req.connection.info.protocol + '://' + req.headers.host + req.path;
             var notice = {
                 error: err,
                 context: {
@@ -124,7 +122,7 @@ function makeHandler(client) {
                     action: req.route.settings.handler.name,
                 },
             };
-            var referer = req.headers['referer'];
+            var referer = req.headers.referer;
             if (referer) {
                 notice.context.referer = referer;
             }

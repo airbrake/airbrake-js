@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.2 */
+/*! airbrake-js v1.6.3 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -117,7 +117,7 @@ function makeMiddleware(client) {
         var start = now();
         next();
         var end = now();
-        var route = req.route ? req.route.path : req.url;
+        var route = req.route ? req.route.path : 'UNKNOWN';
         client.notifyRequest({
             method: req.method,
             route: route,
@@ -129,21 +129,24 @@ function makeMiddleware(client) {
 }
 function makeErrorHandler(client) {
     return function airbrakeErrorHandler(err, req, _res, next) {
-        var url = req.protocol + '://' + req.headers['host'] + req.path;
-        var action = req.route ? req.route.stack[0].name : '';
+        var url = req.protocol + '://' + req.headers.host + req.path;
         var notice = {
             error: err,
             context: {
                 userAddr: req.ip,
                 userAgent: req.headers['user-agent'],
                 url: url,
-                route: req.route ? req.route.path : '',
                 httpMethod: req.method,
                 component: 'express',
-                action: action,
             },
         };
-        var referer = req.headers['referer'];
+        if (req.route) {
+            notice.context.route = req.route.path;
+            if (req.route.stack && req.route.stack.length) {
+                notice.context.action = req.route.stack[0].name;
+            }
+        }
+        var referer = req.headers.referer;
         if (referer) {
             notice.context.referer = referer;
         }
