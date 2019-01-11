@@ -15,7 +15,7 @@
     "notifier"
   ],
   "peerDependencies": {
-    "cross-fetch": "2.2.x"
+    "cross-fetch": ">=2"
   },
   "devDependencies": {
     "@types/chai": "4.1.7",
@@ -24,6 +24,7 @@
     "@types/sinon": "5.0.7",
     "@types/sinon-chai": "3.2.1",
     "chai": "4.2.0",
+    "cross-fetch": "^2.2.3",
     "error-stack-parser": "2.0.2",
     "imports-loader": "0.8.0",
     "karma": "3.1.1",
@@ -40,12 +41,12 @@
     "sinon-chai": "3.3.0",
     "source-map-loader": "0.2.4",
     "ts-loader": "5.3.1",
-    "tslint": "5.11.0",
-    "tslint-loader": "3.6.0",
-    "typescript": "3.2.1",
+    "tslint": "^5.12.0",
+    "tslint-config-prettier": "^1.17.0",
+    "tslint-loader": "^3.5.4",
+    "typescript": "^3.2.2",
     "webpack": "4.26.1",
-    "webpack-cli": "3.1.2",
-    "cross-fetch": "^2.2.3"
+    "webpack-cli": "3.1.2"
   },
   "main": "dist/client.js",
   "types": "dist/client.d.ts",

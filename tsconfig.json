@@ -1,14 +1,14 @@
 {
-    "compilerOptions": {
-        "lib": ["ES2015", "DOM"],
-        "target": "ES5",
-        "moduleResolution": "node",
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "noImplicitReturns": true,
-        "preserveConstEnums": true,
-        "sourceMap": true,
-        "skipLibCheck": true,
-        "esModuleInterop": true
-    }
+  "compilerOptions": {
+    "lib": ["ES2015", "DOM"],
+    "target": "ES5",
+    "moduleResolution": "node",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "preserveConstEnums": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
+  }
 }

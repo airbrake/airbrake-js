@@ -1,8 +1,8 @@
-const path = require('path')
-const webpack = require('webpack')
-const webpackConfig = require('./webpack.config')[0]
+const path = require('path');
+const webpack = require('webpack');
+const webpackConfig = require('./webpack.config')[0];
 
-process.env.CHROME_BIN = require('puppeteer').executablePath()
+process.env.CHROME_BIN = require('puppeteer').executablePath();
 
 module.exports = function(config) {
   config.set({
@@ -14,10 +14,10 @@ module.exports = function(config) {
     frameworks: ['mocha', 'sinon-chai'],
 
     // list of files / patterns to load in the browser
-    files: ['src/internal/compat.ts', 'test/unit/**/*_test.ts'],
+    files: ['test/unit/**/*_test.ts'],
 
     mime: {
-      'text/x-typescript': ['ts', 'tsx']
+      'text/x-typescript': ['ts', 'tsx'],
     },
 
     // list of files to exclude
@@ -26,7 +26,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      '**/*.ts': ['webpack', 'sourcemap']
+      '**/*.ts': ['webpack', 'sourcemap'],
     },
 
     webpack: {
@@ -38,17 +38,17 @@ module.exports = function(config) {
 
       plugins: [
         new webpack.DefinePlugin({
-          VERSION: '"1.0.0"'
+          VERSION: '"0.0.0"',
         }),
         new webpack.SourceMapDevToolPlugin({
           filename: null,
-          test: /\.ts$/
-        })
-      ]
+          test: /\.ts$/,
+        }),
+      ],
     },
 
     webpackMiddleware: {
-      stats: 'errors-only'
+      stats: 'errors-only',
     },
 
     // test results reporter to use
@@ -79,6 +79,6 @@ module.exports = function(config) {
 
     // Concurrency level
     // how many browser should be started simultaneous
-    concurrency: 1
-  })
-}
+    concurrency: 1,
+  });
+};
