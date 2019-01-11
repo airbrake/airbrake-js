@@ -1,25 +1,23 @@
-export interface NoticeFrame {
+export interface INoticeFrame {
   function: string;
   file: string;
   line: number;
   column: number;
 }
 
-export interface NoticeError {
+export interface INoticeError {
   type: string;
   message: string;
-  backtrace: NoticeFrame[];
+  backtrace: INoticeFrame[];
 }
 
-export interface Notice {
+export default interface INotice {
   id?: string;
   error?: Error;
 
-  errors: NoticeError[];
+  errors: INoticeError[];
   context?: any;
   params?: any;
   session?: any;
   environment?: any;
 }
-
-export default Notice;

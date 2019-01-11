@@ -1,4 +1,4 @@
-import { NoticeError } from '../notice';
+import { INoticeError } from '../notice';
 
-export type Processor = (err: Error) => NoticeError;
+export type Processor = (err: Error) => INoticeError;
 export default Processor;

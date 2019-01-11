@@ -3,6 +3,7 @@ import { expect } from './sinon_chai';
 
 describe('truncate', () => {
   it('works', () => {
+    /* tslint:disable */
     let tests = [
       [undefined],
       [null],
@@ -24,6 +25,7 @@ describe('truncate', () => {
       [new RegExp('a')],
       [new Error('hello'), 'Error: hello'],
     ];
+    /* tslint:enable */
     for (let test of tests) {
       let wanted = test.length >= 2 ? test[1] : test[0];
       if (isNaN(wanted as any)) {
@@ -34,12 +36,14 @@ describe('truncate', () => {
   });
 
   it('omits functions in object', () => {
+    /* tslint:disable */
     let obj = {
       foo: 'bar',
       fn1: Math.sin,
       fn2: () => null,
       fn3: new Function('x', 'y', 'return x * y'),
     };
+    /* tslint:enable */
 
     expect(truncate(obj)).to.deep.equal({ foo: 'bar' });
   });

@@ -15,7 +15,9 @@ class Location {
 }
 
 describe('instrumentation', () => {
-  let processor, reporter, client;
+  let processor;
+  let reporter;
+  let client;
 
   beforeEach(() => {
     processor = sinon.spy((data) => {
@@ -38,7 +40,9 @@ describe('instrumentation', () => {
       for (let loc of locations) {
         try {
           window.history.pushState(null, '', loc as string);
-        } catch (_) {}
+        } catch (_) {
+          // ignore
+        }
       }
       client.notify(new Error('test'));
     });
@@ -122,6 +126,7 @@ describe('instrumentation', () => {
   describe('console', () => {
     beforeEach(() => {
       for (let i = 0; i < 25; i++) {
+        // tslint:disable-next-line:no-console
         console.log(i);
       }
       client.notify(new Error('test'));
@@ -134,6 +139,9 @@ describe('instrumentation', () => {
       expect(history).to.have.length(20);
 
       for (let i in history) {
+        if (!history.hasOwnProperty(i)) {
+          continue;
+        }
         let state = history[i];
         expect(state.type).to.equal('log');
         expect(state.severity).to.equal('log');

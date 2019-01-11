@@ -1,4 +1,4 @@
-import FuncWrapper from './func_wrapper';
+import IFuncWrapper from './func_wrapper';
 import { makeEventHandler } from './instrumentation/dom';
 import Notice from './notice';
 import Notifier from './notifier';
@@ -270,7 +270,7 @@ export class Historian {
           severity: m,
           arguments: args,
         });
-      }) as FuncWrapper;
+      }) as IFuncWrapper;
       newFn.inner = oldFn;
       console[m] = newFn;
     }

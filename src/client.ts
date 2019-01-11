@@ -1,6 +1,6 @@
 import 'promise-polyfill/src/polyfill';
 
-import FuncWrapper from './func_wrapper';
+import IFuncWrapper from './func_wrapper';
 import jsonifyNotice from './jsonify_notice';
 import Notice from './notice';
 
@@ -231,7 +231,7 @@ class Client {
   }
 
   // TODO: fix wrapping for multiple clients
-  public wrap(fn, props: string[] = []): FuncWrapper {
+  public wrap(fn, props: string[] = []): IFuncWrapper {
     if (fn._airbrake) {
       return fn;
     }
@@ -248,7 +248,7 @@ class Client {
         this.historian.ignoreNextWindowError();
         throw err;
       }
-    } as FuncWrapper;
+    } as IFuncWrapper;
 
     for (let prop in fn) {
       if (fn.hasOwnProperty(prop)) {
