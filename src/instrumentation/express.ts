@@ -12,7 +12,7 @@ function makeMiddleware(client: Client) {
     let start = now();
     next();
     let end = now();
-    let route = req.route ? req.route.path : req.url;
+    let route = req.route ? req.route.path : 'UNKNOWN';
     client.notifyRequest({
       method: req.method,
       route,
@@ -26,19 +26,24 @@ function makeMiddleware(client: Client) {
 function makeErrorHandler(client: Client) {
   return function airbrakeErrorHandler(err: Error, req, _res, next): void {
     let url = req.protocol + '://' + req.headers.host + req.path;
-    let action = req.route ? req.route.stack[0].name : '';
     let notice: any = {
       error: err,
       context: {
         userAddr: req.ip,
         userAgent: req.headers['user-agent'],
         url,
-        route: req.route ? req.route.path : '',
         httpMethod: req.method,
         component: 'express',
-        action,
       },
     };
+
+    if (req.route) {
+      notice.context.route = req.route.path;
+      if (req.route.stack && req.route.stack.length) {
+        notice.context.action = req.route.stack[0].name;
+      }
+    }
+
     let referer = req.headers.referer;
     if (referer) {
       notice.context.referer = referer;
