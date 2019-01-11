@@ -1,10 +1,10 @@
-import { NoticeError } from '../../../src/notice';
+import { INoticeError } from '../../../src/notice';
 import processor from '../../../src/processor/stacktracejs';
 
 import { expect } from '../sinon_chai';
 
 describe('stacktracejs processor', () => {
-  let error: NoticeError;
+  let error: INoticeError;
 
   describe('Error', () => {
     beforeEach(() => {

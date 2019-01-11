@@ -1,7 +1,7 @@
-interface FuncWrapper {
+interface IFuncWrapper {
   (): any;
   inner: () => any;
   _airbrake?: boolean;
 }
 
-export default FuncWrapper;
+export default IFuncWrapper;

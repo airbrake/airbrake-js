@@ -1,6 +1,5 @@
 import Notice from './notice';
 
-export interface Notifier {
+export default interface INotifier {
   notify(err: any): Promise<Notice>;
 }
-export default Notifier;

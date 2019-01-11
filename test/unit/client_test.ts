@@ -5,7 +5,8 @@ import * as sinon from 'sinon';
 import { expect } from './sinon_chai';
 
 describe('Client config', () => {
-  let reporter, client: Client;
+  let reporter;
+  let client: Client;
   let err = new Error('test');
 
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('Client config', () => {
 
   it('throws when projectId or projectKey are missing', () => {
     expect(() => {
+      // tslint:disable-next-line:no-object-literal-type-assertion
       new Client({} as Options);
     }).to.throw('airbrake: projectId and projectKey are required');
   });
@@ -113,8 +115,9 @@ describe('Client config', () => {
 });
 
 describe('Client', () => {
-  let reporter, client: Client;
-  let err = new Error('test');
+  let reporter;
+  let client: Client;
+  let theErr = new Error('test');
 
   beforeEach(() => {
     reporter = sinon.spy(() => {
@@ -218,7 +221,7 @@ describe('Client', () => {
 
   describe('severity', () => {
     it('defaults to "error"', () => {
-      client.notify(err);
+      client.notify(theErr);
       let reported = reporter.lastCall.args[0];
       expect(reported.context.severity).to.equal('error');
     });
@@ -231,7 +234,7 @@ describe('Client', () => {
         return n;
       });
 
-      client.notify(err);
+      client.notify(theErr);
       let reported = reporter.lastCall.args[0];
       expect(reported.context.severity).to.equal(customSeverity);
     });
@@ -239,12 +242,12 @@ describe('Client', () => {
 
   describe('notify', () => {
     it('calls reporter', () => {
-      client.notify(err);
+      client.notify(theErr);
       expect(reporter).to.have.been.called;
     });
 
     it('returns promise and resolves it', (done) => {
-      let promise = client.notify(err);
+      let promise = client.notify(theErr);
       let onResolved = sinon.spy();
       promise.then(onResolved);
       setTimeout(() => {
@@ -254,10 +257,10 @@ describe('Client', () => {
     });
 
     it('does not report same error twice', (done) => {
-      client.notify(err);
+      client.notify(theErr);
       expect(reporter).to.have.been.calledOnce;
 
-      let promise = client.notify(err);
+      let promise = client.notify(theErr);
       promise.then((notice: any) => {
         expect(notice.error.toString()).to.equal(
           'Error: airbrake: error is filtered'
@@ -279,14 +282,14 @@ describe('Client', () => {
     });
 
     it('reports severity', () => {
-      client.notify({ error: err, context: { severity: 'warning' } });
+      client.notify({ error: theErr, context: { severity: 'warning' } });
 
       let notice = reporter.lastCall.args[0];
       expect(notice.context.severity).to.equal('warning');
     });
 
     it('reports userAgent', () => {
-      client.notify(err);
+      client.notify(theErr);
 
       let notice = reporter.lastCall.args[0];
       expect(notice.context.userAgent).to.contain('HeadlessChrome');
@@ -326,7 +329,7 @@ describe('Client', () => {
           n.context.context_key = '[custom_context]';
           return n;
         });
-        client.notify(err);
+        client.notify(theErr);
 
         let reported = reporter.lastCall.args[0];
         expect(reported.context.context_key).to.equal('[custom_context]');
@@ -337,7 +340,7 @@ describe('Client', () => {
           n.environment.env_key = '[custom_env]';
           return n;
         });
-        client.notify(err);
+        client.notify(theErr);
 
         let reported = reporter.lastCall.args[0];
         expect(reported.environment.env_key).to.equal('[custom_env]');
@@ -348,7 +351,7 @@ describe('Client', () => {
           n.params.params_key = '[custom_params]';
           return n;
         });
-        client.notify(err);
+        client.notify(theErr);
 
         let reported = reporter.lastCall.args[0];
         expect(reported.params.params_key).to.equal('[custom_params]');
@@ -359,7 +362,7 @@ describe('Client', () => {
           n.session.session_key = '[custom_session]';
           return n;
         });
-        client.notify(err);
+        client.notify(theErr);
 
         let reported = reporter.lastCall.args[0];
         expect(reported.session.session_key).to.equal('[custom_session]');
@@ -368,7 +371,7 @@ describe('Client', () => {
 
     describe('wrapped error', () => {
       it('unwraps and processes error', () => {
-        client.notify({ error: err });
+        client.notify({ error: theErr });
         expect(reporter).to.have.been.called;
       });
 
@@ -393,7 +396,7 @@ describe('Client', () => {
         });
 
         client.notify({
-          error: err,
+          error: theErr,
           context: {
             context1: 'notify_value1',
             context3: 'notify_value3',
@@ -414,7 +417,7 @@ describe('Client', () => {
         });
 
         client.notify({
-          error: err,
+          error: theErr,
           environment: {
             env1: 'notify_value1',
             env3: 'notify_value3',
@@ -437,7 +440,7 @@ describe('Client', () => {
         });
 
         client.notify({
-          error: err,
+          error: theErr,
           params: {
             param1: 'notify_value1',
             param3: 'notify_value3',
@@ -458,7 +461,7 @@ describe('Client', () => {
         });
 
         client.notify({
-          error: err,
+          error: theErr,
           session: {
             session1: 'notify_value1',
             session3: 'notify_value3',
@@ -479,7 +482,7 @@ describe('Client', () => {
     let notice;
 
     beforeEach(() => {
-      client.notify(err);
+      client.notify(theErr);
       expect(reporter).to.have.been.called;
       notice = reporter.lastCall.args[0];
     });
@@ -526,17 +529,19 @@ describe('Client', () => {
       let spy = sinon.spy();
       client.notify = spy;
       let fn = () => {
-        throw err;
+        throw theErr;
       };
       let wrapper: any = client.wrap(fn);
       try {
         wrapper('hello', 'world');
-      } catch (err) {}
+      } catch (_) {
+        // ignore
+      }
 
       expect(spy).to.have.been.called;
       expect(spy.lastCall.args).to.deep.equal([
         {
-          error: err,
+          error: theErr,
           params: { arguments: ['hello', 'world'] },
         },
       ]);
@@ -560,16 +565,18 @@ describe('Client', () => {
       let spy = sinon.spy();
       client.notify = spy;
       let fn = () => {
-        throw err;
+        throw theErr;
       };
       try {
         client.call(fn, 'hello', 'world');
-      } catch (_) {}
+      } catch (_) {
+        // ignore
+      }
 
       expect(spy).to.have.been.called;
       expect(spy.lastCall.args).to.deep.equal([
         {
-          error: err,
+          error: theErr,
           params: { arguments: ['hello', 'world'] },
         },
       ]);
@@ -583,7 +590,7 @@ describe('Client', () => {
       let event = new Event('offline');
       window.dispatchEvent(event);
 
-      let promise = client.notify(err);
+      let promise = client.notify(theErr);
       spy = sinon.spy();
       promise.then(spy);
     });
@@ -614,7 +621,7 @@ describe('Client', () => {
   describe('unhandledrejection event', () => {
     it('notifies about unhandled rejection', (done) => {
       new Promise((_resolve, reject) => {
-        reject(err);
+        reject(theErr);
       });
 
       setTimeout(() => {
@@ -636,7 +643,7 @@ describe('Client', () => {
 
     it('notifies about errors thrown in Promise.then', (done) => {
       Promise.resolve(null).then(() => {
-        throw err;
+        throw theErr;
       });
 
       setTimeout(() => {
@@ -663,7 +670,7 @@ describe('Client', () => {
         }, 0);
       });
       p.catch(() => {
-        throw err;
+        throw theErr;
       });
 
       setTimeout(() => {

@@ -7,7 +7,7 @@ import { ITDigestConstructor } from './routes';
 
 type Reporter = (notice: Notice) => Promise<Notice>;
 
-export default interface Options {
+export default interface IOptions {
   projectId: number;
   projectKey: string;
   environment?: string;

@@ -1,4 +1,4 @@
-import { NoticeError, NoticeFrame } from '../notice';
+import { INoticeError, INoticeFrame } from '../notice';
 
 import ErrorStackParser = require('error-stack-parser');
 
@@ -31,8 +31,8 @@ function parse(err: IError): IStackFrame[] {
   return [];
 }
 
-export default function processor(err: IError): NoticeError {
-  let backtrace: NoticeFrame[] = [];
+export default function processor(err: IError): INoticeError {
+  let backtrace: INoticeFrame[] = [];
 
   if (!err.noStack) {
     let frames = parse(err);
