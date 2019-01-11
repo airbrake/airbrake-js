@@ -33,7 +33,7 @@ function makeErrorHandler(client: Client) {
         userAddr: req.ip,
         userAgent: req.headers['user-agent'],
         url,
-        route: req.route.path,
+        route: req.route ? req.route.path : '',
         httpMethod: req.method,
         component: 'express',
         action,
