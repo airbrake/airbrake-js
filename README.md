@@ -10,6 +10,7 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 ## Installation
 
 Using yarn:
+
 ```sh
 yarn add airbrake-js
 yarn add cross-fetch # add cross-fetch as peerDependency
@@ -20,13 +21,6 @@ or Using npm:
 ```sh
 npm install airbrake-js
 npm install cross-fetch # add cross-fetch as peerDependency
-```
-
-or using Bower:
-
-```sh
-bower install airbrake-js-client
-bower install cross-fetch # add cross-fetch as peerDependency
 ```
 
 ## Setup
