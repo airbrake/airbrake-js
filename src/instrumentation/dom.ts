@@ -94,7 +94,7 @@ export function makeEventHandler(client: Historian): EventListener {
     try {
       state.target = elemPath(target);
     } catch (err) {
-      state.target = `<${err.toString()}>`;
+      state.target = `<${String(err)}>`;
     }
 
     client.pushHistory(state);
