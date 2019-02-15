@@ -211,7 +211,11 @@ class Client {
       keysBlacklist: this.opts.keysBlacklist,
     });
     if (this.opts.reporter) {
-      return this.opts.reporter(notice);
+      if (typeof this.opts.reporter === 'function') {
+        return this.opts.reporter(notice);
+      } else {
+        console.warn('airbrake: options.reporter must be a function');
+      }
     }
 
     let req = {
