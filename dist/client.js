@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.3 */
+/*! airbrake-js v1.6.4 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1221,7 +1221,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.3",
+            version: "1.6.4",
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
@@ -1231,7 +1231,12 @@ var Client = /** @class */ (function () {
             keysBlacklist: this.opts.keysBlacklist,
         });
         if (this.opts.reporter) {
-            return this.opts.reporter(notice);
+            if (typeof this.opts.reporter === 'function') {
+                return this.opts.reporter(notice);
+            }
+            else {
+                console.warn('airbrake: options.reporter must be a function');
+            }
         }
         var req = {
             method: 'POST',
@@ -2212,7 +2217,7 @@ function makeEventHandler(client) {
             state.target = elemPath(target);
         }
         catch (err) {
-            state.target = "<" + err.toString() + ">";
+            state.target = "<" + String(err) + ">";
         }
         client.pushHistory(state);
     };
