@@ -18,7 +18,7 @@ function elemName(elem: HTMLElement): string {
     s.push(elem.id);
   }
 
-  if (elem.classList) {
+  if (elem.classList && Array.from) {
     s.push('.');
     s.push(Array.from(elem.classList).join('.'));
   } else if (elem.className) {
