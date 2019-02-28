@@ -11,7 +11,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha', 'sinon-chai'],
+    frameworks: ['source-map-support', 'mocha', 'sinon-chai'],
 
     // list of files / patterns to load in the browser
     files: ['test/unit/**/*_test.ts'],
