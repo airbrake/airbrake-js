@@ -9,14 +9,14 @@ declare module 'airbrake-js' {
     public notifyRequest(req: IRequestInfo): void;
   }
 
-  interface FuncWrapper {
+  interface IFuncWrapper {
     (): any;
     inner: () => any;
   }
 
   type Filter = (notice: Notice) => Notice | null;
 
-  interface Notice {
+  interface INotice {
     id: string;
     errors: AirbrakeError[];
     context: any;
@@ -25,18 +25,20 @@ declare module 'airbrake-js' {
     environment: any;
   }
 
-  interface AirbrakeFrame {
+  interface IAirbrakeFrame {
     function: string;
     file: string;
     line: number;
     column: number;
   }
 
-  interface AirbrakeError {
+  interface IAirbrakeError {
     type: string;
     message: string;
-    backtrace: AirbrakeFrame[];
+    backtrace: IAirbrakeFrame[];
   }
+
+  type time = Date | number | [number, number];
 
   interface IRequestInfo {
     method: string;
