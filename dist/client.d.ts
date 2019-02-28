@@ -6,6 +6,7 @@ declare module 'airbrake-js' {
     public wrap(fn: any): FuncWrapper;
     public call(fn: any, ...args: any[]): any;
     public onerror(): void;
+    public notifyRequest(req: IRequestInfo): void;
   }
 
   interface FuncWrapper {
@@ -35,6 +36,14 @@ declare module 'airbrake-js' {
     type: string;
     message: string;
     backtrace: AirbrakeFrame[];
+  }
+
+  interface IRequestInfo {
+    method: string;
+    route: string;
+    statusCode: number;
+    start: time;
+    end: time;
   }
 
   export = Client;
