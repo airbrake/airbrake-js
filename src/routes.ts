@@ -140,7 +140,7 @@ export class Routes {
     let req = {
       method: 'POST',
       url: this.url,
-      body: JSON.stringify({ routes }),
+      body: JSON.stringify({ environment: this.opts.environment, routes }),
     };
     this.requester(req)
       .then((_resp) => {
