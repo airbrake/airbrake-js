@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.4 */
+/*! airbrake-js v1.6.5 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1221,7 +1221,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.4",
+            version: "1.6.5",
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
@@ -2148,7 +2148,7 @@ function elemName(elem) {
         s.push('#');
         s.push(elem.id);
     }
-    if (elem.classList) {
+    if (elem.classList && Array.from) {
         s.push('.');
         s.push(Array.from(elem.classList).join('.'));
     }
@@ -2607,7 +2607,7 @@ var Routes = /** @class */ (function () {
         var req = {
             method: 'POST',
             url: this.url,
-            body: JSON.stringify({ routes: routes }),
+            body: JSON.stringify({ environment: this.opts.environment, routes: routes }),
         };
         this.requester(req)
             .then(function (_resp) {
