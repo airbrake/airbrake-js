@@ -1,5 +1,6 @@
 import { makeRequester, Requester } from './http_req';
-import Options from './options';
+import { replaceTemplate } from './instrumentation/template';
+import Options, { IOptionsApiProxyProp, IOptionsProjectProps } from './options';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -51,6 +52,8 @@ export interface IRequestInfo {
   end: time;
 }
 
+export const routesStatsPath: string = '{host}/api/v5/projects/{projectId}/routes-stats?key={projectKey}';
+
 export class Routes {
   private opts: Options;
   private url: string;
@@ -62,10 +65,18 @@ export class Routes {
 
   constructor(opts: Options) {
     this.opts = opts;
-    this.url = `${this.opts.host}/api/v5/projects/${
-      this.opts.projectId
-    }/routes-stats?key=${this.opts.projectKey}`;
-    this.requester = makeRequester(this.opts);
+    const { host, projectId, projectKey } = opts as IOptionsProjectProps;
+    const { apiProxy } = opts as IOptionsApiProxyProp;
+    if (apiProxy) {
+      this.url = apiProxy.routesStats;
+    } else {
+      this.url = replaceTemplate(routesStatsPath, {
+        host,
+        projectId,
+        projectKey
+      });
+      this.requester = makeRequester(this.opts);
+    }
   }
 
   public notifyRequest(req: IRequestInfo): void {

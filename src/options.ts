@@ -7,9 +7,7 @@ import { ITDigestConstructor } from './routes';
 
 type Reporter = (notice: Notice) => Promise<Notice>;
 
-export default interface IOptions {
-  projectId: number;
-  projectKey: string;
+interface IOptionsBase {
   environment?: string;
   host?: string;
   timeout?: number;
@@ -26,3 +24,19 @@ export default interface IOptions {
   >;
   TDigest?: ITDigestConstructor;
 }
+
+export interface IOptionsProjectProps extends IOptionsBase {
+  projectId: number;
+  projectKey: string;
+}
+
+export interface IOptionsApiProxyProp extends IOptionsBase {
+  apiProxy: {
+    notices: string;
+    routesStats: string;
+  };
+}
+
+type IOptions = IOptionsProjectProps | IOptionsApiProxyProp;
+
+export default IOptions

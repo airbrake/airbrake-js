@@ -28,6 +28,26 @@ describe('Client config', () => {
     }).to.throw('airbrake: projectId and projectKey are required');
   });
 
+  it('throws when apiProxy.notices or apiProxy.routesStats are missing in apiProxy mode', () => {
+    expect(() => {
+      // tslint:disable-next-line:no-object-literal-type-assertion
+      new Client({
+        apiProxy: {
+          notices: 'some/path',
+        },
+      } as Options);
+    }).to.throw('airbrake: apiProxy.notices and apiProxy.routesStats are required');
+
+    expect(() => {
+      // tslint:disable-next-line:no-object-literal-type-assertion
+      new Client({
+        apiProxy: {
+          routesStats: 'other/path',
+        },
+      } as Options);
+    }).to.throw('airbrake: apiProxy.notices and apiProxy.routesStats are required');
+  });
+
   it('calls a reporter', () => {
     client = new Client({
       projectId: 1,
@@ -112,6 +132,89 @@ describe('Client config', () => {
       test([/key1/]);
     });
   });
+
+  describe('endpoints', () => {
+    it('endpoint url "notify" for default host', () => {
+      client = new Client({
+        projectId: 1,
+        projectKey: 'a',
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['url']).to.equal('https://api.airbrake.io/api/v3/projects/1/notices?key=a');
+    });
+
+    it('endpoint url "notify" for custom host', () => {
+      client = new Client({
+        host: 'https://customhost.com',
+        projectId: 1,
+        projectKey: 'a',
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['url']).to.equal('https://customhost.com/api/v3/projects/1/notices?key=a');
+    });
+
+    it('endpoint url "notify" for API proxy', () => {
+      client = new Client({
+        apiProxy: {
+          notices: 'https://dummy.com/api/v1/airbrake/notices',
+          routesStats: 'https://dummy.com/api/v1/airbrake/routesStats',
+        },
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['url']).to.equal('https://dummy.com/api/v1/airbrake/notices');
+    });
+
+    it('endpoint url "routes stats" for default host', () => {
+      client = new Client({
+        projectId: 1,
+        projectKey: 'a',
+      });
+      client.notifyRequest({
+        method: 'GET',
+        route: 'https://dummy.com/api/v1/test',
+        statusCode: 200,
+        start: Date.now() - 300,
+        end: Date.now(),
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['routes']['url']).to.equal('https://api.airbrake.io/api/v5/projects/1/routes-stats?key=a');
+    });
+
+    it('endpoint url "routes stats" for custom host', () => {
+      client = new Client({
+        host: 'https://customhost.com',
+        projectId: 1,
+        projectKey: 'a',
+      });
+      client.notifyRequest({
+        method: 'GET',
+        route: 'https://dummy.com/api/v1/test',
+        statusCode: 200,
+        start: Date.now() - 300,
+        end: Date.now(),
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['routes']['url']).to.equal('https://customhost.com/api/v5/projects/1/routes-stats?key=a');
+    });
+
+    it('endpoint url "routes stats" for API proxy', () => {
+      client = new Client({
+        apiProxy: {
+          notices: 'https://dummy.com/api/v1/airbrake/notices',
+          routesStats: 'https://dummy.com/api/v1/airbrake/routesStats',
+        },
+      });
+      client.notifyRequest({
+        method: 'GET',
+        route: 'https://dummy.com/api/v1/test',
+        statusCode: 200,
+        start: Date.now() - 300,
+        end: Date.now(),
+      });
+      // tslint:disable-next-line:no-string-literal
+      expect(client['routes']['url']).to.equal('https://dummy.com/api/v1/airbrake/routesStats');
+    });
+  });
 });
 
 describe('Client', () => {
@@ -132,6 +235,19 @@ describe('Client', () => {
 
   afterEach(() => {
     client.close();
+  });
+
+  describe('static properties', () => {
+    it('has defaultHost property', () => {
+      expect(Client.defaultHost).to.equal('https://api.airbrake.io');
+    });
+
+    it('has apiPaths.notices, apiPaths.routesStats templates', () => {
+      expect(Client.apiPaths).to.deep.equal({
+        notices: '{host}/api/v3/projects/{projectId}/notices?key={projectKey}',
+        routesStats: '{host}/api/v5/projects/{projectId}/routes-stats?key={projectKey}',
+      });
+    });
   });
 
   describe('filter', () => {

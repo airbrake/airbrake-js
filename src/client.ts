@@ -16,10 +16,11 @@ import uncaughtMessageFilter from './filter/uncaught_message';
 import windowFilter from './filter/window';
 
 import { makeRequester, Requester } from './http_req';
+import { replaceTemplate } from './instrumentation/template';
 
 import { Historian } from './historian';
-import Options from './options';
-import { IRequestInfo, Routes } from './routes';
+import Options, { IOptionsApiProxyProp, IOptionsProjectProps } from './options';
+import { IRequestInfo, Routes, routesStatsPath } from './routes';
 
 declare const VERSION: string;
 
@@ -29,7 +30,15 @@ interface ITodo {
   reject: (err: Error) => void;
 }
 
+const noticesPath: string = '{host}/api/v3/projects/{projectId}/notices?key={projectKey}';
+
 class Client {
+  public static defaultHost = 'https://api.airbrake.io';
+  public static apiPaths = Object.freeze({
+    notices: noticesPath,
+    routesStats: routesStatsPath,
+  });
+
   private opts: Options;
   private url: string;
   private historian: Historian;
@@ -46,17 +55,29 @@ class Client {
   private onClose: Array<() => void> = [];
 
   constructor(opts: Options) {
-    if (!opts.projectId || !opts.projectKey) {
+    const { projectId, projectKey } = opts as IOptionsProjectProps;
+    const { apiProxy } = opts as IOptionsApiProxyProp;
+
+    if (!apiProxy && (!projectId || !projectKey)) {
       throw new Error('airbrake: projectId and projectKey are required');
+    }
+    if (apiProxy && (!apiProxy.notices || !apiProxy.routesStats)) {
+      throw new Error('airbrake: apiProxy.notices and apiProxy.routesStats are required');
     }
 
     this.opts = opts;
-    this.opts.host = this.opts.host || 'https://api.airbrake.io';
+    this.opts.host = this.opts.host || Client.defaultHost;
     this.opts.timeout = this.opts.timeout || 10000;
     this.opts.keysBlacklist = this.opts.keysBlacklist || [/password/, /secret/];
-    this.url = `${this.opts.host}/api/v3/projects/${
-      this.opts.projectId
-    }/notices?key=${this.opts.projectKey}`;
+    if (apiProxy) {
+      this.url = apiProxy.notices;
+    } else {
+      this.url = replaceTemplate(noticesPath, {
+        host: this.opts.host,
+        projectId,
+        projectKey
+      });
+    }
 
     this.processor = this.opts.processor || stacktracejsProcessor;
     this.requester = makeRequester(this.opts);

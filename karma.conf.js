@@ -37,6 +37,8 @@ module.exports = function(config) {
       devtool: 'inline-source-map',
 
       plugins: [
+        new webpack.NamedModulesPlugin(),
+        new webpack.HotModuleReplacementPlugin(),
         new webpack.DefinePlugin({
           VERSION: '"0.0.0"',
         }),

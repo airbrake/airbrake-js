@@ -230,6 +230,25 @@ var airbrake = new AirbrakeClient({
 });
 ```
 
+### Client request proxy
+
+In order restriction to not propagate API key there is possibility to setup server endpoints, which should proxy calls to the Airbrake service.
+```js
+var airbrake = new AirbrakeClient({
+  apiProxy: {
+    notifications: 'https://yourhost.com/api/v1/airbrake/notifications',
+    routesStats: 'https://yourhost.com/api/v1/airbrake/route-stats',
+  }
+});
+```
+`AirbrakeClient.apiPaths` contains API urls with placeholders, which should be implemented on the server in order to proxy client library messages to the Airbrake service.
+
+`AirbrakeClient.defaultHost` contains Airbrake API host, which will be used in url by default
+
+Example: `AirbrakeClient.apiPaths.notices` contains `{host}/api/v3/projects/{projectId}/notices?key={projectKey}`, where `{host}` placeholder should be replaced with `https://api.airbrake.io` (AirbrakeClient.defaultHost value) and `{projectId}`, `{projectKey}` with your project id and API key.
+
+If you are going to use this client proxy paths be aware that in a case of library update you should check whether the Airbrake service API urls are the same (by checking AirbrakeClient.apiPaths properties values). If they were updated, then you should update in you server code too.
+
 ## Integration
 
 ### window.onerror
