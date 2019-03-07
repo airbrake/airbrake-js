@@ -208,14 +208,16 @@ Airbrake supports using private and public source maps. Check out our docs for m
 - [Public source maps](https://airbrake.io/docs/features/public-sourcemaps/)
 
 
-### Unwrapping console
+### Instrumentation
 
-airbrake-js automatically wraps `console.log` function calls in order to collect logs and send them with first error. You can undo it using `unwrapConsole` option:
+airbrake-js automatically instruments `console.log` function calls in order to collect logs and send them with first error. You can disable that behavior using `instrumentation` option:
 
 ```js
 var airbrake = new airbrakeJs.Client({
   ...
-  unwrapConsole: true,
+  instrumentation: {
+    console: false,
+  },
 });
 ```
 
