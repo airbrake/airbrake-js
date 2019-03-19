@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.5 */
+/*! airbrake-js v1.6.6 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1221,7 +1221,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.5",
+            version: "1.6.6",
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
