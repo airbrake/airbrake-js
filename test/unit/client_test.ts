@@ -652,13 +652,13 @@ describe('Client', () => {
       }, 0);
     });
 
-    it('notifies about rejections with no reason', (done) => {
+    it('ignores rejections with no reason', (done) => {
       new Promise((_resolve, reject) => {
         reject();
       });
 
       setTimeout(() => {
-        expect(reporter).to.have.been.called;
+        expect(reporter).to.not.have.been.called;
         done();
       }, 0);
     });

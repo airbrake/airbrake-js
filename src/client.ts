@@ -318,8 +318,10 @@ class Client {
     // http://bluebirdjs.com/docs/api/error-management-configuration.html
     let reason =
       (e as PromiseRejectionEvent).reason ||
-      ((e as CustomEvent).detail && (e as CustomEvent).detail.reason) ||
-      'unhandled rejection with no reason given';
+      ((e as CustomEvent).detail && (e as CustomEvent).detail.reason);
+    if (!reason) {
+      return;
+    }
     let msg = reason.message || String(reason);
     if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
       return;
