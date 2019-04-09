@@ -61,7 +61,12 @@ export class Historian {
       }
     }
 
-    if (typeof process === 'object' && typeof process.on === 'function') {
+    // Don't use process.on when windows is defined such as Electron apps.
+    if (
+      typeof window === 'undefined' &&
+      typeof process === 'object' &&
+      typeof process.on === 'function'
+    ) {
       process.on('uncaughtException', (err) => {
         this.notify(err).then(() => {
           if (process.listeners('uncaughtException').length !== 1) {
