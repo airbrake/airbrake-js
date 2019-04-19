@@ -1,5 +1,5 @@
 var http = require('http');
-// make sure `request` package is installed before using airbrake-js
+// make sure `cross-env` package is installed before using airbrake-js
 var AirbrakeClient = require('airbrake-js');
 
 http.createServer(function (req, res) {
