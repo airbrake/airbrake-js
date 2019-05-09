@@ -303,8 +303,13 @@ export class Historian {
       };
 
       state.url = typeof input === 'string' ? input : input.url;
-      state.method = init && init.method ? init.method : 'GET';
-
+      if (typeof input !== 'string') {
+        state.url = input.url;
+        state.method = input.method ? input.method : 'GET';
+      } else {
+        state.url = input;
+        state.method = init && init.method ? init.method : 'GET';
+      }
       // Some platforms (e.g. react-native) implement fetch via XHR.
       client.ignoreNextXHR++;
       setTimeout(() => client.ignoreNextXHR--);

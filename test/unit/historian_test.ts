@@ -123,6 +123,30 @@ describe('instrumentation', () => {
     });
   });
 
+  describe('fetch with Request object', () => {
+    beforeEach(() => {
+      const request = new Request('http://ip2c.org/4.4.4.4', { method: 'GET' })
+      let promise = fetch(request);
+      promise.then(() => {
+        client.notify(new Error('test'));
+      });
+      return promise;
+    });
+
+    it('records request', () => {
+      expect(reporter).to.have.been.called;
+      let notice = reporter.lastCall.args[0];
+      let history = notice.context.history;
+
+      let state = history[history.length - 1];
+      expect(state.type).to.equal('xhr');
+      expect(state.method).to.equal('GET');
+      expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
+      expect(state.statusCode).to.equal(200);
+      expect(state.duration).to.be.a('number');
+    });
+  });
+
   describe('console', () => {
     beforeEach(() => {
       for (let i = 0; i < 25; i++) {

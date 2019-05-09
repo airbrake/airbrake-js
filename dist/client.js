@@ -1336,8 +1336,10 @@ var Client = /** @class */ (function () {
         // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
         // http://bluebirdjs.com/docs/api/error-management-configuration.html
         var reason = e.reason ||
-            (e.detail && e.detail.reason) ||
-            'unhandled rejection with no reason given';
+            (e.detail && e.detail.reason);
+        if (!reason) {
+            return;
+        }
         var msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
@@ -1615,7 +1617,10 @@ var Historian = /** @class */ (function () {
                 this.location();
             }
         }
-        if (typeof process === 'object' && typeof process.on === 'function') {
+        // Don't use process.on when windows is defined such as Electron apps.
+        if (typeof window === 'undefined' &&
+            typeof process === 'object' &&
+            typeof process.on === 'function') {
             process.on('uncaughtException', function (err) {
                 _this.notify(err).then(function () {
                     if (process.listeners('uncaughtException').length !== 1) {
@@ -1825,7 +1830,14 @@ var Historian = /** @class */ (function () {
                 date: new Date(),
             };
             state.url = typeof input === 'string' ? input : input.url;
-            state.method = init && init.method ? init.method : 'GET';
+            if (typeof input !== 'string') {
+                state.url = input.url;
+                state.method = state.method;
+            }
+            else {
+                state.url = input;
+                state.method = init && init.method ? init.method : 'GET';
+            }
             // Some platforms (e.g. react-native) implement fetch via XHR.
             client.ignoreNextXHR++;
             setTimeout(function () { return client.ignoreNextXHR--; });
