@@ -54,7 +54,7 @@ export class Historian {
 
       this.domEvents();
       if (enabled(opts.fetch) && typeof fetch === 'function') {
-        this.fetch();
+        this.instrumentFetch();
       }
       if (enabled(opts.history) && typeof history === 'object') {
         this.location();
@@ -289,21 +289,26 @@ export class Historian {
     }
   }
 
-  public fetch(): void {
+  public instrumentFetch(): void {
     // tslint:disable-next-line:no-this-assignment
     let client = this;
     let oldFetch = window.fetch;
     window.fetch = function(
-      input: RequestInfo,
-      init?: RequestInit
+      req: RequestInfo,
+      options?: RequestInit
     ): Promise<Response> {
       let state: any = {
         type: 'xhr',
         date: new Date(),
       };
 
-      state.url = typeof input === 'string' ? input : input.url;
-      state.method = init && init.method ? init.method : 'GET';
+      state.method = options && options.method ? options.method : 'GET';
+      if (typeof req === 'string') {
+        state.url = req;
+      } else {
+        state.method = req.method;
+        state.url = req.url;
+      }
 
       // Some platforms (e.g. react-native) implement fetch via XHR.
       client.ignoreNextXHR++;

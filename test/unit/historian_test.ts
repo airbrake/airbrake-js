@@ -101,25 +101,77 @@ describe('instrumentation', () => {
   });
 
   describe('fetch', () => {
-    beforeEach(() => {
-      let promise = fetch('http://ip2c.org/4.4.4.4');
-      promise.then(() => {
-        client.notify(new Error('test'));
+    describe('simple fetch', () => {
+      beforeEach(() => {
+        let promise = fetch('http://ip2c.org/4.4.4.4');
+        promise.then(() => {
+          client.notify(new Error('test'));
+        });
+        return promise;
       });
-      return promise;
+
+      it('records request', () => {
+        expect(reporter).to.have.been.called;
+        let notice = reporter.lastCall.args[0];
+        let history = notice.context.history;
+
+        let state = history[history.length - 1];
+        expect(state.type).to.equal('xhr');
+        expect(state.method).to.equal('GET');
+        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).to.equal(200);
+        expect(state.duration).to.be.a('number');
+      });
     });
 
-    it('records request', () => {
-      expect(reporter).to.have.been.called;
-      let notice = reporter.lastCall.args[0];
-      let history = notice.context.history;
+    describe('fetch with options', () => {
+      beforeEach(() => {
+        let promise = fetch('http://ip2c.org/4.4.4.4', { method: 'POST' });
+        promise.then(() => {
+          client.notify(new Error('test'));
+        });
+        return promise;
+      });
 
-      let state = history[history.length - 1];
-      expect(state.type).to.equal('xhr');
-      expect(state.method).to.equal('GET');
-      expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
-      expect(state.statusCode).to.equal(200);
-      expect(state.duration).to.be.a('number');
+      it('records request', () => {
+        expect(reporter).to.have.been.called;
+        let notice = reporter.lastCall.args[0];
+        let history = notice.context.history;
+
+        let state = history[history.length - 1];
+        expect(state.type).to.equal('xhr');
+        expect(state.method).to.equal('POST');
+        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).to.equal(200);
+        expect(state.duration).to.be.a('number');
+      });
+    });
+
+    describe('fetch with Request object', () => {
+      beforeEach(() => {
+        const req = new Request('http://ip2c.org/4.4.4.4', {
+          method: 'POST',
+          body: '{"foo": "bar"}',
+        });
+        let promise = fetch(req);
+        promise.then(() => {
+          client.notify(new Error('test'));
+        });
+        return promise;
+      });
+
+      it('records request', () => {
+        expect(reporter).to.have.been.called;
+        let notice = reporter.lastCall.args[0];
+        let history = notice.context.history;
+
+        let state = history[history.length - 1];
+        expect(state.type).to.equal('xhr');
+        expect(state.method).to.equal('POST');
+        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).to.equal(200);
+        expect(state.duration).to.be.a('number');
+      });
     });
   });
 
