@@ -137,10 +137,14 @@ export class Routes {
     this.m = {};
     this.timer = null;
 
+    let outJSON = JSON.stringify({
+      environment: this.opts.environment,
+      routes,
+    });
     let req = {
       method: 'POST',
       url: this.url,
-      body: JSON.stringify({ environment: this.opts.environment, routes }),
+      body: outJSON,
     };
     this.requester(req)
       .then((_resp) => {
@@ -167,17 +171,12 @@ export class Routes {
   }
 }
 
-const NS_PER_MS = 1e6;
-
 function toTime(tm: time): number {
   if (tm instanceof Date) {
     return tm.getTime();
   }
   if (typeof tm === 'number') {
     return tm;
-  }
-  if (tm instanceof Array) {
-    return tm[0] + tm[1] / NS_PER_MS;
   }
   throw new Error(`unsupported type: ${typeof tm}`);
 }
@@ -188,11 +187,6 @@ function durationMs(start: time, end: time): number {
   }
   if (typeof start === 'number' && typeof end === 'number') {
     return end - start;
-  }
-  if (start instanceof Array && end instanceof Array) {
-    let ms = end[0] - start[0];
-    ms += (end[1] - start[1]) / NS_PER_MS;
-    return ms;
   }
   throw new Error(`unsupported type: ${typeof start}`);
 }
