@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.6 */
+/*! airbrake-js v1.6.7 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1221,7 +1221,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.6",
+            version: "1.6.7",
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
@@ -1336,8 +1336,10 @@ var Client = /** @class */ (function () {
         // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
         // http://bluebirdjs.com/docs/api/error-management-configuration.html
         var reason = e.reason ||
-            (e.detail && e.detail.reason) ||
-            'unhandled rejection with no reason given';
+            (e.detail && e.detail.reason);
+        if (!reason) {
+            return;
+        }
         var msg = reason.message || String(reason);
         if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
             return;
@@ -1609,13 +1611,16 @@ var Historian = /** @class */ (function () {
             }
             this.domEvents();
             if (enabled(opts.fetch) && typeof fetch === 'function') {
-                this.fetch();
+                this.instrumentFetch();
             }
             if (enabled(opts.history) && typeof history === 'object') {
                 this.location();
             }
         }
-        if (typeof process === 'object' && typeof process.on === 'function') {
+        // Don't use process.on when windows is defined such as Electron apps.
+        if (typeof window === 'undefined' &&
+            typeof process === 'object' &&
+            typeof process.on === 'function') {
             process.on('uncaughtException', function (err) {
                 _this.notify(err).then(function () {
                     if (process.listeners('uncaughtException').length !== 1) {
@@ -1815,17 +1820,23 @@ var Historian = /** @class */ (function () {
             }
         }
     };
-    Historian.prototype.fetch = function () {
+    Historian.prototype.instrumentFetch = function () {
         // tslint:disable-next-line:no-this-assignment
         var client = this;
         var oldFetch = window.fetch;
-        window.fetch = function (input, init) {
+        window.fetch = function (req, options) {
             var state = {
                 type: 'xhr',
                 date: new Date(),
             };
-            state.url = typeof input === 'string' ? input : input.url;
-            state.method = init && init.method ? init.method : 'GET';
+            state.method = options && options.method ? options.method : 'GET';
+            if (typeof req === 'string') {
+                state.url = req;
+            }
+            else {
+                state.method = req.method;
+                state.url = req.url;
+            }
             // Some platforms (e.g. react-native) implement fetch via XHR.
             client.ignoreNextXHR++;
             setTimeout(function () { return client.ignoreNextXHR--; });
@@ -2604,10 +2615,14 @@ var Routes = /** @class */ (function () {
         }
         this.m = {};
         this.timer = null;
+        var outJSON = JSON.stringify({
+            environment: this.opts.environment,
+            routes: routes,
+        });
         var req = {
             method: 'POST',
             url: this.url,
-            body: JSON.stringify({ environment: this.opts.environment, routes: routes }),
+            body: outJSON,
         };
         this.requester(req)
             .then(function (_resp) {
@@ -2634,16 +2649,12 @@ var Routes = /** @class */ (function () {
     return Routes;
 }());
 exports.Routes = Routes;
-var NS_PER_MS = 1e6;
 function toTime(tm) {
     if (tm instanceof Date) {
         return tm.getTime();
     }
     if (typeof tm === 'number') {
         return tm;
-    }
-    if (tm instanceof Array) {
-        return tm[0] + tm[1] / NS_PER_MS;
     }
     throw new Error("unsupported type: " + typeof tm);
 }
@@ -2653,11 +2664,6 @@ function durationMs(start, end) {
     }
     if (typeof start === 'number' && typeof end === 'number') {
         return end - start;
-    }
-    if (start instanceof Array && end instanceof Array) {
-        var ms = end[0] - start[0];
-        ms += (end[1] - start[1]) / NS_PER_MS;
-        return ms;
     }
     throw new Error("unsupported type: " + typeof start);
 }
