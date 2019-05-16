@@ -34,7 +34,14 @@ function parse(err: IError): IStackFrame[] {
 export default function processor(err: IError): INoticeError {
   let backtrace: INoticeFrame[] = [];
 
-  if (!err.noStack) {
+  if (err.noStack) {
+    backtrace.push({
+      function: err.functionName || '',
+      file: err.fileName || '',
+      line: err.lineNumber || 0,
+      column: err.columnNumber || 0,
+    });
+  } else {
     let frames = parse(err);
     if (frames.length === 0) {
       try {
