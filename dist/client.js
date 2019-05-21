@@ -1,4 +1,4 @@
-/*! airbrake-js v1.6.7 */
+/*! airbrake-js v1.6.8 */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory((function webpackLoadOptionalExternalModule() { try { return require("os"); } catch(e) {} }()), require("cross-fetch"));
@@ -1221,7 +1221,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: "1.6.7",
+            version: "1.6.8",
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
@@ -1309,6 +1309,9 @@ var Client = /** @class */ (function () {
         this.historian.onerror.apply(this.historian, arguments);
     };
     Client.prototype.notifyRequest = function (req) {
+        if (!this.opts.TDigest) {
+            return;
+        }
         if (!this.routes) {
             this.routes = new routes_1.Routes(this.opts);
         }
@@ -1586,8 +1589,8 @@ var dom_1 = __webpack_require__(/*! ./instrumentation/dom */ "./src/instrumentat
 var CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
 var Historian = /** @class */ (function () {
     function Historian(opts) {
-        if (opts === void 0) { opts = {}; }
         var _this = this;
+        if (opts === void 0) { opts = {}; }
         this.historyMaxLen = 20;
         this.notifiers = [];
         this.errors = [];
@@ -2490,7 +2493,15 @@ function parse(err) {
 }
 function processor(err) {
     var backtrace = [];
-    if (!err.noStack) {
+    if (err.noStack) {
+        backtrace.push({
+            function: err.functionName || '',
+            file: err.fileName || '',
+            line: err.lineNumber || 0,
+            column: err.columnNumber || 0,
+        });
+    }
+    else {
         var frames_2 = parse(err);
         if (frames_2.length === 0) {
             try {
