@@ -291,6 +291,9 @@ class Client {
   }
 
   public notifyRequest(req: IRequestInfo): void {
+    if (!this.opts.TDigest) {
+      return;
+    }
     if (!this.routes) {
       this.routes = new Routes(this.opts);
     }
