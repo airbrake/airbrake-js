@@ -1,6 +1,6 @@
 import { INoticeError, INoticeFrame } from '../notice';
 
-import ErrorStackParser = require('error-stack-parser');
+import ErrorStackParser from 'error-stack-parser';
 
 const hasConsole = typeof console === 'object' && console.warn;
 

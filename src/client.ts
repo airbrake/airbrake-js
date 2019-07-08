@@ -1,4 +1,4 @@
-import 'promise-polyfill/src/polyfill';
+import Promise from 'promise-polyfill';
 
 import IFuncWrapper from './func_wrapper';
 import jsonifyNotice from './jsonify_notice';
@@ -29,7 +29,7 @@ interface ITodo {
   reject: (err: Error) => void;
 }
 
-class Client {
+export default class Client {
   private opts: Options;
   private url: string;
   private historian: Historian;
@@ -54,9 +54,7 @@ class Client {
     this.opts.host = this.opts.host || 'https://api.airbrake.io';
     this.opts.timeout = this.opts.timeout || 10000;
     this.opts.keysBlacklist = this.opts.keysBlacklist || [/password/, /secret/];
-    this.url = `${this.opts.host}/api/v3/projects/${
-      this.opts.projectId
-    }/notices?key=${this.opts.projectKey}`;
+    this.url = `${this.opts.host}/api/v3/projects/${this.opts.projectId}/notices?key=${this.opts.projectKey}`;
 
     this.processor = this.opts.processor || stacktracejsProcessor;
     this.requester = makeRequester(this.opts);
@@ -74,12 +72,10 @@ class Client {
       this.opts.environment = process.env.NODE_ENV;
     }
     if (this.opts.environment) {
-      this.addFilter(
-        (notice: Notice): Notice | null => {
-          notice.context.environment = this.opts.environment;
-          return notice;
-        }
-      );
+      this.addFilter((notice: Notice): Notice | null => {
+        notice.context.environment = this.opts.environment;
+        return notice;
+      });
     }
 
     if (typeof window === 'object') {
@@ -336,5 +332,3 @@ class Client {
 function isDevEnv(env: any): boolean {
   return env && env.startsWith && env.startsWith('dev');
 }
-
-export = Client;
