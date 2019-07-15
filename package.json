@@ -64,6 +64,7 @@
   "jsnext:main": "dist/airbrake-js.esm.js",
   "types": "dist/airbrake-js.d.ts",
   "files": [
+    "src/",
     "dist/",
     "README.md",
     "LICENSE"
