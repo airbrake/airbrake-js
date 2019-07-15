@@ -1,4 +1,5 @@
-import typescript from 'rollup-plugin-typescript';
+import replace from 'rollup-plugin-replace';
+import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
@@ -16,11 +17,14 @@ export default {
     },
   ],
   plugins: [
+    typescript(),
+    replace({
+      VERSION: `'${pkg.version}'`,
+    }),
     resolve({
       mainFields: ['module', 'main'],
     }),
     commonjs(),
-    typescript(),
     terser({
       include: [/^.+\.min\.js$/, '*esm*'],
     }),
