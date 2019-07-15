@@ -6,26 +6,45 @@ import commonjs from 'rollup-plugin-commonjs';
 
 const pkg = require('./package.json');
 
-const plugins = [
+const webPlugins = [
   resolve({
     mainFields: ['module', 'main'],
   }),
   commonjs(),
   typescript(),
-  replace({
-    VERSION: `'${pkg.version}'`,
-  }),
+  replace({ VERSION: `'${pkg.version}'` }),
   terser({
-    include: [/^.+\.min\.js$/, '*esm*'],
+    include: [/^.+\.min\.js$/],
   }),
 ];
 
-function umd(cfg) {
+const nodePlugins = [typescript(), replace({ VERSION: `'${pkg.version}'` })];
+
+function iife(cfg) {
   return Object.assign(
     {
-      format: 'umd',
-      name: 'airbrakeJs.Client',
+      format: 'iife',
       banner: `/* airbrake-js v${pkg.version} */`,
+      sourcemap: true,
+    },
+    cfg
+  );
+}
+
+function cjs(cfg) {
+  return Object.assign(
+    {
+      format: 'cjs',
+      sourcemap: true,
+    },
+    cfg
+  );
+}
+
+function esm(cfg) {
+  return Object.assign(
+    {
+      format: 'esm',
       sourcemap: true,
     },
     cfg
@@ -34,39 +53,45 @@ function umd(cfg) {
 
 export default [
   {
-    input: 'src/client.ts',
+    input: 'src/web.entry.ts',
     output: [
-      umd({ file: 'dist/client.js' }),
-      umd({ file: 'dist/client.min.js' }),
+      iife({ file: 'dist/airbrake-js.js', name: 'airbrakeJs.Client' }),
+      iife({ file: 'dist/airbrake-js.min.js', name: 'airbrakeJs.Client' }),
     ],
-    plugins,
+    plugins: webPlugins,
+  },
+  {
+    input: 'src/node.entry.ts',
+    output: [
+      cjs({ file: 'dist/airbrake-js.common.js', name: 'airbrakeJs.Client' }),
+    ],
+    external: ['error-stack-parser'],
+    plugins: nodePlugins,
+  },
+  {
+    input: 'src/node.entry.ts',
+    output: [esm({ file: 'dist/airbrake-js.esm.js' })],
+    external: ['error-stack-parser'],
+    plugins: nodePlugins,
   },
   {
     input: 'src/instrumentation/express.ts',
     output: [
-      umd({
+      esm({
         file: 'dist/instrumentation/express.js',
         name: 'airbrakeJs.instrumentation.express',
       }),
-      umd({
-        file: 'dist/instrumentation/express.min.js',
-        name: 'airbrakeJs.instrumentation.express',
-      }),
     ],
-    plugins,
+    plugins: nodePlugins,
   },
   {
     input: 'src/instrumentation/hapi.ts',
     output: [
-      umd({
+      esm({
         file: 'dist/instrumentation/hapi.js',
         name: 'airbrakeJs.instrumentation.hapi',
       }),
-      umd({
-        file: 'dist/instrumentation/hapi.min.js',
-        name: 'airbrakeJs.instrumentation.hapi',
-      }),
     ],
-    plugins,
+    plugins: nodePlugins,
   },
 ];

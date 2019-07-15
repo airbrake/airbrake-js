@@ -1,5 +1,3 @@
-import Promise from 'promise-polyfill';
-
 import IFuncWrapper from './func_wrapper';
 import jsonifyNotice from './jsonify_notice';
 import Notice from './notice';
