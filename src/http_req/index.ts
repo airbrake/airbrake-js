@@ -1,19 +1,9 @@
 import Options from '../options';
+import { Requester } from './api';
 import { request as fetchRequest } from './fetch';
 import { makeRequester as makeNodeRequester } from './node';
 
-export interface IHttpRequest {
-  method: string;
-  url: string;
-  body: string;
-  timeout?: number;
-}
-
-export interface IHttpResponse {
-  json: any;
-}
-
-export type Requester = (req: IHttpRequest) => Promise<IHttpResponse>;
+export { Requester };
 
 export function makeRequester(opts: Options): Requester {
   if (opts.request) {
@@ -21,10 +11,3 @@ export function makeRequester(opts: Options): Requester {
   }
   return fetchRequest;
 }
-
-export let errors = {
-  unauthorized: new Error(
-    'airbrake: unauthorized: project id or key are wrong'
-  ),
-  ipRateLimited: new Error('airbrake: IP is rate limited'),
-};

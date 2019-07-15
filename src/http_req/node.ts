@@ -1,6 +1,6 @@
 import * as request_lib from 'request';
 
-import { errors, IHttpRequest, IHttpResponse, Requester } from './index';
+import { errors, IHttpRequest, IHttpResponse, Requester } from './api';
 
 type requestAPI = request_lib.RequestAPI<
   request_lib.Request,
@@ -109,9 +109,7 @@ function request(req: IHttpRequest, api: requestAPI): Promise<IHttpResponse> {
 
         body = body.trim();
         error = new Error(
-          `airbrake: node: unexpected response: code=${
-            resp.statusCode
-          } body='${body}'`
+          `airbrake: node: unexpected response: code=${resp.statusCode} body='${body}'`
         );
         reject(error);
       }

@@ -1,7 +1,7 @@
 // tslint:disable-next-line:no-var-requires
 let fetch = require('cross-fetch');
 
-import { errors, IHttpRequest, IHttpResponse } from './index';
+import { errors, IHttpRequest, IHttpResponse } from './api';
 
 let rateLimitReset = 0;
 
@@ -52,9 +52,7 @@ export function request(req: IHttpRequest): Promise<IHttpResponse> {
 
     return resp.text().then((body) => {
       let err = new Error(
-        `airbrake: fetch: unexpected response: code=${
-          resp.status
-        } body='${body}'`
+        `airbrake: fetch: unexpected response: code=${resp.status} body='${body}'`
       );
       throw err;
     });
