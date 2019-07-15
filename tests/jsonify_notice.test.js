@@ -1,11 +1,10 @@
-import jsonifyNotice from '../../src/jsonify_notice';
-import Notice from '../../src/notice';
-import { expect } from './sinon_chai';
+import jsonifyNotice from '../src/jsonify_notice';
+import Notice from '../src/notice';
 
 describe('jsonify_notice', () => {
   const maxLength = 30000;
 
-  context('when called with notice', () => {
+  describe('when called with notice', () => {
     let notice = {
       params: { arguments: [] },
       environment: { env1: 'value1' },
@@ -14,15 +13,15 @@ describe('jsonify_notice', () => {
     let json;
 
     beforeEach(() => {
-      json = jsonifyNotice(notice as Notice);
+      json = jsonifyNotice(notice);
     });
 
     it('produces valid JSON', () => {
-      expect(JSON.parse(json)).to.deep.equal(notice);
+      expect(JSON.parse(json)).toStrictEqual(notice);
     });
   });
 
-  context('when called with huge notice', () => {
+  describe('when called with huge notice', () => {
     let json;
 
     beforeEach(() => {
@@ -32,30 +31,30 @@ describe('jsonify_notice', () => {
       for (let i = 0; i < 100; i++) {
         notice.params.arr.push(Array(100).join('x'));
       }
-      json = jsonifyNotice(notice as Notice, { maxLength });
+      json = jsonifyNotice(notice, { maxLength });
     });
 
     it('limits json size', () => {
-      expect(json.length).to.be.below(maxLength);
+      expect(json.length).toBeLessThan(maxLength);
     });
   });
 
-  context('when called with one huge string', () => {
+  describe('when called with one huge string', () => {
     let json;
 
     beforeEach(() => {
       let notice = {
         params: { str: Array(100000).join('x') },
       };
-      json = jsonifyNotice(notice as Notice, { maxLength });
+      json = jsonifyNotice(notice, { maxLength });
     });
 
     it('limits json size', () => {
-      expect(json.length).to.be.below(maxLength);
+      expect(json.length).toBeLessThan(maxLength);
     });
   });
 
-  context('when called with huge error message', () => {
+  describe('when called with huge error message', () => {
     let json;
 
     beforeEach(() => {
@@ -67,26 +66,26 @@ describe('jsonify_notice', () => {
           },
         ],
       };
-      json = jsonifyNotice(notice as Notice, { maxLength });
+      json = jsonifyNotice(notice, { maxLength });
     });
 
     it('limits json size', () => {
-      expect(json.length).to.be.below(maxLength);
+      expect(json.length).toBeLessThan(maxLength);
     });
   });
 
-  context('when called with huger array', () => {
+  describe('when called with huger array', () => {
     let json;
 
     beforeEach(() => {
       let notice = {
         params: { param1: Array(100000) },
       };
-      json = jsonifyNotice(notice as Notice, { maxLength });
+      json = jsonifyNotice(notice, { maxLength });
     });
 
     it('limits json size', () => {
-      expect(json.length).to.be.below(maxLength);
+      expect(json.length).toBeLessThan(maxLength);
     });
   });
 });
