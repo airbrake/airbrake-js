@@ -67,7 +67,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "webpack",
+    "build": "rollup --config",
     "test": "jest"
   }
 }

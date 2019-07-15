@@ -51,4 +51,4 @@ function makeErrorHandler(client: Client) {
 (makeErrorHandler as any).makeMiddleware = makeMiddleware;
 (makeErrorHandler as any).makeErrorHandler = makeErrorHandler;
 
-export = makeErrorHandler;
+export default makeErrorHandler;
