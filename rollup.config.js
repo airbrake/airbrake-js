@@ -6,27 +6,67 @@ import commonjs from 'rollup-plugin-commonjs';
 
 const pkg = require('./package.json');
 
-export default {
-  input: 'src/client.ts',
-  output: [
+const plugins = [
+  resolve({
+    mainFields: ['module', 'main'],
+  }),
+  commonjs(),
+  typescript(),
+  replace({
+    VERSION: `'${pkg.version}'`,
+  }),
+  terser({
+    include: [/^.+\.min\.js$/, '*esm*'],
+  }),
+];
+
+function umd(cfg) {
+  return Object.assign(
     {
-      file: 'dist/bundle.js',
       format: 'umd',
       name: 'airbrakeJs.Client',
       banner: `/* airbrake-js v${pkg.version} */`,
+      sourcemap: true,
     },
-  ],
-  plugins: [
-    typescript(),
-    replace({
-      VERSION: `'${pkg.version}'`,
-    }),
-    resolve({
-      mainFields: ['module', 'main'],
-    }),
-    commonjs(),
-    terser({
-      include: [/^.+\.min\.js$/, '*esm*'],
-    }),
-  ],
-};
+    cfg
+  );
+}
+
+export default [
+  {
+    input: 'src/client.ts',
+    output: [
+      umd({ file: 'dist/client.js' }),
+      umd({ file: 'dist/client.min.js' }),
+    ],
+    plugins,
+  },
+  {
+    input: 'src/instrumentation/express.ts',
+    output: [
+      umd({
+        file: 'dist/instrumentation/express.js',
+        name: 'airbrakeJs.instrumentation.express',
+      }),
+      umd({
+        file: 'dist/instrumentation/express.min.js',
+        name: 'airbrakeJs.instrumentation.express',
+      }),
+    ],
+    plugins,
+  },
+  {
+    input: 'src/instrumentation/hapi.ts',
+    output: [
+      umd({
+        file: 'dist/instrumentation/hapi.js',
+        name: 'airbrakeJs.instrumentation.hapi',
+      }),
+      umd({
+        file: 'dist/instrumentation/hapi.min.js',
+        name: 'airbrakeJs.instrumentation.hapi',
+      }),
+    ],
+    plugins,
+  },
+];
