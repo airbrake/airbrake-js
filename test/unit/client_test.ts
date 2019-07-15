@@ -1,5 +1,4 @@
 import Client from '../../src/client';
-import Options from '../../src/options';
 
 import * as sinon from 'sinon';
 import { expect } from './sinon_chai';

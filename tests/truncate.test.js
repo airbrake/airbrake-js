@@ -1,5 +1,4 @@
-import { truncate } from '../../src/jsonify_notice';
-import { expect } from './sinon_chai';
+import { truncate } from '../src/jsonify_notice';
 
 describe('truncate', () => {
   it('works', () => {
@@ -26,12 +25,13 @@ describe('truncate', () => {
       [new Error('hello'), 'Error: hello'],
     ];
     /* tslint:enable */
-    for (let test of tests) {
+
+   	for (let test of tests) {
       let wanted = test.length >= 2 ? test[1] : test[0];
-      if (isNaN(wanted as any)) {
+      if (isNaN(wanted)) {
         continue;
       }
-      expect(truncate(test[0])).to.equal(wanted);
+      expect(truncate(test[0])).toBe(wanted);
     }
   });
 
@@ -45,18 +45,18 @@ describe('truncate', () => {
     };
     /* tslint:enable */
 
-    expect(truncate(obj)).to.deep.equal({ foo: 'bar' });
+    expect(truncate(obj)).toStrictEqual({ foo: 'bar' });
   });
 
   it('sets object type', () => {
     let e = new Event('load');
 
     let got = truncate(e);
-    expect(got.__type).to.equal('Event');
+    expect(got.__type).toBe('Event');
   });
 
-  context('when called with object with circular references', () => {
-    let obj: any = { foo: 'bar' };
+  describe('when called with object with circular references', () => {
+    let obj = { foo: 'bar' };
     obj.circularRef = obj;
     obj.circularList = [obj, obj];
     let truncated;
@@ -66,7 +66,7 @@ describe('truncate', () => {
     });
 
     it('produces object with resolved circular references', () => {
-      expect(truncated).to.deep.equal({
+      expect(truncated).toStrictEqual({
         foo: 'bar',
         circularRef: '[Circular ~]',
         circularList: ['[Circular ~]', '[Circular ~]'],
@@ -74,14 +74,14 @@ describe('truncate', () => {
     });
   });
 
-  context('when called with object with complex circular references', () => {
-    let a: any = { x: 1 };
+  describe('when called with object with complex circular references', () => {
+    let a = { x: 1 };
     a.a = a;
-    let b: any = { x: 2 };
+    let b = { x: 2 };
     b.a = a;
     let c = { a, b };
 
-    let obj: any = { list: [a, b, c] };
+    let obj = { list: [a, b, c] };
     obj.obj = obj;
 
     let truncated;
@@ -91,7 +91,7 @@ describe('truncate', () => {
     });
 
     it('produces object with resolved circular references', () => {
-      expect(truncated).to.deep.equal({
+      expect(truncated).toStrictEqual({
         list: [
           {
             x: 1,
@@ -111,9 +111,9 @@ describe('truncate', () => {
     });
   });
 
-  context('when called with deeply nested objects', () => {
+  describe('when called with deeply nested objects', () => {
     let obj = {};
-    let tmp: any = obj;
+    let tmp = obj;
     for (let i = 0; i < 100; i++) {
       tmp.value = i;
       tmp.obj = {};
@@ -127,7 +127,7 @@ describe('truncate', () => {
     });
 
     it('produces truncated object', () => {
-      expect(truncated).to.deep.equal({
+      expect(truncated).toStrictEqual({
         value: 0,
         obj: {
           value: 1,
@@ -143,11 +143,11 @@ describe('truncate', () => {
     });
   });
 
-  context('when called with object created with Object.create(null)', () => {
+  describe('when called with object created with Object.create(null)', () => {
     it('works', () => {
-      let obj: any = Object.create(null);
+      let obj = Object.create(null);
       obj.foo = 'bar';
-      expect(truncate(obj)).to.deep.equal({ foo: 'bar' });
+      expect(truncate(obj)).toStrictEqual({ foo: 'bar' });
     });
   });
 
@@ -164,7 +164,7 @@ describe('truncate', () => {
       let keysBlacklist = [/password/, /secret/];
       let truncated = truncate(obj, { keysBlacklist });
 
-      expect(truncated).to.deep.equal({
+      expect(truncated).toStrictEqual({
         params: {
           password: '[Filtered]',
           sub: { secret: '[Filtered]' },
