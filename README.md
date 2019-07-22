@@ -9,21 +9,41 @@ This is the JavaScript notifier for capturing errors in web browsers and reporti
 
 ## Installation
 
-Using yarn:
+airbrake-js can be installed using yarn:
+
 
 ```sh
 yarn add airbrake-js
-yarn add cross-fetch # add cross-fetch as peerDependency
 ```
 
-or Using npm:
+or using npm:
 
 ```sh
 npm install airbrake-js
-npm install cross-fetch # add cross-fetch as peerDependency
 ```
 
+If you prefer not to host the library yourself,
+airbrake-js is available on the excellent
+[cdnjs](https://cdnjs.com/libraries/airbrake-js).
+
 ## Setup
+
+Starting from v2 airbrake-js uses [rollup.js](https://rollupjs.org) to provide 3 separate build formats:
+
+- dist/airbrake.iife.js - a self-executing function, suitable for inclusion as a <script> tag.
+- dist/airbrake.esm.js - an ES module file, suitable for other bundlers and inclusion as a <script type=module> tag in modern browsers.
+- dist/airbrake.common.js - CommonJS, suitable for Node.js and other bundlers.
+
+Your package manager should automatically pick suitable bundle format based on airbrake-js package.json file:
+
+```js
+  "main": "dist/airbrake.common.js",
+  "web": "dist/airbrake.iife.js",
+  "module": "dist/airbrake.esm.js",
+  "jsnext:main": "dist/airbrake.esm.js",
+  "types": "dist/airbrake.d.ts",
+  "source": "src/index.ts",
+```
 
 Example configurations can be found in [examples](examples), including:
 
@@ -39,16 +59,6 @@ Example configurations can be found in [examples](examples), including:
 * [Redux](examples/redux)
 * [RequireJS](examples/requirejs)
 * [Vue.js](examples/vuejs)
-
-The notifier is built using
-[umd](https://webpack.js.org/concepts/output/#output-librarytarget)
-and therefore can be imported with AMD, CommonJS2 or as property in root.
-
-If you prefer not to host the library yourself,
-airbrake-js is available on the excellent
-[cdnjs](https://cdnjs.com/libraries/airbrake-js).
-
-If you're using Webpack in browser context you might need to mark certain [Node.js packages](https://github.com/airbrake/airbrake-js/blob/83197fa170c1456bbcdcb48ca67a68d7a829865a/webpack.config.js#L32-L39) as [external dependencies](https://webpack.js.org/configuration/externals/) to decrease bundle size.
 
 ## Basic Usage
 

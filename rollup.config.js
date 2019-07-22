@@ -55,8 +55,8 @@ export default [
   {
     input: 'src/web.entry.ts',
     output: [
-      iife({ file: 'dist/airbrake.js', name: 'airbrakeJs.Client' }),
-      iife({ file: 'dist/airbrake.min.js', name: 'airbrakeJs.Client' }),
+      iife({ file: 'dist/airbrake.iife.js', name: 'airbrakeJs.Client' }),
+      iife({ file: 'dist/airbrake.iife.min.js', name: 'airbrakeJs.Client' }),
     ],
     plugins: webPlugins,
   },
