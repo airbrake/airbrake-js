@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js",
-  "version": "1.6.8",
+  "version": "2.0.0-beta",
   "description": "Notify Airbrake on JavaScript exceptions",
   "author": "Airbrake",
   "license": "MIT",
