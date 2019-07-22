@@ -241,7 +241,9 @@ airbrake-js automatically setups `window.onerror` handler when script is loaded.
 var airbrake = new airbrakeJs.Client({ignoreWindowError: true});
 ```
 
-## What does "Script error" mean?
+## FAQ
+
+### What does "Script error" mean?
 
 See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#Notes.
 
@@ -250,19 +252,19 @@ See https://developer.mozilla.org/en/docs/Web/API/GlobalEventHandlers/onerror#No
 Install dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
 Run unit tests:
 
 ```bash
-karma start
+yarn test
 ```
 
 Build project:
 
 ```bash
-webpack
+yarn build
 ```
 
 ## Credits
