@@ -48,5 +48,5 @@ declare module 'airbrake-js' {
     end: time;
   }
 
-  export = Client;
+  export default Client;
 }

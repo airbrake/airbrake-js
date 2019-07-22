@@ -58,11 +58,11 @@
     "webpack": "4.35.3",
     "webpack-cli": "3.3.6"
   },
-  "main": "dist/airbrake-js.common.js",
-  "web": "dist/airbrake-js.iife.js",
-  "module": "dist/airbrake-js.esm.js",
-  "jsnext:main": "dist/airbrake-js.esm.js",
-  "types": "dist/airbrake-js.d.ts",
+  "main": "dist/airbrake.common.js",
+  "web": "dist/airbrake.iife.js",
+  "module": "dist/airbrake.esm.js",
+  "jsnext:main": "dist/airbrake.esm.js",
+  "types": "dist/airbrake.d.ts",
   "files": [
     "src/",
     "dist/",

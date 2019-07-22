@@ -55,22 +55,22 @@ export default [
   {
     input: 'src/web.entry.ts',
     output: [
-      iife({ file: 'dist/airbrake-js.js', name: 'airbrakeJs.Client' }),
-      iife({ file: 'dist/airbrake-js.min.js', name: 'airbrakeJs.Client' }),
+      iife({ file: 'dist/airbrake.js', name: 'airbrakeJs.Client' }),
+      iife({ file: 'dist/airbrake.min.js', name: 'airbrakeJs.Client' }),
     ],
     plugins: webPlugins,
   },
   {
     input: 'src/node.entry.ts',
     output: [
-      cjs({ file: 'dist/airbrake-js.common.js', name: 'airbrakeJs.Client' }),
+      cjs({ file: 'dist/airbrake.common.js', name: 'airbrakeJs.Client' }),
     ],
     external: ['error-stack-parser'],
     plugins: nodePlugins,
   },
   {
     input: 'src/node.entry.ts',
-    output: [esm({ file: 'dist/airbrake-js.esm.js' })],
+    output: [esm({ file: 'dist/airbrake.esm.js' })],
     external: ['error-stack-parser'],
     plugins: nodePlugins,
   },
