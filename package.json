@@ -16,7 +16,8 @@
   ],
   "dependencies": {
     "cross-fetch": "^3.0.1",
-    "error-stack-parser": "^2.0.2"
+    "error-stack-parser": "^2.0.2",
+    "tdigest": "^0.1.1"
   },
   "devDependencies": {
     "@babel/core": "^7.5.4",
