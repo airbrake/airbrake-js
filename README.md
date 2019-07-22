@@ -29,7 +29,6 @@ Example configurations can be found in [examples](examples), including:
 
 * [Angular](examples/angular)
 * [Angular 2](examples/angular-2)
-* [Bower](examples/bower-wiredep)
 * [Browserify](examples/browserify)
 * [Express.js](examples/express)
 * [hapi.js](examples/hapi)

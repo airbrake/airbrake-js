@@ -1,7 +1,0 @@
-{
-  "name": "bower-wiredep-example",
-  "dependencies": {
-    "airbrake-js-client": "~0.9.0",
-    "gulp": "^3.9.1"
-  }
-}

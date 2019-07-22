@@ -1,6 +1,0 @@
-{
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "wiredep": "^3.0.0-beta"
-  }
-}
