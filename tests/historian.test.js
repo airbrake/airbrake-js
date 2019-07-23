@@ -1,17 +1,17 @@
-import * as sinon from 'sinon';
-import Client from '../../src/client';
-import { expect } from './sinon_chai';
+let {fetch, Request} = require('cross-fetch');
+
+window.fetch = fetch
+
+import Client from '../src/client';
 
 class Location {
-  private s: string;
+    constructor(s) {
+        this.s = s;
+    }
 
-  constructor(s: string) {
-    this.s = s;
-  }
-
-  public toString(): string {
-    return this.s;
-  }
+    toString() {
+        return this.s;
+    }
 }
 
 describe('instrumentation', () => {
@@ -20,10 +20,10 @@ describe('instrumentation', () => {
   let client;
 
   beforeEach(() => {
-    processor = sinon.spy((data) => {
+    processor = jest.fn((data) => {
       return data;
     });
-    reporter = sinon.spy(() => {
+    reporter = jest.fn(() => {
       return Promise.resolve({ id: 1 });
     });
     client = new Client({
@@ -39,7 +39,7 @@ describe('instrumentation', () => {
       let locations = ['', 'http://hello/world', 'foo', new Location('/')];
       for (let loc of locations) {
         try {
-          window.history.pushState(null, '', loc as string);
+          window.history.pushState(null, '', loc);
         } catch (_) {
           // ignore
         }
@@ -48,21 +48,21 @@ describe('instrumentation', () => {
     });
 
     it('records browser history', () => {
-      expect(reporter).to.have.been.called;
-      let notice = reporter.lastCall.args[0];
+      expect(reporter.mock.calls.length).toBe(1);
+      let notice = reporter.mock.calls[0][0];
       let history = notice.context.history;
 
       let state = history[history.length - 3];
       delete state.date;
-      expect(state).to.deep.equal({
+      expect(state).toStrictEqual({
         type: 'location',
-        from: '/context.html',
+        from: '/',
         to: '/world',
       });
 
       state = history[history.length - 2];
       delete state.date;
-      expect(state).to.deep.equal({
+      expect(state).toStrictEqual({
         type: 'location',
         from: '/world',
         to: '/foo',
@@ -70,7 +70,7 @@ describe('instrumentation', () => {
 
       state = history[history.length - 1];
       delete state.date;
-      expect(state).to.deep.equal({
+      expect(state).toStrictEqual({
         type: 'location',
         from: '/foo',
         to: '/',
@@ -80,30 +80,44 @@ describe('instrumentation', () => {
 
   describe('XHR', () => {
     beforeEach(() => {
-      let req = new XMLHttpRequest();
-      req.open('GET', 'http://ip2c.org/self', false);
-      req.send();
-      client.notify(new Error('test'));
+      let promise =  new Promise((resolve, reject) => {
+        var req = new XMLHttpRequest();
+        req.open('GET', 'http://ip2c.org/self');
+        req.onreadystatechange = () => {
+          if (req.readyState != 4) return;
+          if (req.status == 200) {
+            resolve(req.response);
+          } else {
+            reject();
+          }
+        };
+        req.send();
+      });
+
+      promise.then(() => {
+        client.notify(new Error('test'));
+      });
+      return promise;
     });
 
     it('records request', () => {
-      expect(reporter).to.have.been.called;
-      let notice = reporter.lastCall.args[0];
+      expect(reporter.mock.calls.length).toBe(1);
+      let notice = reporter.mock.calls[0][0];
       let history = notice.context.history;
 
       let state = history[history.length - 1];
-      expect(state.type).to.equal('xhr');
-      expect(state.method).to.equal('GET');
-      expect(state.url).to.equal('http://ip2c.org/self');
-      expect(state.statusCode).to.equal(200);
-      expect(state.duration).to.be.a('number');
+      expect(state.type).toBe('xhr');
+      expect(state.method).toBe('GET');
+      expect(state.url).toBe('http://ip2c.org/self');
+      expect(state.statusCode).toBe(200);
+      expect(state.duration).toEqual(expect.any(Number));
     });
   });
 
   describe('fetch', () => {
     describe('simple fetch', () => {
       beforeEach(() => {
-        let promise = fetch('http://ip2c.org/4.4.4.4');
+        let promise = window.fetch('http://ip2c.org/4.4.4.4');
         promise.then(() => {
           client.notify(new Error('test'));
         });
@@ -111,22 +125,22 @@ describe('instrumentation', () => {
       });
 
       it('records request', () => {
-        expect(reporter).to.have.been.called;
-        let notice = reporter.lastCall.args[0];
+        expect(reporter.mock.calls.length).toBe(1);
+        let notice = reporter.mock.calls[0][0];
         let history = notice.context.history;
 
         let state = history[history.length - 1];
-        expect(state.type).to.equal('xhr');
-        expect(state.method).to.equal('GET');
-        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
-        expect(state.statusCode).to.equal(200);
-        expect(state.duration).to.be.a('number');
+        expect(state.type).toBe('xhr');
+        expect(state.method).toBe('GET');
+        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).toBe(200);
+        expect(state.duration).toEqual(expect.any(Number));
       });
     });
 
     describe('fetch with options', () => {
       beforeEach(() => {
-        let promise = fetch('http://ip2c.org/4.4.4.4', { method: 'POST' });
+        let promise = window.fetch('http://ip2c.org/4.4.4.4', { method: 'POST' });
         promise.then(() => {
           client.notify(new Error('test'));
         });
@@ -134,16 +148,16 @@ describe('instrumentation', () => {
       });
 
       it('records request', () => {
-        expect(reporter).to.have.been.called;
-        let notice = reporter.lastCall.args[0];
+        expect(reporter.mock.calls.length).toBe(1);
+        let notice = reporter.mock.calls[0][0];
         let history = notice.context.history;
 
         let state = history[history.length - 1];
-        expect(state.type).to.equal('xhr');
-        expect(state.method).to.equal('POST');
-        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
-        expect(state.statusCode).to.equal(200);
-        expect(state.duration).to.be.a('number');
+        expect(state.type).toBe('xhr');
+        expect(state.method).toBe('POST');
+        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).toBe(200);
+        expect(state.duration).toEqual(expect.any(Number));
       });
     });
 
@@ -153,7 +167,7 @@ describe('instrumentation', () => {
           method: 'POST',
           body: '{"foo": "bar"}',
         });
-        let promise = fetch(req);
+        let promise = window.fetch(req);
         promise.then(() => {
           client.notify(new Error('test'));
         });
@@ -161,16 +175,16 @@ describe('instrumentation', () => {
       });
 
       it('records request', () => {
-        expect(reporter).to.have.been.called;
-        let notice = reporter.lastCall.args[0];
+        expect(reporter.mock.calls.length).toBe(1);
+        let notice = reporter.mock.calls[0][0];
         let history = notice.context.history;
 
         let state = history[history.length - 1];
-        expect(state.type).to.equal('xhr');
-        expect(state.method).to.equal('POST');
-        expect(state.url).to.equal('http://ip2c.org/4.4.4.4');
-        expect(state.statusCode).to.equal(200);
-        expect(state.duration).to.be.a('number');
+        expect(state.type).toBe('xhr');
+        expect(state.method).toBe('POST');
+        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.statusCode).toBe(200);
+        expect(state.duration).toEqual(expect.any(Number));
       });
     });
   });
@@ -185,20 +199,20 @@ describe('instrumentation', () => {
     });
 
     it('records log message', () => {
-      expect(reporter).to.have.been.called;
-      let notice = reporter.lastCall.args[0];
+      expect(reporter.mock.calls.length).toBe(1);
+      let notice = reporter.mock.calls[0][0];
       let history = notice.context.history;
-      expect(history).to.have.length(20);
+      expect(history).toHaveLength(20);
 
       for (let i in history) {
         if (!history.hasOwnProperty(i)) {
           continue;
         }
         let state = history[i];
-        expect(state.type).to.equal('log');
-        expect(state.severity).to.equal('log');
-        expect(state.arguments).to.deep.equal([+i + 5]);
-        expect(state.date).to.exist;
+        expect(state.type).toBe('log');
+        expect(state.severity).toBe('log');
+        expect(state.arguments).toStrictEqual([+i + 5]);
+        expect(state.date).not.toBeNull();
       }
     });
   });
