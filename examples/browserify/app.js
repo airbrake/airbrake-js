@@ -2,8 +2,8 @@ function start() {
   var AirbrakeClient = require('airbrake-js');
 
   var airbrake = new AirbrakeClient({
-    projectId: 1,
-    projectKey: 'FIXME'
+    projectId: 123,
+    projectKey: 'FIXME',
   });
 
   try {
