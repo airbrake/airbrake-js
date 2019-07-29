@@ -56,7 +56,6 @@ Example configurations can be found in [examples](examples), including:
 * [Rails](examples/rails)
 * [React](examples/react)
 * [Redux](examples/redux)
-* [RequireJS](examples/requirejs)
 * [Vue.js](examples/vuejs)
 
 ## Basic Usage
