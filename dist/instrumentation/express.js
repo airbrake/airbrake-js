@@ -1,3 +1,7 @@
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
 function makeMiddleware(client) {
     return function airbrakeMiddleware(req, res, next) {
         var start = Date.now();
@@ -40,9 +44,7 @@ function makeErrorHandler(client) {
         next(err);
     };
 }
-// Hack to preserve backwards compatibility.
-makeErrorHandler.makeMiddleware = makeMiddleware;
-makeErrorHandler.makeErrorHandler = makeErrorHandler;
 
-export default makeErrorHandler;
+exports.makeErrorHandler = makeErrorHandler;
+exports.makeMiddleware = makeMiddleware;
 //# sourceMappingURL=express.js.map

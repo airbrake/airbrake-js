@@ -3,6 +3,7 @@
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var ErrorStackParser = _interopDefault(require('error-stack-parser'));
+var fetch$1 = _interopDefault(require('cross-fetch'));
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -432,8 +433,6 @@ var errors = {
     ipRateLimited: new Error('airbrake: IP is rate limited'),
 };
 
-// tslint:disable-next-line:no-var-requires
-var fetch$1 = require('cross-fetch');
 var rateLimitReset = 0;
 function request(req) {
     var utime = Date.now() / 1000;
@@ -1266,7 +1265,7 @@ var Client = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: '2.0.0-beta',
+            version: '2.0.0-beta.2',
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this.sendNotice(notice);
