@@ -51,7 +51,6 @@ Example configurations can be found in [examples](examples), including:
 * [Angular 2](examples/angular-2)
 * [Browserify](examples/browserify)
 * [Express.js](examples/express)
-* [hapi.js](examples/hapi)
 * [Legacy](examples/legacy)
 * [Node.js](examples/nodejs)
 * [Rails](examples/rails)

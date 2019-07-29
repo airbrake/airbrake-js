@@ -19,8 +19,6 @@ import { Historian } from './historian';
 import Options from './options';
 import { IRequestInfo, Routes } from './routes';
 
-declare const VERSION: string;
-
 interface ITodo {
   err: any;
   resolve: (notice: Notice) => void;
@@ -194,7 +192,7 @@ export default class Client {
     notice.context.language = 'JavaScript';
     notice.context.notifier = {
       name: 'airbrake-js',
-      version: VERSION,
+      version: 'VERSION',
       url: 'https://github.com/airbrake/airbrake-js',
     };
     return this.sendNotice(notice);

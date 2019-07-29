@@ -1,6 +1,6 @@
 import Client from '../client';
 
-function makeMiddleware(client: Client) {
+export function makeMiddleware(client: Client) {
   return function airbrakeMiddleware(req, res, next): void {
     let start = Date.now();
     next();
@@ -16,7 +16,7 @@ function makeMiddleware(client: Client) {
   };
 }
 
-function makeErrorHandler(client: Client) {
+export function makeErrorHandler(client: Client) {
   return function airbrakeErrorHandler(err: Error, req, _res, next): void {
     let url = req.protocol + '://' + req.headers.host + req.path;
     let notice: any = {
@@ -46,9 +46,3 @@ function makeErrorHandler(client: Client) {
     next(err);
   };
 }
-
-// Hack to preserve backwards compatibility.
-(makeErrorHandler as any).makeMiddleware = makeMiddleware;
-(makeErrorHandler as any).makeErrorHandler = makeErrorHandler;
-
-export default makeErrorHandler;

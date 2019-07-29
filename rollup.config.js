@@ -12,13 +12,13 @@ const webPlugins = [
   }),
   commonjs(),
   typescript(),
-  replace({ VERSION: `'${pkg.version}'` }),
+  replace({ VERSION: `${pkg.version}` }),
   terser({
     include: [/^.+\.min\.js$/],
   }),
 ];
 
-const nodePlugins = [typescript(), replace({ VERSION: `'${pkg.version}'` })];
+const nodePlugins = [typescript(), replace({ VERSION: `${pkg.version}` })];
 
 function iife(cfg) {
   return Object.assign(
@@ -77,19 +77,9 @@ export default [
   {
     input: 'src/instrumentation/express.ts',
     output: [
-      esm({
+      cjs({
         file: 'dist/instrumentation/express.js',
         name: 'airbrakeJs.instrumentation.express',
-      }),
-    ],
-    plugins: nodePlugins,
-  },
-  {
-    input: 'src/instrumentation/hapi.ts',
-    output: [
-      esm({
-        file: 'dist/instrumentation/hapi.js',
-        name: 'airbrakeJs.instrumentation.hapi',
       }),
     ],
     plugins: nodePlugins,
