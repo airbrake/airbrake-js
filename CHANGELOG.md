@@ -1,6 +1,12 @@
 Please note that this file only lists backwards incompatible changes. For full list of changes please check https://github.com/airbrake/airbrake-js/commits/master
 
-### Unreleased v1.6.0
+## v2.0.0 WIP
+- Single UMD build is replaced with 3 separate builds: IIFE, ESM, and CommonJS. Most bundlers should automatically chose supported format.
+- The default `client.min.js` file is replaced with `airbrake.iife.min.js`.
+- Require.js support is removed. Please open an issue if you are using it.
+- Hapi support is removed since it no longer works with latest Hapi version.
+
+### v1.6.0
 
 - `jsonp` and `xhr` reporters are removed, because `fetch` is supported in modern browsers with help of isomorphic-fetch.
 
