@@ -1,5 +1,4 @@
 var http = require('http');
-// make sure `cross-fetch` package is installed before using airbrake-js
 var AirbrakeClient = require('airbrake-js');
 
 http
@@ -19,6 +18,6 @@ http
 console.log('Server running on port 8080.');
 
 var airbrake = new AirbrakeClient({
-  projectId: 1,
+  projectId: 123,
   projectKey: 'FIXME',
 });
