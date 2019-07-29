@@ -1,5 +1,4 @@
-// tslint:disable-next-line:no-var-requires
-let fetch = require('cross-fetch');
+import fetch from 'cross-fetch';
 
 import { errors, IHttpRequest, IHttpResponse } from './api';
 

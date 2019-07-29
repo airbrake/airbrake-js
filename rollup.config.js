@@ -8,7 +8,7 @@ const pkg = require('./package.json');
 
 const webPlugins = [
   resolve({
-    mainFields: ['module', 'main'],
+    browser: true,
   }),
   commonjs(),
   typescript(),
@@ -65,13 +65,13 @@ export default [
     output: [
       cjs({ file: 'dist/airbrake.common.js', name: 'airbrakeJs.Client' }),
     ],
-    external: ['error-stack-parser'],
+    external: ['error-stack-parser', 'cross-fetch'],
     plugins: nodePlugins,
   },
   {
     input: 'src/node.entry.ts',
     output: [esm({ file: 'dist/airbrake.esm.js' })],
-    external: ['error-stack-parser'],
+    external: ['error-stack-parser', 'cross-fetch'],
     plugins: nodePlugins,
   },
   {
