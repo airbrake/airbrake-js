@@ -17,7 +17,6 @@ import { makeRequester, Requester } from './http_req';
 
 import { Historian } from './historian';
 import Options from './options';
-import { IRequestInfo, Routes } from './routes';
 
 interface ITodo {
   err: any;
@@ -25,7 +24,7 @@ interface ITodo {
   reject: (err: Error) => void;
 }
 
-export default class Client {
+export class Client {
   private opts: Options;
   private url: string;
   private historian: Historian;
@@ -36,8 +35,6 @@ export default class Client {
 
   private offline = false;
   private todo: ITodo[] = [];
-
-  private routes: Routes;
 
   private onClose: Array<() => void> = [];
 
@@ -282,16 +279,6 @@ export default class Client {
     this.historian.onerror.apply(this.historian, arguments);
   }
 
-  public notifyRequest(req: IRequestInfo): void {
-    if (!this.opts.TDigest) {
-      return;
-    }
-    if (!this.routes) {
-      this.routes = new Routes(this.opts);
-    }
-    this.routes.notifyRequest(req);
-  }
-
   private onOnline(): void {
     this.offline = false;
 
@@ -328,3 +315,5 @@ export default class Client {
 function isDevEnv(env: any): boolean {
   return env && env.startsWith && env.startsWith('dev');
 }
+
+export default Client;

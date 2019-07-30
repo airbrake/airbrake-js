@@ -3,7 +3,6 @@ import * as request from 'request';
 import { IHistorianOptions } from './historian';
 import Notice from './notice';
 import Processor from './processor/processor';
-import { ITDigestConstructor } from './routes';
 
 type Reporter = (notice: Notice) => Promise<Notice>;
 
@@ -24,5 +23,4 @@ export default interface IOptions {
     request.CoreOptions,
     request.RequiredUriUrl
   >;
-  TDigest?: ITDigestConstructor;
 }
