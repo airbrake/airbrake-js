@@ -15,7 +15,7 @@ export default interface INotice {
   id?: string;
   error?: Error;
 
-  errors: INoticeError[];
+  errors?: INoticeError[];
   context?: any;
   params?: any;
   session?: any;

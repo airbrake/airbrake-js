@@ -1,22 +1,9 @@
-import IFuncWrapper from './func_wrapper';
-import jsonifyNotice from './jsonify_notice';
-import Notice from './notice';
-
-import Processor from './processor/processor';
-import stacktracejsProcessor from './processor/stacktracejs';
-
-import angularMessageFilter from './filter/angular_message';
-import makeDebounceFilter from './filter/debounce';
-import Filter from './filter/filter';
-import ignoreFilter from './filter/ignore';
-import nodeFilter from './filter/node';
-import uncaughtMessageFilter from './filter/uncaught_message';
-import windowFilter from './filter/window';
-
-import { makeRequester, Requester } from './http_req';
-
 import { Historian } from './historian';
 import Options from './options';
+import { BaseClient } from './base_client';
+import Notice from './notice';
+
+import windowFilter from './filter/window';
 
 interface ITodo {
   err: any;
@@ -24,130 +11,56 @@ interface ITodo {
   reject: (err: Error) => void;
 }
 
-export class Client {
-  private opts: Options;
-  private url: string;
-  private historian: Historian;
+export class Client extends BaseClient {
+  protected historian: Historian;
 
-  private processor: Processor;
-  private requester: Requester;
-  private filters: Filter[] = [];
+  protected offline = false;
+  protected todo: ITodo[] = [];
 
-  private offline = false;
-  private todo: ITodo[] = [];
+  constructor(opt: Options) {
+    super(opt);
 
-  private onClose: Array<() => void> = [];
+    this.addFilter(windowFilter);
 
-  constructor(opts: Options) {
-    if (!opts.projectId || !opts.projectKey) {
-      throw new Error('airbrake: projectId and projectKey are required');
-    }
+    if (window.addEventListener) {
+      this.onOnline = this.onOnline.bind(this);
+      window.addEventListener('online', this.onOnline);
+      this.onOffline = this.onOffline.bind(this);
+      window.addEventListener('offline', this.onOffline);
 
-    this.opts = opts;
-    this.opts.host = this.opts.host || 'https://api.airbrake.io';
-    this.opts.timeout = this.opts.timeout || 10000;
-    this.opts.keysBlacklist = this.opts.keysBlacklist || [/password/, /secret/];
-    this.url = `${this.opts.host}/api/v3/projects/${this.opts.projectId}/notices?key=${this.opts.projectKey}`;
+      this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
+      window.addEventListener('unhandledrejection', this.onUnhandledrejection);
 
-    this.processor = this.opts.processor || stacktracejsProcessor;
-    this.requester = makeRequester(this.opts);
-
-    this.addFilter(ignoreFilter);
-    this.addFilter(makeDebounceFilter());
-    this.addFilter(uncaughtMessageFilter);
-    this.addFilter(angularMessageFilter);
-
-    if (
-      !this.opts.environment &&
-      typeof process !== 'undefined' &&
-      process.env.NODE_ENV
-    ) {
-      this.opts.environment = process.env.NODE_ENV;
-    }
-    if (this.opts.environment) {
-      this.addFilter((notice: Notice): Notice | null => {
-        notice.context.environment = this.opts.environment;
-        return notice;
-      });
-    }
-
-    if (typeof window === 'object') {
-      this.addFilter(windowFilter);
-
-      if (window.addEventListener) {
-        this.onOnline = this.onOnline.bind(this);
-        window.addEventListener('online', this.onOnline);
-        this.onOffline = this.onOffline.bind(this);
-        window.addEventListener('offline', this.onOffline);
-
-        this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
-        window.addEventListener(
+      this.onClose.push(() => {
+        window.removeEventListener('online', this.onOnline);
+        window.removeEventListener('offline', this.onOffline);
+        window.removeEventListener(
           'unhandledrejection',
           this.onUnhandledrejection
         );
-
-        this.onClose.push(() => {
-          window.removeEventListener('online', this.onOnline);
-          window.removeEventListener('offline', this.onOffline);
-          window.removeEventListener(
-            'unhandledrejection',
-            this.onUnhandledrejection
-          );
-        });
-      }
-    } else {
-      this.addFilter(nodeFilter);
+      });
     }
 
-    let historianOpts = opts.instrumentation || {};
+    let historianOpts = opt.instrumentation || {};
     if (typeof historianOpts.console === undefined) {
-      historianOpts.console = !isDevEnv(opts.environment);
+      historianOpts.console = !isDevEnv(opt.environment);
     }
 
     this.historian = Historian.instance(historianOpts);
     this.historian.registerNotifier(this);
-  }
-
-  public close(): void {
-    for (let fn of this.onClose) {
-      fn();
-    }
-    this.historian.unregisterNotifier(this);
-  }
-
-  public addFilter(filter: Filter): void {
-    this.filters.push(filter);
+    this.addFilter((notice) => {
+      let history = this.historian.getHistory();
+      if (history.length > 0) {
+        notice.context.history = history;
+      }
+      return notice;
+    });
+    this.onClose.push(() => {
+      this.historian.unregisterNotifier(this);
+    });
   }
 
   public notify(err: any): Promise<Notice> {
-    let notice: Notice = {
-      id: '',
-      errors: [],
-      context: {
-        severity: 'error',
-        ...err.context,
-      },
-      params: err.params || {},
-      environment: err.environment || {},
-      session: err.session || {},
-    };
-
-    if (typeof err !== 'object' || err.error === undefined) {
-      err = { error: err };
-    }
-
-    if (!err.error) {
-      notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
-      );
-      return Promise.resolve(notice);
-    }
-
-    if (this.opts.ignoreWindowError && err.context && err.context.windowError) {
-      notice.error = new Error('airbrake: window error is ignored');
-      return Promise.resolve(notice);
-    }
-
     if (this.offline) {
       return new Promise((resolve, reject) => {
         this.todo.push({
@@ -160,126 +73,21 @@ export class Client {
           if (j === undefined) {
             break;
           }
-          notice.error = new Error('airbrake: offline queue is too large');
-          j.resolve(notice);
+          j.resolve({
+            error: new Error('airbrake: offline queue is too large'),
+          });
         }
       });
     }
 
-    let history = this.historian.getHistory();
-    if (history.length > 0) {
-      notice.context.history = history;
-    }
-
-    let error = this.processor(err.error);
-    notice.errors.push(error);
-
-    for (let filter of this.filters) {
-      let r = filter(notice);
-      if (r === null) {
-        notice.error = new Error('airbrake: error is filtered');
-        return Promise.resolve(notice);
-      }
-      notice = r;
-    }
-
-    if (!notice.context) {
-      notice.context = {};
-    }
-    notice.context.language = 'JavaScript';
-    notice.context.notifier = {
-      name: 'airbrake-js',
-      version: 'VERSION',
-      url: 'https://github.com/airbrake/airbrake-js',
-    };
-    return this.sendNotice(notice);
-  }
-
-  private sendNotice(notice: Notice): Promise<Notice> {
-    let body = jsonifyNotice(notice, {
-      keysBlacklist: this.opts.keysBlacklist,
-    });
-    if (this.opts.reporter) {
-      if (typeof this.opts.reporter === 'function') {
-        return this.opts.reporter(notice);
-      } else {
-        console.warn('airbrake: options.reporter must be a function');
-      }
-    }
-
-    let req = {
-      method: 'POST',
-      url: this.url,
-      body,
-    };
-    return this.requester(req)
-      .then((resp) => {
-        notice.id = resp.json.id;
-        return notice;
-      })
-      .catch((err) => {
-        notice.error = err;
-        return notice;
-      });
-  }
-
-  // TODO: fix wrapping for multiple clients
-  public wrap(fn, props: string[] = []): IFuncWrapper {
-    if (fn._airbrake) {
-      return fn;
-    }
-
-    // tslint:disable-next-line:no-this-assignment
-    let client = this;
-    let airbrakeWrapper = function() {
-      let fnArgs = Array.prototype.slice.call(arguments);
-      let wrappedArgs = client.wrapArguments(fnArgs);
-      try {
-        return fn.apply(this, wrappedArgs);
-      } catch (err) {
-        client.notify({ error: err, params: { arguments: fnArgs } });
-        this.historian.ignoreNextWindowError();
-        throw err;
-      }
-    } as IFuncWrapper;
-
-    for (let prop in fn) {
-      if (fn.hasOwnProperty(prop)) {
-        airbrakeWrapper[prop] = fn[prop];
-      }
-    }
-    for (let prop of props) {
-      if (fn.hasOwnProperty(prop)) {
-        airbrakeWrapper[prop] = fn[prop];
-      }
-    }
-
-    airbrakeWrapper._airbrake = true;
-    airbrakeWrapper.inner = fn;
-
-    return airbrakeWrapper;
-  }
-
-  private wrapArguments(args: any[]): any[] {
-    for (let i = 0; i < args.length; i++) {
-      let arg = args[i];
-      if (typeof arg === 'function') {
-        args[i] = this.wrap(arg);
-      }
-    }
-    return args;
-  }
-
-  public call(fn, ..._args: any[]): any {
-    let wrapper = this.wrap(fn);
-    return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+    return super.notify(err);
   }
 
   public onerror(): void {
     this.historian.onerror.apply(this.historian, arguments);
   }
 
-  private onOnline(): void {
+  protected onOnline(): void {
     this.offline = false;
 
     for (let j of this.todo) {
@@ -290,11 +98,11 @@ export class Client {
     this.todo = [];
   }
 
-  private onOffline(): void {
+  protected onOffline(): void {
     this.offline = true;
   }
 
-  private onUnhandledrejection(e: PromiseRejectionEvent | CustomEvent): void {
+  protected onUnhandledrejection(e: PromiseRejectionEvent | CustomEvent): void {
     // Handle native or bluebird Promise rejections
     // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
     // http://bluebirdjs.com/docs/api/error-management-configuration.html
