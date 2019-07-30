@@ -53,7 +53,7 @@ function esm(cfg) {
 
 export default [
   {
-    input: 'src/web.entry.ts',
+    input: 'src/browser.entry.ts',
     output: [
       iife({ file: 'dist/airbrake.iife.js', name: 'airbrakeJs.Client' }),
       iife({ file: 'dist/airbrake.iife.min.js', name: 'airbrakeJs.Client' }),
@@ -61,7 +61,7 @@ export default [
     plugins: webPlugins,
   },
   {
-    input: 'src/node.entry.ts',
+    input: 'src/bundler.entry.ts',
     output: [
       cjs({ file: 'dist/airbrake.common.js', name: 'airbrakeJs.Client' }),
     ],
@@ -69,19 +69,9 @@ export default [
     plugins: nodePlugins,
   },
   {
-    input: 'src/node.entry.ts',
+    input: 'src/bundler.entry.ts',
     output: [esm({ file: 'dist/airbrake.esm.js' })],
     external: ['error-stack-parser', 'cross-fetch'],
-    plugins: nodePlugins,
-  },
-  {
-    input: 'src/instrumentation/express.ts',
-    output: [
-      cjs({
-        file: 'dist/instrumentation/express.js',
-        name: 'airbrakeJs.instrumentation.express',
-      }),
-    ],
     plugins: nodePlugins,
   },
 ];
