@@ -1,7 +1,7 @@
 function start() {
   var airbrake = new airbrakeJs.Client({
-    projectId: 1,
-    projectKey: 'FIXME'
+    projectId: 105138,
+    projectKey: 'ab34d9c2b6d3639bd3447139342ef181',
   });
 
   airbrake.notify('app started');
@@ -9,7 +9,7 @@ function start() {
   $(function() {
     $('#send_error').click(function() {
       try {
-        history.pushState({'foo': 'bar'}, 'Send error', 'send-error');
+        history.pushState({ foo: 'bar' }, 'Send error', 'send-error');
       } catch (_) {}
 
       var val = $('#error_text').val();

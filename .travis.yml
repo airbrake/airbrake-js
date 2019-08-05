@@ -4,3 +4,10 @@ sudo: false
 language: node_js
 node_js:
   - node
+
+install:
+  - cd packages/airbrake-js
+  - yarn install
+
+script:
+  - yarn test
