@@ -1,4 +1,2 @@
-typings
 node_modules
-bower_components
-examples/browserify/dist
+.rpt2_cache
