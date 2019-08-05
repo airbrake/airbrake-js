@@ -80,7 +80,7 @@ export class BaseClient {
 
     if (!err.error) {
       notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
+        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`,
       );
       return Promise.resolve(notice);
     }

@@ -36,7 +36,7 @@ export class Client extends BaseClient {
         window.removeEventListener('offline', this.onOffline);
         window.removeEventListener(
           'unhandledrejection',
-          this.onUnhandledrejection
+          this.onUnhandledrejection,
         );
       });
     }
