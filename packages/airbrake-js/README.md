@@ -1,9 +1,9 @@
-# Airbrake-JS
+# Airbrake for web browsers
 
 [![Build Status](https://travis-ci.org/airbrake/airbrake-js.svg?branch=master)](https://travis-ci.org/airbrake/airbrake-js)
 [![CDNJS](https://img.shields.io/cdnjs/v/airbrake-js.svg)](https://cdnjs.com/libraries/airbrake-js)
 
-This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io).
+This is the JavaScript notifier for capturing errors in web browsers and reporting them to [Airbrake](http://airbrake.io). For Node.js there is a [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/node).
 
 <img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
 
@@ -225,17 +225,6 @@ var airbrake = new airbrakeJs.Client({
   instrumentation: {
     console: false,
   },
-});
-```
-
-### Node.js request and proxy
-
-In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
-
-```js
-var airbrake = new AirbrakeClient({
-  ...
-  request: request.defaults({'proxy':'http://localproxy.com'})
 });
 ```
 
