@@ -1,12 +1,12 @@
 const express = require('express');
-const AirbrakeClient = require('airbrake-js');
-const airbrakeExpress = require('airbrake-js/dist/instrumentation/express');
+const AirbrakeClient = require('airbrake');
+const airbrakeExpress = require('airbrake/dist/instrumentation/express');
 
 const app = express();
 
 const airbrake = new AirbrakeClient({
-  projectId: 123,
-  projectKey: 'FIXME',
+  projectId: process.env.PORT.AIBRAKE_PROJECT_ID,
+  projectKey: process.env.PORT.AIBRAKE_PROJECT_KEY,
 });
 
 // This middleware should be used before any routes are defined.

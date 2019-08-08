@@ -35,65 +35,28 @@ export class Historian {
   private consoleError: (message?: any, ...optionalParams: any[]) => void;
 
   constructor(opts: IHistorianOptions = {}) {
-    if (enabled(opts.console) && typeof console === 'object' && console.error) {
+    if (typeof console === 'object' && console.error) {
       this.consoleError = console.error;
     }
 
-    if (typeof window === 'object') {
-      if (enabled(opts.onerror)) {
-        // tslint:disable-next-line:no-this-assignment
-        let self = this;
-        let oldHandler = window.onerror;
-        window.onerror = function() {
-          if (oldHandler) {
-            oldHandler.apply(this, arguments);
-          }
-          self.onerror.apply(self, arguments);
-        };
-      }
-
-      this.domEvents();
-      if (enabled(opts.fetch) && typeof fetch === 'function') {
-        this.instrumentFetch();
-      }
-      if (enabled(opts.history) && typeof history === 'object') {
-        this.location();
-      }
+    if (enabled(opts.onerror)) {
+      // tslint:disable-next-line:no-this-assignment
+      let self = this;
+      let oldHandler = window.onerror;
+      window.onerror = function() {
+        if (oldHandler) {
+          oldHandler.apply(this, arguments);
+        }
+        self.onerror.apply(self, arguments);
+      };
     }
 
-    // Don't use process.on when windows is defined such as Electron apps.
-    if (
-      typeof window === 'undefined' &&
-      typeof process === 'object' &&
-      typeof process.on === 'function'
-    ) {
-      process.on('uncaughtException', (err) => {
-        this.notify(err).then(() => {
-          if (process.listeners('uncaughtException').length !== 1) {
-            return;
-          }
-          if (this.consoleError) {
-            this.consoleError('uncaught exception', err);
-          }
-          process.exit(1);
-        });
-      });
-      process.on('unhandledRejection', (reason: Error, _p) => {
-        let msg = reason.message || String(reason);
-        if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
-          return;
-        }
-
-        this.notify(reason).then(() => {
-          if (process.listeners('unhandledRejection').length !== 1) {
-            return;
-          }
-          if (this.consoleError) {
-            this.consoleError('unhandled rejection', reason);
-          }
-          process.exit(1);
-        });
-      });
+    this.domEvents();
+    if (enabled(opts.fetch) && typeof fetch === 'function') {
+      this.instrumentFetch();
+    }
+    if (enabled(opts.history) && typeof history === 'object') {
+      this.location();
     }
 
     if (enabled(opts.console) && typeof console === 'object') {
@@ -155,7 +118,7 @@ export class Historian {
     filename?: string,
     line?: number,
     column?: number,
-    err?: Error
+    err?: Error,
   ): void {
     if (this.ignoreWindowError > 0) {
       return;
@@ -248,7 +211,7 @@ export class Historian {
           }
           handler(event);
         },
-        true
+        true,
       );
     }
 
@@ -295,7 +258,7 @@ export class Historian {
     let oldFetch = window.fetch;
     window.fetch = function(
       req: RequestInfo,
-      options?: RequestInit
+      options?: RequestInit,
     ): Promise<Response> {
       let state: any = {
         type: 'xhr',
@@ -341,7 +304,7 @@ export class Historian {
       url: string,
       _async?: boolean,
       _user?: string,
-      _password?: string
+      _password?: string,
     ): void {
       if (client.ignoreNextXHR === 0) {
         this.__state = {
@@ -396,7 +359,7 @@ export class Historian {
     history.pushState = function(
       _state: any,
       _title: string,
-      url?: string | null
+      url?: string | null,
     ): void {
       if (url) {
         client.recordLocation(url.toString());

@@ -14,21 +14,12 @@
     "airbrake",
     "notifier"
   ],
-  "dependencies": {
-    "rollup-plugin-commonjs": "^10.0.2",
-    "rollup-plugin-includepaths": "^0.2.3",
-    "rollup-plugin-node-resolve": "^5.2.0",
+  "devDependencies": {
     "rollup-plugin-typescript2": "^0.22.1",
     "typescript": "^3.5.3"
   },
-  "devDependencies": {},
   "main": "dist/airbrake.common.js",
-  "module": "dist/airbrake.esm.js",
-  "jsnext:main": "dist/airbrake.esm.js",
-  "types": "dist/airbrake.d.ts",
-  "source": "src/index.ts",
   "files": [
-    "src/",
     "dist/",
     "README.md",
     "LICENSE"
