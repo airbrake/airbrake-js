@@ -428,7 +428,6 @@ this.airbrakeJs.Client = (function () {
   var CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
   var Historian = /** @class */ (function () {
       function Historian(opts) {
-          var _this = this;
           if (opts === void 0) { opts = {}; }
           this.historyMaxLen = 20;
           this.notifiers = [];
@@ -436,59 +435,23 @@ this.airbrakeJs.Client = (function () {
           this.ignoreWindowError = 0;
           this.history = [];
           this.ignoreNextXHR = 0;
-          if (enabled(opts.console) && typeof console === 'object' && console.error) {
-              this.consoleError = console.error;
-          }
-          if (typeof window === 'object') {
-              if (enabled(opts.onerror)) {
-                  // tslint:disable-next-line:no-this-assignment
-                  var self_1 = this;
-                  var oldHandler_1 = window.onerror;
-                  window.onerror = function () {
-                      if (oldHandler_1) {
-                          oldHandler_1.apply(this, arguments);
-                      }
-                      self_1.onerror.apply(self_1, arguments);
-                  };
-              }
-              this.domEvents();
-              if (enabled(opts.fetch) && typeof fetch === 'function') {
-                  this.instrumentFetch();
-              }
-              if (enabled(opts.history) && typeof history === 'object') {
-                  this.location();
-              }
-          }
-          // Don't use process.on when windows is defined such as Electron apps.
-          if (typeof window === 'undefined' &&
-              typeof process === 'object' &&
-              typeof process.on === 'function') {
-              process.on('uncaughtException', function (err) {
-                  _this.notify(err).then(function () {
-                      if (process.listeners('uncaughtException').length !== 1) {
-                          return;
-                      }
-                      if (_this.consoleError) {
-                          _this.consoleError('uncaught exception', err);
-                      }
-                      process.exit(1);
-                  });
-              });
-              process.on('unhandledRejection', function (reason, _p) {
-                  var msg = reason.message || String(reason);
-                  if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
-                      return;
+          if (enabled(opts.onerror)) {
+              // tslint:disable-next-line:no-this-assignment
+              var self_1 = this;
+              var oldHandler_1 = window.onerror;
+              window.onerror = function () {
+                  if (oldHandler_1) {
+                      oldHandler_1.apply(this, arguments);
                   }
-                  _this.notify(reason).then(function () {
-                      if (process.listeners('unhandledRejection').length !== 1) {
-                          return;
-                      }
-                      if (_this.consoleError) {
-                          _this.consoleError('unhandled rejection', reason);
-                      }
-                      process.exit(1);
-                  });
-              });
+                  self_1.onerror.apply(self_1, arguments);
+              };
+          }
+          this.domEvents();
+          if (enabled(opts.fetch) && typeof fetch === 'function') {
+              this.instrumentFetch();
+          }
+          if (enabled(opts.history) && typeof history === 'object') {
+              this.location();
           }
           if (enabled(opts.console) && typeof console === 'object') {
               this.console();

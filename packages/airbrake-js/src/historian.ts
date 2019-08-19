@@ -32,13 +32,7 @@ export class Historian {
   private lastLocation: string | null;
   private ignoreNextXHR = 0;
 
-  private consoleError: (message?: any, ...optionalParams: any[]) => void;
-
   constructor(opts: IHistorianOptions = {}) {
-    if (typeof console === 'object' && console.error) {
-      this.consoleError = console.error;
-    }
-
     if (enabled(opts.onerror)) {
       // tslint:disable-next-line:no-this-assignment
       let self = this;
