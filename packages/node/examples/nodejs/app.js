@@ -18,6 +18,6 @@ http
 console.log('Server running on port 8080.');
 
 var airbrake = new AirbrakeClient({
-  projectId: process.env.PORT.AIBRAKE_PROJECT_ID,
-  projectKey: process.env.PORT.AIBRAKE_PROJECT_KEY,
+  projectId: process.env.AIRBRAKE_PROJECT_ID,
+  projectKey: process.env.AIRBRAKE_PROJECT_KEY,
 });

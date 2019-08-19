@@ -6,6 +6,26 @@ This is the JavaScript notifier for capturing errors in Node.js and reporting th
 
 <img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
 
+## Installation
+
+airbrake can be installed using yarn:
+
+
+```sh
+yarn add airbrake
+```
+
+or using npm:
+
+```sh
+npm install airbrake
+```
+
+Example configurations can be found in [examples](examples), including:
+
+* [Express](examples/express)
+* [Node.js](examples/nodejs)
+
 ### Node.js request and proxy
 
 In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:

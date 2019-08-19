@@ -22,10 +22,6 @@ or using npm:
 npm install airbrake-js
 ```
 
-If you prefer not to host the library yourself,
-airbrake-js is available on the excellent
-[cdnjs](https://cdnjs.com/libraries/airbrake-js).
-
 ## Setup
 
 Starting from v2 airbrake-js uses [rollup.js](https://rollupjs.org) to provide 3 separate build formats:

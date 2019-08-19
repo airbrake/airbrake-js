@@ -2,6 +2,6 @@
 
 This example requires Node.js.
 
-    npm install
+    yarn install
     node app.js
     firefox localhost:8080

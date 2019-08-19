@@ -2,6 +2,6 @@
 
 This example uses Express.js on Node.js.
 
-    npm install
+    yarn install
     node app.js
     firefox localhost:3000
