@@ -59,7 +59,7 @@ Example configurations can be found in [examples](examples), including:
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
-var airbrake = new airbrakeJs.Client({
+var airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'REPLACE_ME',
   environment: 'production',
@@ -69,8 +69,8 @@ var airbrake = new airbrakeJs.Client({
 Or if you are using browserify/webpack/etc:
 
 ```js
-var AirbrakeClient = require('@airbrake/browser');
-var airbrake = new AirbrakeClient({...});
+var Airbrake = require('@airbrake/browser');
+var airbrake = new Airbrake.Notifier({...});
 ```
 
 Then you can send a textual message to Airbrake:
@@ -195,7 +195,7 @@ airbrake.addFilter(function(notice) {
 With `keysBlacklist` option you can specify list of keys containing sensitive information that must be filtered out, e.g.:
 
 ```js
-var airbrake = new AirbrakeClient({
+var airbrake = new Airbrake.Notifier({
     ...
     keysBlacklist: [
       'password', // exact match
@@ -216,7 +216,7 @@ Airbrake supports using private and public source maps. Check out our docs for m
 @airbrake/browser automatically instruments `console.log` function calls in order to collect logs and send them with first error. You can disable that behavior using `instrumentation` option:
 
 ```js
-var airbrake = new airbrakeJs.Client({
+var airbrake = new Airbrake.Notifier({
   ...
   instrumentation: {
     console: false,
@@ -231,7 +231,7 @@ var airbrake = new airbrakeJs.Client({
 airbrake-js automatically setups `window.onerror` handler when script is loaded. It also makes sure to call old error handler if there are any. Errors reported by `window.onerror` can be ignored using `ignoreWindowError` option:
 
 ```js
-var airbrake = new airbrakeJs.Client({ignoreWindowError: true});
+var airbrake = new Airbrake.Notifier({ignoreWindowError: true});
 ```
 
 ## FAQ

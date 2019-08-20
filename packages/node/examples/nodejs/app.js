@@ -1,5 +1,5 @@
 var http = require('http');
-var AirbrakeClient = require('airbrake');
+var Airbrake = require('@airbrake/node');
 
 http
   .createServer(function(req, res) {
@@ -17,7 +17,7 @@ http
 
 console.log('Server running on port 8080.');
 
-var airbrake = new AirbrakeClient({
+var airbrake = new Airbrake.Notifier({
   projectId: process.env.AIRBRAKE_PROJECT_ID,
   projectKey: process.env.AIRBRAKE_PROJECT_KEY,
 });
