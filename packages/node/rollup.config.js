@@ -25,7 +25,7 @@ function esm(cfg) {
 export default [
   {
     input: 'src/node.entry.ts',
-    output: [cjs({ file: 'dist/airbrake.common.js', name: 'airbrake.Client' })],
+    output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
     external: ['error-stack-parser', 'cross-fetch'],
     plugins: nodePlugins,
   },

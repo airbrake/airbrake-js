@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/airbrake/airbrake-js.svg?branch=master)](https://travis-ci.org/airbrake/airbrake-js)
 
-This is the JavaScript notifier for capturing errors in Node.js and reporting them to [Airbrake](http://airbrake.io). For web browsers there is a [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/airbrake-js).
+This is the JavaScript notifier for capturing errors in Node.js and reporting them to [Airbrake](http://airbrake.io). For web browsers there is a [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/browser).
 
 <img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
 
@@ -12,13 +12,13 @@ airbrake can be installed using yarn:
 
 
 ```sh
-yarn add airbrake
+yarn add @airbrake/node
 ```
 
 or using npm:
 
 ```sh
-npm install airbrake
+npm install @airbrake/node
 ```
 
 Example configurations can be found in [examples](examples), including:
