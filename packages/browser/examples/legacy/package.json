@@ -1,6 +1,6 @@
 {
   "name": "airbrake-js-example",
   "dependencies": {
-    "@airbrake/browser": "^3.0.0-beta.1"
+    "@airbrake/browser": "^1.0.0-beta.1"
   }
 }
