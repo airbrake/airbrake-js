@@ -1,8 +1,8 @@
-import Notice from '../notice';
+import { INotice } from '../notice';
 
 const os = require('os');
 
-export default function filter(notice: Notice): Notice {
+export function nodeFilter(notice: INotice): INotice {
   notice.context.os = `${os.type()}/${os.release()}`;
   notice.context.architecture = os.arch();
   notice.context.hostname = os.hostname();

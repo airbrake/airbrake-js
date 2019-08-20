@@ -1,5 +1,5 @@
 import { makeRequester, Requester } from './http_req';
-import Options from './options';
+import { IOptions } from './options';
 
 const TDigest = require('tdigest').TDigest;
 
@@ -52,7 +52,7 @@ export interface IRequestInfo {
 }
 
 export class Routes {
-  private opts: Options;
+  private opts: IOptions;
   private url: string;
   // TODO: use RouteKey as map key
   private m: { [key: string]: IRouteStat } = {};
@@ -60,7 +60,7 @@ export class Routes {
 
   private requester: Requester;
 
-  constructor(opts: Options) {
+  constructor(opts: IOptions) {
     this.opts = opts;
     this.url = `${opts.host}/api/v5/projects/${opts.projectId}/routes-stats?key=${opts.projectKey}`;
     this.requester = makeRequester(opts);

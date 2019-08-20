@@ -1,6 +1,6 @@
-import Client from '../node.entry';
+import { Notifier } from '../notifier';
 
-export function makeMiddleware(airbrake: Client) {
+export function makeMiddleware(airbrake: Notifier) {
   return function airbrakeMiddleware(req, res, next): void {
     let start = Date.now();
     next();
@@ -16,7 +16,7 @@ export function makeMiddleware(airbrake: Client) {
   };
 }
 
-export function makeErrorHandler(airbrake: Client) {
+export function makeErrorHandler(airbrake: Notifier) {
   return function airbrakeErrorHandler(err: Error, req, _res, next): void {
     let url = req.protocol + '://' + req.headers.host + req.path;
     let notice: any = {

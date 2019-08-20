@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-airbrake-js@^1.0.4:
-  version "1.6.8"
-  resolved "https://registry.yarnpkg.com/airbrake-js/-/airbrake-js-1.6.8.tgz#a2b7e7587ebd8b578bce8cb5214b060b385c66fc"
-  integrity sha512-ru2A1lyXv1cqAPbN3T27cUT4HphH0eFQzp0xDVzXpiaUy3pMEBU6i06cGueHavK4CyEEhL6mKQrIshcNsIqwlg==
+airbrake@^3.0.0-beta:
+  version "3.0.0-beta"
+  resolved "https://registry.yarnpkg.com/airbrake/-/airbrake-3.0.0-beta.tgz#5e82ad92a6c8432a48c4d335151513b73c672f01"
+  integrity sha512-fVPOPWb+CEH86Oglo8usq0nPp18AcRA0WwHeWGSukyPws7ngfksdi/y3SiNV7TwtMEQzIPQYyPzQvdC7Oj+CBg==
 
 ajv@^6.5.5:
   version "6.10.2"

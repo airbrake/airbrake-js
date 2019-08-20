@@ -6,7 +6,7 @@ node_js:
   - node
 
 install:
-  - cd packages/airbrake-js
+  - cd packages/browser
   - yarn install
 
 script:
