@@ -1,5 +1,5 @@
 # Airbrake error notifier for JavaScript
 
-Starting from v2 there are 2 separate packages:
-- for [web browsers](packages/browser),
-- and for [Node.js](packages/node).
+Please chose one of the following packages:
+- [@airbrake/browser](packages/browser) for web browsers,
+- [@airbrake/node](packages/node) for Node.js.
