@@ -1,0 +1,13 @@
+{
+  "name": "airbrake-js-example",
+  "devDependencies": {
+    "@airbrake/browser": "^3.0.0-beta.1",
+    "grunt": "^1.0.4",
+    "grunt-browserify": "^5.3.0",
+    "grunt-contrib-uglify": "^4.0.1",
+    "load-grunt-tasks": "^5.1.0"
+  },
+  "scripts": {
+    "build": "grunt build"
+  }
+}
