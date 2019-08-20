@@ -1,10 +1,10 @@
 const express = require('express');
-const AirbrakeClient = require('airbrake');
-const airbrakeExpress = require('airbrake/dist/instrumentation/express');
+const Airbrake = require('@airbrake/node');
+const airbrakeExpress = require('@airbrake/node/dist/instrumentation/express');
 
 const app = express();
 
-const airbrake = new AirbrakeClient({
+const airbrake = new Airbrake.Notifier({
   projectId: process.env.AIRBRAKE_PROJECT_ID,
   projectKey: process.env.AIRBRAKE_PROJECT_KEY,
 });
