@@ -1,5 +1,5 @@
-import { IOptions } from './options';
-import { BaseNotifier } from './base_notifier';
+import { IOptions } from '@browser/options';
+import { BaseNotifier } from '@browser/base_notifier';
 import { nodeFilter } from './filter/node';
 import { Routes } from './routes';
 

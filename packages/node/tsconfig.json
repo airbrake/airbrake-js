@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@browser/*": ["../browser/src/*"]
+    },
     "rootDirs": ["src", "../browser/src"],
     "lib": ["ES2015", "DOM"],
     "target": "ES5",
