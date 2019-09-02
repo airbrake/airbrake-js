@@ -7,4 +7,6 @@ module.exports = {
   moduleNameMapper: {
     '^@browser/(.*)$': '<rootDir>/../browser/src/$1',
   },
+  roots: ['tests'],
+  clearMocks: true,
 };
