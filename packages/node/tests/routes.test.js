@@ -1,4 +1,4 @@
-import { Routes } from '../src/routes';
+import { Routes, RouteMetric } from '../src/routes';
 
 describe('Routes', () => {
   it('works', () => {
@@ -7,17 +7,17 @@ describe('Routes', () => {
       projectKey: 'test',
     });
 
-    routes.notify({
-      method: 'GET',
-      route: '/projects/:id',
-      statusCode: 200,
-      contentType: 'application/json',
-      start: new Date(1),
-      end: new Date(1000),
-    });
-    clearTimeout(routes.timer);
+    let req = routes.start('GET', '/projects/:id');
+    req.statusCode = 200;
+    req.contentType = 'application/json';
+    req.startTime = new Date(1);
+    req.endTime = new Date(1000);
 
-    let m = JSON.parse(JSON.stringify(routes.m));
+    routes.notify(req);
+    clearTimeout(routes._routes._timer);
+    clearTimeout(routes._breakdowns._timer);
+
+    let m = JSON.parse(JSON.stringify(routes._routes._m));
     expect(m).toStrictEqual({
       '{"method":"GET","route":"/projects/:id","statusCode":200,"time":"1970-01-01T00:00:00.000Z"}': {
         count: 1,

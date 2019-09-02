@@ -2,17 +2,14 @@ import { Notifier } from '../notifier';
 
 export function makeMiddleware(airbrake: Notifier) {
   return function airbrakeMiddleware(req, res, next): void {
-    let start = Date.now();
-    next();
-    let end = Date.now();
     let route = req.route ? req.route.path : 'UNKNOWN';
-    airbrake.routes.notify({
-      method: req.method,
-      route,
-      statusCode: res.statusCode,
-      start,
-      end,
-    });
+    let metric = airbrake.routes.start(req.method, route);
+
+    next();
+
+    metric.statusCode = req.statusCode;
+    metric.contentType = res.get('Content-Type');
+    airbrake.routes.notify(metric);
   };
 }
 
