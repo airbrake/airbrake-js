@@ -1,21 +1,14 @@
 import typescript from 'rollup-plugin-typescript2';
+import replace from 'rollup-plugin-replace';
 
-const nodePlugins = [typescript()];
+const pkg = require('./package.json');
+
+const nodePlugins = [typescript(), replace({ VERSION: `${pkg.version}` })];
 
 function cjs(cfg) {
   return Object.assign(
     {
       format: 'cjs',
-      sourcemap: true,
-    },
-    cfg,
-  );
-}
-
-function esm(cfg) {
-  return Object.assign(
-    {
-      format: 'esm',
       sourcemap: true,
     },
     cfg,

@@ -1,4 +1,4 @@
-import { INotice } from '../notice';
+import { INotice } from '@browser/notice';
 
 const os = require('os');
 

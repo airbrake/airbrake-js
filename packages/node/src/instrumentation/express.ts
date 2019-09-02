@@ -6,7 +6,7 @@ export function makeMiddleware(airbrake: Notifier) {
     next();
     let end = Date.now();
     let route = req.route ? req.route.path : 'UNKNOWN';
-    airbrake.routes.notifyRequest({
+    airbrake.routes.notify({
       method: req.method,
       route,
       statusCode: res.statusCode,

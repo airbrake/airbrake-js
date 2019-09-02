@@ -1,5 +1,5 @@
-import { makeRequester, Requester } from './http_req';
-import { IOptions } from './options';
+import { IOptions } from '@browser/options';
+import { makeRequester, Requester } from '@browser/http_req';
 
 const TDigest = require('tdigest').TDigest;
 
@@ -33,12 +33,27 @@ interface IRouteKey {
   time: Date;
 }
 
-interface IRouteStat {
-  count: number;
-  sum: number;
-  sumsq: number;
-  tdigest?: ITDigest;
-  tdigestCentroids?: ITDigestCentroids;
+class TDigestStat {
+  protected count = 0;
+  protected sum = 0;
+  protected sumsq = 0;
+  protected td = new TDigest();
+
+  add(ms: number) {
+    this.count += 1;
+    this.sum += ms;
+    this.sumsq += ms * ms;
+    this.td.push(ms);
+  }
+
+  toJSON() {
+    return {
+      count: this.count,
+      sum: this.sum,
+      sumsq: this.sumsq,
+      tdigestCentroids: tdigestCentroids(this.td),
+    };
+  }
 }
 
 type time = Date | number;
@@ -47,18 +62,19 @@ export interface IRequestInfo {
   method: string;
   route: string;
   statusCode: number;
+  contentType?: string;
   start: time;
   end: time;
 }
 
 export class Routes {
-  private opts: IOptions;
-  private url: string;
-  // TODO: use RouteKey as map key
-  private m: { [key: string]: IRouteStat } = {};
-  private timer;
+  protected opts: IOptions;
+  protected url: string;
+  protected requester: Requester;
 
-  private requester: Requester;
+  // TODO: use RouteKey as map key
+  protected m: { [key: string]: TDigestStat } = {};
+  protected timer;
 
   constructor(opts: IOptions) {
     this.opts = opts;
@@ -66,7 +82,7 @@ export class Routes {
     this.requester = makeRequester(opts);
   }
 
-  public notifyRequest(req: IRequestInfo): void {
+  public notify(req: IRequestInfo): void {
     let ms = durationMs(req.start, req.end);
     if (ms === 0) {
       ms = 0.00001;
@@ -83,24 +99,15 @@ export class Routes {
     };
     let keyStr = JSON.stringify(key);
 
-    let stat: IRouteStat;
+    let stat: TDigestStat;
     if (keyStr in this.m) {
       stat = this.m[keyStr];
     } else {
-      stat = {
-        count: 0,
-        sum: 0,
-        sumsq: 0,
-        tdigest: new TDigest(),
-      };
-
+      stat = new TDigestStat();
       this.m[keyStr] = stat;
     }
 
-    stat.count++;
-    stat.sum += ms;
-    stat.sumsq += ms * ms;
-    stat.tdigest.push(ms);
+    stat.add(ms);
 
     if (this.timer) {
       return;
@@ -110,22 +117,13 @@ export class Routes {
     }, FLUSH_INTERVAL);
   }
 
-  private flush(): void {
+  protected flush(): void {
     let routes = [];
     for (let keyStr in this.m) {
       if (!this.m.hasOwnProperty(keyStr)) {
         continue;
       }
-      let key: IRouteKey = JSON.parse(keyStr);
-      let v = {
-        ...key,
-        ...this.m[keyStr],
-      };
-      if (v.tdigest) {
-        v.tdigestCentroids = this.tdigestCentroids(v.tdigest);
-        delete v.tdigest;
-      }
-      routes.push(v);
+      routes.push(this.m[keyStr].toJSON());
     }
 
     this.m = {};
@@ -150,19 +148,19 @@ export class Routes {
         }
       });
   }
+}
 
-  private tdigestCentroids(td: ITDigest): ITDigestCentroids {
-    let means: number[] = [];
-    let counts: number[] = [];
-    td.centroids.each((c: ICentroid) => {
-      means.push(c.mean);
-      counts.push(c.n);
-    });
-    return {
-      mean: means,
-      count: counts,
-    };
-  }
+function tdigestCentroids(td: ITDigest): ITDigestCentroids {
+  let means: number[] = [];
+  let counts: number[] = [];
+  td.centroids.each((c: ICentroid) => {
+    means.push(c.mean);
+    counts.push(c.n);
+  });
+  return {
+    mean: means,
+    count: counts,
+  };
 }
 
 function toTime(tm: time): number {
