@@ -36,6 +36,10 @@ export function request(req: IHttpRequest): Promise<IHttpResponse> {
     if (resp.status === 204) {
       return { json: null };
     }
+    if (resp.status === 404) {
+      throw new Error('404 Not Found');
+    }
+
     if (resp.status >= 200 && resp.status < 300) {
       return resp.json().then((json) => {
         return { json };
@@ -51,7 +55,7 @@ export function request(req: IHttpRequest): Promise<IHttpResponse> {
 
     return resp.text().then((body) => {
       let err = new Error(
-        `airbrake: fetch: unexpected response: code=${resp.status} body='${body}'`
+        `airbrake: fetch: unexpected response: code=${resp.status} body='${body}'`,
       );
       throw err;
     });
