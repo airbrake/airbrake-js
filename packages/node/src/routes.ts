@@ -1,8 +1,6 @@
-import * as asyncHooks from 'async_hooks';
-
 import { IOptions } from '@browser/options';
 import { makeRequester, Requester } from '@browser/http_req';
-import { Metric } from './metric';
+import { BaseMetric, setActiveMetric } from './metric';
 
 const TDigest = require('tdigest').TDigest;
 
@@ -84,13 +82,23 @@ class TDigestStatGroups extends TDigestStat {
     }
     stat.add(ms);
   }
+
+  toJSON() {
+    return {
+      count: this.count,
+      sum: this.sum,
+      sumsq: this.sumsq,
+      tdigestCentroids: tdigestCentroids(this._td),
+      groups: this.groups,
+    };
+  }
 }
 
-class RouteMetric extends Metric {
+class RouteMetric extends BaseMetric {
   method: string;
   route: string;
   statusCode: number;
-  contentType?: string;
+  contentType: string;
 
   constructor(method = '', route = '', statusCode = 0, contentType = '') {
     super();
@@ -100,12 +108,6 @@ class RouteMetric extends Metric {
     this.contentType = contentType;
     this.startTime = new Date();
   }
-}
-
-class NoopMetric extends RouteMetric {
-  startSpan(_name: string, _startTime: Date = null): void {}
-
-  endSpan(_name: string, _startTime: Date = null): void {}
 }
 
 class RoutesStats {
@@ -163,7 +165,14 @@ class RoutesStats {
       if (!this._m.hasOwnProperty(keyStr)) {
         continue;
       }
-      routes.push(this._m[keyStr].toJSON());
+
+      let key: IRouteKey = JSON.parse(keyStr);
+      let v = {
+        ...key,
+        ...this._m[keyStr].toJSON(),
+      };
+
+      routes.push(v);
     }
 
     this._m = {};
@@ -200,14 +209,15 @@ class RoutesBreakdowns {
 
   constructor(opts: IOptions) {
     this._opts = opts;
-    this._url = `${opts.host}/api/v5/projects/${opts.projectId}/routes-breakdown?key=${opts.projectKey}`;
+    this._url = `${opts.host}/api/v5/projects/${opts.projectId}/routes-breakdowns?key=${opts.projectKey}`;
     this._requester = makeRequester(opts);
   }
 
   notify(req: RouteMetric): void {
     if (
       req.statusCode < 200 ||
-      (req.statusCode >= 300 && req.statusCode < 400)
+      (req.statusCode >= 300 && req.statusCode < 400) ||
+      req.statusCode === 404
     ) {
       return;
     }
@@ -252,7 +262,14 @@ class RoutesBreakdowns {
       if (!this._m.hasOwnProperty(keyStr)) {
         continue;
       }
-      routes.push(this._m[keyStr].toJSON());
+
+      let key: IBreakdownKey = JSON.parse(keyStr);
+      let v = {
+        ...key,
+        ...this._m[keyStr].toJSON(),
+      };
+
+      routes.push(v);
     }
 
     this._m = {};
@@ -273,7 +290,7 @@ class RoutesBreakdowns {
       })
       .catch((err) => {
         if (console.error) {
-          console.error('can not report routes stats', err);
+          console.error('can not report routes breakdowns', err);
         }
       });
   }
@@ -285,6 +302,9 @@ class RoutesBreakdowns {
     if (req.statusCode >= 400) {
       return '4xx';
     }
+    if (!req.contentType) {
+      return '';
+    }
     return req.contentType.split(';')[0].split('/')[-1];
   }
 }
@@ -293,20 +313,9 @@ export class Routes {
   _routes: RoutesStats;
   _breakdowns: RoutesBreakdowns;
 
-  _asyncHook: asyncHooks.AsyncHook;
-
-  _metrics: { [uid: number]: RouteMetric } = {};
-  _noopMetric = new NoopMetric();
-
   constructor(opts: IOptions) {
     this._routes = new RoutesStats(opts);
     this._breakdowns = new RoutesBreakdowns(opts);
-
-    this._asyncHook = asyncHooks.createHook({
-      init: this._init.bind(this),
-      destroy: this._destroy.bind(this),
-      promiseResolve: this._destroy.bind(this),
-    });
   }
 
   start(
@@ -316,35 +325,13 @@ export class Routes {
     contentType = '',
   ): RouteMetric {
     let metric = new RouteMetric(method, route, statusCode, contentType);
-    this._setActive(metric);
+    setActiveMetric(metric);
     return metric;
-  }
-
-  _setActive(metric: RouteMetric) {
-    const uid = asyncHooks.executionAsyncId();
-    this._metrics[uid] = metric;
-  }
-
-  active(): RouteMetric {
-    const uid = asyncHooks.executionAsyncId();
-    let metric = this._metrics[uid];
-    if (metric) {
-      return metric;
-    }
-    return this._noopMetric;
   }
 
   notify(req: RouteMetric): void {
     this._routes.notify(req);
     this._breakdowns.notify(req);
-  }
-
-  _init(uid: number) {
-    this._metrics[uid] = this._metrics[asyncHooks.executionAsyncId()];
-  }
-
-  _destroy(uid: number) {
-    delete this._metrics[uid];
   }
 }
 

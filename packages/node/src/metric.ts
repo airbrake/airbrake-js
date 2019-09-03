@@ -1,20 +1,28 @@
+import * as asyncHooks from 'async_hooks';
+
+export interface IMetric {
+  startSpan(name: string, startTime?: Date): void;
+  endSpan(name: string, endTime?: Date): void;
+  _incGroup(name: string, ms: number): void;
+}
+
 export class Span {
   name = '';
   startTime: Date;
   endTime: Date;
 
-  _metric: Metric;
+  _metric: IMetric;
   _parent: Span;
 
   _dur = 0;
   _level = 0;
 
-  constructor(metric: Metric, name: string, startTime: Date = null) {
+  constructor(metric: IMetric, name: string, startTime: Date = null) {
     this._metric = metric;
     this._parent = null;
 
     this.name = name;
-    this.startTime = startTime;
+    this.startTime = startTime || new Date();
   }
 
   end(endTime: Date = null) {
@@ -50,12 +58,7 @@ export class Span {
   }
 }
 
-interface IMetric {
-  startSpan(name: string, startTime: Date): void;
-  endSpan(name: string, endTime: Date): void;
-}
-
-export class Metric implements IMetric {
+export class BaseMetric implements IMetric {
   startTime: Date;
   endTime: Date;
 
@@ -118,7 +121,7 @@ export class Metric implements IMetric {
     return true;
   }
 
-  _incGroup(name, ms) {
+  _incGroup(name: string, ms: number): void {
     this._groups[name] = (this._groups[name] || 0) + ms;
   }
 
@@ -128,4 +131,57 @@ export class Metric implements IMetric {
     }
     return this.endTime.getTime() - this.startTime.getTime();
   }
+}
+
+class NoopMetric implements IMetric {
+  startSpan(_name: string, _startTime: Date = null): void {}
+  endSpan(_name: string, _startTime: Date = null): void {}
+  _incGroup(_name: string, _ms: number): void {}
+}
+
+class Metrics {
+  _asyncHook: asyncHooks.AsyncHook;
+
+  _metrics: { [uid: number]: IMetric } = {};
+  _noopMetric = new NoopMetric();
+
+  constructor() {
+    this._asyncHook = asyncHooks.createHook({
+      init: this._init.bind(this),
+      destroy: this._destroy.bind(this),
+      promiseResolve: this._destroy.bind(this),
+    });
+  }
+
+  setActive(metric: IMetric) {
+    const uid = asyncHooks.executionAsyncId();
+    this._metrics[uid] = metric;
+  }
+
+  active(): IMetric {
+    const uid = asyncHooks.executionAsyncId();
+    let metric = this._metrics[uid];
+    if (metric) {
+      return metric;
+    }
+    return this._noopMetric;
+  }
+
+  _init(uid: number) {
+    this._metrics[uid] = this._metrics[asyncHooks.executionAsyncId()];
+  }
+
+  _destroy(uid: number) {
+    delete this._metrics[uid];
+  }
+}
+
+let metrics = new Metrics();
+
+export function setActiveMetric(metric: IMetric) {
+  return metrics.setActive(metric);
+}
+
+export function activeMetric(): IMetric {
+  return metrics.active();
 }

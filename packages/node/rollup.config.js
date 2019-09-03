@@ -32,4 +32,14 @@ export default [
     ],
     plugins: nodePlugins,
   },
+  {
+    input: 'src/instrumentation/pg.ts',
+    output: [
+      cjs({
+        file: 'dist/instrumentation/pg.js',
+        name: 'airbrake.instrumentation.pg',
+      }),
+    ],
+    plugins: nodePlugins,
+  },
 ];

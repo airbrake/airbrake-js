@@ -5,11 +5,15 @@ export function makeMiddleware(airbrake: Notifier) {
     let route = req.route ? req.route.path : 'UNKNOWN';
     let metric = airbrake.routes.start(req.method, route);
 
-    next();
+    let origFn = res.end;
+    res.end = function() {
+      metric.statusCode = res.statusCode;
+      metric.contentType = res.get('Content-Type');
+      airbrake.routes.notify(metric);
+      return origFn.apply(this, arguments);
+    };
 
-    metric.statusCode = req.statusCode;
-    metric.contentType = res.get('Content-Type');
-    airbrake.routes.notify(metric);
+    next();
   };
 }
 
