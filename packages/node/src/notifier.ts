@@ -2,7 +2,7 @@ import { IOptions } from '@browser/options';
 import { BaseNotifier } from '@browser/base_notifier';
 import { nodeFilter } from './filter/node';
 import { Routes } from './routes';
-import { IMetric, activeMetric } from './metric';
+import { IMetric, activeMetric } from './metrics';
 
 export class Notifier extends BaseNotifier {
   public routes: Routes;

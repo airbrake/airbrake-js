@@ -1,6 +1,6 @@
 import { IOptions } from '@browser/options';
 import { makeRequester, Requester } from '@browser/http_req';
-import { BaseMetric, setActiveMetric } from './metric';
+import { BaseMetric, setActiveMetric } from './metrics';
 
 const TDigest = require('tdigest').TDigest;
 
@@ -107,6 +107,14 @@ class RouteMetric extends BaseMetric {
     this.statusCode = statusCode;
     this.contentType = contentType;
     this.startTime = new Date();
+    this.startSpan('http.handler', this.startTime);
+  }
+
+  end(endTime: Date = null): void {
+    if (!this.endTime) {
+      this.endTime = endTime || new Date();
+    }
+    this.endSpan('http.handler', this.endTime);
   }
 }
 
@@ -217,7 +225,8 @@ class RoutesBreakdowns {
     if (
       req.statusCode < 200 ||
       (req.statusCode >= 300 && req.statusCode < 400) ||
-      req.statusCode === 404
+      req.statusCode === 404 ||
+      Object.keys(req._groups).length <= 1
     ) {
       return;
     }
@@ -330,6 +339,7 @@ export class Routes {
   }
 
   notify(req: RouteMetric): void {
+    req.end();
     this._routes.notify(req);
     this._breakdowns.notify(req);
   }
