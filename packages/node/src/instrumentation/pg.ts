@@ -21,29 +21,28 @@ export function patch(pg, airbrake: Notifier) {
 }
 
 function patchClient(Client, airbrake: Notifier): void {
-  let origFn = Client.prototype.query;
+  let origQuery = Client.prototype.query;
 
-  Client.prototype.query = function() {
+  Client.prototype.query = function abQuery() {
     let metric = airbrake.activeMetric();
     metric.startSpan(SPAN_NAME);
 
-    let args = arguments;
-    let cbIdx = args.length - 1;
-    let cb = args[cbIdx];
+    let cbIdx = arguments.length - 1;
+    let cb = arguments[cbIdx];
     if (Array.isArray(cb)) {
       let cbIdx = cb.length - 1;
       cb = cb[cbIdx];
     }
 
     if (typeof cb === 'function') {
-      args[cbIdx] = function() {
+      arguments[cbIdx] = function abCallback() {
         metric.endSpan(SPAN_NAME);
         return cb.apply(this, arguments);
       };
-      return origFn.apply(this, arguments);
+      return origQuery.apply(this, arguments);
     }
 
-    let query = origFn.apply(this, arguments);
+    let query = origQuery.apply(this, arguments);
 
     let endSpan = () => {
       metric.endSpan(SPAN_NAME);

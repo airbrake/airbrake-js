@@ -107,14 +107,12 @@ class RouteMetric extends BaseMetric {
     this.statusCode = statusCode;
     this.contentType = contentType;
     this.startTime = new Date();
-    this.startSpan('http.handler', this.startTime);
   }
 
-  end(endTime: Date = null): void {
+  end(endTime?: Date): void {
     if (!this.endTime) {
       this.endTime = endTime || new Date();
     }
-    this.endSpan('http.handler', this.endTime);
   }
 }
 
@@ -226,7 +224,7 @@ class RoutesBreakdowns {
       req.statusCode < 200 ||
       (req.statusCode >= 300 && req.statusCode < 400) ||
       req.statusCode === 404 ||
-      Object.keys(req._groups).length <= 1
+      Object.keys(req._groups).length === 0
     ) {
       return;
     }

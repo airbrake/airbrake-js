@@ -7,25 +7,23 @@ export interface IMetric {
 }
 
 export class Span {
-  name = '';
+  _metric: IMetric;
+
+  name: string;
   startTime: Date;
   endTime: Date;
-
-  _metric: IMetric;
-  _parent: Span;
 
   _dur = 0;
   _level = 0;
 
-  constructor(metric: IMetric, name: string, startTime: Date = null) {
+  constructor(metric: IMetric, name: string, startTime?: Date) {
     this._metric = metric;
-    this._parent = null;
 
     this.name = name;
     this.startTime = startTime || new Date();
   }
 
-  end(endTime: Date = null) {
+  end(endTime?: Date) {
     if (endTime) {
       this.endTime = endTime;
     } else {
@@ -63,62 +61,35 @@ export class BaseMetric implements IMetric {
   endTime: Date;
 
   _spans = {};
-  _currSpan: Span;
-
   _groups = {};
 
   constructor() {
     this.startTime = new Date();
   }
 
-  startSpan(name: string, startTime: Date = null): void {
-    if (this._currSpan) {
-      if (this._currSpan.name === name) {
-        this._currSpan._level++;
-        return;
-      }
-      this._currSpan._pause();
-    }
-
+  startSpan(name: string, startTime?: Date): void {
     let span = this._spans[name];
     if (span) {
-      span._resume();
+      span._level++;
     } else {
       span = new Span(this, name, startTime);
       this._spans[name] = span;
     }
-
-    span._parent = this._currSpan;
-    this._currSpan = span;
   }
 
-  endSpan(name: string, endTime: Date = null): void {
-    if (this._currSpan && this._currSpan.name === name) {
-      if (this._endSpan(this._currSpan)) {
-        this._currSpan = this._currSpan._parent;
-        if (this._currSpan) {
-          this._currSpan._resume();
-        }
-      }
-      return;
-    }
-
+  endSpan(name: string, endTime?: Date): void {
     let span = this._spans[name];
     if (!span) {
       console.error('airbrake: span=%s does not exist', name);
       return;
     }
-    this._endSpan(span, endTime);
-  }
 
-  _endSpan(span, endTime: Date = null): boolean {
     if (span._level > 0) {
       span._level--;
-      return false;
+    } else {
+      span.end(endTime);
+      delete this._spans[span.name];
     }
-    span.end(endTime);
-    delete this._spans[span.name];
-    return true;
   }
 
   _incGroup(name: string, ms: number): void {
@@ -134,45 +105,47 @@ export class BaseMetric implements IMetric {
 }
 
 class NoopMetric implements IMetric {
-  startSpan(_name: string, _startTime: Date = null): void {}
-  endSpan(_name: string, _startTime: Date = null): void {}
+  startSpan(_name: string, _startTime?: Date): void {}
+  endSpan(_name: string, _startTime?: Date): void {}
   _incGroup(_name: string, _ms: number): void {}
 }
 
 class Metrics {
   _asyncHook: asyncHooks.AsyncHook;
 
-  _metrics: { [uid: number]: IMetric } = {};
+  _metrics: { [id: number]: IMetric } = {};
   _noopMetric = new NoopMetric();
 
   constructor() {
-    this._asyncHook = asyncHooks.createHook({
-      init: this._init.bind(this),
-      destroy: this._destroy.bind(this),
-      promiseResolve: this._destroy.bind(this),
-    });
+    this._asyncHook = asyncHooks
+      .createHook({
+        init: this._init.bind(this),
+        destroy: this._destroy.bind(this),
+        promiseResolve: this._destroy.bind(this),
+      })
+      .enable();
   }
 
   setActive(metric: IMetric) {
-    const uid = asyncHooks.executionAsyncId();
-    this._metrics[uid] = metric;
+    const eid = asyncHooks.executionAsyncId();
+    this._metrics[eid] = metric;
   }
 
   active(): IMetric {
-    const uid = asyncHooks.executionAsyncId();
-    let metric = this._metrics[uid];
+    const eid = asyncHooks.executionAsyncId();
+    let metric = this._metrics[eid];
     if (metric) {
       return metric;
     }
     return this._noopMetric;
   }
 
-  _init(uid: number) {
-    this._metrics[uid] = this._metrics[asyncHooks.executionAsyncId()];
+  _init(aid: number) {
+    this._metrics[aid] = this._metrics[asyncHooks.executionAsyncId()];
   }
 
-  _destroy(uid: number) {
-    delete this._metrics[uid];
+  _destroy(aid: number) {
+    delete this._metrics[aid];
   }
 }
 

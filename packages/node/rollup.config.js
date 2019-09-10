@@ -15,31 +15,26 @@ function cjs(cfg) {
   );
 }
 
-export default [
+let todo = [
   {
     input: 'src/node.entry.ts',
     output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
-    external: ['error-stack-parser', 'cross-fetch'],
-    plugins: nodePlugins,
-  },
-  {
-    input: 'src/instrumentation/express.ts',
-    output: [
-      cjs({
-        file: 'dist/instrumentation/express.js',
-        name: 'airbrake.instrumentation.express',
-      }),
-    ],
-    plugins: nodePlugins,
-  },
-  {
-    input: 'src/instrumentation/pg.ts',
-    output: [
-      cjs({
-        file: 'dist/instrumentation/pg.js',
-        name: 'airbrake.instrumentation.pg',
-      }),
-    ],
+    external: ['error-stack-parser', 'cross-fetch', 'async_hooks'],
     plugins: nodePlugins,
   },
 ];
+
+for (let mod of ['express', 'pg', 'mysql', 'redis']) {
+  todo.push({
+    input: `src/instrumentation/${mod}.ts`,
+    output: [
+      cjs({
+        file: `dist/instrumentation/${mod}.js`,
+        name: `airbrake.instrumentation.${mod}`,
+      }),
+    ],
+    plugins: nodePlugins,
+  });
+}
+
+export default todo;
