@@ -5,11 +5,11 @@ const SPAN_NAME = 'sql';
 export function patch(pg, airbrake: Notifier) {
   patchClient(pg.Client, airbrake);
 
-  let getter = pg.__lookupGetter__('native');
-  if (getter) {
+  const origGetter = pg.__lookupGetter__('native');
+  if (origGetter) {
     delete pg.native;
     pg.__defineGetter__('native', function() {
-      let native = getter();
+      const native = origGetter();
       if (native && native.Client) {
         patchClient(native.Client, airbrake);
       }
@@ -21,16 +21,18 @@ export function patch(pg, airbrake: Notifier) {
 }
 
 function patchClient(Client, airbrake: Notifier): void {
-  let origQuery = Client.prototype.query;
-
+  const origQuery = Client.prototype.query;
   Client.prototype.query = function abQuery() {
-    let metric = airbrake.activeMetric();
+    const metric = airbrake.activeMetric();
     metric.startSpan(SPAN_NAME);
+    if (!metric.isRecording()) {
+      return origQuery.apply(this, arguments);
+    }
 
     let cbIdx = arguments.length - 1;
     let cb = arguments[cbIdx];
     if (Array.isArray(cb)) {
-      let cbIdx = cb.length - 1;
+      cbIdx = cb.length - 1;
       cb = cb[cbIdx];
     }
 
@@ -42,9 +44,9 @@ function patchClient(Client, airbrake: Notifier): void {
       return origQuery.apply(this, arguments);
     }
 
-    let query = origQuery.apply(this, arguments);
+    const query = origQuery.apply(this, arguments);
 
-    let endSpan = () => {
+    const endSpan = () => {
       metric.endSpan(SPAN_NAME);
     };
 
