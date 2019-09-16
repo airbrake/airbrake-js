@@ -24,7 +24,15 @@ let todo = [
   },
 ];
 
-for (let mod of ['express', 'pg', 'mysql', 'redis']) {
+for (let mod of [
+  'express',
+  'pg',
+  'mysql',
+  'mysql2',
+  'redis',
+  'http',
+  'https',
+]) {
   todo.push({
     input: `src/instrumentation/${mod}.ts`,
     output: [

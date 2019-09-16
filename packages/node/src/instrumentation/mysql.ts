@@ -6,16 +6,16 @@ const SPAN_NAME = 'sql';
 export function patch(mysql, airbrake: Notifier) {
   mysql.createPool = wrapCreatePool(mysql.createPool, airbrake);
 
-  let origCreatePoolCluster = mysql.createPoolCluster;
+  const origCreatePoolCluster = mysql.createPoolCluster;
   mysql.createPoolCluster = function abCreatePoolCluster() {
-    let cluster = origCreatePoolCluster.apply(this, arguments);
+    const cluster = origCreatePoolCluster.apply(this, arguments);
     cluster.of = wrapCreatePool(cluster.of, airbrake);
     return cluster;
   };
 
-  let origCreateConnection = mysql.createConnection;
+  const origCreateConnection = mysql.createConnection;
   mysql.createConnection = function abCreateConnection() {
-    let conn = origCreateConnection.apply(this, arguments);
+    const conn = origCreateConnection.apply(this, arguments);
     wrapConnection(conn, airbrake);
     return conn;
   };
@@ -25,7 +25,7 @@ export function patch(mysql, airbrake: Notifier) {
 
 function wrapCreatePool(origFn, airbrake: Notifier) {
   return function abCreatePool() {
-    let pool = origFn.apply(this, arguments);
+    const pool = origFn.apply(this, arguments);
     pool.getConnection = wrapGetConnection(pool.getConnection, airbrake);
     return pool;
   };
@@ -33,7 +33,7 @@ function wrapCreatePool(origFn, airbrake: Notifier) {
 
 function wrapGetConnection(origFn, airbrake: Notifier) {
   return function abGetConnection() {
-    let cb = arguments[0];
+    const cb = arguments[0];
     if (typeof cb === 'function') {
       arguments[0] = function abCallback(_err, conn) {
         if (conn) {
@@ -58,10 +58,13 @@ function wrapConnection(conn, airbrake: Notifier): void {
     };
   }
 
-  let origQuery = conn.query;
+  const origQuery = conn.query;
   conn.query = function abQuery(sql, values, cb) {
     metric = airbrake.activeMetric();
     metric.startSpan(SPAN_NAME);
+    if (!metric.isRecording()) {
+      return origQuery.apply(this, arguments);
+    }
 
     switch (typeof sql) {
       case 'function':
@@ -80,10 +83,10 @@ function wrapConnection(conn, airbrake: Notifier): void {
       arguments[2] = wrapCallback(cb);
     }
 
-    let res = origQuery.apply(this, arguments);
+    const res = origQuery.apply(this, arguments);
 
     if (!foundCallback && res && res.emit) {
-      let origEmit = res.emit;
+      const origEmit = res.emit;
       res.emit = function abEmit(evt) {
         switch (evt) {
           case 'error':

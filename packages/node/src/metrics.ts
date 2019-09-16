@@ -1,6 +1,7 @@
 import * as asyncHooks from 'async_hooks';
 
 export interface IMetric {
+  isRecording(): boolean;
   startSpan(name: string, startTime?: Date): void;
   endSpan(name: string, endTime?: Date): void;
   _incGroup(name: string, ms: number): void;
@@ -67,6 +68,10 @@ export class BaseMetric implements IMetric {
     this.startTime = new Date();
   }
 
+  isRecording(): boolean {
+    return true;
+  }
+
   startSpan(name: string, startTime?: Date): void {
     let span = this._spans[name];
     if (span) {
@@ -105,6 +110,9 @@ export class BaseMetric implements IMetric {
 }
 
 class NoopMetric implements IMetric {
+  isRecording(): boolean {
+    return false;
+  }
   startSpan(_name: string, _startTime?: Date): void {}
   endSpan(_name: string, _startTime?: Date): void {}
   _incGroup(_name: string, _ms: number): void {}

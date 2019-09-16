@@ -48,6 +48,9 @@ class TDigestStat {
   _td = new TDigest();
 
   add(ms: number) {
+    if (ms === 0) {
+      ms = 0.00001;
+    }
     this.count += 1;
     this.sum += ms;
     this.sumsq += ms * ms;
@@ -132,9 +135,6 @@ class RoutesStats {
 
   notify(req: RouteMetric): void {
     let ms = req._duration();
-    if (ms === 0) {
-      ms = 0.00001;
-    }
 
     const minute = 60 * 1000;
     let startTime = new Date(

@@ -2,15 +2,19 @@ import { Notifier } from '../notifier';
 
 export function makeMiddleware(airbrake: Notifier) {
   return function airbrakeMiddleware(req, res, next): void {
-    let route = req.route ? req.route.path : 'UNKNOWN';
-    let metric = airbrake.routes.start(req.method, route);
+    const route = req.route ? req.route.path : 'UNKNOWN';
+    const metric = airbrake.routes.start(req.method, route);
+    if (!metric.isRecording()) {
+      next();
+      return;
+    }
 
-    let origFn = res.end;
-    res.end = function() {
+    const origEnd = res.end;
+    res.end = function abEnd() {
       metric.statusCode = res.statusCode;
       metric.contentType = res.get('Content-Type');
       airbrake.routes.notify(metric);
-      return origFn.apply(this, arguments);
+      return origEnd.apply(this, arguments);
     };
 
     next();
@@ -19,8 +23,8 @@ export function makeMiddleware(airbrake: Notifier) {
 
 export function makeErrorHandler(airbrake: Notifier) {
   return function airbrakeErrorHandler(err: Error, req, _res, next): void {
-    let url = req.protocol + '://' + req.headers.host + req.path;
-    let notice: any = {
+    const url = req.protocol + '://' + req.headers.host + req.path;
+    const notice: any = {
       error: err,
       context: {
         userAddr: req.ip,
@@ -38,7 +42,7 @@ export function makeErrorHandler(airbrake: Notifier) {
       }
     }
 
-    let referer = req.headers.referer;
+    const referer = req.headers.referer;
     if (referer) {
       notice.context.referer = referer;
     }
