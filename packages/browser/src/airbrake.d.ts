@@ -5,6 +5,7 @@ export declare class Notifier {
   public wrap(fn: any): IFuncWrapper;
   public call(fn: any, ...args: any[]): any;
   public onerror(): void;
+  public notifyRequest(req: IRequestInfo): void;
 }
 
 interface IFuncWrapper {
@@ -34,4 +35,12 @@ interface IAirbrakeError {
   type: string;
   message: string;
   backtrace: IAirbrakeFrame[];
+}
+
+interface IRequestInfo {
+  method: string;
+  route: string;
+  statusCode: number;
+  start: time;
+  end: time;
 }
