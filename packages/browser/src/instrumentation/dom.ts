@@ -1,6 +1,54 @@
-import { Historian } from '../historian';
+import { Notifier } from '../notifier';
 
 const elemAttrs = ['type', 'name', 'src'];
+
+export function instrumentDOM(notifier: Notifier) {
+  const handler = makeEventHandler(notifier);
+
+  if (window.addEventListener) {
+    window.addEventListener('load', handler);
+    window.addEventListener(
+      'error',
+      (event: Event): void => {
+        if ('error' in event) {
+          return;
+        }
+        handler(event);
+      },
+      true,
+    );
+  }
+
+  if (typeof document === 'object' && document.addEventListener) {
+    document.addEventListener('DOMContentLoaded', handler);
+    document.addEventListener('click', handler);
+    document.addEventListener('keypress', handler);
+  }
+}
+
+function makeEventHandler(notifier: Notifier): EventListener {
+  return (event: Event): void => {
+    let target: HTMLElement;
+    try {
+      target = event.target as HTMLElement;
+    } catch (_) {
+      return;
+    }
+    if (!target) {
+      return;
+    }
+
+    let state: any = { type: event.type };
+
+    try {
+      state.target = elemPath(target);
+    } catch (err) {
+      state.target = `<${String(err)}>`;
+    }
+
+    notifier.scope().pushHistory(state);
+  };
+}
 
 function elemName(elem: HTMLElement): string {
   if (!elem) {
@@ -75,28 +123,4 @@ function elemPath(elem: HTMLElement): string {
   }
 
   return path.reverse().join(' > ');
-}
-
-export function makeEventHandler(client: Historian): EventListener {
-  return (event: Event): void => {
-    let target: HTMLElement;
-    try {
-      target = event.target as HTMLElement;
-    } catch (_) {
-      return;
-    }
-    if (!target) {
-      return;
-    }
-
-    let state: any = { type: event.type };
-
-    try {
-      state.target = elemPath(target);
-    } catch (err) {
-      state.target = `<${String(err)}>`;
-    }
-
-    client.pushHistory(state);
-  };
 }

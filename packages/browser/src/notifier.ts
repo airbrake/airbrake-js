@@ -1,9 +1,13 @@
-import { Historian } from './historian';
-import { IOptions } from './options';
+import { Scope } from './scope';
+import { IOptions, IInstrumentationOptions } from './options';
 import { BaseNotifier } from './base_notifier';
 import { INotice } from './notice';
-
 import { windowFilter } from './filter/window';
+import { instrumentConsole } from './instrumentation/console';
+import { instrumentDOM } from './instrumentation/dom';
+import { instrumentFetch } from './instrumentation/fetch';
+import { instrumentLocation } from './instrumentation/location';
+import { instrumentXHR } from './instrumentation/xhr';
 
 interface ITodo {
   err: any;
@@ -12,10 +16,13 @@ interface ITodo {
 }
 
 export class Notifier extends BaseNotifier {
-  protected historian: Historian;
+  _scope = new Scope();
 
   protected offline = false;
   protected todo: ITodo[] = [];
+
+  _ignoreWindowError = 0;
+  _ignoreNextXHR = 0;
 
   constructor(opt: IOptions) {
     super(opt);
@@ -41,23 +48,47 @@ export class Notifier extends BaseNotifier {
       });
     }
 
-    let historianOpts = opt.instrumentation || {};
-    if (typeof historianOpts.console === undefined) {
-      historianOpts.console = !isDevEnv(opt.environment);
-    }
-
-    this.historian = Historian.instance(historianOpts);
-    this.historian.registerNotifier(this);
+    this._instrument(opt.instrumentation);
     this.addFilter((notice) => {
-      let history = this.historian.getHistory();
-      if (history.length > 0) {
-        notice.context.history = history;
+      if (this._scope._history.length > 0) {
+        notice.context.history = this._scope._history;
       }
       return notice;
     });
-    this.onClose.push(() => {
-      this.historian.unregisterNotifier(this);
-    });
+  }
+
+  _instrument(opt: IInstrumentationOptions = {}) {
+    opt.console = !isDevEnv(this.opt.environment);
+
+    if (enabled(opt.onerror)) {
+      // tslint:disable-next-line:no-this-assignment
+      let self = this;
+      let oldHandler = window.onerror;
+      window.onerror = function abOnerror() {
+        if (oldHandler) {
+          oldHandler.apply(this, arguments);
+        }
+        self.onerror.apply(self, arguments);
+      };
+    }
+
+    instrumentDOM(this);
+    if (enabled(opt.fetch) && typeof fetch === 'function') {
+      instrumentFetch(this);
+    }
+    if (enabled(opt.history) && typeof history === 'object') {
+      instrumentLocation(this);
+    }
+    if (enabled(opt.console) && typeof console === 'object') {
+      instrumentConsole(this);
+    }
+    if (enabled(opt.xhr) && typeof XMLHttpRequest !== 'undefined') {
+      instrumentXHR(this);
+    }
+  }
+
+  scope(): Scope {
+    return this._scope;
   }
 
   public notify(err: any): Promise<INotice> {
@@ -81,10 +112,6 @@ export class Notifier extends BaseNotifier {
     }
 
     return super.notify(err);
-  }
-
-  public onerror(): void {
-    this.historian.onerror.apply(this.historian, arguments);
   }
 
   protected onOnline(): void {
@@ -118,8 +145,57 @@ export class Notifier extends BaseNotifier {
     }
     this.notify(reason);
   }
+
+  onerror(
+    message: string,
+    filename?: string,
+    line?: number,
+    column?: number,
+    err?: Error,
+  ): void {
+    if (this._ignoreWindowError > 0) {
+      return;
+    }
+
+    if (err) {
+      this.notify({
+        error: err,
+        context: {
+          windowError: true,
+        },
+      });
+      return;
+    }
+
+    // Ignore errors without file or line.
+    if (!filename || !line) {
+      return;
+    }
+
+    this.notify({
+      error: {
+        message,
+        fileName: filename,
+        lineNumber: line,
+        columnNumber: column,
+        noStack: true,
+      },
+      context: {
+        windowError: true,
+      },
+    });
+  }
+
+  _ignoreNextWindowError(): void {
+    this._ignoreWindowError++;
+    setTimeout(() => this._ignoreWindowError--);
+  }
 }
 
 function isDevEnv(env: any): boolean {
   return env && env.startsWith && env.startsWith('dev');
+}
+
+function enabled(v: undefined | boolean): boolean {
+  return v === undefined || v === true;
 }
