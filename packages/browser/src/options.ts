@@ -1,10 +1,17 @@
 import * as request from 'request';
 
-import { IHistorianOptions } from './historian';
 import { INotice } from './notice';
 import { Processor } from './processor/processor';
 
 type Reporter = (notice: INotice) => Promise<INotice>;
+
+export interface IInstrumentationOptions {
+  onerror?: boolean;
+  fetch?: boolean;
+  history?: boolean;
+  console?: boolean;
+  xhr?: boolean;
+}
 
 export interface IOptions {
   projectId: number;
@@ -16,7 +23,7 @@ export interface IOptions {
   ignoreWindowError?: boolean;
   processor?: Processor;
   reporter?: Reporter;
-  instrumentation?: IHistorianOptions;
+  instrumentation?: IInstrumentationOptions;
 
   request?: request.RequestAPI<
     request.Request,

@@ -5,12 +5,6 @@ describe('Notifier config', () => {
   const err = new Error('test');
   let client;
 
-  afterEach(() => {
-    if (client) {
-      client.close();
-    }
-  });
-
   test('throws when projectId or projectKey are missing', () => {
     expect(() => {
       new Notifier({});
@@ -117,10 +111,6 @@ describe('Notifier', () => {
       projectKey: 'abc',
       reporter,
     });
-  });
-
-  afterEach(() => {
-    client.close();
   });
 
   describe('filter', () => {

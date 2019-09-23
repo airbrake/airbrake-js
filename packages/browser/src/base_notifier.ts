@@ -152,12 +152,12 @@ export class BaseNotifier {
     let client = this;
     let airbrakeWrapper = function() {
       let fnArgs = Array.prototype.slice.call(arguments);
-      let wrappedArgs = client.wrapArguments(fnArgs);
+      let wrappedArgs = client._wrapArguments(fnArgs);
       try {
         return fn.apply(this, wrappedArgs);
       } catch (err) {
         client.notify({ error: err, params: { arguments: fnArgs } });
-        this.historian.ignoreNextWindowError();
+        this._ignoreNextWindowError();
         throw err;
       }
     } as IFuncWrapper;
@@ -179,7 +179,7 @@ export class BaseNotifier {
     return airbrakeWrapper;
   }
 
-  protected wrapArguments(args: any[]): any[] {
+  _wrapArguments(args: any[]): any[] {
     for (let i = 0; i < args.length; i++) {
       let arg = args[i];
       if (typeof arg === 'function') {
@@ -188,6 +188,8 @@ export class BaseNotifier {
     }
     return args;
   }
+
+  _ignoreNextWindowError() {}
 
   public call(fn, ..._args: any[]): any {
     let wrapper = this.wrap(fn);
