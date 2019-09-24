@@ -1,4 +1,3 @@
-import { Scope } from './scope';
 import { IOptions, IInstrumentationOptions } from './options';
 import { BaseNotifier } from './base_notifier';
 import { INotice } from './notice';
@@ -16,8 +15,6 @@ interface ITodo {
 }
 
 export class Notifier extends BaseNotifier {
-  _scope = new Scope();
-
   protected offline = false;
   protected todo: ITodo[] = [];
 
@@ -38,7 +35,7 @@ export class Notifier extends BaseNotifier {
       this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
       window.addEventListener('unhandledrejection', this.onUnhandledrejection);
 
-      this.onClose.push(() => {
+      this._onClose.push(() => {
         window.removeEventListener('online', this.onOnline);
         window.removeEventListener('offline', this.onOffline);
         window.removeEventListener(
@@ -49,12 +46,6 @@ export class Notifier extends BaseNotifier {
     }
 
     this._instrument(opt.instrumentation);
-    this.addFilter((notice) => {
-      if (this._scope._history.length > 0) {
-        notice.context.history = this._scope._history;
-      }
-      return notice;
-    });
   }
 
   _instrument(opt: IInstrumentationOptions = {}) {
@@ -85,10 +76,6 @@ export class Notifier extends BaseNotifier {
     if (enabled(opt.xhr) && typeof XMLHttpRequest !== 'undefined') {
       instrumentXHR(this);
     }
-  }
-
-  scope(): Scope {
-    return this._scope;
   }
 
   public notify(err: any): Promise<INotice> {
