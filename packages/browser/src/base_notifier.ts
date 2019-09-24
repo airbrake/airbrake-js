@@ -1,6 +1,7 @@
 import { IFuncWrapper } from './func_wrapper';
 import { jsonifyNotice } from './jsonify_notice';
 import { INotice } from './notice';
+import { Scope } from './scope';
 
 import { Processor } from './processor/processor';
 import { espProcessor } from './processor/esp';
@@ -22,8 +23,9 @@ export class BaseNotifier {
   protected processor: Processor;
   protected requester: Requester;
   protected filters: Filter[] = [];
+  _scope = new Scope();
 
-  protected onClose: Array<() => void> = [];
+  _onClose: (() => void)[] = [];
 
   constructor(opt: IOptions) {
     if (!opt.projectId || !opt.projectKey) {
@@ -50,12 +52,24 @@ export class BaseNotifier {
         return notice;
       });
     }
+
+    this.addFilter((notice) => {
+      const history = this.scope()._history;
+      if (history.length > 0) {
+        notice.context.history = history;
+      }
+      return notice;
+    });
   }
 
-  public close(): void {
-    for (let fn of this.onClose) {
+  close(): void {
+    for (let fn of this._onClose) {
       fn();
     }
+  }
+
+  scope(): Scope {
+    return this._scope;
   }
 
   public addFilter(filter: Filter): void {

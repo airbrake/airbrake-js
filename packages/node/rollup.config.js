@@ -32,6 +32,7 @@ for (let mod of [
   'redis',
   'http',
   'https',
+  'debug',
 ]) {
   todo.push({
     input: `src/instrumentation/${mod}.ts`,
