@@ -1,11 +1,14 @@
 import { IOptions } from '@browser/options';
 import { BaseNotifier } from '@browser/base_notifier';
 import { nodeFilter } from './filter/node';
-import { Routes } from './routes';
-import { IMetric, activeMetric } from './metrics';
+import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
+import { Scope, ScopeManager } from './scope';
 
 export class Notifier extends BaseNotifier {
-  public routes: Routes;
+  routes: Routes;
+
+  _scopeManager: ScopeManager;
+  _mainScope: Scope;
 
   constructor(opt: IOptions) {
     if (!opt.environment && process.env.NODE_ENV) {
@@ -14,7 +17,10 @@ export class Notifier extends BaseNotifier {
     super(opt);
 
     this.addFilter(nodeFilter);
-    this.routes = new Routes(opt);
+    this.routes = new Routes(this);
+
+    this._scopeManager = new ScopeManager();
+    this._mainScope = new Scope();
 
     process.on('uncaughtException', (err) => {
       this.notify(err).then(() => {
@@ -45,7 +51,49 @@ export class Notifier extends BaseNotifier {
     });
   }
 
-  activeMetric(): IMetric {
-    return activeMetric();
+  scope(): Scope {
+    let scope = this._scopeManager.active();
+    if (scope) {
+      return scope;
+    }
+    return this._mainScope;
+  }
+
+  setActiveScope(scope: Scope) {
+    this._scopeManager.setActive(scope);
+  }
+}
+
+class Routes {
+  _notifier: Notifier;
+  _routes: RoutesStats;
+  _breakdowns: RoutesBreakdowns;
+
+  constructor(notifier: Notifier) {
+    this._notifier = notifier;
+    this._routes = new RoutesStats(notifier._opt);
+    this._breakdowns = new RoutesBreakdowns(notifier._opt);
+  }
+
+  start(
+    method = '',
+    route = '',
+    statusCode = 0,
+    contentType = '',
+  ): RouteMetric {
+    const metric = new RouteMetric(method, route, statusCode, contentType);
+
+    const scope = this._notifier.scope().clone();
+    scope.setContext({ httpMethod: method, route: route });
+    scope.setMetric(metric);
+    this._notifier.setActiveScope(scope);
+
+    return metric;
+  }
+
+  notify(req: RouteMetric): void {
+    req.end();
+    this._routes.notify(req);
+    this._breakdowns.notify(req);
   }
 }

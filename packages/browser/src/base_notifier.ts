@@ -17,7 +17,7 @@ import { makeRequester, Requester } from './http_req';
 import { IOptions } from './options';
 
 export class BaseNotifier {
-  protected opt: IOptions;
+  _opt: IOptions;
   protected url: string;
 
   protected processor: Processor;
@@ -32,32 +32,28 @@ export class BaseNotifier {
       throw new Error('airbrake: projectId and projectKey are required');
     }
 
-    this.opt = opt;
-    this.opt.host = this.opt.host || 'https://api.airbrake.io';
-    this.opt.timeout = this.opt.timeout || 10000;
-    this.opt.keysBlacklist = this.opt.keysBlacklist || [/password/, /secret/];
-    this.url = `${this.opt.host}/api/v3/projects/${this.opt.projectId}/notices?key=${this.opt.projectKey}`;
+    this._opt = opt;
+    this._opt.host = this._opt.host || 'https://api.airbrake.io';
+    this._opt.timeout = this._opt.timeout || 10000;
+    this._opt.keysBlacklist = this._opt.keysBlacklist || [/password/, /secret/];
+    this.url = `${this._opt.host}/api/v3/projects/${this._opt.projectId}/notices?key=${this._opt.projectKey}`;
 
-    this.processor = this.opt.processor || espProcessor;
-    this.requester = makeRequester(this.opt);
+    this.processor = this._opt.processor || espProcessor;
+    this.requester = makeRequester(this._opt);
 
     this.addFilter(ignoreNoiseFilter);
     this.addFilter(makeDebounceFilter());
     this.addFilter(uncaughtMessageFilter);
     this.addFilter(angularMessageFilter);
 
-    if (this.opt.environment) {
+    if (this._opt.environment) {
       this.addFilter((notice: INotice): INotice | null => {
-        notice.context.environment = this.opt.environment;
+        notice.context.environment = this._opt.environment;
         return notice;
       });
     }
 
     this.addFilter((notice) => {
-      const history = this.scope()._history;
-      if (history.length > 0) {
-        notice.context.history = history;
-      }
       return notice;
     });
   }
@@ -79,10 +75,11 @@ export class BaseNotifier {
   public notify(err: any): Promise<INotice> {
     let notice: INotice = {
       errors: [],
-      context: {
-        severity: 'error',
-        ...err.context,
-      },
+      context: Object.assign(
+        { severity: 'error' },
+        this.scope().context(),
+        err.context,
+      ),
       params: err.params || {},
       environment: err.environment || {},
       session: err.session || {},
@@ -99,7 +96,7 @@ export class BaseNotifier {
       return Promise.resolve(notice);
     }
 
-    if (this.opt.ignoreWindowError && err.context && err.context.windowError) {
+    if (this._opt.ignoreWindowError && err.context && err.context.windowError) {
       notice.error = new Error('airbrake: window error is ignored');
       return Promise.resolve(notice);
     }
@@ -130,11 +127,11 @@ export class BaseNotifier {
 
   protected sendNotice(notice: INotice): Promise<INotice> {
     let body = jsonifyNotice(notice, {
-      keysBlacklist: this.opt.keysBlacklist,
+      keysBlacklist: this._opt.keysBlacklist,
     });
-    if (this.opt.reporter) {
-      if (typeof this.opt.reporter === 'function') {
-        return this.opt.reporter(notice);
+    if (this._opt.reporter) {
+      if (typeof this._opt.reporter === 'function') {
+        return this._opt.reporter(notice);
       } else {
         console.warn('airbrake: options.reporter must be a function');
       }

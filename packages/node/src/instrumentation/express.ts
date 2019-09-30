@@ -11,6 +11,7 @@ export function makeMiddleware(airbrake: Notifier) {
 
     const origEnd = res.end;
     res.end = function abEnd() {
+      metric.route = req.route ? req.route.path : 'UNKNOWN';
       metric.statusCode = res.statusCode;
       metric.contentType = res.get('Content-Type');
       airbrake.routes.notify(metric);
