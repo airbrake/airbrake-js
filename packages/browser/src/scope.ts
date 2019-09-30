@@ -4,10 +4,33 @@ interface HistoryRecord {
   [key: string]: any;
 }
 
+type Map = { [key: string]: any };
+
 export class Scope {
+  _context: Map = {};
+
   _historyMaxLen = 20;
   _history: HistoryRecord[] = [];
   _lastRecord: HistoryRecord;
+
+  clone(): Scope {
+    const clone = new Scope();
+    clone._context = { ...this._context };
+    clone._history = this._history.slice();
+    return clone;
+  }
+
+  setContext(context: Map) {
+    this._context = Object.assign(this._context, context);
+  }
+
+  context(): Map {
+    const ctx = { ...this._context };
+    if (this._history.length > 0) {
+      ctx.history = this._history.slice();
+    }
+    return ctx;
+  }
 
   pushHistory(state: HistoryRecord): void {
     if (this._isDupState(state)) {

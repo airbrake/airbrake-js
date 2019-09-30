@@ -1,6 +1,6 @@
 import { IOptions } from '@browser/options';
 import { makeRequester, Requester } from '@browser/http_req';
-import { BaseMetric, setActiveMetric } from './metrics';
+import { BaseMetric } from './metrics';
 
 const TDigest = require('tdigest').TDigest;
 
@@ -97,7 +97,7 @@ class TDigestStatGroups extends TDigestStat {
   }
 }
 
-class RouteMetric extends BaseMetric {
+export class RouteMetric extends BaseMetric {
   method: string;
   route: string;
   statusCode: number;
@@ -119,18 +119,18 @@ class RouteMetric extends BaseMetric {
   }
 }
 
-class RoutesStats {
-  _opts: IOptions;
+export class RoutesStats {
+  _opt: IOptions;
   _url: string;
   _requester: Requester;
 
   _m: { [key: string]: TDigestStat } = {};
   _timer;
 
-  constructor(opts: IOptions) {
-    this._opts = opts;
-    this._url = `${opts.host}/api/v5/projects/${opts.projectId}/routes-stats?key=${opts.projectKey}`;
-    this._requester = makeRequester(opts);
+  constructor(opt: IOptions) {
+    this._opt = opt;
+    this._url = `${opt.host}/api/v5/projects/${opt.projectId}/routes-stats?key=${opt.projectKey}`;
+    this._requester = makeRequester(opt);
   }
 
   notify(req: RouteMetric): void {
@@ -185,7 +185,7 @@ class RoutesStats {
     this._timer = null;
 
     let outJSON = JSON.stringify({
-      environment: this._opts.environment,
+      environment: this._opt.environment,
       routes,
     });
     let req = {
@@ -205,18 +205,18 @@ class RoutesStats {
   }
 }
 
-class RoutesBreakdowns {
-  _opts: IOptions;
+export class RoutesBreakdowns {
+  _opt: IOptions;
   _url: string;
   _requester: Requester;
 
   _m: { [key: string]: TDigestStatGroups } = {};
   _timer;
 
-  constructor(opts: IOptions) {
-    this._opts = opts;
-    this._url = `${opts.host}/api/v5/projects/${opts.projectId}/routes-breakdowns?key=${opts.projectKey}`;
-    this._requester = makeRequester(opts);
+  constructor(opt: IOptions) {
+    this._opt = opt;
+    this._url = `${opt.host}/api/v5/projects/${opt.projectId}/routes-breakdowns?key=${opt.projectKey}`;
+    this._requester = makeRequester(opt);
   }
 
   notify(req: RouteMetric): void {
@@ -283,7 +283,7 @@ class RoutesBreakdowns {
     this._timer = null;
 
     let outJSON = JSON.stringify({
-      environment: this._opts.environment,
+      environment: this._opt.environment,
       routes,
     });
     let req = {
@@ -313,33 +313,6 @@ class RoutesBreakdowns {
       return '';
     }
     return req.contentType.split(';')[0].split('/')[-1];
-  }
-}
-
-export class Routes {
-  _routes: RoutesStats;
-  _breakdowns: RoutesBreakdowns;
-
-  constructor(opts: IOptions) {
-    this._routes = new RoutesStats(opts);
-    this._breakdowns = new RoutesBreakdowns(opts);
-  }
-
-  start(
-    method = '',
-    route = '',
-    statusCode = 0,
-    contentType = '',
-  ): RouteMetric {
-    let metric = new RouteMetric(method, route, statusCode, contentType);
-    setActiveMetric(metric);
-    return metric;
-  }
-
-  notify(req: RouteMetric): void {
-    req.end();
-    this._routes.notify(req);
-    this._breakdowns.notify(req);
   }
 }
 

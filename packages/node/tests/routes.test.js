@@ -1,11 +1,13 @@
-import { Routes, RouteMetric } from '../src/routes';
+import { Notifier } from '../src/notifier';
 
 describe('Routes', () => {
   it('works', () => {
-    let routes = new Routes({
+    const opt = {
       projectId: 1,
       projectKey: 'test',
-    });
+    };
+    const notifier = new Notifier(opt);
+    const routes = notifier.routes;
 
     let req = routes.start('GET', '/projects/:id');
     req.statusCode = 200;
