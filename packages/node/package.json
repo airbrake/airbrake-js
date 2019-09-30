@@ -31,6 +31,8 @@
     "typescript": "^3.6.3"
   },
   "main": "dist/airbrake.common.js",
+  "module": "dist/airbrake.esm.js",
+  "jsnext:main": "dist/airbrake.esm.js",
   "files": [
     "dist/",
     "README.md",

@@ -15,10 +15,26 @@ function cjs(cfg) {
   );
 }
 
+function esm(cfg) {
+  return Object.assign(
+    {
+      format: 'esm',
+      sourcemap: true,
+    },
+    cfg,
+  );
+}
+
 let todo = [
   {
     input: 'src/node.entry.ts',
     output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
+    external: ['error-stack-parser', 'cross-fetch', 'async_hooks'],
+    plugins: nodePlugins,
+  },
+  {
+    input: 'src/node.entry.ts',
+    output: [esm({ file: 'dist/airbrake.esm.js' })],
     external: ['error-stack-parser', 'cross-fetch', 'async_hooks'],
     plugins: nodePlugins,
   },
