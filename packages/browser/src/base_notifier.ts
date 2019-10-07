@@ -68,11 +68,11 @@ export class BaseNotifier {
     return this._scope;
   }
 
-  public addFilter(filter: Filter): void {
+  addFilter(filter: Filter): void {
     this.filters.push(filter);
   }
 
-  public notify(err: any): Promise<INotice> {
+  notify(err: any): Promise<INotice> {
     let notice: INotice = {
       errors: [],
       context: Object.assign(
