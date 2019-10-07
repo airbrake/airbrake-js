@@ -45,9 +45,9 @@ yarn add @airbrake/browser
 In your main application pack, import `@airbrake/browser` and configure the client.
 
 ```js
-import Airbrake from '@airbrake/browser';
+import Notifier from '@airbrake/browser';
 
-const airbrake = new Airbrake.Browser({
+const airbrake = new Notifier({
   projectId: 1,
   projectKey: 'FIXME'
 });

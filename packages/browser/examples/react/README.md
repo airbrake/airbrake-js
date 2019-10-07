@@ -5,13 +5,13 @@ To report errors from a React app, you'll need to set up and use an
 and initialize an `Airbrake.Notifier` with your `projectId` and `projectKey`.
 
 ```js
-import Airbrake from '@airbrake/notifier';
+import Notifier from '@airbrake/browser';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false };
-    this.airbrake = new Airbrake.Notifier({
+    this.airbrake = new Notifier({
       projectId: 1,
       projectKey: 'FIXME'
     });
