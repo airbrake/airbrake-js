@@ -45,6 +45,11 @@ export class Notifier extends BaseNotifier {
       });
     }
 
+    //TODO: deprecated
+    if (this._opt.ignoreWindowError) {
+      opt.instrumentation.onerror = false;
+    }
+
     this._instrument(opt.instrumentation);
   }
 

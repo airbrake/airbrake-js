@@ -22,29 +22,6 @@ describe('Notifier config', () => {
     expect(reporter.mock.calls.length).toBe(1);
   });
 
-  test('supports ignoreWindowError', (done) => {
-    client = new Notifier({
-      projectId: 1,
-      projectKey: 'abc',
-      reporter,
-      ignoreWindowError: true,
-    });
-    let promise = client.notify({
-      error: err,
-      context: {
-        windowError: true,
-      },
-    });
-
-    expect(reporter.mock.calls.length).toBe(0);
-    promise.then((notice) => {
-      expect(notice.error.toString()).toBe(
-        'Error: airbrake: window error is ignored',
-      );
-      done();
-    });
-  });
-
   test('supports environment', () => {
     client = new Notifier({
       projectId: 1,

@@ -20,7 +20,7 @@ export interface IOptions {
   host?: string;
   timeout?: number;
   keysBlacklist?: any[];
-  ignoreWindowError?: boolean;
+  ignoreWindowError?: boolean; //TODO:deprecated
   processor?: Processor;
   reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;

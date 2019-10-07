@@ -96,11 +96,6 @@ export class BaseNotifier {
       return Promise.resolve(notice);
     }
 
-    if (this._opt.ignoreWindowError && err.context && err.context.windowError) {
-      notice.error = new Error('airbrake: window error is ignored');
-      return Promise.resolve(notice);
-    }
-
     let error = this.processor(err.error);
     notice.errors.push(error);
 
