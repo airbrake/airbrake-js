@@ -1,5 +1,6 @@
 import { IOptions } from '@browser/options';
 import { BaseNotifier } from '@browser/base_notifier';
+import { INotice } from '@browser/notice';
 import { nodeFilter } from './filter/node';
 import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
 import { Scope, ScopeManager } from './scope';
@@ -7,6 +8,7 @@ import { Scope, ScopeManager } from './scope';
 export class Notifier extends BaseNotifier {
   routes: Routes;
 
+  _inFlight: number;
   _scopeManager: ScopeManager;
   _mainScope: Scope;
 
@@ -19,6 +21,7 @@ export class Notifier extends BaseNotifier {
     this.addFilter(nodeFilter);
     this.routes = new Routes(this);
 
+    this._inFlight = 0;
     this._scopeManager = new ScopeManager();
     this._mainScope = new Scope();
 
@@ -61,6 +64,41 @@ export class Notifier extends BaseNotifier {
 
   setActiveScope(scope: Scope) {
     this._scopeManager.setActive(scope);
+  }
+
+  notify(err: any): Promise<INotice> {
+    this._inFlight++;
+    return super.notify(err).finally(() => {
+      this._inFlight--;
+    });
+  }
+
+  async flush(timeout = 3000): Promise<boolean> {
+    if (this._inFlight === 0 || timeout <= 0) {
+      return Promise.resolve(true);
+    }
+    return new Promise((resolve, _reject) => {
+      let interval = timeout / 100;
+      if (interval <= 0) {
+        interval = 10;
+      }
+
+      const timerID = setInterval(() => {
+        if (this._inFlight === 0) {
+          resolve(true);
+          clearInterval(timerID);
+          return;
+        }
+
+        if (timeout <= 0) {
+          resolve(false);
+          clearInterval(timerID);
+          return;
+        }
+
+        timeout -= interval;
+      }, interval);
+    });
   }
 }
 
