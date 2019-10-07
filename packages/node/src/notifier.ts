@@ -25,6 +25,9 @@ export class Notifier extends BaseNotifier {
     this._scopeManager = new ScopeManager();
     this._mainScope = new Scope();
 
+    process.on('beforeExit', async () => {
+      await this.flush();
+    });
     process.on('uncaughtException', (err) => {
       this.notify(err).then(() => {
         if (process.listeners('uncaughtException').length !== 1) {
