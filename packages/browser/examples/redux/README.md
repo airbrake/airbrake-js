@@ -2,18 +2,18 @@
 
 #### 1. Add dependencies
 ``` bash
-npm install airbrake-js redux-airbrake --save
+npm install @airbrake/browser redux-airbrake --save
 ```
 
 #### 2. Import dependency
 ``` js
-import AirbrakeClient from 'airbrake-js';
+import Airbrake from '@airbrake/browser';
 import airbrakeMiddleware from 'redux-airbrake';
 ```
 
 #### 3. Configure & add middleware
 ``` js
-const airbrake = new AirbrakeClient({
+const airbrake = new Airbrake.Browser({
     projectId: '******',
     projectKey: '**************'
 });

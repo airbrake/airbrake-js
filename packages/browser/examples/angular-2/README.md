@@ -1,19 +1,19 @@
 ### Usage with Angular 2 & TypeScript
 
 ### Create an error handler
-The first step is to create an error handler with an `AirbrakeClient`
+The first step is to create an error handler with a `Notifier`
 initialized with your `projectId` and `projectKey`. In this example the
 handler will be in a file called `error_handler.ts`.
 
 ```ts
 import { ErrorHandler } from '@angular/core';
-import AirbrakeClient from 'airbrake-js';
+import { Notifier } from '@airbrake/browser';
 
 export class AirbrakeErrorHandler implements ErrorHandler {
-  airbrake: AirbrakeClient;
+  airbrake: Notifier;
 
   constructor() {
-    this.airbrake = new AirbrakeClient({
+    this.airbrake = new Notifier({
       projectId: 1,
       projectKey: 'FIXME'
     });
@@ -49,4 +49,3 @@ import { AirbrakeErrorHandler } from './error_handler';
 })
 export class AppModule { }
 ```
-

@@ -1,6 +1,7 @@
 ### Usage with Ruby on Rails
 
 #### Option 1 - Asset pipeline
+
 Copy the compiled file
 [`dist/client.js`](https://github.com/airbrake/airbrake-js/blob/master/dist/client.js)
 from this repository to `vendor/assets/javascripts/airbrake.js` in your project.
@@ -8,9 +9,9 @@ from this repository to `vendor/assets/javascripts/airbrake.js` in your project.
 Then, add the following code to your Sprockets manifest:
 
 ```javascript
-//= require airbrake
+//= require @airbrake/browser
 
-var airbrake = new airbrakeJs.Client({
+var airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'FIXME'
 });
@@ -34,18 +35,19 @@ try {
 ```
 
 #### Option 2 - Webpacker
-Add `airbrake-js` and `cross-fetch` to your application.
+
+Add `@airbrake/broswer` to your application.
 
 ```sh
-yarn add airbrake-js cross-fetch
+yarn add @airbrake/browser
 ```
 
-In your main application pack, import `airbrake-js` and configure the client.
+In your main application pack, import `@airbrake/browser` and configure the client.
 
 ```js
-import AirbrakeClient from 'airbrake-js';
+import Airbrake from '@airbrake/browser';
 
-const airbrake = new AirbrakeClient({
+const airbrake = new Airbrake.Browser({
   projectId: 1,
   projectKey: 'FIXME'
 });
