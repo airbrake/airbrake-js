@@ -18,11 +18,11 @@ import { IOptions } from './options';
 
 export class BaseNotifier {
   _opt: IOptions;
-  protected url: string;
+  _url: string;
 
-  protected processor: Processor;
-  protected requester: Requester;
-  protected filters: Filter[] = [];
+  _processor: Processor;
+  _requester: Requester;
+  _filters: Filter[] = [];
   _scope = new Scope();
 
   _onClose: (() => void)[] = [];
@@ -36,10 +36,10 @@ export class BaseNotifier {
     this._opt.host = this._opt.host || 'https://api.airbrake.io';
     this._opt.timeout = this._opt.timeout || 10000;
     this._opt.keysBlacklist = this._opt.keysBlacklist || [/password/, /secret/];
-    this.url = `${this._opt.host}/api/v3/projects/${this._opt.projectId}/notices?key=${this._opt.projectKey}`;
+    this._url = `${this._opt.host}/api/v3/projects/${this._opt.projectId}/notices?key=${this._opt.projectKey}`;
 
-    this.processor = this._opt.processor || espProcessor;
-    this.requester = makeRequester(this._opt);
+    this._processor = this._opt.processor || espProcessor;
+    this._requester = makeRequester(this._opt);
 
     this.addFilter(ignoreNoiseFilter);
     this.addFilter(makeDebounceFilter());
@@ -69,7 +69,7 @@ export class BaseNotifier {
   }
 
   addFilter(filter: Filter): void {
-    this.filters.push(filter);
+    this._filters.push(filter);
   }
 
   notify(err: any): Promise<INotice> {
@@ -96,10 +96,10 @@ export class BaseNotifier {
       return Promise.resolve(notice);
     }
 
-    let error = this.processor(err.error);
+    let error = this._processor(err.error);
     notice.errors.push(error);
 
-    for (let filter of this.filters) {
+    for (let filter of this._filters) {
       let r = filter(notice);
       if (r === null) {
         notice.error = new Error('airbrake: error is filtered');
@@ -117,10 +117,10 @@ export class BaseNotifier {
       version: 'VERSION',
       url: 'https://github.com/airbrake/airbrake-js',
     };
-    return this.sendNotice(notice);
+    return this._sendNotice(notice);
   }
 
-  protected sendNotice(notice: INotice): Promise<INotice> {
+  _sendNotice(notice: INotice): Promise<INotice> {
     let body = jsonifyNotice(notice, {
       keysBlacklist: this._opt.keysBlacklist,
     });
@@ -134,10 +134,10 @@ export class BaseNotifier {
 
     let req = {
       method: 'POST',
-      url: this.url,
+      url: this._url,
       body,
     };
-    return this.requester(req)
+    return this._requester(req)
       .then((resp) => {
         notice.id = resp.json.id;
         return notice;
@@ -148,8 +148,7 @@ export class BaseNotifier {
       });
   }
 
-  // TODO: fix wrapping for multiple clients
-  public wrap(fn, props: string[] = []): IFuncWrapper {
+  wrap(fn, props: string[] = []): IFuncWrapper {
     if (fn._airbrake) {
       return fn;
     }
@@ -197,7 +196,7 @@ export class BaseNotifier {
 
   _ignoreNextWindowError() {}
 
-  public call(fn, ..._args: any[]): any {
+  call(fn, ..._args: any[]): any {
     let wrapper = this.wrap(fn);
     return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
   }
