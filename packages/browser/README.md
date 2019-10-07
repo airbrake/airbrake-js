@@ -57,7 +57,7 @@ Example configurations can be found in [examples](examples), including:
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
-var airbrake = new Airbrake.Notifier({
+const airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'REPLACE_ME',
   environment: 'production',
@@ -67,14 +67,14 @@ var airbrake = new Airbrake.Notifier({
 Or if you are using browserify/webpack/etc:
 
 ```js
-var Airbrake = require('@airbrake/browser');
-var airbrake = new Airbrake.Notifier({...});
+const Airbrake = require('@airbrake/browser');
+const airbrake = new Airbrake.Notifier({...});
 ```
 
 Then you can send a textual message to Airbrake:
 
 ```js
-var promise = airbrake.notify(`user id=${user_id} not found`);
+let promise = airbrake.notify(`user id=${user_id} not found`);
 promise.then(function(notice) {
   if (notice.id) {
     console.log('notice id', notice.id);
@@ -99,7 +99,7 @@ try {
 Alternatively, you can wrap any code which may throw errors using the client's `wrap` method:
 
 ```js
-var startApp = function() {
+let startApp = function() {
   // This will throw if the document has no head tag.
   document.head.insertBefore(document.createElement('style'));
 }
@@ -112,7 +112,7 @@ startApp();
 or use `call` shortcut:
 
 ```js
-var startApp = function() {
+let startApp = function() {
   // This will throw if the document has no head tag.
   document.head.insertBefore(document.createElement('style'));
 }

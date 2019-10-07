@@ -31,7 +31,7 @@ Example configurations can be found in [examples](examples), including:
 In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
 
 ```js
-var airbrake = new Airbrake.Notifier({
+const airbrake = new Airbrake.Notifier({
   ...
   request: request.defaults({'proxy':'http://localproxy.com'})
 });
