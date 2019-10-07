@@ -1,0 +1,7 @@
+{
+  "name": "airbrake",
+  "private": true,
+  "devDependencies": {
+    "lerna": "^3.16.4"
+  }
+}
