@@ -1,4 +1,4 @@
-/* airbrake-js v1.0.0-beta.5 */
+/* airbrake-js v1.0.0-beta.7 */
 var Airbrake = (function (exports) {
   'use strict';
 
@@ -1862,7 +1862,7 @@ var Airbrake = (function (exports) {
           notice.context.language = 'JavaScript';
           notice.context.notifier = {
               name: 'airbrake-js',
-              version: '1.0.0-beta.5',
+              version: '1.0.0-beta.7',
               url: 'https://github.com/airbrake/airbrake-js',
           };
           return this._sendNotice(notice);

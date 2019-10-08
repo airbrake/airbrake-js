@@ -676,7 +676,7 @@ var BaseNotifier = /** @class */ (function () {
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
             name: 'airbrake-js',
-            version: '1.0.0-beta.5',
+            version: '1.0.0-beta.7',
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this._sendNotice(notice);
