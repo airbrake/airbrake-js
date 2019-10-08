@@ -3,6 +3,7 @@ import { INotice } from '@browser/notice';
 const os = require('os');
 
 export function nodeFilter(notice: INotice): INotice {
+  notice.context.notifier.name = 'airbrake-js/node';
   notice.context.os = `${os.type()}/${os.release()}`;
   notice.context.architecture = os.arch();
   notice.context.hostname = os.hostname();

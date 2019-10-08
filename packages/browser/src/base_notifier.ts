@@ -113,7 +113,7 @@ export class BaseNotifier {
     }
     notice.context.language = 'JavaScript';
     notice.context.notifier = {
-      name: 'airbrake-js',
+      name: 'airbrake-js/browser',
       version: 'VERSION',
       url: 'https://github.com/airbrake/airbrake-js',
     };
