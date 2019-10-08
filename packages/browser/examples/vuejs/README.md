@@ -7,7 +7,7 @@ You can start reporting errors from your Vue.js app by configuring an
 ```js
 import Airbrake from '@airbrake/browser';
 
-var airbrake = new Airbrake.Browser({
+var airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'FIXME'
 });

@@ -13,7 +13,7 @@ import airbrakeMiddleware from 'redux-airbrake';
 
 #### 3. Configure & add middleware
 ``` js
-const airbrake = new Airbrake.Browser({
+const airbrake = new Airbrake.Notifier({
     projectId: '******',
     projectKey: '**************'
 });

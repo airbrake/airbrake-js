@@ -47,7 +47,7 @@ In your main application pack, import `@airbrake/browser` and configure the clie
 ```js
 import Airbrake from '@airbrake/browser';
 
-const airbrake = new Airbrake.Browser({
+const airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'FIXME'
 });
