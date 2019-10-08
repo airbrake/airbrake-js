@@ -42,10 +42,8 @@
   "web": "dist/airbrake.iife.js",
   "module": "dist/airbrake.esm.js",
   "jsnext:main": "dist/airbrake.esm.js",
-  "types": "src/airbrake.d.ts",
-  "source": "src/index.ts",
+  "types": "dist/airbrake.d.ts",
   "files": [
-    "src/",
     "dist/",
     "README.md",
     "LICENSE"

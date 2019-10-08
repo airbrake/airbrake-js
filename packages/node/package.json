@@ -33,6 +33,7 @@
   "main": "dist/airbrake.common.js",
   "module": "dist/airbrake.esm.js",
   "jsnext:main": "dist/airbrake.esm.js",
+  "types": "dist/airbrake.d.ts",
   "files": [
     "dist/",
     "README.md",
