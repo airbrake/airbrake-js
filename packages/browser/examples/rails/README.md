@@ -3,13 +3,13 @@
 #### Option 1 - Asset pipeline
 
 Copy the compiled file
-[`dist/client.js`](https://github.com/airbrake/airbrake-js/blob/master/dist/client.js)
+[`dist/airbrake.esm.js`](https://github.com/airbrake/airbrake-js/blob/master/packages/browser/dist/airbrake.esm.js)
 from this repository to `vendor/assets/javascripts/airbrake.js` in your project.
 
 Then, add the following code to your Sprockets manifest:
 
 ```javascript
-//= require @airbrake/browser
+//= require airbrake
 
 var airbrake = new Airbrake.Notifier({
   projectId: 1,
