@@ -22,15 +22,7 @@ export interface IOptions {
   host?: string;
   timeout?: number;
   keysBlacklist?: any[];
-  processor?: Processor;
-  reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;
-
-  request?: request.RequestAPI<
-    request.Request,
-    request.CoreOptions,
-    request.RequiredUriUrl
-  >;
 }
 
 interface IFuncWrapper {
