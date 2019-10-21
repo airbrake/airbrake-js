@@ -713,8 +713,8 @@ var BaseNotifier = /** @class */ (function () {
         }
         notice.context.language = 'JavaScript';
         notice.context.notifier = {
-            name: 'airbrake-js',
-            version: '1.0.0-beta.7',
+            name: 'airbrake-js/browser',
+            version: '1.0.0',
             url: 'https://github.com/airbrake/airbrake-js',
         };
         return this._sendNotice(notice);
@@ -803,6 +803,7 @@ var BaseNotifier = /** @class */ (function () {
 
 var os = require('os');
 function nodeFilter(notice) {
+    notice.context.notifier.name = 'airbrake-js/node';
     notice.context.os = os.type() + "/" + os.release();
     notice.context.architecture = os.arch();
     notice.context.hostname = os.hostname();
