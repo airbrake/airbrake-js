@@ -57,18 +57,13 @@ Example configurations can be found in [examples](examples), including:
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
+import Airbrake from '@airbrake/browser';
+
 const airbrake = new Airbrake.Notifier({
   projectId: 1,
   projectKey: 'REPLACE_ME',
   environment: 'production',
 });
-```
-
-Or if you are using browserify/webpack/etc:
-
-```js
-const Airbrake = require('@airbrake/browser');
-const airbrake = new Airbrake.Notifier({...});
 ```
 
 Then you can send a textual message to Airbrake:

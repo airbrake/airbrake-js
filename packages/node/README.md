@@ -26,6 +26,69 @@ Example configurations can be found in [examples](examples), including:
 * [Express](examples/express)
 * [Node.js](examples/nodejs)
 
+## Basic Usage
+
+First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
+
+```js
+import Airbrake from '@airbrake/browser';
+
+const airbrake = new Airbrake.Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+```
+
+Then you can send a textual message to Airbrake:
+
+```js
+let promise = airbrake.notify(`user id=${user_id} not found`);
+promise.then(function(notice) {
+  if (notice.id) {
+    console.log('notice id', notice.id);
+  } else {
+    console.log('notify failed', notice.error);
+  }
+});
+```
+
+Or report catched errors directly:
+
+```js
+try {
+  // This will throw if the document has no head tag
+  document.head.insertBefore(document.createElement('style'));
+} catch(err) {
+  airbrake.notify(err);
+  throw err;
+}
+```
+
+Alternatively, you can wrap any code which may throw errors using the client's `wrap` method:
+
+```js
+let startApp = function() {
+  // This will throw if the document has no head tag.
+  document.head.insertBefore(document.createElement('style'));
+}
+startApp = airbrake.wrap(startApp);
+
+// Any exceptions thrown in startApp will be reported to Airbrake.
+startApp();
+```
+
+or use `call` shortcut:
+
+```js
+let startApp = function() {
+  // This will throw if the document has no head tag.
+  document.head.insertBefore(document.createElement('style'));
+}
+
+airbrake.call(startApp);
+```
+
 ### Node.js request and proxy
 
 In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
