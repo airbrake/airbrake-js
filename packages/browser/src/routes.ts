@@ -1,8 +1,8 @@
-import { IOptions } from '@browser/options';
-import { makeRequester, Requester } from '@browser/http_req';
-import { BaseMetric } from './metrics';
+import * as tdigest from 'tdigest';
 
-const TDigest = require('tdigest').TDigest;
+import { IOptions } from './options';
+import { makeRequester, Requester } from './http_req';
+import { BaseMetric } from './metrics';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -45,7 +45,7 @@ class TDigestStat {
   count = 0;
   sum = 0;
   sumsq = 0;
-  _td = new TDigest();
+  _td = new tdigest.TDigest();
 
   add(ms: number) {
     if (ms === 0) {

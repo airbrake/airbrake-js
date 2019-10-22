@@ -2,6 +2,7 @@ import { IFuncWrapper } from './func_wrapper';
 import { jsonifyNotice } from './jsonify_notice';
 import { INotice } from './notice';
 import { Scope } from './scope';
+import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
 
 import { Processor } from './processor/processor';
 import { espProcessor } from './processor/esp';
@@ -17,6 +18,8 @@ import { makeRequester, Requester } from './http_req';
 import { IOptions } from './options';
 
 export class BaseNotifier {
+  routes: Routes;
+
   _opt: IOptions;
   _url: string;
 
@@ -53,9 +56,7 @@ export class BaseNotifier {
       });
     }
 
-    this.addFilter((notice) => {
-      return notice;
-    });
+    this.routes = new Routes(this);
   }
 
   close(): void {
@@ -66,6 +67,10 @@ export class BaseNotifier {
 
   scope(): Scope {
     return this._scope;
+  }
+
+  setActiveScope(scope: Scope) {
+    this._scope = scope;
   }
 
   addFilter(filter: Filter): void {
@@ -199,5 +204,39 @@ export class BaseNotifier {
   call(fn, ..._args: any[]): any {
     let wrapper = this.wrap(fn);
     return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
+  }
+}
+
+class Routes {
+  _notifier: BaseNotifier;
+  _routes: RoutesStats;
+  _breakdowns: RoutesBreakdowns;
+
+  constructor(notifier: BaseNotifier) {
+    this._notifier = notifier;
+    this._routes = new RoutesStats(notifier._opt);
+    this._breakdowns = new RoutesBreakdowns(notifier._opt);
+  }
+
+  start(
+    method = '',
+    route = '',
+    statusCode = 0,
+    contentType = '',
+  ): RouteMetric {
+    const metric = new RouteMetric(method, route, statusCode, contentType);
+
+    const scope = this._notifier.scope().clone();
+    scope.setContext({ httpMethod: method, route: route });
+    scope.setMetric(metric);
+    this._notifier.setActiveScope(scope);
+
+    return metric;
+  }
+
+  notify(req: RouteMetric): void {
+    req.end();
+    this._routes.notify(req);
+    this._breakdowns.notify(req);
   }
 }

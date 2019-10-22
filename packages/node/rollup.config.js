@@ -1,9 +1,18 @@
 import typescript from 'rollup-plugin-typescript2';
+import resolve from 'rollup-plugin-node-resolve';
 import replace from 'rollup-plugin-replace';
+import commonjs from 'rollup-plugin-commonjs';
 
 const pkg = require('./package.json');
 
-const nodePlugins = [typescript(), replace({ VERSION: `${pkg.version}` })];
+const nodePlugins = [
+  resolve(),
+  commonjs({
+    namedExports: { tdigest: ['TDigest'] },
+  }),
+  typescript(),
+  replace({ VERSION: `${pkg.version}` }),
+];
 
 function cjs(cfg) {
   return Object.assign(
