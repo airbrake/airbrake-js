@@ -1,3 +1,5 @@
+import { IMetric, NoopMetric } from './metrics';
+
 interface HistoryRecord {
   type: string;
   date?: Date;
@@ -7,6 +9,9 @@ interface HistoryRecord {
 type Map = { [key: string]: any };
 
 export class Scope {
+  _metric: IMetric;
+  _noopMetric = new NoopMetric();
+
   _context: Map = {};
 
   _historyMaxLen = 20;
@@ -66,5 +71,13 @@ export class Scope {
       }
     }
     return true;
+  }
+
+  metric(): IMetric {
+    return this._metric || this._noopMetric;
+  }
+
+  setMetric(metric: IMetric) {
+    this._metric = metric;
   }
 }

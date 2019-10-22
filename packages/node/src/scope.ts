@@ -1,26 +1,7 @@
 import * as asyncHooks from 'async_hooks';
-import { Scope as BaseScope } from '@browser/scope';
-import { IMetric, NoopMetric } from './metrics';
+import { Scope } from '@browser/scope';
 
-export class Scope extends BaseScope {
-  _metric: IMetric;
-  _noopMetric = new NoopMetric();
-
-  clone(): Scope {
-    const clone = new Scope();
-    clone._context = { ...this._context };
-    clone._history = this._history.slice();
-    return clone;
-  }
-
-  metric(): IMetric {
-    return this._metric || this._noopMetric;
-  }
-
-  setMetric(metric: IMetric) {
-    this._metric = metric;
-  }
-}
+export { Scope };
 
 export class ScopeManager {
   _asyncHook: asyncHooks.AsyncHook;

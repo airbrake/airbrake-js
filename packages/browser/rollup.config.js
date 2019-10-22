@@ -10,7 +10,9 @@ const webPlugins = [
   resolve({
     browser: true,
   }),
-  commonjs(),
+  commonjs({
+    namedExports: { tdigest: ['TDigest'] },
+  }),
   typescript(),
   replace({ VERSION: `${pkg.version}` }),
   terser({
@@ -63,13 +65,13 @@ export default [
   {
     input: 'src/bundler.entry.ts',
     output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
-    external: ['error-stack-parser', 'cross-fetch'],
+    external: ['error-stack-parser', 'cross-fetch', 'tdigest'],
     plugins: nodePlugins,
   },
   {
     input: 'src/bundler.entry.ts',
     output: [esm({ file: 'dist/airbrake.esm.js' })],
-    external: ['error-stack-parser', 'cross-fetch'],
+    external: ['error-stack-parser', 'cross-fetch', 'tdigest'],
     plugins: nodePlugins,
   },
 ];
