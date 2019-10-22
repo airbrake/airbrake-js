@@ -31,9 +31,9 @@ Example configurations can be found in [examples](examples), including:
 First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
 
 ```js
-import Airbrake from '@airbrake/browser';
+import { Notifier } from '@airbrake/browser';
 
-const airbrake = new Airbrake.Notifier({
+const airbrake = new Notifier({
   projectId: 1,
   projectKey: 'REPLACE_ME',
   environment: 'production',

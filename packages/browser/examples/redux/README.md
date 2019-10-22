@@ -7,13 +7,13 @@ npm install @airbrake/browser redux-airbrake --save
 
 #### 2. Import dependency
 ``` js
-import Airbrake from '@airbrake/browser';
+import { Notifier } from '@airbrake/browser';
 import airbrakeMiddleware from 'redux-airbrake';
 ```
 
 #### 3. Configure & add middleware
 ``` js
-const airbrake = new Airbrake.Notifier({
+const airbrake = new Notifier({
     projectId: '******',
     projectKey: '**************'
 });

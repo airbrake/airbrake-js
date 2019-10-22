@@ -7,7 +7,7 @@ Integration with Angular is as simple as adding an
 angular
   .module('app')
   .factory('$exceptionHandler', function ($log) {
-    var airbrake = new Airbrake.Notifier({
+    var airbrake = new Notifier({
       projectid: 1,       // Airbrake project id
       projectkey: 'FIXME' // Airbrake project API key
     });
