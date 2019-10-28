@@ -7,7 +7,7 @@ function patch(redis, airbrake) {
     var proto = redis.RedisClient.prototype;
     var origSendCommand = proto.internal_send_command;
     proto.internal_send_command = function ab_internal_send_command(cmd) {
-        var metric = airbrake.scope().metric();
+        var metric = airbrake.scope().routeMetric();
         metric.startSpan(SPAN_NAME);
         if (!metric.isRecording()) {
             return origSendCommand.apply(this, arguments);

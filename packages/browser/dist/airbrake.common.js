@@ -6,6 +6,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var ErrorStackParser = _interopDefault(require('error-stack-parser'));
 var fetch$1 = _interopDefault(require('cross-fetch'));
+var tdigest = require('tdigest');
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -256,8 +257,108 @@ function isBlacklisted(key, keysBlacklist) {
     return false;
 }
 
+var Span = /** @class */ (function () {
+    function Span(metric, name, startTime) {
+        this._dur = 0;
+        this._level = 0;
+        this._metric = metric;
+        this.name = name;
+        this.startTime = startTime || new Date();
+    }
+    Span.prototype.end = function (endTime) {
+        if (endTime) {
+            this.endTime = endTime;
+        }
+        else {
+            this.endTime = new Date();
+        }
+        this._dur += this.endTime.getTime() - this.startTime.getTime();
+        this._metric._incGroup(this.name, this._dur);
+        this._metric = null;
+    };
+    Span.prototype._pause = function () {
+        if (this._paused()) {
+            return;
+        }
+        var now = new Date();
+        this._dur += now.getTime() - this.startTime.getTime();
+        this.startTime = null;
+    };
+    Span.prototype._resume = function () {
+        if (!this._paused()) {
+            return;
+        }
+        this.startTime = new Date();
+    };
+    Span.prototype._paused = function () {
+        return this.startTime == null;
+    };
+    return Span;
+}());
+var BaseMetric = /** @class */ (function () {
+    function BaseMetric() {
+        this._spans = {};
+        this._groups = {};
+        this.startTime = new Date();
+    }
+    BaseMetric.prototype.end = function (endTime) {
+        if (!this.endTime) {
+            this.endTime = endTime || new Date();
+        }
+    };
+    BaseMetric.prototype.isRecording = function () {
+        return true;
+    };
+    BaseMetric.prototype.startSpan = function (name, startTime) {
+        var span = this._spans[name];
+        if (span) {
+            span._level++;
+        }
+        else {
+            span = new Span(this, name, startTime);
+            this._spans[name] = span;
+        }
+    };
+    BaseMetric.prototype.endSpan = function (name, endTime) {
+        var span = this._spans[name];
+        if (!span) {
+            console.error('airbrake: span=%s does not exist', name);
+            return;
+        }
+        if (span._level > 0) {
+            span._level--;
+        }
+        else {
+            span.end(endTime);
+            delete this._spans[span.name];
+        }
+    };
+    BaseMetric.prototype._incGroup = function (name, ms) {
+        this._groups[name] = (this._groups[name] || 0) + ms;
+    };
+    BaseMetric.prototype._duration = function () {
+        if (!this.endTime) {
+            this.endTime = new Date();
+        }
+        return this.endTime.getTime() - this.startTime.getTime();
+    };
+    return BaseMetric;
+}());
+var NoopMetric = /** @class */ (function () {
+    function NoopMetric() {
+    }
+    NoopMetric.prototype.isRecording = function () {
+        return false;
+    };
+    NoopMetric.prototype.startSpan = function (_name, _startTime) { };
+    NoopMetric.prototype.endSpan = function (_name, _startTime) { };
+    NoopMetric.prototype._incGroup = function (_name, _ms) { };
+    return NoopMetric;
+}());
+
 var Scope = /** @class */ (function () {
     function Scope() {
+        this._noopMetric = new NoopMetric();
         this._context = {};
         this._historyMaxLen = 20;
         this._history = [];
@@ -310,6 +411,18 @@ var Scope = /** @class */ (function () {
             }
         }
         return true;
+    };
+    Scope.prototype.routeMetric = function () {
+        return this._routeMetric || this._noopMetric;
+    };
+    Scope.prototype.setRouteMetric = function (metric) {
+        this._routeMetric = metric;
+    };
+    Scope.prototype.queueMetric = function () {
+        return this._queueMetric || this._noopMetric;
+    };
+    Scope.prototype.setQueueMetric = function (metric) {
+        this._queueMetric = metric;
     };
     return Scope;
 }());
@@ -602,6 +715,325 @@ function makeRequester$1(opts) {
     return request;
 }
 
+var TDigestStat = /** @class */ (function () {
+    function TDigestStat() {
+        this.count = 0;
+        this.sum = 0;
+        this.sumsq = 0;
+        this._td = new tdigest.TDigest();
+    }
+    TDigestStat.prototype.add = function (ms) {
+        if (ms === 0) {
+            ms = 0.00001;
+        }
+        this.count += 1;
+        this.sum += ms;
+        this.sumsq += ms * ms;
+        this._td.push(ms);
+    };
+    TDigestStat.prototype.toJSON = function () {
+        return {
+            count: this.count,
+            sum: this.sum,
+            sumsq: this.sumsq,
+            tdigestCentroids: tdigestCentroids(this._td),
+        };
+    };
+    return TDigestStat;
+}());
+var TDigestStatGroups = /** @class */ (function (_super) {
+    __extends(TDigestStatGroups, _super);
+    function TDigestStatGroups() {
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.groups = {};
+        return _this;
+    }
+    TDigestStatGroups.prototype.addGroups = function (totalMs, groups) {
+        this.add(totalMs);
+        for (var name_1 in groups) {
+            this.addGroup(name_1, groups[name_1]);
+        }
+    };
+    TDigestStatGroups.prototype.addGroup = function (name, ms) {
+        var stat = this.groups[name];
+        if (!stat) {
+            stat = new TDigestStat();
+            this.groups[name] = stat;
+        }
+        stat.add(ms);
+    };
+    TDigestStatGroups.prototype.toJSON = function () {
+        return {
+            count: this.count,
+            sum: this.sum,
+            sumsq: this.sumsq,
+            tdigestCentroids: tdigestCentroids(this._td),
+            groups: this.groups,
+        };
+    };
+    return TDigestStatGroups;
+}(TDigestStat));
+function tdigestCentroids(td) {
+    var means = [];
+    var counts = [];
+    td.centroids.each(function (c) {
+        means.push(c.mean);
+        counts.push(c.n);
+    });
+    return {
+        mean: means,
+        count: counts,
+    };
+}
+
+var FLUSH_INTERVAL = 15000; // 15 seconds
+var RouteMetric = /** @class */ (function (_super) {
+    __extends(RouteMetric, _super);
+    function RouteMetric(method, route, statusCode, contentType) {
+        if (method === void 0) { method = ''; }
+        if (route === void 0) { route = ''; }
+        if (statusCode === void 0) { statusCode = 0; }
+        if (contentType === void 0) { contentType = ''; }
+        var _this = _super.call(this) || this;
+        _this.method = method;
+        _this.route = route;
+        _this.statusCode = statusCode;
+        _this.contentType = contentType;
+        _this.startTime = new Date();
+        return _this;
+    }
+    return RouteMetric;
+}(BaseMetric));
+var RoutesStats = /** @class */ (function () {
+    function RoutesStats(opt) {
+        this._m = {};
+        this._opt = opt;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-stats?key=" + opt.projectKey;
+        this._requester = makeRequester$1(opt);
+    }
+    RoutesStats.prototype.notify = function (req) {
+        var _this = this;
+        var ms = req._duration();
+        var minute = 60 * 1000;
+        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
+        var key = {
+            method: req.method,
+            route: req.route,
+            statusCode: req.statusCode,
+            time: startTime,
+        };
+        var keyStr = JSON.stringify(key);
+        var stat = this._m[keyStr];
+        if (!stat) {
+            stat = new TDigestStat();
+            this._m[keyStr] = stat;
+        }
+        stat.add(ms);
+        if (this._timer) {
+            return;
+        }
+        this._timer = setTimeout(function () {
+            _this._flush();
+        }, FLUSH_INTERVAL);
+    };
+    RoutesStats.prototype._flush = function () {
+        var routes = [];
+        for (var keyStr in this._m) {
+            if (!this._m.hasOwnProperty(keyStr)) {
+                continue;
+            }
+            var key = JSON.parse(keyStr);
+            var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
+            routes.push(v);
+        }
+        this._m = {};
+        this._timer = null;
+        var outJSON = JSON.stringify({
+            environment: this._opt.environment,
+            routes: routes,
+        });
+        var req = {
+            method: 'POST',
+            url: this._url,
+            body: outJSON,
+        };
+        this._requester(req)
+            .then(function (_resp) {
+            // nothing
+        })
+            .catch(function (err) {
+            if (console.error) {
+                console.error('can not report routes stats', err);
+            }
+        });
+    };
+    return RoutesStats;
+}());
+var RoutesBreakdowns = /** @class */ (function () {
+    function RoutesBreakdowns(opt) {
+        this._m = {};
+        this._opt = opt;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-breakdowns?key=" + opt.projectKey;
+        this._requester = makeRequester$1(opt);
+    }
+    RoutesBreakdowns.prototype.notify = function (req) {
+        var _this = this;
+        if (req.statusCode < 200 ||
+            (req.statusCode >= 300 && req.statusCode < 400) ||
+            req.statusCode === 404 ||
+            Object.keys(req._groups).length === 0) {
+            return;
+        }
+        var ms = req._duration();
+        if (ms === 0) {
+            ms = 0.00001;
+        }
+        var minute = 60 * 1000;
+        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
+        var key = {
+            method: req.method,
+            route: req.route,
+            responseType: this._responseType(req),
+            time: startTime,
+        };
+        var keyStr = JSON.stringify(key);
+        var stat = this._m[keyStr];
+        if (!stat) {
+            stat = new TDigestStatGroups();
+            this._m[keyStr] = stat;
+        }
+        stat.addGroups(ms, req._groups);
+        if (this._timer) {
+            return;
+        }
+        this._timer = setTimeout(function () {
+            _this._flush();
+        }, FLUSH_INTERVAL);
+    };
+    RoutesBreakdowns.prototype._flush = function () {
+        var routes = [];
+        for (var keyStr in this._m) {
+            if (!this._m.hasOwnProperty(keyStr)) {
+                continue;
+            }
+            var key = JSON.parse(keyStr);
+            var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
+            routes.push(v);
+        }
+        this._m = {};
+        this._timer = null;
+        var outJSON = JSON.stringify({
+            environment: this._opt.environment,
+            routes: routes,
+        });
+        var req = {
+            method: 'POST',
+            url: this._url,
+            body: outJSON,
+        };
+        this._requester(req)
+            .then(function (_resp) {
+            // nothing
+        })
+            .catch(function (err) {
+            if (console.error) {
+                console.error('can not report routes breakdowns', err);
+            }
+        });
+    };
+    RoutesBreakdowns.prototype._responseType = function (req) {
+        if (req.statusCode >= 500) {
+            return '5xx';
+        }
+        if (req.statusCode >= 400) {
+            return '4xx';
+        }
+        if (!req.contentType) {
+            return '';
+        }
+        return req.contentType.split(';')[0].split('/')[-1];
+    };
+    return RoutesBreakdowns;
+}());
+
+var FLUSH_INTERVAL$1 = 15000; // 15 seconds
+var QueueMetric = /** @class */ (function (_super) {
+    __extends(QueueMetric, _super);
+    function QueueMetric(queue) {
+        var _this = _super.call(this) || this;
+        _this.queue = queue;
+        _this.startTime = new Date();
+        return _this;
+    }
+    return QueueMetric;
+}(BaseMetric));
+var QueuesStats = /** @class */ (function () {
+    function QueuesStats(opt) {
+        this._m = {};
+        this._opt = opt;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/queues-stats?key=" + opt.projectKey;
+        this._requester = makeRequester$1(opt);
+    }
+    QueuesStats.prototype.notify = function (q) {
+        var _this = this;
+        var ms = q._duration();
+        if (ms === 0) {
+            ms = 0.00001;
+        }
+        var minute = 60 * 1000;
+        var startTime = new Date(Math.floor(q.startTime.getTime() / minute) * minute);
+        var key = {
+            queue: q.queue,
+            time: startTime,
+        };
+        var keyStr = JSON.stringify(key);
+        var stat = this._m[keyStr];
+        if (!stat) {
+            stat = new TDigestStatGroups();
+            this._m[keyStr] = stat;
+        }
+        stat.addGroups(ms, q._groups);
+        if (this._timer) {
+            return;
+        }
+        this._timer = setTimeout(function () {
+            _this._flush();
+        }, FLUSH_INTERVAL$1);
+    };
+    QueuesStats.prototype._flush = function () {
+        var queues = [];
+        for (var keyStr in this._m) {
+            if (!this._m.hasOwnProperty(keyStr)) {
+                continue;
+            }
+            var key = JSON.parse(keyStr);
+            var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
+            queues.push(v);
+        }
+        this._m = {};
+        this._timer = null;
+        var outJSON = JSON.stringify({
+            environment: this._opt.environment,
+            queues: queues,
+        });
+        var req = {
+            method: 'POST',
+            url: this._url,
+            body: outJSON,
+        };
+        this._requester(req)
+            .then(function (_resp) {
+            // nothing
+        })
+            .catch(function (err) {
+            if (console.error) {
+                console.error('can not report queues breakdowns', err);
+            }
+        });
+    };
+    return QueuesStats;
+}());
+
 var BaseNotifier = /** @class */ (function () {
     function BaseNotifier(opt) {
         var _this = this;
@@ -622,15 +1054,19 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(makeDebounceFilter());
         this.addFilter(uncaughtMessageFilter);
         this.addFilter(angularMessageFilter);
-        if (this._opt.environment) {
-            this.addFilter(function (notice) {
-                notice.context.environment = _this._opt.environment;
-                return notice;
-            });
-        }
         this.addFilter(function (notice) {
+            notice.context.notifier = {
+                name: 'airbrake-js/browser',
+                version: '1.0.1',
+                url: 'https://github.com/airbrake/airbrake-js',
+            };
+            if (_this._opt.environment) {
+                notice.context.environment = _this._opt.environment;
+            }
             return notice;
         });
+        this.routes = new Routes(this);
+        this.queues = new Queues(this);
     }
     BaseNotifier.prototype.close = function () {
         for (var _i = 0, _a = this._onClose; _i < _a.length; _i++) {
@@ -640,6 +1076,9 @@ var BaseNotifier = /** @class */ (function () {
     };
     BaseNotifier.prototype.scope = function () {
         return this._scope;
+    };
+    BaseNotifier.prototype.setActiveScope = function (scope) {
+        this._scope = scope;
     };
     BaseNotifier.prototype.addFilter = function (filter) {
         this._filters.push(filter);
@@ -674,11 +1113,6 @@ var BaseNotifier = /** @class */ (function () {
             notice.context = {};
         }
         notice.context.language = 'JavaScript';
-        notice.context.notifier = {
-            name: 'airbrake-js/browser',
-            version: '1.0.0',
-            url: 'https://github.com/airbrake/airbrake-js',
-        };
         return this._sendNotice(notice);
     };
     BaseNotifier.prototype._sendNotice = function (notice) {
@@ -761,6 +1195,50 @@ var BaseNotifier = /** @class */ (function () {
         return wrapper.apply(this, Array.prototype.slice.call(arguments, 1));
     };
     return BaseNotifier;
+}());
+var Routes = /** @class */ (function () {
+    function Routes(notifier) {
+        this._notifier = notifier;
+        this._routes = new RoutesStats(notifier._opt);
+        this._breakdowns = new RoutesBreakdowns(notifier._opt);
+    }
+    Routes.prototype.start = function (method, route, statusCode, contentType) {
+        if (method === void 0) { method = ''; }
+        if (route === void 0) { route = ''; }
+        if (statusCode === void 0) { statusCode = 0; }
+        if (contentType === void 0) { contentType = ''; }
+        var metric = new RouteMetric(method, route, statusCode, contentType);
+        var scope = this._notifier.scope().clone();
+        scope.setContext({ httpMethod: method, route: route });
+        scope.setRouteMetric(metric);
+        this._notifier.setActiveScope(scope);
+        return metric;
+    };
+    Routes.prototype.notify = function (req) {
+        req.end();
+        this._routes.notify(req);
+        this._breakdowns.notify(req);
+    };
+    return Routes;
+}());
+var Queues = /** @class */ (function () {
+    function Queues(notifier) {
+        this._notifier = notifier;
+        this._queues = new QueuesStats(notifier._opt);
+    }
+    Queues.prototype.start = function (queue) {
+        var metric = new QueueMetric(queue);
+        var scope = this._notifier.scope().clone();
+        scope.setContext({ queue: queue });
+        scope.setQueueMetric(metric);
+        this._notifier.setActiveScope(scope);
+        return metric;
+    };
+    Queues.prototype.notify = function (q) {
+        q.end();
+        this._queues.notify(q);
+    };
+    return Queues;
 }());
 
 function windowFilter(notice) {

@@ -11,7 +11,7 @@ function patch(mysql2, airbrake) {
 }
 function wrapQuery(origQuery, airbrake) {
     return function abQuery(sql, values, cb) {
-        var metric = airbrake.scope().metric();
+        var metric = airbrake.scope().routeMetric();
         metric.startSpan(SPAN_NAME);
         if (!metric.isRecording()) {
             return origQuery.apply(this, arguments);

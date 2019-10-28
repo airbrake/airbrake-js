@@ -21,7 +21,7 @@ function patch(pg, airbrake) {
 function patchClient(Client, airbrake) {
     var origQuery = Client.prototype.query;
     Client.prototype.query = function abQuery() {
-        var metric = airbrake.scope().metric();
+        var metric = airbrake.scope().routeMetric();
         metric.startSpan(SPAN_NAME);
         if (!metric.isRecording()) {
             return origQuery.apply(this, arguments);
