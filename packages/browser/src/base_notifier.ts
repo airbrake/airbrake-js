@@ -49,12 +49,17 @@ export class BaseNotifier {
     this.addFilter(uncaughtMessageFilter);
     this.addFilter(angularMessageFilter);
 
-    if (this._opt.environment) {
-      this.addFilter((notice: INotice): INotice | null => {
+    this.addFilter((notice: INotice): INotice | null => {
+      notice.context.notifier = {
+        name: 'airbrake-js/browser',
+        version: 'VERSION',
+        url: 'https://github.com/airbrake/airbrake-js',
+      };
+      if (this._opt.environment) {
         notice.context.environment = this._opt.environment;
-        return notice;
-      });
-    }
+      }
+      return notice;
+    });
 
     this.routes = new Routes(this);
   }
@@ -117,11 +122,6 @@ export class BaseNotifier {
       notice.context = {};
     }
     notice.context.language = 'JavaScript';
-    notice.context.notifier = {
-      name: 'airbrake-js/browser',
-      version: 'VERSION',
-      url: 'https://github.com/airbrake/airbrake-js',
-    };
     return this._sendNotice(notice);
   }
 
