@@ -1,10 +1,14 @@
 function start() {
   var airbrake = new Airbrake.Notifier({
-    projectId: 1,
-    projectKey: 'FIXME',
+    projectId: 105138,
+    projectKey: 'ab34d9c2b6d3639bd3447139342ef181',
   });
 
-  airbrake.notify('app started');
+  let metric = airbrake.queues.start('something');
+  airbrake.notify('app started').then(() => {
+    console.log('notify');
+    airbrake.queues.notify(metric);
+  });
 
   $(function() {
     $('#send_error').click(function() {

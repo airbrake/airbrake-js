@@ -2,7 +2,7 @@ import { Notifier } from '../notifier';
 
 const SPAN_NAME = 'redis';
 
-export function patch(redis, airbrake: Notifier) {
+export function patch(redis, airbrake: Notifier): void {
   const proto = redis.RedisClient.prototype;
   const origSendCommand = proto.internal_send_command;
   proto.internal_send_command = function ab_internal_send_command(cmd) {
@@ -22,6 +22,4 @@ export function patch(redis, airbrake: Notifier) {
 
     return origSendCommand.apply(this, arguments);
   };
-
-  return redis;
 }

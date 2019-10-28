@@ -1,6 +1,6 @@
 import { Notifier } from '../notifier';
 
-export function patch(createDebug, airbrake: Notifier) {
+export function patch(createDebug, airbrake: Notifier): void {
   const oldInit = createDebug.init;
   createDebug.init = function(debug) {
     oldInit.apply(this, arguments);

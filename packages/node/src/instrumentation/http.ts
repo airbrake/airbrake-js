@@ -2,7 +2,7 @@ import { Notifier } from '../notifier';
 
 const SPAN_NAME = 'http';
 
-export function patch(http, airbrake: Notifier) {
+export function patch(http, airbrake: Notifier): void {
   if (http.request) {
     http.request = wrapRequest(http.request, airbrake);
   }

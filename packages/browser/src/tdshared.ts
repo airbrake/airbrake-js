@@ -1,4 +1,4 @@
-import * as tdigest from 'tdigest';
+const tdigest = require('tdigest');
 
 interface ICentroid {
   mean: number;
@@ -25,7 +25,7 @@ export class TDigestStat {
   count = 0;
   sum = 0;
   sumsq = 0;
-  _td = new tdigest.TDigest();
+  _td = new tdigest.Digest();
 
   add(ms: number) {
     if (ms === 0) {

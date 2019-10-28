@@ -1,6 +1,5 @@
 import ErrorStackParser from 'error-stack-parser';
 import fetch$1 from 'cross-fetch';
-import { TDigest } from 'tdigest';
 
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation. All rights reserved.
@@ -709,12 +708,13 @@ function makeRequester$1(opts) {
     return request;
 }
 
+var tdigest = require('tdigest');
 var TDigestStat = /** @class */ (function () {
     function TDigestStat() {
         this.count = 0;
         this.sum = 0;
         this.sumsq = 0;
-        this._td = new TDigest();
+        this._td = new tdigest.Digest();
     }
     TDigestStat.prototype.add = function (ms) {
         if (ms === 0) {
@@ -1051,7 +1051,7 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(function (notice) {
             notice.context.notifier = {
                 name: 'airbrake-js/browser',
-                version: '1.0.1',
+                version: '1.0.2',
                 url: 'https://github.com/airbrake/airbrake-js',
             };
             if (_this._opt.environment) {

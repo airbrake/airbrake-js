@@ -16,7 +16,6 @@ function patch(pg, airbrake) {
             return native;
         });
     }
-    return pg;
 }
 function patchClient(Client, airbrake) {
     var origQuery = Client.prototype.query;

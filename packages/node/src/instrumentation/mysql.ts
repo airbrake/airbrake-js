@@ -3,7 +3,7 @@ import { IMetric } from '../metrics';
 
 const SPAN_NAME = 'sql';
 
-export function patch(mysql, airbrake: Notifier) {
+export function patch(mysql, airbrake: Notifier): void {
   mysql.createPool = wrapCreatePool(mysql.createPool, airbrake);
 
   const origCreatePoolCluster = mysql.createPoolCluster;
@@ -19,8 +19,6 @@ export function patch(mysql, airbrake: Notifier) {
     wrapConnection(conn, airbrake);
     return conn;
   };
-
-  return mysql;
 }
 
 function wrapCreatePool(origFn, airbrake: Notifier) {

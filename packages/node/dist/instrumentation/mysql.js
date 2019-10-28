@@ -17,7 +17,6 @@ function patch(mysql, airbrake) {
         wrapConnection(conn, airbrake);
         return conn;
     };
-    return mysql;
 }
 function wrapCreatePool(origFn, airbrake) {
     return function abCreatePool() {

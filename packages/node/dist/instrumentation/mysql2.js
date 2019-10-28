@@ -7,7 +7,6 @@ function patch(mysql2, airbrake) {
     var proto = mysql2.Connection.prototype;
     proto.query = wrapQuery(proto.query, airbrake);
     proto.execute = wrapQuery(proto.execute, airbrake);
-    return mysql2;
 }
 function wrapQuery(origQuery, airbrake) {
     return function abQuery(sql, values, cb) {

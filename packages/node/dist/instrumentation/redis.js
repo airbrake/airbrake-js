@@ -21,7 +21,6 @@ function patch(redis, airbrake) {
         }
         return origSendCommand.apply(this, arguments);
     };
-    return redis;
 }
 
 exports.patch = patch;

@@ -2,7 +2,7 @@ import { Notifier } from '../notifier';
 
 const SPAN_NAME = 'sql';
 
-export function patch(pg, airbrake: Notifier) {
+export function patch(pg, airbrake: Notifier): void {
   patchClient(pg.Client, airbrake);
 
   const origGetter = pg.__lookupGetter__('native');
@@ -16,8 +16,6 @@ export function patch(pg, airbrake: Notifier) {
       return native;
     });
   }
-
-  return pg;
 }
 
 function patchClient(Client, airbrake: Notifier): void {

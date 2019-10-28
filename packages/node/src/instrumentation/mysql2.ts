@@ -2,11 +2,10 @@ import { Notifier } from '../notifier';
 
 const SPAN_NAME = 'sql';
 
-export function patch(mysql2, airbrake: Notifier) {
+export function patch(mysql2, airbrake: Notifier): void {
   const proto = mysql2.Connection.prototype;
   proto.query = wrapQuery(proto.query, airbrake);
   proto.execute = wrapQuery(proto.execute, airbrake);
-  return mysql2;
 }
 
 function wrapQuery(origQuery, airbrake: Notifier) {

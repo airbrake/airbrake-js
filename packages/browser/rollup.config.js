@@ -10,9 +10,7 @@ const webPlugins = [
   resolve({
     browser: true,
   }),
-  commonjs({
-    namedExports: { tdigest: ['TDigest'] },
-  }),
+  commonjs(),
   typescript(),
   replace({ VERSION: `${pkg.version}` }),
   terser({
