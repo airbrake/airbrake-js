@@ -13,7 +13,7 @@ export function patch(http, airbrake: Notifier) {
 
 export function wrapRequest(origFn, airbrake: Notifier) {
   return function abRequest() {
-    const metric = airbrake.scope().metric();
+    const metric = airbrake.scope().routeMetric();
     metric.startSpan(SPAN_NAME);
 
     const req = origFn.apply(this, arguments);

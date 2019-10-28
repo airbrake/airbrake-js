@@ -23,7 +23,7 @@ export function patch(pg, airbrake: Notifier) {
 function patchClient(Client, airbrake: Notifier): void {
   const origQuery = Client.prototype.query;
   Client.prototype.query = function abQuery() {
-    const metric = airbrake.scope().metric();
+    const metric = airbrake.scope().routeMetric();
     metric.startSpan(SPAN_NAME);
     if (!metric.isRecording()) {
       return origQuery.apply(this, arguments);

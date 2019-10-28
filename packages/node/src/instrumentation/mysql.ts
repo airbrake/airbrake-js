@@ -60,7 +60,7 @@ function wrapConnection(conn, airbrake: Notifier): void {
 
   const origQuery = conn.query;
   conn.query = function abQuery(sql, values, cb) {
-    metric = airbrake.scope().metric();
+    metric = airbrake.scope().routeMetric();
     metric.startSpan(SPAN_NAME);
     if (!metric.isRecording()) {
       return origQuery.apply(this, arguments);

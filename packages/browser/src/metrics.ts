@@ -66,6 +66,12 @@ export class BaseMetric implements IMetric {
     this.startTime = new Date();
   }
 
+  end(endTime?: Date): void {
+    if (!this.endTime) {
+      this.endTime = endTime || new Date();
+    }
+  }
+
   isRecording(): boolean {
     return true;
   }

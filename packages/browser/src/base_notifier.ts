@@ -2,7 +2,6 @@ import { IFuncWrapper } from './func_wrapper';
 import { jsonifyNotice } from './jsonify_notice';
 import { INotice } from './notice';
 import { Scope } from './scope';
-import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
 
 import { Processor } from './processor/processor';
 import { espProcessor } from './processor/esp';
@@ -16,9 +15,12 @@ import { uncaughtMessageFilter } from './filter/uncaught_message';
 import { makeRequester, Requester } from './http_req';
 
 import { IOptions } from './options';
+import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
+import { QueuesStats, QueueMetric } from './queues';
 
 export class BaseNotifier {
   routes: Routes;
+  queues: Queues;
 
   _opt: IOptions;
   _url: string;
@@ -62,6 +64,7 @@ export class BaseNotifier {
     });
 
     this.routes = new Routes(this);
+    this.queues = new Queues(this);
   }
 
   close(): void {
@@ -228,7 +231,7 @@ class Routes {
 
     const scope = this._notifier.scope().clone();
     scope.setContext({ httpMethod: method, route: route });
-    scope.setMetric(metric);
+    scope.setRouteMetric(metric);
     this._notifier.setActiveScope(scope);
 
     return metric;
@@ -238,5 +241,31 @@ class Routes {
     req.end();
     this._routes.notify(req);
     this._breakdowns.notify(req);
+  }
+}
+
+class Queues {
+  _notifier: BaseNotifier;
+  _queues: QueuesStats;
+
+  constructor(notifier: BaseNotifier) {
+    this._notifier = notifier;
+    this._queues = new QueuesStats(notifier._opt);
+  }
+
+  start(queue: string): QueueMetric {
+    const metric = new QueueMetric(queue);
+
+    const scope = this._notifier.scope().clone();
+    scope.setContext({ queue: queue });
+    scope.setQueueMetric(metric);
+    this._notifier.setActiveScope(scope);
+
+    return metric;
+  }
+
+  notify(q: QueueMetric): void {
+    q.end();
+    this._queues.notify(q);
   }
 }
