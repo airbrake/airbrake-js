@@ -9,8 +9,9 @@ interface HistoryRecord {
 type Map = { [key: string]: any };
 
 export class Scope {
-  _metric: IMetric;
   _noopMetric = new NoopMetric();
+  _routeMetric: IMetric;
+  _queueMetric: IMetric;
 
   _context: Map = {};
 
@@ -73,11 +74,19 @@ export class Scope {
     return true;
   }
 
-  metric(): IMetric {
-    return this._metric || this._noopMetric;
+  routeMetric(): IMetric {
+    return this._routeMetric || this._noopMetric;
   }
 
-  setMetric(metric: IMetric) {
-    this._metric = metric;
+  setRouteMetric(metric: IMetric) {
+    this._routeMetric = metric;
+  }
+
+  queueMetric(): IMetric {
+    return this._queueMetric || this._noopMetric;
+  }
+
+  setQueueMetric(metric: IMetric) {
+    this._queueMetric = metric;
   }
 }

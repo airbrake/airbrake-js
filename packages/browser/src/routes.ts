@@ -1,31 +1,9 @@
-import * as tdigest from 'tdigest';
-
 import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
 import { BaseMetric } from './metrics';
+import { TDigestStat, TDigestStatGroups } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
-
-interface ICentroid {
-  mean: number;
-  n: number;
-}
-
-interface ICentroids {
-  each(fn: (c: ICentroid) => void): void;
-}
-
-interface ITDigest {
-  centroids: ICentroids;
-
-  push(x: number);
-  compress();
-}
-
-interface ITDigestCentroids {
-  mean: number[];
-  count: number[];
-}
 
 interface IRouteKey {
   method: string;
@@ -41,62 +19,6 @@ interface IBreakdownKey {
   time: Date;
 }
 
-class TDigestStat {
-  count = 0;
-  sum = 0;
-  sumsq = 0;
-  _td = new tdigest.TDigest();
-
-  add(ms: number) {
-    if (ms === 0) {
-      ms = 0.00001;
-    }
-    this.count += 1;
-    this.sum += ms;
-    this.sumsq += ms * ms;
-    this._td.push(ms);
-  }
-
-  toJSON() {
-    return {
-      count: this.count,
-      sum: this.sum,
-      sumsq: this.sumsq,
-      tdigestCentroids: tdigestCentroids(this._td),
-    };
-  }
-}
-
-class TDigestStatGroups extends TDigestStat {
-  groups: { [key: string]: TDigestStat } = {};
-
-  addGroups(totalMs: number, groups: { [key: string]: number }) {
-    this.add(totalMs);
-    for (let name in groups) {
-      this.addGroup(name, groups[name]);
-    }
-  }
-
-  addGroup(name: string, ms: number) {
-    let stat = this.groups[name];
-    if (!stat) {
-      stat = new TDigestStat();
-      this.groups[name] = stat;
-    }
-    stat.add(ms);
-  }
-
-  toJSON() {
-    return {
-      count: this.count,
-      sum: this.sum,
-      sumsq: this.sumsq,
-      tdigestCentroids: tdigestCentroids(this._td),
-      groups: this.groups,
-    };
-  }
-}
-
 export class RouteMetric extends BaseMetric {
   method: string;
   route: string;
@@ -110,12 +32,6 @@ export class RouteMetric extends BaseMetric {
     this.statusCode = statusCode;
     this.contentType = contentType;
     this.startTime = new Date();
-  }
-
-  end(endTime?: Date): void {
-    if (!this.endTime) {
-      this.endTime = endTime || new Date();
-    }
   }
 }
 
@@ -314,17 +230,4 @@ export class RoutesBreakdowns {
     }
     return req.contentType.split(';')[0].split('/')[-1];
   }
-}
-
-function tdigestCentroids(td: ITDigest): ITDigestCentroids {
-  let means: number[] = [];
-  let counts: number[] = [];
-  td.centroids.each((c: ICentroid) => {
-    means.push(c.mean);
-    counts.push(c.n);
-  });
-  return {
-    mean: means,
-    count: counts,
-  };
 }

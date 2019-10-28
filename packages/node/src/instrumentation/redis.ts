@@ -6,7 +6,7 @@ export function patch(redis, airbrake: Notifier) {
   const proto = redis.RedisClient.prototype;
   const origSendCommand = proto.internal_send_command;
   proto.internal_send_command = function ab_internal_send_command(cmd) {
-    const metric = airbrake.scope().metric();
+    const metric = airbrake.scope().routeMetric();
     metric.startSpan(SPAN_NAME);
     if (!metric.isRecording()) {
       return origSendCommand.apply(this, arguments);
