@@ -5,6 +5,18 @@ export declare class Notifier {
   public wrap(fn: any): IFuncWrapper;
   public call(fn: any, ...args: any[]): any;
   public onerror(): void;
+  public queues: Queues;
+}
+
+declare class Queues {
+  notify(q: QueueMetric): void
+  start(queue: string): QueueMetric;
+}
+
+declare class QueueMetric {
+  queue: string;
+  startTime: Date;
+  endTime: Date;
 }
 
 interface IInstrumentationOptions {
