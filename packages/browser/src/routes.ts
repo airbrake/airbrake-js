@@ -105,7 +105,7 @@ export class RoutesStats {
       routes,
     });
     let req = {
-      method: 'POST',
+      method: 'PUT',
       url: this._url,
       body: outJSON,
     };
@@ -203,7 +203,7 @@ export class RoutesBreakdowns {
       routes,
     });
     let req = {
-      method: 'POST',
+      method: 'PUT',
       url: this._url,
       body: outJSON,
     };

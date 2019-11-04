@@ -1,63 +1,85 @@
 import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
-import { BaseMetric } from './metrics';
-import { TDigestStatGroups } from './tdshared';
+import { TDigestStat } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
-interface IQueueKey {
-  queue: string;
+interface IQueryKey {
+  method: string;
+  route: string;
+  query: string;
+  func: string;
+  file: string;
+  line: number;
   time: Date;
 }
 
-export class QueueMetric extends BaseMetric {
-  queue: string;
+export class QueryInfo {
+  method = '';
+  route = '';
+  query = '';
+  func = '';
+  file = '';
+  line = 0;
+  startTime = new Date();
+  endTime: Date;
 
-  constructor(queue: string) {
-    super();
-    this.queue = queue;
-    this.startTime = new Date();
+  constructor(query = '') {
+    this.query = query;
+  }
+
+  _duration(): number {
+    if (!this.endTime) {
+      this.endTime = new Date();
+    }
+    return this.endTime.getTime() - this.startTime.getTime();
   }
 }
 
-export class QueuesStats {
+export class QueriesStats {
   _opt: IOptions;
   _url: string;
   _requester: Requester;
 
-  _m: { [key: string]: TDigestStatGroups } = {};
+  _m: { [key: string]: TDigestStat } = {};
   _timer;
 
   constructor(opt: IOptions) {
     this._opt = opt;
-    this._url = `${opt.host}/api/v5/projects/${opt.projectId}/queues-stats?key=${opt.projectKey}`;
+    this._url = `${opt.host}/api/v5/projects/${opt.projectId}/queries-stats?key=${opt.projectKey}`;
     this._requester = makeRequester(opt);
   }
 
-  notify(q: QueueMetric): void {
+  start(query = ''): QueryInfo {
+    return new QueryInfo(query);
+  }
+
+  notify(q: QueryInfo): void {
     let ms = q._duration();
-    if (ms === 0) {
-      ms = 0.00001;
-    }
 
     const minute = 60 * 1000;
     let startTime = new Date(
       Math.floor(q.startTime.getTime() / minute) * minute,
     );
 
-    let key: IQueueKey = {
-      queue: q.queue,
+    let key: IQueryKey = {
+      method: q.method,
+      route: q.route,
+      query: q.query,
+      func: q.func,
+      file: q.file,
+      line: q.line,
       time: startTime,
     };
     let keyStr = JSON.stringify(key);
 
     let stat = this._m[keyStr];
     if (!stat) {
-      stat = new TDigestStatGroups();
+      stat = new TDigestStat();
       this._m[keyStr] = stat;
     }
 
-    stat.addGroups(ms, q._groups);
+    stat.add(ms);
 
     if (this._timer) {
       return;
@@ -68,19 +90,19 @@ export class QueuesStats {
   }
 
   _flush(): void {
-    let queues = [];
+    let queries = [];
     for (let keyStr in this._m) {
       if (!this._m.hasOwnProperty(keyStr)) {
         continue;
       }
 
-      let key: IQueueKey = JSON.parse(keyStr);
+      let key: IQueryKey = JSON.parse(keyStr);
       let v = {
         ...key,
         ...this._m[keyStr].toJSON(),
       };
 
-      queues.push(v);
+      queries.push(v);
     }
 
     this._m = {};
@@ -88,7 +110,7 @@ export class QueuesStats {
 
     let outJSON = JSON.stringify({
       environment: this._opt.environment,
-      queues,
+      queries,
     });
     let req = {
       method: 'PUT',
@@ -101,7 +123,7 @@ export class QueuesStats {
       })
       .catch((err) => {
         if (console.error) {
-          console.error('can not report queues breakdowns', err);
+          console.error('can not report queries stats', err);
         }
       });
   }
