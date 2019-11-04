@@ -51,8 +51,11 @@ function patchClient(Client, airbrake: Notifier): void {
     if (typeof query.on === 'function') {
       query.on('end', endSpan);
       query.on('error', endSpan);
-    } else if (typeof query.then === 'function') {
-      query.then(endSpan);
+    } else if (
+      typeof query.then === 'function' &&
+      typeof query.catch === 'function'
+    ) {
+      query.then(endSpan).catch(endSpan);
     }
 
     return query;
