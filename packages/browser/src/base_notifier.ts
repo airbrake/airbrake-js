@@ -17,10 +17,12 @@ import { makeRequester, Requester } from './http_req';
 import { IOptions } from './options';
 import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
 import { QueuesStats, QueueMetric } from './queues';
+import { QueriesStats } from './queries';
 
 export class BaseNotifier {
   routes: Routes;
   queues: Queues;
+  queries: QueriesStats;
 
   _opt: IOptions;
   _url: string;
@@ -65,6 +67,7 @@ export class BaseNotifier {
 
     this.routes = new Routes(this);
     this.queues = new Queues(this);
+    this.queries = new QueriesStats(this._opt);
   }
 
   close(): void {
