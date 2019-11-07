@@ -1,4 +1,5 @@
 import { Notifier } from '../notifier';
+import { QueryInfo } from '../queries';
 
 const SPAN_NAME = 'sql';
 
@@ -20,11 +21,20 @@ export function patch(pg, airbrake: Notifier): void {
 
 function patchClient(Client, airbrake: Notifier): void {
   const origQuery = Client.prototype.query;
-  Client.prototype.query = function abQuery() {
+  Client.prototype.query = function abQuery(sql) {
     const metric = airbrake.scope().routeMetric();
-    metric.startSpan(SPAN_NAME);
     if (!metric.isRecording()) {
       return origQuery.apply(this, arguments);
+    }
+    metric.startSpan(SPAN_NAME);
+
+    if (sql && typeof sql.text === 'string') {
+      sql = sql.text;
+    }
+
+    let qinfo: QueryInfo;
+    if (typeof sql === 'string') {
+      qinfo = airbrake.queries.start(sql);
     }
 
     let cbIdx = arguments.length - 1;
@@ -34,19 +44,22 @@ function patchClient(Client, airbrake: Notifier): void {
       cb = cb[cbIdx];
     }
 
+    const endSpan = () => {
+      metric.endSpan(SPAN_NAME);
+      if (qinfo) {
+        airbrake.queries.notify(qinfo);
+      }
+    };
+
     if (typeof cb === 'function') {
       arguments[cbIdx] = function abCallback() {
-        metric.endSpan(SPAN_NAME);
+        endSpan();
         return cb.apply(this, arguments);
       };
       return origQuery.apply(this, arguments);
     }
 
     const query = origQuery.apply(this, arguments);
-
-    const endSpan = () => {
-      metric.endSpan(SPAN_NAME);
-    };
 
     if (typeof query.on === 'function') {
       query.on('end', endSpan);
