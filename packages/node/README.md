@@ -91,10 +91,10 @@ airbrake.call(startApp);
 
 ### Node.js request and proxy
 
-In order to configure [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
+In order to use [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
 
 ```js
-const airbrake = new Airbrake.Notifier({
+const airbrake = new Notifier({
   ...
   request: request.defaults({'proxy':'http://localproxy.com'})
 });

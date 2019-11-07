@@ -34,17 +34,19 @@ function esm(cfg) {
   );
 }
 
+const external = ['error-stack-parser', 'cross-fetch', 'async_hooks'];
+
 let todo = [
   {
     input: 'src/node.entry.ts',
     output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
-    external: ['error-stack-parser', 'cross-fetch', 'async_hooks'],
+    external,
     plugins: nodePlugins,
   },
   {
     input: 'src/node.entry.ts',
     output: [esm({ file: 'dist/airbrake.esm.js' })],
-    external: ['error-stack-parser', 'cross-fetch', 'async_hooks'],
+    external,
     plugins: nodePlugins,
   },
 ];
