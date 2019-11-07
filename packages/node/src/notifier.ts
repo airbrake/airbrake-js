@@ -52,6 +52,8 @@ export class Notifier extends BaseNotifier {
         process.exit(1);
       });
     });
+
+    this._instrument();
   }
 
   scope(): Scope {
@@ -99,5 +101,16 @@ export class Notifier extends BaseNotifier {
         timeout -= interval;
       }, interval);
     });
+  }
+
+  _instrument() {
+    const mods = ['pg', 'mysql', 'mysql2', 'redis', 'http', 'https'];
+    for (let modName of mods) {
+      try {
+        const mod = require(modName);
+        const airbrakeMod = require(`@airbrake/node/dist/instrumentation/${modName}`);
+        airbrakeMod.patch(mod, this);
+      } catch (_) {}
+    }
   }
 }
