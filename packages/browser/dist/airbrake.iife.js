@@ -1,4 +1,4 @@
-/* airbrake-js v1.0.2 */
+/* airbrake-js v1.0.3 */
 var Airbrake = (function (exports) {
   'use strict';
 
@@ -2039,7 +2039,7 @@ var Airbrake = (function (exports) {
               routes: routes,
           });
           var req = {
-              method: 'POST',
+              method: 'PUT',
               url: this._url,
               body: outJSON,
           };
@@ -2113,7 +2113,7 @@ var Airbrake = (function (exports) {
               routes: routes,
           });
           var req = {
-              method: 'POST',
+              method: 'PUT',
               url: this._url,
               body: outJSON,
           };
@@ -2203,7 +2203,7 @@ var Airbrake = (function (exports) {
               queues: queues,
           });
           var req = {
-              method: 'POST',
+              method: 'PUT',
               url: this._url,
               body: outJSON,
           };
@@ -2218,6 +2218,100 @@ var Airbrake = (function (exports) {
           });
       };
       return QueuesStats;
+  }());
+
+  var FLUSH_INTERVAL$2 = 15000; // 15 seconds
+  var QueryInfo = /** @class */ (function () {
+      function QueryInfo(query) {
+          if (query === void 0) { query = ''; }
+          this.method = '';
+          this.route = '';
+          this.query = '';
+          this.func = '';
+          this.file = '';
+          this.line = 0;
+          this.startTime = new Date();
+          this.query = query;
+      }
+      QueryInfo.prototype._duration = function () {
+          if (!this.endTime) {
+              this.endTime = new Date();
+          }
+          return this.endTime.getTime() - this.startTime.getTime();
+      };
+      return QueryInfo;
+  }());
+  var QueriesStats = /** @class */ (function () {
+      function QueriesStats(opt) {
+          this._m = {};
+          this._opt = opt;
+          this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/queries-stats?key=" + opt.projectKey;
+          this._requester = makeRequester$1(opt);
+      }
+      QueriesStats.prototype.start = function (query) {
+          if (query === void 0) { query = ''; }
+          return new QueryInfo(query);
+      };
+      QueriesStats.prototype.notify = function (q) {
+          var _this = this;
+          var ms = q._duration();
+          var minute = 60 * 1000;
+          var startTime = new Date(Math.floor(q.startTime.getTime() / minute) * minute);
+          var key = {
+              method: q.method,
+              route: q.route,
+              query: q.query,
+              func: q.func,
+              file: q.file,
+              line: q.line,
+              time: startTime,
+          };
+          var keyStr = JSON.stringify(key);
+          var stat = this._m[keyStr];
+          if (!stat) {
+              stat = new TDigestStat();
+              this._m[keyStr] = stat;
+          }
+          stat.add(ms);
+          if (this._timer) {
+              return;
+          }
+          this._timer = setTimeout(function () {
+              _this._flush();
+          }, FLUSH_INTERVAL$2);
+      };
+      QueriesStats.prototype._flush = function () {
+          var queries = [];
+          for (var keyStr in this._m) {
+              if (!this._m.hasOwnProperty(keyStr)) {
+                  continue;
+              }
+              var key = JSON.parse(keyStr);
+              var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
+              queries.push(v);
+          }
+          this._m = {};
+          this._timer = null;
+          var outJSON = JSON.stringify({
+              environment: this._opt.environment,
+              queries: queries,
+          });
+          var req = {
+              method: 'PUT',
+              url: this._url,
+              body: outJSON,
+          };
+          this._requester(req)
+              .then(function (_resp) {
+              // nothing
+          })
+              .catch(function (err) {
+              if (console.error) {
+                  console.error('can not report queries stats', err);
+              }
+          });
+      };
+      return QueriesStats;
   }());
 
   var BaseNotifier = /** @class */ (function () {
@@ -2243,7 +2337,7 @@ var Airbrake = (function (exports) {
           this.addFilter(function (notice) {
               notice.context.notifier = {
                   name: 'airbrake-js/browser',
-                  version: '1.0.2',
+                  version: '1.0.3',
                   url: 'https://github.com/airbrake/airbrake-js',
               };
               if (_this._opt.environment) {
@@ -2253,6 +2347,7 @@ var Airbrake = (function (exports) {
           });
           this.routes = new Routes(this);
           this.queues = new Queues(this);
+          this.queries = new QueriesStats(this._opt);
       }
       BaseNotifier.prototype.close = function () {
           for (var _i = 0, _a = this._onClose; _i < _a.length; _i++) {

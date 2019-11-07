@@ -11,8 +11,7 @@ async function main() {
     projectKey: process.env.AIRBRAKE_PROJECT_KEY,
   });
 
-  // Instrument pg with airbrake calls.
-  airbrakePG.patch(pg, airbrake);
+  console.log(pg.Client.prototype.query);
 
   const client = new pg.Client();
   await client.connect();

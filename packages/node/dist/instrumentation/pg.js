@@ -19,11 +19,18 @@ function patch(pg, airbrake) {
 }
 function patchClient(Client, airbrake) {
     var origQuery = Client.prototype.query;
-    Client.prototype.query = function abQuery() {
+    Client.prototype.query = function abQuery(sql) {
         var metric = airbrake.scope().routeMetric();
-        metric.startSpan(SPAN_NAME);
         if (!metric.isRecording()) {
             return origQuery.apply(this, arguments);
+        }
+        metric.startSpan(SPAN_NAME);
+        if (sql && typeof sql.text === 'string') {
+            sql = sql.text;
+        }
+        var qinfo;
+        if (typeof sql === 'string') {
+            qinfo = airbrake.queries.start(sql);
         }
         var cbIdx = arguments.length - 1;
         var cb = arguments[cbIdx];
@@ -31,23 +38,27 @@ function patchClient(Client, airbrake) {
             cbIdx = cb.length - 1;
             cb = cb[cbIdx];
         }
+        var endSpan = function () {
+            metric.endSpan(SPAN_NAME);
+            if (qinfo) {
+                airbrake.queries.notify(qinfo);
+            }
+        };
         if (typeof cb === 'function') {
             arguments[cbIdx] = function abCallback() {
-                metric.endSpan(SPAN_NAME);
+                endSpan();
                 return cb.apply(this, arguments);
             };
             return origQuery.apply(this, arguments);
         }
         var query = origQuery.apply(this, arguments);
-        var endSpan = function () {
-            metric.endSpan(SPAN_NAME);
-        };
         if (typeof query.on === 'function') {
             query.on('end', endSpan);
             query.on('error', endSpan);
         }
-        else if (typeof query.then === 'function') {
-            query.then(endSpan);
+        else if (typeof query.then === 'function' &&
+            typeof query.catch === 'function') {
+            query.then(endSpan).catch(endSpan);
         }
         return query;
     };
