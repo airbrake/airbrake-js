@@ -12,7 +12,10 @@ export function instrumentLocation(notifier: Notifier): void {
 
   const oldFn = window.onpopstate;
   window.onpopstate = function abOnpopstate(_event: PopStateEvent): any {
-    recordLocation(notifier, getCurrentLocation());
+    const url = getCurrentLocation();
+    if (url) {
+      recordLocation(notifier, url);
+    }
     if (oldFn) {
       return oldFn.apply(this, arguments);
     }
@@ -31,16 +34,14 @@ export function instrumentLocation(notifier: Notifier): void {
   };
 }
 
-function recordLocation(notifier: Notifier, url: string | null): void {
-  if (url !== null) {
-    let index = url.indexOf('://');
-    if (index >= 0) {
-      url = url.slice(index + 3);
-      index = url.indexOf('/');
-      url = index >= 0 ? url.slice(index) : '/';
-    } else if (url.charAt(0) !== '/') {
-      url = '/' + url;
-    }
+function recordLocation(notifier: Notifier, url: string): void {
+  let index = url.indexOf('://');
+  if (index >= 0) {
+    url = url.slice(index + 3);
+    index = url.indexOf('/');
+    url = index >= 0 ? url.slice(index) : '/';
+  } else if (url.charAt(0) !== '/') {
+    url = '/' + url;
   }
 
   notifier.scope().pushHistory({
