@@ -2,12 +2,17 @@ import { Notifier } from '../notifier';
 
 let lastLocation = '';
 
+// In some environments (i.e. Cypress) document.location may sometimes be null
+function getCurrentLocation(): string | null {
+  return document.location && document.location.pathname;
+}
+
 export function instrumentLocation(notifier: Notifier): void {
-  lastLocation = document.location.pathname;
+  lastLocation = getCurrentLocation();
 
   const oldFn = window.onpopstate;
   window.onpopstate = function abOnpopstate(_event: PopStateEvent): any {
-    recordLocation(notifier, document.location.pathname);
+    recordLocation(notifier, getCurrentLocation());
     if (oldFn) {
       return oldFn.apply(this, arguments);
     }
@@ -26,14 +31,16 @@ export function instrumentLocation(notifier: Notifier): void {
   };
 }
 
-function recordLocation(notifier: Notifier, url: string): void {
-  let index = url.indexOf('://');
-  if (index >= 0) {
-    url = url.slice(index + 3);
-    index = url.indexOf('/');
-    url = index >= 0 ? url.slice(index) : '/';
-  } else if (url.charAt(0) !== '/') {
-    url = '/' + url;
+function recordLocation(notifier: Notifier, url: string | null): void {
+  if (url !== null) {
+    let index = url.indexOf('://');
+    if (index >= 0) {
+      url = url.slice(index + 3);
+      index = url.indexOf('/');
+      url = index >= 0 ? url.slice(index) : '/';
+    } else if (url.charAt(0) !== '/') {
+      url = '/' + url;
+    }
   }
 
   notifier.scope().pushHistory({
