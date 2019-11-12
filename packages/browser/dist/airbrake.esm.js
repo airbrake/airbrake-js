@@ -1145,7 +1145,7 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(function (notice) {
             notice.context.notifier = {
                 name: 'airbrake-js/browser',
-                version: '1.0.3',
+                version: '1.0.4',
                 url: 'https://github.com/airbrake/airbrake-js',
             };
             if (_this._opt.environment) {
@@ -1514,11 +1514,18 @@ function instrumentFetch(notifier) {
 }
 
 var lastLocation = '';
+// In some environments (i.e. Cypress) document.location may sometimes be null
+function getCurrentLocation() {
+    return document.location && document.location.pathname;
+}
 function instrumentLocation(notifier) {
-    lastLocation = document.location.pathname;
+    lastLocation = getCurrentLocation();
     var oldFn = window.onpopstate;
     window.onpopstate = function abOnpopstate(_event) {
-        recordLocation(notifier, document.location.pathname);
+        var url = getCurrentLocation();
+        if (url) {
+            recordLocation(notifier, url);
+        }
         if (oldFn) {
             return oldFn.apply(this, arguments);
         }

@@ -11,19 +11,30 @@ function patch(mysql2, airbrake) {
 function wrapQuery(origQuery, airbrake) {
     return function abQuery(sql, values, cb) {
         var metric = airbrake.scope().routeMetric();
-        metric.startSpan(SPAN_NAME);
         if (!metric.isRecording()) {
             return origQuery.apply(this, arguments);
         }
+        metric.startSpan(SPAN_NAME);
+        var qinfo;
+        var endSpan = function () {
+            metric.endSpan(SPAN_NAME);
+            if (qinfo) {
+                airbrake.queries.notify(qinfo);
+            }
+        };
         var foundCallback = false;
         function wrapCallback(cb) {
             foundCallback = true;
             return function abCallback() {
-                metric.endSpan(SPAN_NAME);
+                endSpan();
                 return cb.apply(this, arguments);
             };
         }
+        var query;
         switch (typeof sql) {
+            case 'string':
+                query = sql;
+                break;
             case 'function':
                 arguments[0] = wrapCallback(sql);
                 break;
@@ -31,7 +42,11 @@ function wrapQuery(origQuery, airbrake) {
                 if (typeof sql.onResult === 'function') {
                     sql.onResult = wrapCallback(sql.onResult);
                 }
+                query = sql.sql;
                 break;
+        }
+        if (query) {
+            qinfo = airbrake.queries.start(query);
         }
         if (typeof values === 'function') {
             arguments[1] = wrapCallback(values);
@@ -44,10 +59,10 @@ function wrapQuery(origQuery, airbrake) {
             var origEmit_1 = res.emit;
             res.emit = function abEmit(evt) {
                 switch (evt) {
-                    case 'error':
                     case 'end':
+                    case 'error':
                     case 'close':
-                        metric.endSpan(SPAN_NAME);
+                        endSpan();
                         break;
                 }
                 return origEmit_1.apply(this, arguments);

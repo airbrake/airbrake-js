@@ -1212,7 +1212,7 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(function (notice) {
             notice.context.notifier = {
                 name: 'airbrake-js/browser',
-                version: '1.0.3',
+                version: '1.0.4',
                 url: 'https://github.com/airbrake/airbrake-js',
             };
             if (_this._opt.environment) {
