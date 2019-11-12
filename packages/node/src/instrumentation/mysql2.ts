@@ -1,4 +1,5 @@
 import { Notifier } from '../notifier';
+import { QueryInfo } from '../queries';
 
 const SPAN_NAME = 'sql';
 
@@ -11,21 +12,33 @@ export function patch(mysql2, airbrake: Notifier): void {
 function wrapQuery(origQuery, airbrake: Notifier) {
   return function abQuery(sql, values, cb) {
     const metric = airbrake.scope().routeMetric();
-    metric.startSpan(SPAN_NAME);
     if (!metric.isRecording()) {
       return origQuery.apply(this, arguments);
     }
+    metric.startSpan(SPAN_NAME);
+
+    let qinfo: QueryInfo;
+    const endSpan = () => {
+      metric.endSpan(SPAN_NAME);
+      if (qinfo) {
+        airbrake.queries.notify(qinfo);
+      }
+    };
 
     let foundCallback = false;
     function wrapCallback(cb) {
       foundCallback = true;
       return function abCallback() {
-        metric.endSpan(SPAN_NAME);
+        endSpan();
         return cb.apply(this, arguments);
       };
     }
 
+    let query: string;
     switch (typeof sql) {
+      case 'string':
+        query = sql;
+        break;
       case 'function':
         arguments[0] = wrapCallback(sql);
         break;
@@ -33,7 +46,12 @@ function wrapQuery(origQuery, airbrake: Notifier) {
         if (typeof sql.onResult === 'function') {
           sql.onResult = wrapCallback(sql.onResult);
         }
+        query = sql.sql;
         break;
+    }
+
+    if (query) {
+      qinfo = airbrake.queries.start(query);
     }
 
     if (typeof values === 'function') {
@@ -48,10 +66,10 @@ function wrapQuery(origQuery, airbrake: Notifier) {
       const origEmit = res.emit;
       res.emit = function abEmit(evt) {
         switch (evt) {
-          case 'error':
           case 'end':
+          case 'error':
           case 'close':
-            metric.endSpan(SPAN_NAME);
+            endSpan();
             break;
         }
         return origEmit.apply(this, arguments);
