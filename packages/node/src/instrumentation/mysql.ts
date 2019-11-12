@@ -1,5 +1,5 @@
 import { Notifier } from '../notifier';
-import { IMetric } from '../metrics';
+import { QueryInfo } from '../queries';
 
 const SPAN_NAME = 'sql';
 
@@ -45,26 +45,36 @@ function wrapGetConnection(origFn, airbrake: Notifier) {
 }
 
 function wrapConnection(conn, airbrake: Notifier): void {
-  let metric: IMetric;
-
-  let foundCallback = false;
-  function wrapCallback(cb) {
-    foundCallback = true;
-    return function abCallback() {
-      metric.endSpan(SPAN_NAME);
-      return cb.apply(this, arguments);
-    };
-  }
-
   const origQuery = conn.query;
   conn.query = function abQuery(sql, values, cb) {
-    metric = airbrake.scope().routeMetric();
-    metric.startSpan(SPAN_NAME);
+    let foundCallback = false;
+    function wrapCallback(cb) {
+      foundCallback = true;
+      return function abCallback() {
+        endSpan();
+        return cb.apply(this, arguments);
+      };
+    }
+
+    const metric = airbrake.scope().routeMetric();
     if (!metric.isRecording()) {
       return origQuery.apply(this, arguments);
     }
+    metric.startSpan(SPAN_NAME);
 
+    let qinfo: QueryInfo;
+    const endSpan = () => {
+      metric.endSpan(SPAN_NAME);
+      if (qinfo) {
+        airbrake.queries.notify(qinfo);
+      }
+    };
+
+    let query: string;
     switch (typeof sql) {
+      case 'string':
+        query = sql;
+        break;
       case 'function':
         arguments[0] = wrapCallback(sql);
         break;
@@ -72,7 +82,12 @@ function wrapConnection(conn, airbrake: Notifier): void {
         if (typeof sql._callback === 'function') {
           sql._callback = wrapCallback(sql._callback);
         }
+        query = sql.sql;
         break;
+    }
+
+    if (query) {
+      qinfo = airbrake.queries.start(query);
     }
 
     if (typeof values === 'function') {
@@ -87,9 +102,9 @@ function wrapConnection(conn, airbrake: Notifier): void {
       const origEmit = res.emit;
       res.emit = function abEmit(evt) {
         switch (evt) {
-          case 'error':
           case 'end':
-            metric.endSpan(SPAN_NAME);
+          case 'error':
+            endSpan();
             break;
         }
         return origEmit.apply(this, arguments);
