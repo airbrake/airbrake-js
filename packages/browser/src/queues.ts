@@ -1,7 +1,7 @@
 import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
 import { BaseMetric } from './metrics';
-import { TDigestStatGroups } from './tdshared';
+import { TDigestStatGroups, hasTdigest } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -35,6 +35,10 @@ export class QueuesStats {
   }
 
   notify(q: QueueMetric): void {
+    if (!hasTdigest) {
+      return;
+    }
+
     let ms = q._duration();
     if (ms === 0) {
       ms = 0.00001;

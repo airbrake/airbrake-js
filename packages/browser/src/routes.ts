@@ -1,7 +1,7 @@
 import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
 import { BaseMetric } from './metrics';
-import { TDigestStat, TDigestStatGroups } from './tdshared';
+import { TDigestStat, TDigestStatGroups, hasTdigest } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -50,6 +50,10 @@ export class RoutesStats {
   }
 
   notify(req: RouteMetric): void {
+    if (!hasTdigest) {
+      return;
+    }
+
     let ms = req._duration();
 
     const minute = 60 * 1000;
@@ -136,6 +140,10 @@ export class RoutesBreakdowns {
   }
 
   notify(req: RouteMetric): void {
+    if (!hasTdigest) {
+      return;
+    }
+
     if (
       req.statusCode < 200 ||
       (req.statusCode >= 300 && req.statusCode < 400) ||

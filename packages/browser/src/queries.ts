@@ -1,6 +1,6 @@
 import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
-import { TDigestStat } from './tdshared';
+import { TDigestStat, hasTdigest } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -55,6 +55,10 @@ export class QueriesStats {
   }
 
   notify(q: QueryInfo): void {
+    if (!hasTdigest) {
+      return;
+    }
+
     let ms = q._duration();
 
     const minute = 60 * 1000;
