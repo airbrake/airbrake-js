@@ -1,4 +1,4 @@
-/* airbrake-js v1.0.5 */
+/* airbrake-js v1.0.6 */
 var Airbrake = (function (exports) {
   'use strict';
 
@@ -2050,7 +2050,7 @@ var Airbrake = (function (exports) {
               routes: routes,
           });
           var req = {
-              method: 'PUT',
+              method: 'POST',
               url: this._url,
               body: outJSON,
           };
@@ -2127,7 +2127,7 @@ var Airbrake = (function (exports) {
               routes: routes,
           });
           var req = {
-              method: 'PUT',
+              method: 'POST',
               url: this._url,
               body: outJSON,
           };
@@ -2220,7 +2220,7 @@ var Airbrake = (function (exports) {
               queues: queues,
           });
           var req = {
-              method: 'PUT',
+              method: 'POST',
               url: this._url,
               body: outJSON,
           };
@@ -2317,7 +2317,7 @@ var Airbrake = (function (exports) {
               queries: queries,
           });
           var req = {
-              method: 'PUT',
+              method: 'POST',
               url: this._url,
               body: outJSON,
           };
@@ -2357,7 +2357,7 @@ var Airbrake = (function (exports) {
           this.addFilter(function (notice) {
               notice.context.notifier = {
                   name: 'airbrake-js/browser',
-                  version: '1.0.5',
+                  version: '1.0.6',
                   url: 'https://github.com/airbrake/airbrake-js',
               };
               if (_this._opt.environment) {

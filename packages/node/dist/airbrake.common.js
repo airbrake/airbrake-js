@@ -931,7 +931,7 @@ var RoutesStats = /** @class */ (function () {
             routes: routes,
         });
         var req = {
-            method: 'PUT',
+            method: 'POST',
             url: this._url,
             body: outJSON,
         };
@@ -1008,7 +1008,7 @@ var RoutesBreakdowns = /** @class */ (function () {
             routes: routes,
         });
         var req = {
-            method: 'PUT',
+            method: 'POST',
             url: this._url,
             body: outJSON,
         };
@@ -1101,7 +1101,7 @@ var QueuesStats = /** @class */ (function () {
             queues: queues,
         });
         var req = {
-            method: 'PUT',
+            method: 'POST',
             url: this._url,
             body: outJSON,
         };
@@ -1198,7 +1198,7 @@ var QueriesStats = /** @class */ (function () {
             queries: queries,
         });
         var req = {
-            method: 'PUT',
+            method: 'POST',
             url: this._url,
             body: outJSON,
         };
@@ -1238,7 +1238,7 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(function (notice) {
             notice.context.notifier = {
                 name: 'airbrake-js/browser',
-                version: '1.0.5',
+                version: '1.0.6',
                 url: 'https://github.com/airbrake/airbrake-js',
             };
             if (_this._opt.environment) {
