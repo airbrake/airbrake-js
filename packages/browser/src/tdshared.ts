@@ -1,4 +1,10 @@
-const tdigest = require('tdigest');
+let tdigest;
+export let hasTdigest = false;
+
+try {
+  tdigest = require('tdigest');
+  hasTdigest = true;
+} catch (err) {}
 
 interface ICentroid {
   mean: number;
@@ -34,7 +40,9 @@ export class TDigestStat {
     this.count += 1;
     this.sum += ms;
     this.sumsq += ms * ms;
-    this._td.push(ms);
+    if (this._td) {
+      this._td.push(ms);
+    }
   }
 
   toJSON() {
