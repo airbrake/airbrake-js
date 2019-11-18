@@ -1,4 +1,4 @@
-/* airbrake-js v1.0.4 */
+/* airbrake-js v1.0.5 */
 var Airbrake = (function (exports) {
   'use strict';
 
@@ -1900,7 +1900,13 @@ var Airbrake = (function (exports) {
       return request;
   }
 
-  var tdigest = require('tdigest');
+  var tdigest;
+  var hasTdigest = false;
+  try {
+      tdigest = require('tdigest');
+      hasTdigest = true;
+  }
+  catch (err) { }
   var TDigestStat = /** @class */ (function () {
       function TDigestStat() {
           this.count = 0;
@@ -1915,7 +1921,9 @@ var Airbrake = (function (exports) {
           this.count += 1;
           this.sum += ms;
           this.sumsq += ms * ms;
-          this._td.push(ms);
+          if (this._td) {
+              this._td.push(ms);
+          }
       };
       TDigestStat.prototype.toJSON = function () {
           return {
@@ -1999,6 +2007,9 @@ var Airbrake = (function (exports) {
       }
       RoutesStats.prototype.notify = function (req) {
           var _this = this;
+          if (!hasTdigest) {
+              return;
+          }
           var ms = req._duration();
           var minute = 60 * 1000;
           var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
@@ -2064,6 +2075,9 @@ var Airbrake = (function (exports) {
       }
       RoutesBreakdowns.prototype.notify = function (req) {
           var _this = this;
+          if (!hasTdigest) {
+              return;
+          }
           if (req.statusCode < 200 ||
               (req.statusCode >= 300 && req.statusCode < 400) ||
               req.statusCode === 404 ||
@@ -2162,6 +2176,9 @@ var Airbrake = (function (exports) {
       }
       QueuesStats.prototype.notify = function (q) {
           var _this = this;
+          if (!hasTdigest) {
+              return;
+          }
           var ms = q._duration();
           if (ms === 0) {
               ms = 0.00001;
@@ -2254,6 +2271,9 @@ var Airbrake = (function (exports) {
       };
       QueriesStats.prototype.notify = function (q) {
           var _this = this;
+          if (!hasTdigest) {
+              return;
+          }
           var ms = q._duration();
           var minute = 60 * 1000;
           var startTime = new Date(Math.floor(q.startTime.getTime() / minute) * minute);
@@ -2337,7 +2357,7 @@ var Airbrake = (function (exports) {
           this.addFilter(function (notice) {
               notice.context.notifier = {
                   name: 'airbrake-js/browser',
-                  version: '1.0.4',
+                  version: '1.0.5',
                   url: 'https://github.com/airbrake/airbrake-js',
               };
               if (_this._opt.environment) {
