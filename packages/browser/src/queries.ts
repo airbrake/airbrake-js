@@ -117,7 +117,7 @@ export class QueriesStats {
       queries,
     });
     let req = {
-      method: 'PUT',
+      method: 'POST',
       url: this._url,
       body: outJSON,
     };
