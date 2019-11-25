@@ -1,4 +1,4 @@
-# Usage with Angular
+# Usage with AngularJS
 
 Integration with Angular is as simple as adding an
 [$exceptionHandler](https://docs.angularjs.org/api/ng/service/$exceptionHandler):

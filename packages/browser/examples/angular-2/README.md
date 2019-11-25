@@ -1,4 +1,4 @@
-### Usage with Angular 2 & TypeScript
+### Usage with Angular 2+ & TypeScript
 
 ### Create an error handler
 The first step is to create an error handler with a `Notifier`
