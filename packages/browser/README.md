@@ -43,8 +43,8 @@ Your package manager should automatically pick suitable bundle format based on @
 
 Example configurations can be found in [examples](examples), including:
 
-* [Angular](examples/angular)
-* [Angular 2](examples/angular-2)
+* [AngularJS](examples/angular)
+* [Angular 2+](examples/angular-2)
 * [Browserify](examples/browserify)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
