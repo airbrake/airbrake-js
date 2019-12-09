@@ -10,7 +10,7 @@ export function instrumentDOM(notifier: Notifier) {
     window.addEventListener(
       'error',
       (event: Event): void => {
-        if ('error' in event) {
+        if (getProp(event, 'error')) {
           return;
         }
         handler(event);
@@ -28,12 +28,7 @@ export function instrumentDOM(notifier: Notifier) {
 
 function makeEventHandler(notifier: Notifier): EventListener {
   return (event: Event): void => {
-    let target: HTMLElement;
-    try {
-      target = event.target as HTMLElement;
-    } catch (_) {
-      return;
-    }
+    let target = getProp(event, 'target') as HTMLElement | null;
     if (!target) {
       return;
     }
@@ -123,4 +118,13 @@ function elemPath(elem: HTMLElement): string {
   }
 
   return path.reverse().join(' > ');
+}
+
+function getProp(obj: any, prop: string): any {
+  try {
+    return obj[prop];
+  } catch (_) {
+    // Permission denied to access property
+    return null;
+  }
 }
