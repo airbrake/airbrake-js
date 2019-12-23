@@ -8,8 +8,8 @@ angular
   .module('app')
   .factory('$exceptionHandler', function ($log) {
     var airbrake = new Notifier({
-      projectid: 1,       // Airbrake project id
-      projectkey: 'FIXME' // Airbrake project API key
+      projectId: 1,       // Airbrake project id
+      projectKey: 'FIXME' // Airbrake project API key
     });
 
     airbrake.addFilter(function (notice) {
