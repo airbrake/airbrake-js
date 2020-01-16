@@ -5,12 +5,16 @@ describe('stacktracejs processor', () => {
   let error;
 
   describe('Error', () => {
-    beforeEach(() => {
+    function throwTestError() {
       try {
         throw new Error('BOOM');
       } catch (err) {
         error = espProcessor(err);
       }
+    }
+
+    beforeEach(() => {
+      throwTestError();
     });
 
     it('provides type and message', () => {
@@ -24,7 +28,7 @@ describe('stacktracejs processor', () => {
 
       let frame = backtrace[0];
       expect(frame.file).toContain('tests/processor/stacktracejs.test');
-      expect(frame.function).toBe('Object.<anonymous>');
+      expect(frame.function).toBe('throwTestError');
       expect(frame.line).toEqual(expect.any(Number));
       expect(frame.column).toEqual(expect.any(Number));
     });
