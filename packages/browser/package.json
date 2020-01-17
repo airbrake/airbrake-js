@@ -51,6 +51,7 @@
   ],
   "scripts": {
     "build": "rollup --config",
+    "lint": "tslint -p .",
     "test": "jest"
   }
 }
