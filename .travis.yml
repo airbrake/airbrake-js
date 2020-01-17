@@ -4,6 +4,8 @@ sudo: false
 language: node_js
 node_js:
   - node
+  - lts/*
+  - 10
 
 script:
   - ./scripts/test.sh
