@@ -1,8 +1,7 @@
 {
   "extends": [
     "tslint:latest",
-    "tslint-config-prettier",
-    "tslint-no-unused-expression-chai"
+    "tslint-config-prettier"
   ],
   "rules": {
     "prefer-const": false,
@@ -13,7 +12,7 @@
     "no-implicit-dependencies": false,
     "no-submodule-imports": [true, "promise-polyfill/src/polyfill"],
     "member-ordering": false,
-    "no-shadowed-variable": [true, { "temporalDeadZone": false }],
-    "no-unused-expression-chai": [true, "allow-new"]
-  }
+    "no-shadowed-variable": [true, { "temporalDeadZone": false }]
+  },
+  "defaultSeverity": "warning"
 }
