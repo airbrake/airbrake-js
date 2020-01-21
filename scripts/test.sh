@@ -2,4 +2,5 @@
 
 yarn install
 yarn bootstrap
+yarn lint
 yarn test
