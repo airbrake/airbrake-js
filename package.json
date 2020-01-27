@@ -2,7 +2,9 @@
   "name": "airbrake",
   "private": true,
   "devDependencies": {
-    "lerna": "^3.16.4"
+    "lerna": "^3.16.4",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint": "^5.20.0"
   },
   "scripts": {
     "bootstrap": "lerna bootstrap",

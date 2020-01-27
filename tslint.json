@@ -1,0 +1,19 @@
+{
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier"
+  ],
+  "rules": {
+    "member-ordering": false,
+    "no-bitwise": false,
+    "no-console": [true, "log"],
+    "no-empty": false,
+    "no-implicit-dependencies": false,
+    "no-shadowed-variable": [true, { "temporalDeadZone": false }],
+    "no-submodule-imports": [true, "promise-polyfill/src/polyfill"],
+    "object-literal-sort-keys": false,
+    "prefer-const": false,
+    "variable-name": [true, "allow-leading-underscore"]
+  },
+  "defaultSeverity": "warning"
+}
