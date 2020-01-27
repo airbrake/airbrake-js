@@ -17,6 +17,5 @@
     "object-literal-sort-keys": false,
     "prefer-const": false,
     "variable-name": [true, "allow-leading-underscore"]
-  },
-  "defaultSeverity": "warning"
+  }
 }
