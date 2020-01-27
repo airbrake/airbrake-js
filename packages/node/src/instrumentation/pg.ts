@@ -9,7 +9,7 @@ export function patch(pg, airbrake: Notifier): void {
   const origGetter = pg.__lookupGetter__('native');
   if (origGetter) {
     delete pg.native;
-    pg.__defineGetter__('native', function() {
+    pg.__defineGetter__('native', () => {
       const native = origGetter();
       if (native && native.Client) {
         patchClient(native.Client, airbrake);
@@ -19,6 +19,7 @@ export function patch(pg, airbrake: Notifier): void {
   }
 }
 
+// tslint:disable-next-line: variable-name
 function patchClient(Client, airbrake: Notifier): void {
   const origQuery = Client.prototype.query;
   Client.prototype.query = function abQuery(sql) {

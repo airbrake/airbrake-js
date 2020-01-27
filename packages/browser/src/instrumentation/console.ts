@@ -1,5 +1,5 @@
-import { Notifier } from '../notifier';
 import { IFuncWrapper } from '../func_wrapper';
+import { Notifier } from '../notifier';
 
 const CONSOLE_METHODS = ['debug', 'log', 'info', 'warn', 'error'];
 

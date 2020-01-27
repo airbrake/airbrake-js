@@ -1,12 +1,12 @@
-import { IOptions, IInstrumentationOptions } from './options';
 import { BaseNotifier } from './base_notifier';
-import { INotice } from './notice';
 import { windowFilter } from './filter/window';
 import { instrumentConsole } from './instrumentation/console';
 import { instrumentDOM } from './instrumentation/dom';
 import { instrumentFetch } from './instrumentation/fetch';
 import { instrumentLocation } from './instrumentation/location';
 import { instrumentXHR } from './instrumentation/xhr';
+import { INotice } from './notice';
+import { IInstrumentationOptions, IOptions } from './options';
 
 interface ITodo {
   err: any;
@@ -45,7 +45,7 @@ export class Notifier extends BaseNotifier {
       });
     }
 
-    //TODO: deprecated
+    // TODO: deprecated
     if (this._opt.ignoreWindowError) {
       opt.instrumentation.onerror = false;
     }

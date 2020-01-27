@@ -23,11 +23,7 @@ export class Span {
   }
 
   end(endTime?: Date) {
-    if (endTime) {
-      this.endTime = endTime;
-    } else {
-      this.endTime = new Date();
-    }
+    this.endTime = endTime ? endTime : new Date();
 
     this._dur += this.endTime.getTime() - this.startTime.getTime();
     this._metric._incGroup(this.name, this._dur);

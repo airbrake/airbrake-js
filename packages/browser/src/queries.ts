@@ -1,6 +1,6 @@
-import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
-import { TDigestStat, hasTdigest } from './tdshared';
+import { IOptions } from './options';
+import { hasTdigest, TDigestStat } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 

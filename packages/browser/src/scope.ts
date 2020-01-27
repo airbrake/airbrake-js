@@ -1,23 +1,23 @@
 import { IMetric, NoopMetric } from './metrics';
 
-interface HistoryRecord {
+interface IHistoryRecord {
   type: string;
   date?: Date;
   [key: string]: any;
 }
 
-type Map = { [key: string]: any };
+interface IMap { [key: string]: any };
 
 export class Scope {
   _noopMetric = new NoopMetric();
   _routeMetric: IMetric;
   _queueMetric: IMetric;
 
-  _context: Map = {};
+  _context: IMap = {};
 
   _historyMaxLen = 20;
-  _history: HistoryRecord[] = [];
-  _lastRecord: HistoryRecord;
+  _history: IHistoryRecord[] = [];
+  _lastRecord: IHistoryRecord;
 
   clone(): Scope {
     const clone = new Scope();
@@ -26,11 +26,11 @@ export class Scope {
     return clone;
   }
 
-  setContext(context: Map) {
-    this._context = Object.assign(this._context, context);
+  setContext(context: IMap) {
+    this._context = {...this._context, ...context};
   }
 
-  context(): Map {
+  context(): IMap {
     const ctx = { ...this._context };
     if (this._history.length > 0) {
       ctx.history = this._history.slice();
@@ -38,7 +38,7 @@ export class Scope {
     return ctx;
   }
 
-  pushHistory(state: HistoryRecord): void {
+  pushHistory(state: IHistoryRecord): void {
     if (this._isDupState(state)) {
       if (this._lastRecord.num) {
         this._lastRecord.num++;
