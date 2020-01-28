@@ -1,7 +1,8 @@
 {
   "extends": [
     "tslint:latest",
-    "tslint-config-prettier"
+    "tslint-config-prettier",
+    "tslint-plugin-prettier"
   ],
   "rules": {
     "max-classes-per-file": false,
@@ -16,6 +17,7 @@
     "no-var-requires": false,
     "object-literal-sort-keys": false,
     "prefer-const": false,
+    "prettier": true,
     "variable-name": [true, "allow-leading-underscore"]
   }
 }
