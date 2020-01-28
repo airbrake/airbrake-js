@@ -25,7 +25,7 @@ export function instrumentLocation(notifier: Notifier): void {
   history.pushState = function abPushState(
     _state: any,
     _title: string,
-    url?: string | null,
+    url?: string | null
   ): void {
     if (url) {
       recordLocation(notifier, url.toString());

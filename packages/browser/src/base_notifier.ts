@@ -3,8 +3,8 @@ import { jsonifyNotice } from './jsonify_notice';
 import { INotice } from './notice';
 import { Scope } from './scope';
 
-import { Processor } from './processor/processor';
 import { espProcessor } from './processor/esp';
+import { Processor } from './processor/processor';
 
 import { angularMessageFilter } from './filter/angular_message';
 import { makeDebounceFilter } from './filter/debounce';
@@ -15,9 +15,9 @@ import { uncaughtMessageFilter } from './filter/uncaught_message';
 import { makeRequester, Requester } from './http_req';
 
 import { IOptions } from './options';
-import { RoutesStats, RoutesBreakdowns, RouteMetric } from './routes';
-import { QueuesStats, QueueMetric } from './queues';
 import { QueriesStats } from './queries';
+import { QueueMetric, QueuesStats } from './queues';
+import { RouteMetric, RoutesBreakdowns, RoutesStats } from './routes';
 
 export class BaseNotifier {
   routes: Routes;
@@ -32,7 +32,7 @@ export class BaseNotifier {
   _filters: Filter[] = [];
   _scope = new Scope();
 
-  _onClose: (() => void)[] = [];
+  _onClose: Array<() => void> = [];
 
   constructor(opt: IOptions) {
     if (!opt.projectId || !opt.projectKey) {
@@ -91,11 +91,11 @@ export class BaseNotifier {
   notify(err: any): Promise<INotice> {
     let notice: INotice = {
       errors: [],
-      context: Object.assign(
-        { severity: 'error' },
-        this.scope().context(),
-        err.context,
-      ),
+      context: {
+        severity: 'error',
+        ...this.scope().context(),
+        ...err.context,
+      },
       params: err.params || {},
       environment: err.environment || {},
       session: err.session || {},
@@ -107,7 +107,7 @@ export class BaseNotifier {
 
     if (!err.error) {
       notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`,
+        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
       );
       return Promise.resolve(notice);
     }
@@ -228,12 +228,12 @@ class Routes {
     method = '',
     route = '',
     statusCode = 0,
-    contentType = '',
+    contentType = ''
   ): RouteMetric {
     const metric = new RouteMetric(method, route, statusCode, contentType);
 
     const scope = this._notifier.scope().clone();
-    scope.setContext({ httpMethod: method, route: route });
+    scope.setContext({ httpMethod: method, route });
     scope.setRouteMetric(metric);
     this._notifier.setActiveScope(scope);
 
@@ -260,7 +260,7 @@ class Queues {
     const metric = new QueueMetric(queue);
 
     const scope = this._notifier.scope().clone();
-    scope.setContext({ queue: queue });
+    scope.setContext({ queue });
     scope.setQueueMetric(metric);
     this._notifier.setActiveScope(scope);
 

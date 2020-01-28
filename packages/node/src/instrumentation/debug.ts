@@ -9,7 +9,7 @@ export function patch(createDebug, airbrake: Notifier): void {
     debug.log = function abCreateDebug() {
       airbrake.scope().pushHistory({
         type: 'log',
-        arguments: arguments,
+        arguments,
       });
       return oldLog.apply(this, arguments);
     };

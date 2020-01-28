@@ -55,7 +55,7 @@ export function request(req: IHttpRequest): Promise<IHttpResponse> {
 
     return resp.text().then((body) => {
       let err = new Error(
-        `airbrake: fetch: unexpected response: code=${resp.status} body='${body}'`,
+        `airbrake: fetch: unexpected response: code=${resp.status} body='${body}'`
       );
       throw err;
     });

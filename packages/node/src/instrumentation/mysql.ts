@@ -48,11 +48,11 @@ function wrapConnection(conn, airbrake: Notifier): void {
   const origQuery = conn.query;
   conn.query = function abQuery(sql, values, cb) {
     let foundCallback = false;
-    function wrapCallback(cb) {
+    function wrapCallback(callback) {
       foundCallback = true;
       return function abCallback() {
         endSpan();
-        return cb.apply(this, arguments);
+        return callback.apply(this, arguments);
       };
     }
 

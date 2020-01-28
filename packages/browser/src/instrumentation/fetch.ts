@@ -5,7 +5,7 @@ export function instrumentFetch(notifier: Notifier): void {
   let oldFetch = window.fetch;
   window.fetch = function(
     req: RequestInfo,
-    options?: RequestInit,
+    options?: RequestInit
   ): Promise<Response> {
     let state: any = {
       type: 'xhr',

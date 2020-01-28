@@ -1,5 +1,5 @@
-import * as asyncHooks from 'async_hooks';
 import { Scope } from '@browser/scope';
+import * as asyncHooks from 'async_hooks';
 
 export { Scope };
 

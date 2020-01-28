@@ -1,6 +1,6 @@
-import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
-import { TDigestStat, hasTdigest } from './tdshared';
+import { IOptions } from './options';
+import { hasTdigest, TDigestStat } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -63,7 +63,7 @@ export class QueriesStats {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(q.startTime.getTime() / minute) * minute,
+      Math.floor(q.startTime.getTime() / minute) * minute
     );
 
     let key: IQueryKey = {

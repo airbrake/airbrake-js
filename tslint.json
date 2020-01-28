@@ -1,0 +1,23 @@
+{
+  "extends": [
+    "tslint:latest",
+    "tslint-config-prettier",
+    "tslint-plugin-prettier"
+  ],
+  "rules": {
+    "max-classes-per-file": false,
+    "member-access": false,
+    "member-ordering": false,
+    "no-bitwise": false,
+    "no-console": [true, "log"],
+    "no-empty": false,
+    "no-implicit-dependencies": false,
+    "no-shadowed-variable": [true, { "temporalDeadZone": false }],
+    "no-submodule-imports": [true, "promise-polyfill/src/polyfill"],
+    "no-var-requires": false,
+    "object-literal-sort-keys": false,
+    "prefer-const": false,
+    "prettier": true,
+    "variable-name": [true, "allow-leading-underscore"]
+  }
+}

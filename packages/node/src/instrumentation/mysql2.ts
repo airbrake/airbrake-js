@@ -26,11 +26,11 @@ function wrapQuery(origQuery, airbrake: Notifier) {
     };
 
     let foundCallback = false;
-    function wrapCallback(cb) {
+    function wrapCallback(callback) {
       foundCallback = true;
       return function abCallback() {
         endSpan();
-        return cb.apply(this, arguments);
+        return callback.apply(this, arguments);
       };
     }
 

@@ -8,7 +8,7 @@ let re = new RegExp(
     ':\\s',
     '(.+)', // message
     '$',
-  ].join(''),
+  ].join('')
 );
 export function uncaughtMessageFilter(notice: INotice): INotice {
   let err = notice.errors[0];

@@ -1,7 +1,7 @@
-import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
 import { BaseMetric } from './metrics';
-import { TDigestStat, TDigestStatGroups, hasTdigest } from './tdshared';
+import { IOptions } from './options';
+import { hasTdigest, TDigestStat, TDigestStatGroups } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -58,7 +58,7 @@ export class RoutesStats {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(req.startTime.getTime() / minute) * minute,
+      Math.floor(req.startTime.getTime() / minute) * minute
     );
 
     let key: IRouteKey = {
@@ -160,7 +160,7 @@ export class RoutesBreakdowns {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(req.startTime.getTime() / minute) * minute,
+      Math.floor(req.startTime.getTime() / minute) * minute
     );
 
     let key: IBreakdownKey = {

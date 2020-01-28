@@ -60,8 +60,10 @@ export class TDigestStatGroups extends TDigestStat {
 
   addGroups(totalMs: number, groups: { [key: string]: number }) {
     this.add(totalMs);
-    for (let name in groups) {
-      this.addGroup(name, groups[name]);
+    for (const name in groups) {
+      if (groups.hasOwnProperty(name)) {
+        this.addGroup(name, groups[name]);
+      }
     }
   }
 

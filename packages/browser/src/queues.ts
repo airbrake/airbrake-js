@@ -1,7 +1,7 @@
-import { IOptions } from './options';
 import { makeRequester, Requester } from './http_req';
 import { BaseMetric } from './metrics';
-import { TDigestStatGroups, hasTdigest } from './tdshared';
+import { IOptions } from './options';
+import { hasTdigest, TDigestStatGroups } from './tdshared';
 
 const FLUSH_INTERVAL = 15000; // 15 seconds
 
@@ -46,7 +46,7 @@ export class QueuesStats {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(q.startTime.getTime() / minute) * minute,
+      Math.floor(q.startTime.getTime() / minute) * minute
     );
 
     let key: IQueueKey = {
