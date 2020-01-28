@@ -15,7 +15,7 @@ export function instrumentDOM(notifier: Notifier) {
         }
         handler(event);
       },
-      true,
+      true
     );
   }
 

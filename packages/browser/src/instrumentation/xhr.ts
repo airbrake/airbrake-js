@@ -18,7 +18,7 @@ export function instrumentXHR(notifier: Notifier): void {
     url: string,
     _async?: boolean,
     _user?: string,
-    _password?: string,
+    _password?: string
   ): void {
     if (notifier._ignoreNextXHR === 0) {
       this.__state = {

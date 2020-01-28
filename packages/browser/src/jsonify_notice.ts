@@ -7,7 +7,7 @@ const MAX_OBJ_LENGTH = 128;
 // environment and session keys.
 export function jsonifyNotice(
   notice: INotice,
-  { maxLength = 64000, keysBlacklist = [] } = {},
+  { maxLength = 64000, keysBlacklist = [] } = {}
 ): string {
   if (notice.errors) {
     for (let i = 0; i < notice.errors.length; i++) {
@@ -48,7 +48,7 @@ export function jsonifyNotice(
   }
 
   let err = new Error(
-    `airbrake: notice exceeds max length and can't be truncated`,
+    `airbrake: notice exceeds max length and can't be truncated`
   );
   (err as any).params = params;
   throw err;

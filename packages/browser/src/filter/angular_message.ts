@@ -7,7 +7,7 @@ let re = new RegExp(
     '\\s',
     '([\\s\\S]+)', // message
     '$',
-  ].join(''),
+  ].join('')
 );
 
 export function angularMessageFilter(notice: INotice): INotice {

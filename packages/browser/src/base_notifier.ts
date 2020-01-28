@@ -107,7 +107,7 @@ export class BaseNotifier {
 
     if (!err.error) {
       notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`,
+        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
       );
       return Promise.resolve(notice);
     }
@@ -228,7 +228,7 @@ class Routes {
     method = '',
     route = '',
     statusCode = 0,
-    contentType = '',
+    contentType = ''
   ): RouteMetric {
     const metric = new RouteMetric(method, route, statusCode, contentType);
 

@@ -6,7 +6,9 @@ interface IHistoryRecord {
   [key: string]: any;
 }
 
-interface IMap { [key: string]: any };
+interface IMap {
+  [key: string]: any;
+}
 
 export class Scope {
   _noopMetric = new NoopMetric();
@@ -27,7 +29,7 @@ export class Scope {
   }
 
   setContext(context: IMap) {
-    this._context = {...this._context, ...context};
+    this._context = { ...this._context, ...context };
   }
 
   context(): IMap {

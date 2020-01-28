@@ -40,7 +40,7 @@ export class Notifier extends BaseNotifier {
         window.removeEventListener('offline', this.onOffline);
         window.removeEventListener(
           'unhandledrejection',
-          this.onUnhandledrejection,
+          this.onUnhandledrejection
         );
       });
     }
@@ -143,7 +143,7 @@ export class Notifier extends BaseNotifier {
     filename?: string,
     line?: number,
     column?: number,
-    err?: Error,
+    err?: Error
   ): void {
     if (this._ignoreWindowError > 0) {
       return;

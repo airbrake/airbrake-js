@@ -58,7 +58,7 @@ export class RoutesStats {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(req.startTime.getTime() / minute) * minute,
+      Math.floor(req.startTime.getTime() / minute) * minute
     );
 
     let key: IRouteKey = {
@@ -160,7 +160,7 @@ export class RoutesBreakdowns {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(req.startTime.getTime() / minute) * minute,
+      Math.floor(req.startTime.getTime() / minute) * minute
     );
 
     let key: IBreakdownKey = {

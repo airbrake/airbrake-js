@@ -63,7 +63,7 @@ export class QueriesStats {
 
     const minute = 60 * 1000;
     let startTime = new Date(
-      Math.floor(q.startTime.getTime() / minute) * minute,
+      Math.floor(q.startTime.getTime() / minute) * minute
     );
 
     let key: IQueryKey = {
