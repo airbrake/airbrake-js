@@ -32,7 +32,7 @@ export class BaseNotifier {
   _filters: Filter[] = [];
   _scope = new Scope();
 
-  _onClose: Array<() => void> = [];
+  _onClose: (() => void)[] = [];
 
   constructor(opt: IOptions) {
     if (!opt.projectId || !opt.projectKey) {
