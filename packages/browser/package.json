@@ -22,7 +22,7 @@
   "devDependencies": {
     "@babel/core": "^7.9.0",
     "@babel/preset-env": "^7.9.0",
-    "@types/request": "2.48.3",
+    "@types/request": "2.48.4",
     "babel-jest": "^25.2.4",
     "jest": "^25.2.4",
     "prettier": "^2.0.2",
