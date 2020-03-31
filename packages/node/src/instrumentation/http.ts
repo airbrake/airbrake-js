@@ -22,7 +22,7 @@ export function wrapRequest(origFn, airbrake: Notifier) {
     }
 
     const origEmit = req.emit;
-    req.emit = function(type, _res) {
+    req.emit = function (type, _res) {
       if (type === 'response') {
         metric.endSpan(SPAN_NAME);
       }

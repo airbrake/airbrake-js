@@ -33,7 +33,7 @@ export function instrumentXHR(notifier: Notifier): void {
   const oldSend = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.send = function abSend(_data?: any): void {
     let oldFn = this.onreadystatechange;
-    this.onreadystatechange = function(_ev: Event): any {
+    this.onreadystatechange = function (_ev: Event): any {
       if (this.readyState === 4 && this.__state) {
         recordReq(this);
       }

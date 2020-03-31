@@ -3,7 +3,7 @@ import { Notifier } from '../notifier';
 export function instrumentFetch(notifier: Notifier): void {
   // tslint:disable-next-line:no-this-assignment
   let oldFetch = window.fetch;
-  window.fetch = function(
+  window.fetch = function (
     req: RequestInfo,
     options?: RequestInit
   ): Promise<Response> {
