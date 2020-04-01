@@ -10,8 +10,8 @@
     "typescript": "3.8.3"
   },
   "scripts": {
-    "bootstrap": "lerna bootstrap",
     "lint": "lerna run lint",
     "test": "lerna run test"
-  }
+  },
+  "workspaces": ["packages/*"]
 }
