@@ -32,7 +32,7 @@ export class BaseNotifier {
   _filters: Filter[] = [];
   _scope = new Scope();
 
-  _onClose: Array<() => void> = [];
+  _onClose: (() => void)[] = [];
 
   constructor(opt: IOptions) {
     if (!opt.projectId || !opt.projectKey) {
@@ -166,7 +166,7 @@ export class BaseNotifier {
 
     // tslint:disable-next-line:no-this-assignment
     let client = this;
-    let airbrakeWrapper = function() {
+    let airbrakeWrapper = function () {
       let fnArgs = Array.prototype.slice.call(arguments);
       let wrappedArgs = client._wrapArguments(fnArgs);
       try {

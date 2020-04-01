@@ -2,7 +2,7 @@ import { Notifier } from '../notifier';
 
 export function patch(createDebug, airbrake: Notifier): void {
   const oldInit = createDebug.init;
-  createDebug.init = function(debug) {
+  createDebug.init = function (debug) {
     oldInit.apply(this, arguments);
 
     const oldLog = debug.log || createDebug.log;
