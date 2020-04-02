@@ -1,6 +1,6 @@
 # Airbrake for Node.js
 
-[![Build Status](https://github.com/airbrake/airbrake-js/workflows/Test/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
+[![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
 
 This is the JavaScript notifier for capturing errors in Node.js and reporting them to [Airbrake](http://airbrake.io). For web browsers there is a [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/browser).
 
