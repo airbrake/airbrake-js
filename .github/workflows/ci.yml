@@ -1,9 +1,9 @@
-name: Test
+name: CI
 
 on: [push]
 
 jobs:
-  build:
+  lint_and_test:
     runs-on: ubuntu-latest
 
     strategy:
