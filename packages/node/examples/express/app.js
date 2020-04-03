@@ -3,15 +3,12 @@ const pg = require('pg');
 
 const Airbrake = require('@airbrake/node');
 const airbrakeExpress = require('@airbrake/node/dist/instrumentation/express');
-const airbrakePG = require('@airbrake/node/dist/instrumentation/pg');
 
 async function main() {
   const airbrake = new Airbrake.Notifier({
     projectId: process.env.AIRBRAKE_PROJECT_ID,
     projectKey: process.env.AIRBRAKE_PROJECT_KEY,
   });
-
-  console.log(pg.Client.prototype.query);
 
   const client = new pg.Client();
   await client.connect();
@@ -30,9 +27,8 @@ async function main() {
     res.send('Hello World!');
   });
 
-  app.get('/hello/:name', function hello(req, res) {
+  app.get('/hello/:name', function hello(_req, _res) {
     throw new Error('hello from Express');
-    res.send(`Hello ${req.params.name}`);
   });
 
   // Error handler middleware should be the last one.
