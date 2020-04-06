@@ -23,11 +23,11 @@ function wrapQuery(origQuery, airbrake) {
             }
         };
         var foundCallback = false;
-        function wrapCallback(cb) {
+        function wrapCallback(callback) {
             foundCallback = true;
             return function abCallback() {
                 endSpan();
-                return cb.apply(this, arguments);
+                return callback.apply(this, arguments);
             };
         }
         var query;

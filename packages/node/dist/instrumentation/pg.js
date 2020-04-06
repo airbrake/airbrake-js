@@ -17,6 +17,7 @@ function patch(pg, airbrake) {
         });
     }
 }
+// tslint:disable-next-line: variable-name
 function patchClient(Client, airbrake) {
     var origQuery = Client.prototype.query;
     Client.prototype.query = function abQuery(sql) {
