@@ -24,6 +24,7 @@ export interface IOptions {
   processor?: Processor;
   reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;
+  performanceStats?: boolean;
 
   request?: request.RequestAPI<
     request.Request,

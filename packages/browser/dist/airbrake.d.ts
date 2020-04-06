@@ -35,6 +35,7 @@ export interface IOptions {
   timeout?: number;
   keysBlacklist?: any[];
   instrumentation?: IInstrumentationOptions;
+  performanceStats?: boolean;
 }
 
 interface IFuncWrapper {

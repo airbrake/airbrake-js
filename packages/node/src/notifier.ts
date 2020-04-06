@@ -14,6 +14,7 @@ export class Notifier extends BaseNotifier {
     if (!opt.environment && process.env.NODE_ENV) {
       opt.environment = process.env.NODE_ENV;
     }
+    opt.performanceStats = opt.performanceStats !== false;
     super(opt);
 
     this.addFilter(nodeFilter);
@@ -53,7 +54,9 @@ export class Notifier extends BaseNotifier {
       });
     });
 
-    this._instrument();
+    if (opt.performanceStats) {
+      this._instrument();
+    }
   }
 
   scope(): Scope {
