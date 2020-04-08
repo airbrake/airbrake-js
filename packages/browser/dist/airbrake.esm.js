@@ -259,12 +259,7 @@ var Span = /** @class */ (function () {
         this.startTime = startTime || new Date();
     }
     Span.prototype.end = function (endTime) {
-        if (endTime) {
-            this.endTime = endTime;
-        }
-        else {
-            this.endTime = new Date();
-        }
+        this.endTime = endTime ? endTime : new Date();
         this._dur += this.endTime.getTime() - this.startTime.getTime();
         this._metric._incGroup(this.name, this._dur);
         this._metric = null;
@@ -363,7 +358,7 @@ var Scope = /** @class */ (function () {
         return clone;
     };
     Scope.prototype.setContext = function (context) {
-        this._context = Object.assign(this._context, context);
+        this._context = __assign(__assign({}, this._context), context);
     };
     Scope.prototype.context = function () {
         var ctx = __assign({}, this._context);
@@ -753,7 +748,9 @@ var TDigestStatGroups = /** @class */ (function (_super) {
     TDigestStatGroups.prototype.addGroups = function (totalMs, groups) {
         this.add(totalMs);
         for (var name_1 in groups) {
-            this.addGroup(name_1, groups[name_1]);
+            if (groups.hasOwnProperty(name_1)) {
+                this.addGroup(name_1, groups[name_1]);
+            }
         }
     };
     TDigestStatGroups.prototype.addGroup = function (name, ms) {
@@ -789,42 +786,52 @@ function tdigestCentroids(td) {
 }
 
 var FLUSH_INTERVAL = 15000; // 15 seconds
-var RouteMetric = /** @class */ (function (_super) {
-    __extends(RouteMetric, _super);
-    function RouteMetric(method, route, statusCode, contentType) {
-        if (method === void 0) { method = ''; }
-        if (route === void 0) { route = ''; }
-        if (statusCode === void 0) { statusCode = 0; }
-        if (contentType === void 0) { contentType = ''; }
-        var _this = _super.call(this) || this;
-        _this.method = method;
-        _this.route = route;
-        _this.statusCode = statusCode;
-        _this.contentType = contentType;
-        _this.startTime = new Date();
-        return _this;
+var QueryInfo = /** @class */ (function () {
+    function QueryInfo(query) {
+        if (query === void 0) { query = ''; }
+        this.method = '';
+        this.route = '';
+        this.query = '';
+        this.func = '';
+        this.file = '';
+        this.line = 0;
+        this.startTime = new Date();
+        this.query = query;
     }
-    return RouteMetric;
-}(BaseMetric));
-var RoutesStats = /** @class */ (function () {
-    function RoutesStats(opt) {
+    QueryInfo.prototype._duration = function () {
+        if (!this.endTime) {
+            this.endTime = new Date();
+        }
+        return this.endTime.getTime() - this.startTime.getTime();
+    };
+    return QueryInfo;
+}());
+var QueriesStats = /** @class */ (function () {
+    function QueriesStats(opt) {
         this._m = {};
         this._opt = opt;
-        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-stats?key=" + opt.projectKey;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/queries-stats?key=" + opt.projectKey;
         this._requester = makeRequester$1(opt);
     }
-    RoutesStats.prototype.notify = function (req) {
+    QueriesStats.prototype.start = function (query) {
+        if (query === void 0) { query = ''; }
+        return new QueryInfo(query);
+    };
+    QueriesStats.prototype.notify = function (q) {
         var _this = this;
         if (!hasTdigest) {
             return;
         }
-        var ms = req._duration();
+        var ms = q._duration();
         var minute = 60 * 1000;
-        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
+        var startTime = new Date(Math.floor(q.startTime.getTime() / minute) * minute);
         var key = {
-            method: req.method,
-            route: req.route,
-            statusCode: req.statusCode,
+            method: q.method,
+            route: q.route,
+            query: q.query,
+            func: q.func,
+            file: q.file,
+            line: q.line,
             time: startTime,
         };
         var keyStr = JSON.stringify(key);
@@ -841,21 +848,21 @@ var RoutesStats = /** @class */ (function () {
             _this._flush();
         }, FLUSH_INTERVAL);
     };
-    RoutesStats.prototype._flush = function () {
-        var routes = [];
+    QueriesStats.prototype._flush = function () {
+        var queries = [];
         for (var keyStr in this._m) {
             if (!this._m.hasOwnProperty(keyStr)) {
                 continue;
             }
             var key = JSON.parse(keyStr);
             var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
-            routes.push(v);
+            queries.push(v);
         }
         this._m = {};
         this._timer = null;
         var outJSON = JSON.stringify({
             environment: this._opt.environment,
-            routes: routes,
+            queries: queries,
         });
         var req = {
             method: 'POST',
@@ -868,100 +875,11 @@ var RoutesStats = /** @class */ (function () {
         })
             .catch(function (err) {
             if (console.error) {
-                console.error('can not report routes stats', err);
+                console.error('can not report queries stats', err);
             }
         });
     };
-    return RoutesStats;
-}());
-var RoutesBreakdowns = /** @class */ (function () {
-    function RoutesBreakdowns(opt) {
-        this._m = {};
-        this._opt = opt;
-        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-breakdowns?key=" + opt.projectKey;
-        this._requester = makeRequester$1(opt);
-    }
-    RoutesBreakdowns.prototype.notify = function (req) {
-        var _this = this;
-        if (!hasTdigest) {
-            return;
-        }
-        if (req.statusCode < 200 ||
-            (req.statusCode >= 300 && req.statusCode < 400) ||
-            req.statusCode === 404 ||
-            Object.keys(req._groups).length === 0) {
-            return;
-        }
-        var ms = req._duration();
-        if (ms === 0) {
-            ms = 0.00001;
-        }
-        var minute = 60 * 1000;
-        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
-        var key = {
-            method: req.method,
-            route: req.route,
-            responseType: this._responseType(req),
-            time: startTime,
-        };
-        var keyStr = JSON.stringify(key);
-        var stat = this._m[keyStr];
-        if (!stat) {
-            stat = new TDigestStatGroups();
-            this._m[keyStr] = stat;
-        }
-        stat.addGroups(ms, req._groups);
-        if (this._timer) {
-            return;
-        }
-        this._timer = setTimeout(function () {
-            _this._flush();
-        }, FLUSH_INTERVAL);
-    };
-    RoutesBreakdowns.prototype._flush = function () {
-        var routes = [];
-        for (var keyStr in this._m) {
-            if (!this._m.hasOwnProperty(keyStr)) {
-                continue;
-            }
-            var key = JSON.parse(keyStr);
-            var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
-            routes.push(v);
-        }
-        this._m = {};
-        this._timer = null;
-        var outJSON = JSON.stringify({
-            environment: this._opt.environment,
-            routes: routes,
-        });
-        var req = {
-            method: 'POST',
-            url: this._url,
-            body: outJSON,
-        };
-        this._requester(req)
-            .then(function (_resp) {
-            // nothing
-        })
-            .catch(function (err) {
-            if (console.error) {
-                console.error('can not report routes breakdowns', err);
-            }
-        });
-    };
-    RoutesBreakdowns.prototype._responseType = function (req) {
-        if (req.statusCode >= 500) {
-            return '5xx';
-        }
-        if (req.statusCode >= 400) {
-            return '4xx';
-        }
-        if (!req.contentType) {
-            return '';
-        }
-        return req.contentType.split(';')[0].split('/')[-1];
-    };
-    return RoutesBreakdowns;
+    return QueriesStats;
 }());
 
 var FLUSH_INTERVAL$1 = 15000; // 15 seconds
@@ -1046,52 +964,42 @@ var QueuesStats = /** @class */ (function () {
 }());
 
 var FLUSH_INTERVAL$2 = 15000; // 15 seconds
-var QueryInfo = /** @class */ (function () {
-    function QueryInfo(query) {
-        if (query === void 0) { query = ''; }
-        this.method = '';
-        this.route = '';
-        this.query = '';
-        this.func = '';
-        this.file = '';
-        this.line = 0;
-        this.startTime = new Date();
-        this.query = query;
+var RouteMetric = /** @class */ (function (_super) {
+    __extends(RouteMetric, _super);
+    function RouteMetric(method, route, statusCode, contentType) {
+        if (method === void 0) { method = ''; }
+        if (route === void 0) { route = ''; }
+        if (statusCode === void 0) { statusCode = 0; }
+        if (contentType === void 0) { contentType = ''; }
+        var _this = _super.call(this) || this;
+        _this.method = method;
+        _this.route = route;
+        _this.statusCode = statusCode;
+        _this.contentType = contentType;
+        _this.startTime = new Date();
+        return _this;
     }
-    QueryInfo.prototype._duration = function () {
-        if (!this.endTime) {
-            this.endTime = new Date();
-        }
-        return this.endTime.getTime() - this.startTime.getTime();
-    };
-    return QueryInfo;
-}());
-var QueriesStats = /** @class */ (function () {
-    function QueriesStats(opt) {
+    return RouteMetric;
+}(BaseMetric));
+var RoutesStats = /** @class */ (function () {
+    function RoutesStats(opt) {
         this._m = {};
         this._opt = opt;
-        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/queries-stats?key=" + opt.projectKey;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-stats?key=" + opt.projectKey;
         this._requester = makeRequester$1(opt);
     }
-    QueriesStats.prototype.start = function (query) {
-        if (query === void 0) { query = ''; }
-        return new QueryInfo(query);
-    };
-    QueriesStats.prototype.notify = function (q) {
+    RoutesStats.prototype.notify = function (req) {
         var _this = this;
         if (!hasTdigest) {
             return;
         }
-        var ms = q._duration();
+        var ms = req._duration();
         var minute = 60 * 1000;
-        var startTime = new Date(Math.floor(q.startTime.getTime() / minute) * minute);
+        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
         var key = {
-            method: q.method,
-            route: q.route,
-            query: q.query,
-            func: q.func,
-            file: q.file,
-            line: q.line,
+            method: req.method,
+            route: req.route,
+            statusCode: req.statusCode,
             time: startTime,
         };
         var keyStr = JSON.stringify(key);
@@ -1108,21 +1016,21 @@ var QueriesStats = /** @class */ (function () {
             _this._flush();
         }, FLUSH_INTERVAL$2);
     };
-    QueriesStats.prototype._flush = function () {
-        var queries = [];
+    RoutesStats.prototype._flush = function () {
+        var routes = [];
         for (var keyStr in this._m) {
             if (!this._m.hasOwnProperty(keyStr)) {
                 continue;
             }
             var key = JSON.parse(keyStr);
             var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
-            queries.push(v);
+            routes.push(v);
         }
         this._m = {};
         this._timer = null;
         var outJSON = JSON.stringify({
             environment: this._opt.environment,
-            queries: queries,
+            routes: routes,
         });
         var req = {
             method: 'POST',
@@ -1135,11 +1043,100 @@ var QueriesStats = /** @class */ (function () {
         })
             .catch(function (err) {
             if (console.error) {
-                console.error('can not report queries stats', err);
+                console.error('can not report routes stats', err);
             }
         });
     };
-    return QueriesStats;
+    return RoutesStats;
+}());
+var RoutesBreakdowns = /** @class */ (function () {
+    function RoutesBreakdowns(opt) {
+        this._m = {};
+        this._opt = opt;
+        this._url = opt.host + "/api/v5/projects/" + opt.projectId + "/routes-breakdowns?key=" + opt.projectKey;
+        this._requester = makeRequester$1(opt);
+    }
+    RoutesBreakdowns.prototype.notify = function (req) {
+        var _this = this;
+        if (!hasTdigest) {
+            return;
+        }
+        if (req.statusCode < 200 ||
+            (req.statusCode >= 300 && req.statusCode < 400) ||
+            req.statusCode === 404 ||
+            Object.keys(req._groups).length === 0) {
+            return;
+        }
+        var ms = req._duration();
+        if (ms === 0) {
+            ms = 0.00001;
+        }
+        var minute = 60 * 1000;
+        var startTime = new Date(Math.floor(req.startTime.getTime() / minute) * minute);
+        var key = {
+            method: req.method,
+            route: req.route,
+            responseType: this._responseType(req),
+            time: startTime,
+        };
+        var keyStr = JSON.stringify(key);
+        var stat = this._m[keyStr];
+        if (!stat) {
+            stat = new TDigestStatGroups();
+            this._m[keyStr] = stat;
+        }
+        stat.addGroups(ms, req._groups);
+        if (this._timer) {
+            return;
+        }
+        this._timer = setTimeout(function () {
+            _this._flush();
+        }, FLUSH_INTERVAL$2);
+    };
+    RoutesBreakdowns.prototype._flush = function () {
+        var routes = [];
+        for (var keyStr in this._m) {
+            if (!this._m.hasOwnProperty(keyStr)) {
+                continue;
+            }
+            var key = JSON.parse(keyStr);
+            var v = __assign(__assign({}, key), this._m[keyStr].toJSON());
+            routes.push(v);
+        }
+        this._m = {};
+        this._timer = null;
+        var outJSON = JSON.stringify({
+            environment: this._opt.environment,
+            routes: routes,
+        });
+        var req = {
+            method: 'POST',
+            url: this._url,
+            body: outJSON,
+        };
+        this._requester(req)
+            .then(function (_resp) {
+            // nothing
+        })
+            .catch(function (err) {
+            if (console.error) {
+                console.error('can not report routes breakdowns', err);
+            }
+        });
+    };
+    RoutesBreakdowns.prototype._responseType = function (req) {
+        if (req.statusCode >= 500) {
+            return '5xx';
+        }
+        if (req.statusCode >= 400) {
+            return '4xx';
+        }
+        if (!req.contentType) {
+            return '';
+        }
+        return req.contentType.split(';')[0].split('/')[-1];
+    };
+    return RoutesBreakdowns;
 }());
 
 var BaseNotifier = /** @class */ (function () {
@@ -1165,7 +1162,7 @@ var BaseNotifier = /** @class */ (function () {
         this.addFilter(function (notice) {
             notice.context.notifier = {
                 name: 'airbrake-js/browser',
-                version: '1.0.6',
+                version: '1.0.7',
                 url: 'https://github.com/airbrake/airbrake-js',
             };
             if (_this._opt.environment) {
@@ -1195,7 +1192,7 @@ var BaseNotifier = /** @class */ (function () {
     BaseNotifier.prototype.notify = function (err) {
         var notice = {
             errors: [],
-            context: Object.assign({ severity: 'error' }, this.scope().context(), err.context),
+            context: __assign(__assign({ severity: 'error' }, this.scope().context()), err.context),
             params: err.params || {},
             environment: err.environment || {},
             session: err.session || {},
@@ -1398,7 +1395,7 @@ function instrumentDOM(notifier) {
     if (window.addEventListener) {
         window.addEventListener('load', handler);
         window.addEventListener('error', function (event) {
-            if ('error' in event) {
+            if (getProp(event, 'error')) {
                 return;
             }
             handler(event);
@@ -1412,13 +1409,7 @@ function instrumentDOM(notifier) {
 }
 function makeEventHandler(notifier) {
     return function (event) {
-        var target;
-        try {
-            target = event.target;
-        }
-        catch (_) {
-            return;
-        }
+        var target = getProp(event, 'target');
         if (!target) {
             return;
         }
@@ -1495,6 +1486,15 @@ function elemPath(elem) {
         return String(elem);
     }
     return path.reverse().join(' > ');
+}
+function getProp(obj, prop) {
+    try {
+        return obj[prop];
+    }
+    catch (_) {
+        // Permission denied to access property
+        return null;
+    }
 }
 
 function instrumentFetch(notifier) {
@@ -1634,7 +1634,7 @@ var Notifier = /** @class */ (function (_super) {
                 window.removeEventListener('unhandledrejection', _this.onUnhandledrejection);
             });
         }
-        //TODO: deprecated
+        // TODO: deprecated
         if (_this._opt.ignoreWindowError) {
             opt.instrumentation.onerror = false;
         }

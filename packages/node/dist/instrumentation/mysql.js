@@ -43,11 +43,11 @@ function wrapConnection(conn, airbrake) {
     var origQuery = conn.query;
     conn.query = function abQuery(sql, values, cb) {
         var foundCallback = false;
-        function wrapCallback(cb) {
+        function wrapCallback(callback) {
             foundCallback = true;
             return function abCallback() {
                 endSpan();
-                return cb.apply(this, arguments);
+                return callback.apply(this, arguments);
             };
         }
         var metric = airbrake.scope().routeMetric();
