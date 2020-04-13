@@ -15,7 +15,8 @@ export class AirbrakeErrorHandler implements ErrorHandler {
   constructor() {
     this.airbrake = new Notifier({
       projectId: 1,
-      projectKey: 'FIXME'
+      projectKey: 'FIXME',
+      environment: 'production'
     });
   }
 
@@ -48,4 +49,11 @@ import { AirbrakeErrorHandler } from './error_handler';
   bootstrap: [AppComponent]
 })
 export class AppModule { }
+```
+
+To test that Airbrake has been installed correctly in your Angular project,
+just open up the JavaScript console in your internet browser and paste in:
+
+```js
+window.onerror("TestError: This is a test", "path/to/file.js", 123);
 ```
