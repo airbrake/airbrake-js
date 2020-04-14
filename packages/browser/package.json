@@ -1,13 +1,15 @@
 {
   "name": "@airbrake/browser",
   "version": "1.0.7",
-  "description": "Notify Airbrake on JavaScript exceptions",
+  "description": "Official Airbrake notifier for browsers",
   "author": "Airbrake",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/airbrake/airbrake-js.git"
+    "url": "git://github.com/airbrake/airbrake-js.git",
+    "directory": "packages/browser"
   },
+  "homepage": "https://github.com/airbrake/airbrake-js/tree/master/packages/browser",
   "keywords": [
     "exception",
     "error",
@@ -17,6 +19,7 @@
   "dependencies": {
     "cross-fetch": "^3.0.4",
     "error-stack-parser": "^2.0.4",
+    "promise-polyfill": "^8.1.3",
     "tdigest": "^0.1.1"
   },
   "devDependencies": {
@@ -26,7 +29,6 @@
     "babel-jest": "^25.2.4",
     "jest": "^25.2.4",
     "prettier": "^2.0.2",
-    "promise-polyfill": "^8.1.3",
     "rollup": "^1.26.0",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
@@ -39,18 +41,22 @@
     "tslint-plugin-prettier": "^2.3.0",
     "typescript": "^3.8.3"
   },
-  "main": "dist/airbrake.common.js",
-  "web": "dist/airbrake.iife.js",
-  "module": "dist/airbrake.esm.js",
-  "jsnext:main": "dist/airbrake.esm.js",
-  "types": "dist/airbrake.d.ts",
+  "main": "dist/index.js",
+  "module": "esm/index.js",
+  "unpkg": "umd/airbrake.js",
   "files": [
     "dist/",
+    "esm/",
+    "umd/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup --config",
+    "build": "yarn build:cjs && yarn build:esm && yarn build:umd",
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:umd": "rollup --config",
+    "clean": "rm -rf dist esm umd",
     "lint": "tslint -p .",
     "test": "jest"
   }

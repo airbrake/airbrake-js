@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- [browser/node] Build process updates
 
 ## [1.0.7] - 2020-04-08
 ### Added

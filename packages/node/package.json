@@ -1,13 +1,15 @@
 {
   "name": "@airbrake/node",
   "version": "1.0.7",
-  "description": "Notify Airbrake on JavaScript exceptions",
+  "description": "Official Airbrake notifier for Node.js",
   "author": "Airbrake",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git://github.com/airbrake/airbrake-js.git"
+    "url": "git://github.com/airbrake/airbrake-js.git",
+    "directory": "packages/node"
   },
+  "homepage": "https://github.com/airbrake/airbrake-js/tree/master/packages/node",
   "keywords": [
     "exception",
     "error",
@@ -15,6 +17,7 @@
     "notifier"
   ],
   "dependencies": {
+    "@airbrake/browser": "^1.0.7",
     "cross-fetch": "^3.0.4",
     "error-stack-parser": "^2.0.4",
     "tdigest": "^0.1.1"
@@ -36,17 +39,19 @@
     "tslint-plugin-prettier": "^2.3.0",
     "typescript": "^3.8.3"
   },
-  "main": "dist/airbrake.common.js",
-  "module": "dist/airbrake.esm.js",
-  "jsnext:main": "dist/airbrake.esm.js",
-  "types": "dist/airbrake.d.ts",
+  "main": "dist/index.js",
+  "module": "esm/index.js",
   "files": [
     "dist/",
+    "esm/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup --config",
+    "build": "yarn build:cjs && yarn build:esm",
+    "build:cjs": "tsc -p tsconfig.json",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "clean": "rm -rf dist esm",
     "lint": "tslint -p .",
     "test": "jest"
   }

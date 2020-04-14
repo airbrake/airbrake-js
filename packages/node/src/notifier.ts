@@ -1,6 +1,4 @@
-import { BaseNotifier } from '@browser/base_notifier';
-import { INotice } from '@browser/notice';
-import { IOptions } from '@browser/options';
+import { BaseNotifier, INotice, IOptions } from '@airbrake/browser';
 import { nodeFilter } from './filter/node';
 import { Scope, ScopeManager } from './scope';
 

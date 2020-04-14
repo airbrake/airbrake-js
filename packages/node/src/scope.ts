@@ -1,4 +1,4 @@
-import { Scope } from '@browser/scope';
+import { Scope } from '@airbrake/browser';
 import * as asyncHooks from 'async_hooks';
 
 export { Scope };
