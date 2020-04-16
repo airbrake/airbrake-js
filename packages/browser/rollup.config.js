@@ -11,40 +11,25 @@ const webPlugins = [
     browser: true,
   }),
   commonjs(),
-  typescript(),
+  typescript({
+    tsconfigOverride: {
+      compilerOptions: {
+        declaration: false,
+        module: 'ES6',
+      },
+    },
+  }),
   replace({ VERSION: `${pkg.version}` }),
   terser({
     include: [/^.+\.min\.js$/],
   }),
 ];
 
-const nodePlugins = [typescript(), replace({ VERSION: `${pkg.version}` })];
-
-function iife(cfg) {
+function umd(cfg) {
   return Object.assign(
     {
-      format: 'iife',
+      format: 'umd',
       banner: `/* airbrake-js v${pkg.version} */`,
-      sourcemap: true,
-    },
-    cfg,
-  );
-}
-
-function cjs(cfg) {
-  return Object.assign(
-    {
-      format: 'cjs',
-      sourcemap: true,
-    },
-    cfg,
-  );
-}
-
-function esm(cfg) {
-  return Object.assign(
-    {
-      format: 'esm',
       sourcemap: true,
     },
     cfg,
@@ -53,23 +38,11 @@ function esm(cfg) {
 
 export default [
   {
-    input: 'src/browser.entry.ts',
+    input: 'src/index.ts',
     output: [
-      iife({ file: 'dist/airbrake.iife.js', name: 'Airbrake' }),
-      iife({ file: 'dist/airbrake.iife.min.js', name: 'Airbrake' }),
+      umd({ file: 'umd/airbrake.js', name: 'Airbrake' }),
+      umd({ file: 'umd/airbrake.min.js', name: 'Airbrake' }),
     ],
     plugins: webPlugins,
-  },
-  {
-    input: 'src/bundler.entry.ts',
-    output: [cjs({ file: 'dist/airbrake.common.js', name: 'Airbrake' })],
-    external: ['error-stack-parser', 'cross-fetch', 'tdigest'],
-    plugins: nodePlugins,
-  },
-  {
-    input: 'src/bundler.entry.ts',
-    output: [esm({ file: 'dist/airbrake.esm.js' })],
-    external: ['error-stack-parser', 'cross-fetch', 'tdigest'],
-    plugins: nodePlugins,
   },
 ];

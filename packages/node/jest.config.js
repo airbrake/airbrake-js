@@ -5,7 +5,7 @@ module.exports = {
   },
   testEnvironment: 'node',
   moduleNameMapper: {
-    '^@browser/(.*)$': '<rootDir>/../browser/src/$1',
+    '^@airbrake/(.*)$': '<rootDir>/../$1/src',
   },
   roots: ['tests'],
   clearMocks: true,

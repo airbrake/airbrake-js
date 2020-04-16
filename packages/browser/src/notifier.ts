@@ -1,3 +1,4 @@
+import Promise from 'promise-polyfill';
 import { BaseNotifier } from './base_notifier';
 import { windowFilter } from './filter/window';
 import { instrumentConsole } from './instrumentation/console';

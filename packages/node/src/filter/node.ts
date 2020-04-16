@@ -1,4 +1,4 @@
-import { INotice } from '@browser/notice';
+import { INotice } from '@airbrake/browser';
 
 const os = require('os');
 
