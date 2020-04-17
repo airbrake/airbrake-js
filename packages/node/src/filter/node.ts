@@ -1,10 +1,13 @@
 import { INotice } from '@airbrake/browser';
+import { NOTIFIER_NAME, NOTIFIER_VERSION, NOTIFIER_URL } from '../version';
 
 const os = require('os');
 
 export function nodeFilter(notice: INotice): INotice {
   if (notice.context.notifier) {
-    notice.context.notifier.name = 'airbrake-js/node';
+    notice.context.notifier.name = NOTIFIER_NAME;
+    notice.context.notifier.version = NOTIFIER_VERSION;
+    notice.context.notifier.url = NOTIFIER_URL;
   }
   notice.context.os = `${os.type()}/${os.release()}`;
   notice.context.architecture = os.arch();

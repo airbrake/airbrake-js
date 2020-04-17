@@ -20,6 +20,7 @@ import { IOptions } from './options';
 import { QueriesStats } from './queries';
 import { QueueMetric, QueuesStats } from './queues';
 import { RouteMetric, RoutesBreakdowns, RoutesStats } from './routes';
+import { NOTIFIER_NAME, NOTIFIER_VERSION, NOTIFIER_URL } from './version';
 
 export class BaseNotifier {
   routes: Routes;
@@ -57,9 +58,9 @@ export class BaseNotifier {
 
     this.addFilter((notice: INotice): INotice | null => {
       notice.context.notifier = {
-        name: 'airbrake-js/browser',
-        version: 'VERSION',
-        url: 'https://github.com/airbrake/airbrake-js',
+        name: NOTIFIER_NAME,
+        version: NOTIFIER_VERSION,
+        url: NOTIFIER_URL,
       };
       if (this._opt.environment) {
         notice.context.environment = this._opt.environment;
