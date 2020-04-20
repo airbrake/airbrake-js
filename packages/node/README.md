@@ -1,37 +1,36 @@
-# Airbrake for Node.js
+# Official Airbrake Notifier for Node.js
 
 [![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
+[![npm version](https://img.shields.io/npm/v/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
 
-This is the JavaScript notifier for capturing errors in Node.js and reporting them to [Airbrake](http://airbrake.io). For web browsers there is a [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/browser).
+The official Airbrake notifier for capturing JavaScript errors in Node.js and
+reporting them to [Airbrake](http://airbrake.io). If you're looking for
+Node.js support there is a
+[separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/browser).
 
-<img src="http://f.cl.ly/items/443E2J1D2W3x1E1u3j1u/JS-airbrakeman.jpg" width=800px>
+![Airbrake Arthur Node](https://camo.githubusercontent.com/9b7c0aad92f9dd2eb03b4dafd2e53784a2199216/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6169726272616b652d6769746875622d6173736574732f6e6f64652d6169726272616b652f6172746875722d6e6f64652e6a706567)
 
 ## Installation
 
-airbrake can be installed using yarn:
-
+Using yarn:
 
 ```sh
 yarn add @airbrake/node
 ```
 
-or using npm:
+Using npm:
 
 ```sh
 npm install @airbrake/node
 ```
 
-Example configurations can be found in [examples](examples), including:
-
-* [Express](examples/express)
-* [Node.js](examples/nodejs)
-
 ## Basic Usage
 
-First you need to initialize the notifier with the project id and API key taken from [Airbrake.io](https://airbrake.io):
+First, initialize the notifier with the project ID and API key taken from
+[Airbrake](https://airbrake.io):
 
 ```js
-import { Notifier } from '@airbrake/browser';
+const { Notifier } = require('@airbrake/node');
 
 const airbrake = new Notifier({
   projectId: 1,
@@ -40,11 +39,11 @@ const airbrake = new Notifier({
 });
 ```
 
-Then you can send a textual message to Airbrake:
+Then, you can send a textual message to Airbrake:
 
 ```js
 let promise = airbrake.notify(`user id=${user_id} not found`);
-promise.then(function(notice) {
+promise.then((notice) => {
   if (notice.id) {
     console.log('notice id', notice.id);
   } else {
@@ -53,81 +52,160 @@ promise.then(function(notice) {
 });
 ```
 
-Or report catched errors directly:
+or report errors directly:
 
 ```js
 try {
-  // This will throw if the document has no head tag
-  document.head.insertBefore(document.createElement('style'));
+  new Error('Hello from Airbrake!');
 } catch(err) {
   airbrake.notify(err);
   throw err;
 }
 ```
 
-Alternatively, you can wrap any code which may throw errors using the client's `wrap` method:
+Alternatively, you can wrap any code which may throw errors using the `wrap`
+method:
 
 ```js
-let startApp = function() {
-  // This will throw if the document has no head tag.
-  document.head.insertBefore(document.createElement('style'));
-}
+let startApp = () => {
+  new Error('Hello from Airbrake!');
+};
 startApp = airbrake.wrap(startApp);
 
 // Any exceptions thrown in startApp will be reported to Airbrake.
 startApp();
 ```
 
-or use `call` shortcut:
+or use the `call` shortcut:
 
 ```js
-let startApp = function() {
-  // This will throw if the document has no head tag.
-  document.head.insertBefore(document.createElement('style'));
-}
+let startApp = () => {
+  new Error('Hello from Airbrake!');
+};
 
 airbrake.call(startApp);
 ```
 
-### Node.js request and proxy
+## Example configurations
 
-In order to use [request](https://github.com/request/request) HTTP client you can pass `request` option which accepts request wrapper:
+* [Express](examples/express)
+* [Node.js](examples/nodejs)
+
+## Advanced Usage
+
+### Notice Annotations
+
+It's possible to annotate error notices with all sorts of useful information at
+the time they're captured by supplying it in the object being reported.
+
+```js
+try {
+  startApp();
+} catch(err) {
+  airbrake.notify({
+    error: err,
+    context: { component: 'bootstrap' },
+    environment: { env1: 'value' },
+    params: { param1: 'value' },
+    session: { session1: 'value' },
+  });
+  throw err;
+}
+```
+
+### Severity
+
+[Severity](https://airbrake.io/docs/airbrake-faq/what-is-severity/) allows
+categorizing how severe an error is. By default, it's set to `error`. To
+redefine severity, simply overwrite `context/severity` of a notice object:
+
+```js
+airbrake.notify({
+  error: err,
+  context: { severity: 'warning' }
+});
+```
+
+### Filtering errors
+
+There may be some errors thrown in your application that you're not interested
+in sending to Airbrake, such as errors thrown by 3rd-party libraries.
+
+The Airbrake notifier makes it simple to ignore this chaff while still
+processing legitimate errors. Add filters to the notifier by providing filter
+functions to `addFilter`.
+
+`addFilter` accepts the entire
+[error notice](https://airbrake.io/docs/api/#create-notice-v3) to be sent to
+Airbrake and provides access to the `context`, `environment`, `params`,
+and `session` properties. It also includes the single-element `errors` array
+with  its `backtrace` property and associated backtrace lines.
+
+The return value of the filter function determines whether or not the error
+notice will be submitted.
+  * If `null` is returned, the notice is ignored.
+  * Otherwise, the returned notice will be submitted.
+
+An error notice must pass all provided filters to be submitted.
+
+In the following example all errors triggered by admins will be ignored:
+
+```js
+airbrake.addFilter((notice) => {
+  if (notice.params.admin) {
+    // Ignore errors from admin sessions.
+    return null;
+  }
+  return notice;
+});
+```
+
+Filters can be also used to modify notice payload, e.g. to set the environment
+and application version:
+
+```js
+airbrake.addFilter((notice) => {
+  notice.context.environment = 'production';
+  notice.context.version = '1.2.3';
+  return notice;
+});
+```
+
+### Filtering keys
+
+With the `keysBlacklist` option, you can specify a list of keys containing
+sensitive information that must be filtered out:
 
 ```js
 const airbrake = new Notifier({
-  ...
+    // ...
+    keysBlacklist: [
+      'password', // exact match
+      /secret/, // regexp match
+    ],
+});
+```
+
+### Node.js request and proxy
+
+To use the [request](https://github.com/request/request) HTTP client, pass
+the `request` option which accepts a request wrapper:
+
+```js
+const airbrake = new Notifier({
+  // ...
   request: request.defaults({'proxy':'http://localproxy.com'})
 });
 ```
 
-## Contributing
+### Instrumentation
 
-Install dependencies:
+`@airbrake/node` attempts to automatically instrument various performance
+metrics. You can disable that behavior using the `performanceStats` option:
 
-```bash
-yarn install
+```js
+const airbrake = new Notifier({
+  // ...
+  performanceStats: false
+});
 ```
-
-Run unit tests:
-
-```bash
-yarn test
-```
-
-Build project:
-
-```bash
-yarn build
-```
-
-## Credits
-
-Airbrake is maintained and funded by [airbrake.io](http://airbrake.io)
-
-Thank you to all [the contributors](https://github.com/airbrake/airbrake-js/contributors).
-
-The names and logos for Airbrake are trademarks of Airbrake Technologies Inc.
-
-# License
-
-Airbrake is Copyright © 2008-2017 Airbrake Technologies Inc. It is free software, and may be redistributed under the terms specified in the MIT-LICENSE file.
