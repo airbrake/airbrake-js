@@ -1,4 +1,3 @@
-import replace from 'rollup-plugin-replace';
 import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import resolve from 'rollup-plugin-node-resolve';
@@ -19,7 +18,6 @@ const webPlugins = [
       },
     },
   }),
-  replace({ VERSION: `${pkg.version}` }),
   terser({
     include: [/^.+\.min\.js$/],
   }),
