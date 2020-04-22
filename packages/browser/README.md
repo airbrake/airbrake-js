@@ -24,6 +24,18 @@ Using npm:
 npm install @airbrake/browser
 ```
 
+Using a `<script>` tag via jsdelivr:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@airbrake/browser"></script>
+```
+
+Using a `<script>` tag via unpkg:
+
+```html
+<script src="https://unpkg.com/@airbrake/browser"></script>
+```
+
 ## Basic Usage
 
 First, initialize the notifier with the project ID and API key taken from
