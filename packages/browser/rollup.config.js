@@ -1,23 +1,14 @@
-import typescript from 'rollup-plugin-typescript2';
+import commonjs from '@rollup/plugin-commonjs';
+import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
 import { terser } from 'rollup-plugin-terser';
-import resolve from 'rollup-plugin-node-resolve';
-import commonjs from 'rollup-plugin-commonjs';
 
 const pkg = require('./package.json');
 
 const webPlugins = [
-  resolve({
-    browser: true,
-  }),
+  resolve({ browser: true }),
   commonjs(),
-  typescript({
-    tsconfigOverride: {
-      compilerOptions: {
-        declaration: false,
-        module: 'ES6',
-      },
-    },
-  }),
+  typescript({ tsconfig: './tsconfig.umd.json' }),
   terser({
     include: [/^.+\.min\.js$/],
   }),
@@ -29,18 +20,17 @@ function umd(cfg) {
       format: 'umd',
       banner: `/* airbrake-js v${pkg.version} */`,
       sourcemap: true,
+      name: 'Airbrake',
     },
     cfg,
   );
 }
 
-export default [
-  {
-    input: 'src/index.ts',
-    output: [
-      umd({ file: 'umd/airbrake.js', name: 'Airbrake' }),
-      umd({ file: 'umd/airbrake.min.js', name: 'Airbrake' }),
-    ],
-    plugins: webPlugins,
-  },
-];
+export default {
+  input: 'src/index.ts',
+  output: [
+    umd({ file: 'umd/airbrake.js' }),
+    umd({ file: 'umd/airbrake.min.js' }),
+  ],
+  plugins: webPlugins,
+};
