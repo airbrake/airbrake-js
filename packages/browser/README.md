@@ -100,8 +100,8 @@ airbrake.call(startApp);
 
 ## Example configurations
 
-* [AngularJS](examples/Angular)
-* [Angular](examples/angular-2)
+* [AngularJS](examples/angularjs)
+* [Angular](examples/angular)
 * [Browserify](examples/browserify)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
