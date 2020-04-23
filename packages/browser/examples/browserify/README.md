@@ -1,9 +1,9 @@
-# Quickstart
+# Usage with Browserify
 
-This example uses Grunt and browserify to build the app. To start it:
+This example uses Grunt and Browserify to build the app. To start it:
 
 ```bash
-yarn install
+npm install
 grunt build
 firefox index.html
 ```

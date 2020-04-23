@@ -47,7 +47,7 @@ The last step is to run your app. To test that you've configured Airbrake
 correctly, you can throw an error inside any of your routes:
 ```js
 app.get('/hello/:name', function hello(_req, _res) {
-  throw new Error('hello from Express');
+  throw new Error('Hello from Airbrake!');
 });
 ```
 

@@ -7,7 +7,7 @@ function start() {
   });
 
   try {
-    throw new Error('hello from Browserify');
+    throw new Error('Hello from Airbrake!');
   } catch (err) {
     airbrake.notify(err).then(function(notice) {
       if (notice.id) {

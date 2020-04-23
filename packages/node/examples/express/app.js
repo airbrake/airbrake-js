@@ -28,7 +28,7 @@ async function main() {
   });
 
   app.get('/hello/:name', function hello(_req, _res) {
-    throw new Error('hello from Express');
+    throw new Error('Hello from Airbrake!');
   });
 
   // Error handler middleware should be the last one.

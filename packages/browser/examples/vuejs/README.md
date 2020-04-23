@@ -1,7 +1,7 @@
-### Vue.js error handler
+# Usage with Vue.js
 
 You can start reporting errors from your Vue.js app by configuring an
-[`errorHandler`](https://vuejs.org/v2/api/#errorHandler) that uses an
+[`errorHandler`](https://vuejs.org/v2/api/#errorHandler) that uses a
 `Notifier` initialized with your `projectId` and `projectKey`.
 
 ```js
