@@ -30,7 +30,7 @@
     "babel-jest": "^25.2.4",
     "jest": "^25.2.4",
     "prettier": "^2.0.2",
-    "rollup": "^1.26.0",
+    "rollup": "^2.7.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.1.2",
