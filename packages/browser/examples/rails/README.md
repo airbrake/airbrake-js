@@ -1,10 +1,10 @@
-### Usage with Ruby on Rails
+# Usage with Ruby on Rails
 
 #### Option 1 - Asset pipeline
 
-Copy the compiled file
-[`dist/airbrake.esm.js`](https://github.com/airbrake/airbrake-js/blob/master/packages/browser/dist/airbrake.esm.js)
-from this repository to `vendor/assets/javascripts/airbrake.js` in your project.
+Copy the latest compiled UMD package bundle from
+[https://unpkg.com/@airbrake/browser](https://unpkg.com/@airbrake/browser) to
+`vendor/assets/javascripts/airbrake.js` in your project.
 
 Then, add the following code to your Sprockets manifest:
 
@@ -22,7 +22,7 @@ airbrake.addFilter(function(notice) {
 });
 
 try {
-  throw new Error('hello from airbrake-js');
+  throw new Error('Hello from Airbrake!');
 } catch (err) {
   airbrake.notify(err).then(function(notice) {
     if (notice.id) {
@@ -58,7 +58,7 @@ airbrake.addFilter((notice) => {
 });
 
 try {
-  throw new Error('hello from airbrake-js');
+  throw new Error('Hello from Airbrake!');
 } catch (err) {
   airbrake.notify(err).then((notice) => {
     if (notice.id) {

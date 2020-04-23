@@ -1,17 +1,17 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airbrake legacy example</title>
 
-<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/airbrake-js/0.7.0/client.js"></script>-->
-<script src="node_modules/@airbrake/browser/dist/airbrake.iife.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@airbrake/browser"></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 
-<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.1.1111111.min.js"></script>
-
-<script src="app.js"></script>
-<script>start();</script>
-
-<input id="error_text" />
-<button id="send_error">Send error to Airbrake</button>
-
+  <script src="app.js"></script>
+</head>
+<body>
+  <input id="error_text" />
+  <button id="send_error">Send error to Airbrake</button>
 </body>
-
 </html>
