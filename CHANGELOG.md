@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [1.1.0]
+## [1.1.0] - 2020-04-22
 ### Changed
 - [browser/node] Build process updates. Bumping minor version for this. See
                  [#646](https://github.com/airbrake/airbrake-js/pull/646)
