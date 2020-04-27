@@ -2,6 +2,7 @@
   "name": "airbrake",
   "private": true,
   "devDependencies": {
+    "concurrently": "^5.2.0",
     "lerna": "^3.16.4",
     "prettier": "^2.0.2",
     "tslint": "^6.1.0",
@@ -11,6 +12,7 @@
   },
   "scripts": {
     "build": "lerna run build",
+    "build:watch": "lerna run build:watch --parallel",
     "clean": "lerna run clean",
     "lint": "lerna run lint",
     "test": "lerna run test"
