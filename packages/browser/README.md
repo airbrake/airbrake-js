@@ -102,7 +102,6 @@ airbrake.call(startApp);
 
 * [AngularJS](examples/angularjs)
 * [Angular](examples/angular)
-* [Browserify](examples/browserify)
 * [Legacy](examples/legacy)
 * [Rails](examples/rails)
 * [React](examples/react)
