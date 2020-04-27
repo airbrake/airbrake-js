@@ -54,8 +54,11 @@
   ],
   "scripts": {
     "build": "yarn build:cjs && yarn build:esm && yarn build:umd",
+    "build:watch": "concurrently 'yarn build:cjs:watch' 'yarn build:esm:watch'",
     "build:cjs": "tsc -p tsconfig.json",
+    "build:cjs:watch": "tsc -p tsconfig.json -w --preserveWatchOutput",
     "build:esm": "tsc -p tsconfig.esm.json",
+    "build:esm:watch": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "build:umd": "rollup --config",
     "clean": "rm -rf dist esm umd",
     "lint": "tslint -p .",
