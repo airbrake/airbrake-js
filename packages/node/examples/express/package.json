@@ -1,7 +1,7 @@
 {
   "name": "airbrake-example",
   "dependencies": {
-    "@airbrake/node": "^1.1.0",
+    "@airbrake/node": "^1.1.1",
     "express": "^4.17.1",
     "pg": "^8.0.0"
   }

@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.1] - 2020-04-28
+### Fixed
+- [node] Express route stat reporting
+         ([#671](https://github.com/airbrake/airbrake-js/pull/671))
+
 ## [1.1.0] - 2020-04-22
 ### Changed
 - [browser/node] Build process updates. Bumping minor version for this. See
@@ -34,7 +39,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.1.0...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.1.1...master
+[1.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.1
 [1.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.0
 [1.0.7]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.7
 [1.0.6]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.6
