@@ -2,7 +2,7 @@ import { Notifier } from '../notifier';
 
 export function makeMiddleware(airbrake: Notifier) {
   return function airbrakeMiddleware(req, res, next): void {
-    const route = req.route ? req.route.path : 'UNKNOWN';
+    const route = req.route?.path?.toString() ?? 'UNKNOWN';
     const metric = airbrake.routes.start(req.method, route);
     if (!metric.isRecording()) {
       next();
@@ -11,7 +11,7 @@ export function makeMiddleware(airbrake: Notifier) {
 
     const origEnd = res.end;
     res.end = function abEnd() {
-      metric.route = req.route ? req.route.path : 'UNKNOWN';
+      metric.route = req.route?.path?.toString() ?? 'UNKNOWN';
       metric.statusCode = res.statusCode;
       metric.contentType = res.get('Content-Type');
       airbrake.routes.notify(metric);
@@ -37,7 +37,9 @@ export function makeErrorHandler(airbrake: Notifier) {
     };
 
     if (req.route) {
-      notice.context.route = req.route.path;
+      if (req.route.path) {
+        notice.context.route = req.route.path.toString();
+      }
       if (req.route.stack && req.route.stack.length) {
         notice.context.action = req.route.stack[0].name;
       }
