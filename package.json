@@ -15,7 +15,8 @@
     "build:watch": "lerna run build:watch --parallel",
     "clean": "lerna run clean",
     "lint": "lerna run lint",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "test:ci": "lerna run test:ci"
   },
   "workspaces": ["packages/*"]
 }
