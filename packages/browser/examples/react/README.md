@@ -5,6 +5,7 @@ To report errors from a React app, you'll need to set up and use an
 and initialize a `Notifier` with your `projectId` and `projectKey`.
 
 ```js
+import React, { Component } from 'react';
 import { Notifier } from '@airbrake/browser';
 
 class ErrorBoundary extends React.Component {
@@ -35,6 +36,8 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+export default ErrorBoundary;
 ```
 
 Then you can use it as a regular component:
