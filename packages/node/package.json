@@ -51,6 +51,7 @@
     "build:esm:watch": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rm -rf dist esm",
     "lint": "tslint -p .",
-    "test": "jest"
+    "test": "jest",
+    "test:ci": "jest --runInBand"
   }
 }
