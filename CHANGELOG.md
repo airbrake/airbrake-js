@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2020-05-05
+### Fixed
+- [browser] Add guard for window being undefined
+            ([#684](https://github.com/airbrake/airbrake-js/pull/684))
+- [node] Report URL using `req.originalUrl` instead of `req.path` in Express
+         apps ([#691](https://github.com/airbrake/airbrake-js/pull/691))
+
 ## [1.1.1] - 2020-04-28
 ### Fixed
 - [node] Express route stat reporting
@@ -39,7 +46,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.1.1...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.1.2...master
+[1.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.2
 [1.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.1
 [1.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.0
 [1.0.7]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.7
