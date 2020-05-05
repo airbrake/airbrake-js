@@ -25,6 +25,10 @@ export class Notifier extends BaseNotifier {
   constructor(opt: IOptions) {
     super(opt);
 
+    if (typeof window === 'undefined') {
+      return;
+    }
+
     this.addFilter(windowFilter);
 
     if (window.addEventListener) {
