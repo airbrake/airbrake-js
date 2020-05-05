@@ -24,7 +24,7 @@ export function makeMiddleware(airbrake: Notifier) {
 
 export function makeErrorHandler(airbrake: Notifier) {
   return function airbrakeErrorHandler(err: Error, req, _res, next): void {
-    const url = req.protocol + '://' + req.headers.host + req.path;
+    const url = req.protocol + '://' + req.headers.host + req.originalUrl;
     const notice: any = {
       error: err,
       context: {
