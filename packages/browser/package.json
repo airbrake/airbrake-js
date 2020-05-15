@@ -18,7 +18,7 @@
   ],
   "dependencies": {
     "@types/promise-polyfill": "^6.0.3",
-    "@types/request": "2.48.4",
+    "@types/request": "2.48.5",
     "cross-fetch": "^3.0.4",
     "error-stack-parser": "^2.0.4",
     "promise-polyfill": "^8.1.3",
