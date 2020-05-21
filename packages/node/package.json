@@ -45,8 +45,8 @@
   "scripts": {
     "build": "yarn build:cjs && yarn build:esm",
     "build:watch": "concurrently 'yarn build:cjs:watch' 'yarn build:esm:watch'",
-    "build:cjs": "tsc -p tsconfig.json",
-    "build:cjs:watch": "tsc -p tsconfig.json -w --preserveWatchOutput",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs:watch": "tsc -p tsconfig.cjs.json -w --preserveWatchOutput",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:esm:watch": "tsc -p tsconfig.esm.json -w --preserveWatchOutput",
     "clean": "rm -rf dist esm",
