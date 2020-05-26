@@ -126,13 +126,11 @@ export class Notifier extends BaseNotifier {
     this.offline = true;
   }
 
-  protected onUnhandledrejection(e: PromiseRejectionEvent | CustomEvent): void {
+  protected onUnhandledrejection(e: any): void {
     // Handle native or bluebird Promise rejections
     // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
     // http://bluebirdjs.com/docs/api/error-management-configuration.html
-    let reason =
-      (e as PromiseRejectionEvent).reason ||
-      ((e as CustomEvent).detail && (e as CustomEvent).detail.reason);
+    let reason = e.reason || (e.detail && e.detail.reason);
     if (!reason) {
       return;
     }
