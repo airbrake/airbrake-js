@@ -21,6 +21,7 @@ import { QueriesStats } from './queries';
 import { QueueMetric, QueuesStats } from './queues';
 import { RouteMetric, RoutesBreakdowns, RoutesStats } from './routes';
 import { NOTIFIER_NAME, NOTIFIER_VERSION, NOTIFIER_URL } from './version';
+import { PerformanceFilter } from './filter/performance_filter';
 
 export class BaseNotifier {
   routes: Routes;
@@ -33,6 +34,7 @@ export class BaseNotifier {
   _processor: Processor;
   _requester: Requester;
   _filters: Filter[] = [];
+  _performanceFilters: PerformanceFilter[] = [];
   _scope = new Scope();
 
   _onClose: (() => void)[] = [];
@@ -89,6 +91,10 @@ export class BaseNotifier {
 
   addFilter(filter: Filter): void {
     this._filters.push(filter);
+  }
+
+  addPerformanceFilter(performanceFilter: PerformanceFilter) {
+    this._performanceFilters.push(performanceFilter);
   }
 
   notify(err: any): Promise<INotice> {
@@ -245,6 +251,11 @@ class Routes {
 
   notify(req: RouteMetric): void {
     req.end();
+    for (const performanceFilter of this._notifier._performanceFilters) {
+      if (performanceFilter(req) === null) {
+        return;
+      }
+    }
     this._routes.notify(req);
     this._breakdowns.notify(req);
   }
