@@ -209,3 +209,17 @@ const airbrake = new Notifier({
   performanceStats: false
 });
 ```
+
+### Filtering performance data
+`addPerformanceFilter` allows for filtering performance data. Return `null` in
+the filter to prevent that metric from being reported to Airbrake.
+
+```js
+airbrake.addPerformanceFilter((metric) => {
+  if (metric.route === '/foo') {
+    // Requests to '/foo' will not be reported
+    return null;
+  }
+  return metric;
+});
+```
