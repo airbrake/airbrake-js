@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2020-05-29
+### Added
+- [node] New method to filter performance metrics
+         ([#726](https://github.com/airbrake/airbrake-js/pull/726))
+
 ## [1.1.3] - 2020-05-26
 ### Changed
 - [browser/node] Remove onUnhandledrejection parameter type
@@ -50,7 +55,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.1.3...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.2.0...master
+[1.2.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.2.0
 [1.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.3
 [1.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.2
 [1.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.1
