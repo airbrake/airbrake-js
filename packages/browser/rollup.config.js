@@ -9,9 +9,6 @@ const webPlugins = [
   resolve({ browser: true }),
   commonjs(),
   typescript({ tsconfig: './tsconfig.umd.json' }),
-  terser({
-    include: [/^.+\.min\.js$/],
-  }),
 ];
 
 function umd(cfg) {
@@ -30,7 +27,7 @@ export default {
   input: 'src/index.ts',
   output: [
     umd({ file: 'umd/airbrake.js' }),
-    umd({ file: 'umd/airbrake.min.js' }),
+    umd({ file: 'umd/airbrake.min.js', plugins: [terser()] }),
   ],
   plugins: webPlugins,
 };
