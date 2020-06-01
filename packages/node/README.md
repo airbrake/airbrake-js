@@ -5,7 +5,7 @@
 
 The official Airbrake notifier for capturing JavaScript errors in Node.js and
 reporting them to [Airbrake](http://airbrake.io). If you're looking for
-Node.js support there is a
+browser support, there is a
 [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/browser).
 
 ![Airbrake Arthur Node](https://camo.githubusercontent.com/9b7c0aad92f9dd2eb03b4dafd2e53784a2199216/687474703a2f2f73332e616d617a6f6e6177732e636f6d2f6169726272616b652d6769746875622d6173736574732f6e6f64652d6169726272616b652f6172746875722d6e6f64652e6a706567)
@@ -56,10 +56,9 @@ or report errors directly:
 
 ```js
 try {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 } catch(err) {
   airbrake.notify(err);
-  throw err;
 }
 ```
 
@@ -68,7 +67,7 @@ method:
 
 ```js
 let startApp = () => {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 };
 startApp = airbrake.wrap(startApp);
 
@@ -80,7 +79,7 @@ or use the `call` shortcut:
 
 ```js
 let startApp = () => {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 };
 
 airbrake.call(startApp);
@@ -109,7 +108,6 @@ try {
     params: { param1: 'value' },
     session: { session1: 'value' },
   });
-  throw err;
 }
 ```
 
