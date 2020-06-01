@@ -68,10 +68,9 @@ or report errors directly:
 
 ```js
 try {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 } catch(err) {
   airbrake.notify(err);
-  throw err;
 }
 ```
 
@@ -80,7 +79,7 @@ method:
 
 ```js
 let startApp = () => {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 };
 startApp = airbrake.wrap(startApp);
 
@@ -92,7 +91,7 @@ or use the `call` shortcut:
 
 ```js
 let startApp = () => {
-  new Error('Hello from Airbrake!');
+  throw new Error('Hello from Airbrake!');
 };
 
 airbrake.call(startApp);
@@ -126,7 +125,6 @@ try {
     params: { param1: 'value' },
     session: { session1: 'value' },
   });
-  throw err;
 }
 ```
 
