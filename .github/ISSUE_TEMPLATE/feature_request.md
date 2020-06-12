@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest a feature for Airbrake
 title: ''
 labels: enhancement
-assignees: sgray
+assignees: ''
 
 ---
 
