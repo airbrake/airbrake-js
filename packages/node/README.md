@@ -171,13 +171,13 @@ airbrake.addFilter((notice) => {
 
 ### Filtering keys
 
-With the `keysBlacklist` option, you can specify a list of keys containing
+With the `keysBlocklist` option, you can specify a list of keys containing
 sensitive information that must be filtered out:
 
 ```js
 const airbrake = new Notifier({
     // ...
-    keysBlacklist: [
+    keysBlocklist: [
       'password', // exact match
       /secret/, // regexp match
     ],
