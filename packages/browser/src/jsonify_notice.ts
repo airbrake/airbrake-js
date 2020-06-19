@@ -7,11 +7,11 @@ const MAX_OBJ_LENGTH = 128;
 // environment and session keys.
 export function jsonifyNotice(
   notice: INotice,
-  { maxLength = 64000, keysBlacklist = [] } = {}
+  { maxLength = 64000, keysBlocklist = [] } = {}
 ): string {
   if (notice.errors) {
     for (let i = 0; i < notice.errors.length; i++) {
-      let t = new Truncator({ keysBlacklist });
+      let t = new Truncator({ keysBlocklist });
       notice.errors[i] = t.truncate(notice.errors[i]);
     }
   }
@@ -19,7 +19,7 @@ export function jsonifyNotice(
   let s = '';
   let keys = ['context', 'params', 'environment', 'session'];
   for (let level = 0; level < 8; level++) {
-    let opts = { level, keysBlacklist };
+    let opts = { level, keysBlocklist };
     for (let key of keys) {
       let obj = notice[key];
       if (obj) {
@@ -60,7 +60,7 @@ function scale(num: number, level: number): number {
 
 interface ITruncatorOptions {
   level?: number;
-  keysBlacklist?: any[];
+  keysBlocklist?: any[];
 }
 
 class Truncator {
@@ -70,12 +70,12 @@ class Truncator {
   private maxDepth = 8;
 
   private keys: string[] = [];
-  private keysBlacklist: any[] = [];
+  private keysBlocklist: any[] = [];
   private seen: any[] = [];
 
   constructor(opts: ITruncatorOptions) {
     let level = opts.level || 0;
-    this.keysBlacklist = opts.keysBlacklist || [];
+    this.keysBlocklist = opts.keysBlocklist || [];
 
     this.maxStringLength = scale(this.maxStringLength, level);
     this.maxObjectLength = scale(this.maxObjectLength, level);
@@ -192,7 +192,7 @@ class Truncator {
       if (!Object.prototype.hasOwnProperty.call(obj, key)) {
         continue;
       }
-      if (isBlacklisted(key, this.keysBlacklist)) {
+      if (isBlocklisted(key, this.keysBlocklist)) {
         dst[key] = FILTERED;
         continue;
       }
@@ -232,8 +232,8 @@ function objectType(obj: any): string {
   return s.slice('[object '.length, -1);
 }
 
-function isBlacklisted(key: string, keysBlacklist: any[]): boolean {
-  for (let v of keysBlacklist) {
+function isBlocklisted(key: string, keysBlocklist: any[]): boolean {
+  for (let v of keysBlocklist) {
     if (v === key) {
       return true;
     }

@@ -47,7 +47,8 @@ export class BaseNotifier {
     this._opt = opt;
     this._opt.host = this._opt.host || 'https://api.airbrake.io';
     this._opt.timeout = this._opt.timeout || 10000;
-    this._opt.keysBlacklist = this._opt.keysBlacklist || [/password/, /secret/];
+    this._opt.keysBlocklist = this._opt.keysBlocklist ||
+      this._opt.keysBlacklist || [/password/, /secret/];
     this._url = `${this._opt.host}/api/v3/projects/${this._opt.projectId}/notices?key=${this._opt.projectKey}`;
 
     this._processor = this._opt.processor || espProcessor;
@@ -142,7 +143,7 @@ export class BaseNotifier {
 
   _sendNotice(notice: INotice): Promise<INotice> {
     let body = jsonifyNotice(notice, {
-      keysBlacklist: this._opt.keysBlacklist,
+      keysBlocklist: this._opt.keysBlocklist,
     });
     if (this._opt.reporter) {
       if (typeof this._opt.reporter === 'function') {

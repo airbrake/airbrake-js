@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- [browser/node] Deprecate `keysBlacklist` in favor of `keysBlocklist`
 
 ## [1.2.0] - 2020-05-29
 ### Added

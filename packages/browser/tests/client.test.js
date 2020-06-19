@@ -37,13 +37,13 @@ describe('Notifier config', () => {
     expect(notice.context.environment).toBe('production');
   });
 
-  describe('keysBlacklist', () => {
-    function test(keysBlacklist) {
+  describe('keysBlocklist', () => {
+    function test(keysBlocklist) {
       client = new Notifier({
         projectId: 1,
         projectKey: 'abc',
         reporter,
-        keysBlacklist,
+        keysBlocklist,
       });
 
       client.notify({

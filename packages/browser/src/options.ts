@@ -19,6 +19,10 @@ export interface IOptions {
   environment?: string;
   host?: string;
   timeout?: number;
+  keysBlocklist?: any[];
+  /**
+   * @deprecated use keysBlocklist
+   */
   keysBlacklist?: any[];
   ignoreWindowError?: boolean; // TODO:deprecated
   processor?: Processor;

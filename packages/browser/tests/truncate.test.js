@@ -151,8 +151,8 @@ describe('truncate', () => {
     });
   });
 
-  describe('keysBlacklist', () => {
-    it('filters blacklisted keys', () => {
+  describe('keysBlocklist', () => {
+    it('filters blocklisted keys', () => {
       let obj = {
         params: {
           password: '123',
@@ -161,8 +161,8 @@ describe('truncate', () => {
           },
         },
       };
-      let keysBlacklist = [/password/, /secret/];
-      let truncated = truncate(obj, { keysBlacklist });
+      let keysBlocklist = [/password/, /secret/];
+      let truncated = truncate(obj, { keysBlocklist });
 
       expect(truncated).toStrictEqual({
         params: {
