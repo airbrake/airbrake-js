@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.3.0] - 2020-06-19
 ### Changed
 - [browser/node] Deprecate `keysBlacklist` in favor of `keysBlocklist`
 
@@ -57,7 +59,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.2.0...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.3.0...master
+[1.3.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.3.0
 [1.2.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.2.0
 [1.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.3
 [1.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.2
