@@ -1857,9 +1857,9 @@
     resolve "^1.14.2"
 
 "@rollup/plugin-typescript@^5.0.0":
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-5.0.1.tgz#af1cb238e4821e9e371cb00b10a7f61f282fca5b"
-  integrity sha512-r2rfyh7dFfqHwxkITM/I9sW+rkx66/ycr12msvZliU6AX1plIcRq4lU9crcQbcSjMr7T9ONWM6pAwsBiNAYW8g==
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-5.0.2.tgz#e879b73354851868b805bbd43f15c229123b8a71"
+  integrity sha512-CkS028Itwjqm1uLbFVfpJgtVtnNvZ+og/m6UlNRR5wOOnNTWPcVQzOu5xGdEX+WWJxdvWIqUq2uR/RBt2ZipWg==
   dependencies:
     "@rollup/pluginutils" "^3.0.1"
     resolve "^1.14.1"
