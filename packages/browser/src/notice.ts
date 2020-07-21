@@ -13,6 +13,7 @@ export interface INoticeError {
 
 export interface INotice {
   id?: string;
+  url?: string;
   error?: Error;
 
   errors?: INoticeError[];
