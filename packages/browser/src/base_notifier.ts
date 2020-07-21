@@ -161,6 +161,7 @@ export class BaseNotifier {
     return this._requester(req)
       .then((resp) => {
         notice.id = resp.json.id;
+        notice.url = resp.json.url;
         return notice;
       })
       .catch((err) => {
