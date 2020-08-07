@@ -145,6 +145,7 @@ export class Notifier extends BaseNotifier {
           unhandledRejection: true,
         },
       });
+      return;
     }
     this.notify({
       ...err,
