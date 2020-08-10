@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.4.1] - 2020-08-10
+### Changed
+- [browser] Unhandled rejection errors now include `unhandledRejection: true`
+            as part of their `context`
+            ([#795](https://github.com/airbrake/airbrake-js/pull/795))
+
 ## [1.4.0] - 2020-07-22
 ### Changed
 - [browser/node] `notify` now includes the `url` property on the returned
@@ -65,7 +71,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.4.0...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.4.1...master
+[1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
 [1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
 [1.3.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.3.0
 [1.2.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.2.0
