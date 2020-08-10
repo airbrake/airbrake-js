@@ -138,7 +138,21 @@ export class Notifier extends BaseNotifier {
     if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
       return;
     }
-    this.notify(reason);
+    if (typeof reason !== 'object' || reason.error === undefined) {
+      this.notify({
+        error: reason,
+        context: {
+          unhandledRejection: true,
+        },
+      });
+      return;
+    }
+    this.notify({
+      ...reason,
+      context: {
+        unhandledRejection: true,
+      },
+    });
   }
 
   onerror(
