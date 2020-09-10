@@ -29,7 +29,7 @@
     "@babel/preset-env": "^7.9.0",
     "@rollup/plugin-commonjs": "^15.0.0",
     "@rollup/plugin-node-resolve": "^9.0.0",
-    "@rollup/plugin-typescript": "^5.0.0",
+    "@rollup/plugin-typescript": "^6.0.0",
     "babel-jest": "^26.0.1",
     "jest": "^26.0.0",
     "prettier": "^2.0.2",
