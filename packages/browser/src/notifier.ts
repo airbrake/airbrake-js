@@ -59,7 +59,7 @@ export class Notifier extends BaseNotifier {
   }
 
   _instrument(opt: IInstrumentationOptions = {}) {
-    opt.console = !isDevEnv(this._opt.environment);
+    if (opt.console === undefined) opt.console = !isDevEnv(this._opt.environment);
 
     if (enabled(opt.onerror)) {
       // tslint:disable-next-line:no-this-assignment
