@@ -38,8 +38,12 @@ Using a `<script>` tag via unpkg:
 
 ## Basic Usage
 
-First, initialize the notifier with the project ID and API key taken from
-[Airbrake](https://airbrake.io):
+First, initialize the notifier with the project ID and project key taken from
+[Airbrake](https://airbrake.io). To find your `project_id` and `project_key`
+navigate to your project's _Settings_ and copy the values from the right
+sidebar:
+
+![][project-idkey]
 
 ```js
 import { Notifier } from '@airbrake/browser';
@@ -224,3 +228,5 @@ const airbrake = new Notifier({
   },
 });
 ```
+
+[project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-js/project-id-key.png
