@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://airbrake-github-assets.s3.amazonaws.com/brand/airbrake-full-logo.png" width="200">
+</p>
+
 # Official Airbrake Notifier for Browsers
 
 [![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
@@ -7,8 +11,6 @@ The official Airbrake notifier for capturing JavaScript errors in web browsers
 and reporting them to [Airbrake](http://airbrake.io). If you're looking for
 Node.js support, there is a
 [separate package](https://github.com/airbrake/airbrake-js/tree/master/packages/node).
-
-![Airbrake Arthur JS](https://camo.githubusercontent.com/1a7883d5943fa246a1383723ef51e4e821eca32f/687474703a2f2f662e636c2e6c792f6974656d732f34343345324a31443257337831453175336a31752f4a532d6169726272616b656d616e2e6a7067)
 
 ## Installation
 
