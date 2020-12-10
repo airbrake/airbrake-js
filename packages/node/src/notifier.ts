@@ -5,8 +5,8 @@ import { Scope, ScopeManager } from './scope';
 export class Notifier extends BaseNotifier {
   _inFlight: number;
 
-  _scopeManager: ScopeManager;
-  _mainScope: Scope;
+  _scopeManager?: ScopeManager;
+  _mainScope?: Scope;
 
   constructor(opt: IOptions) {
     if (!opt.environment && process.env.NODE_ENV) {
@@ -18,8 +18,6 @@ export class Notifier extends BaseNotifier {
     this.addFilter(nodeFilter);
 
     this._inFlight = 0;
-    this._scopeManager = new ScopeManager();
-    this._mainScope = new Scope();
 
     process.on('beforeExit', async () => {
       await this.flush();
@@ -54,13 +52,18 @@ export class Notifier extends BaseNotifier {
 
     if (opt.performanceStats) {
       this._instrument();
+      this._scopeManager = new ScopeManager();
     }
+
+    this._mainScope = new Scope();
   }
 
   scope(): Scope {
-    let scope = this._scopeManager.active();
-    if (scope) {
-      return scope;
+    if (this._scopeManager) {
+      const scope = this._scopeManager.active();
+      if (scope) {
+        return scope;
+      }
     }
     return this._mainScope;
   }
