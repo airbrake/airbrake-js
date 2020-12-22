@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [1.4.2] - 2020-12-22
+### Changed
+- [node] Conditionally initialize ScopeManager
+         ([#894](https://github.com/airbrake/airbrake-js/pull/894))
+- [browser] Add the ability to disable console tracking via instrumentation
+            ([#860](https://github.com/airbrake/airbrake-js/pull/860))
+
 ## [1.4.1] - 2020-08-10
 ### Changed
 - [browser] Unhandled rejection errors now include `unhandledRejection: true`
@@ -71,7 +78,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.4.1...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.4.2...master
+[1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
 [1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
 [1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
 [1.3.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.3.0
