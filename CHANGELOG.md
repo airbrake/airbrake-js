@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- [browser] Removed deprecated `ignoreWindowError` option
+  ([#929](https://github.com/airbrake/airbrake-js/pull/929))
+
 ## [1.4.2] - 2020-12-22
 ### Changed
 - [node] Conditionally initialize ScopeManager

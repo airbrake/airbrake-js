@@ -24,7 +24,6 @@ export interface IOptions {
    * @deprecated use keysBlocklist
    */
   keysBlacklist?: any[];
-  ignoreWindowError?: boolean; // TODO:deprecated
   processor?: Processor;
   reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;
