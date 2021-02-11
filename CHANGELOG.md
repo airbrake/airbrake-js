@@ -2,8 +2,10 @@
 
 ## [Unreleased]
 
-- [browser] Removed deprecated `ignoreWindowError` option
+- [browser/node] Removed deprecated `ignoreWindowError` option
   ([#929](https://github.com/airbrake/airbrake-js/pull/929))
+- [browser/node] Removed deprecated `keysBlacklist` option
+  ([#930](https://github.com/airbrake/airbrake-js/pull/930))
 
 ## [1.4.2] - 2020-12-22
 ### Changed

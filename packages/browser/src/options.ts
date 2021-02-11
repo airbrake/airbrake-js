@@ -20,10 +20,6 @@ export interface IOptions {
   host?: string;
   timeout?: number;
   keysBlocklist?: any[];
-  /**
-   * @deprecated use keysBlocklist
-   */
-  keysBlacklist?: any[];
   processor?: Processor;
   reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;
