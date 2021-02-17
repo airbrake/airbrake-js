@@ -22,6 +22,7 @@ import { QueueMetric, QueuesStats } from './queues';
 import { RouteMetric, RoutesBreakdowns, RoutesStats } from './routes';
 import { NOTIFIER_NAME, NOTIFIER_VERSION, NOTIFIER_URL } from './version';
 import { PerformanceFilter } from './filter/performance_filter';
+import { RemoteSettings } from './remote_settings';
 
 export class BaseNotifier {
   routes: Routes;
@@ -46,9 +47,16 @@ export class BaseNotifier {
 
     this._opt = opt;
     this._opt.host = this._opt.host || 'https://api.airbrake.io';
+    this._opt.remoteConfigHost =
+      this._opt.remoteConfigHost || 'https://notifier-configs.airbrake.io';
+    this._opt.apmHost = this._opt.apmHost || 'https://api.airbrake.io';
     this._opt.timeout = this._opt.timeout || 10000;
     this._opt.keysBlocklist = this._opt.keysBlocklist || [/password/, /secret/];
     this._url = `${this._opt.host}/api/v3/projects/${this._opt.projectId}/notices?key=${this._opt.projectKey}`;
+
+    this._opt.errorNotifications = this._opt.errorNotifications !== false;
+    this._opt.performanceStats = this._opt.performanceStats !== false;
+    this._opt.remoteConfig = this._opt.remoteConfig !== false;
 
     this._processor = this._opt.processor || espProcessor;
     this._requester = makeRequester(this._opt);
@@ -73,6 +81,11 @@ export class BaseNotifier {
     this.routes = new Routes(this);
     this.queues = new Queues(this);
     this.queries = new QueriesStats(this._opt);
+
+    if (this._opt.remoteConfig) {
+      const pollerId = new RemoteSettings(this._opt).poll();
+      this._onClose.push(() => clearInterval(pollerId));
+    }
   }
 
   close(): void {
@@ -112,6 +125,15 @@ export class BaseNotifier {
 
     if (typeof err !== 'object' || err.error === undefined) {
       err = { error: err };
+    }
+
+    if (!this._opt.errorNotifications) {
+      notice.error = new Error(
+        `airbrake: not sending this error, errorNotifications is disabled err=${JSON.stringify(
+          err.error
+        )}`
+      );
+      return Promise.resolve(notice);
     }
 
     if (!err.error) {
@@ -227,11 +249,13 @@ class Routes {
   _notifier: BaseNotifier;
   _routes: RoutesStats;
   _breakdowns: RoutesBreakdowns;
+  _opt: IOptions;
 
   constructor(notifier: BaseNotifier) {
     this._notifier = notifier;
     this._routes = new RoutesStats(notifier._opt);
     this._breakdowns = new RoutesBreakdowns(notifier._opt);
+    this._opt = notifier._opt;
   }
 
   start(
@@ -242,6 +266,10 @@ class Routes {
   ): RouteMetric {
     const metric = new RouteMetric(method, route, statusCode, contentType);
 
+    if (!this._opt.performanceStats) {
+      return metric;
+    }
+
     const scope = this._notifier.scope().clone();
     scope.setContext({ httpMethod: method, route });
     scope.setRouteMetric(metric);
@@ -251,7 +279,12 @@ class Routes {
   }
 
   notify(req: RouteMetric): void {
+    if (!this._opt.performanceStats) {
+      return;
+    }
+
     req.end();
+
     for (const performanceFilter of this._notifier._performanceFilters) {
       if (performanceFilter(req) === null) {
         return;
@@ -265,14 +298,20 @@ class Routes {
 class Queues {
   _notifier: BaseNotifier;
   _queues: QueuesStats;
+  _opt: IOptions;
 
   constructor(notifier: BaseNotifier) {
     this._notifier = notifier;
     this._queues = new QueuesStats(notifier._opt);
+    this._opt = notifier._opt;
   }
 
   start(queue: string): QueueMetric {
     const metric = new QueueMetric(queue);
+
+    if (!this._opt.performanceStats) {
+      return metric;
+    }
 
     const scope = this._notifier.scope().clone();
     scope.setContext({ queue });
@@ -283,6 +322,10 @@ class Queues {
   }
 
   notify(q: QueueMetric): void {
+    if (!this._opt.performanceStats) {
+      return;
+    }
+
     q.end();
     this._queues.notify(q);
   }

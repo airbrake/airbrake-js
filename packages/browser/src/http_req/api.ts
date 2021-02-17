@@ -1,8 +1,9 @@
 export interface IHttpRequest {
   method: string;
   url: string;
-  body: string;
+  body?: string;
   timeout?: number;
+  headers?: any;
 }
 
 export interface IHttpResponse {

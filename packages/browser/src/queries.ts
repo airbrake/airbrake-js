@@ -59,6 +59,10 @@ export class QueriesStats {
       return;
     }
 
+    if (!this._opt.performanceStats) {
+      return;
+    }
+
     let ms = q._duration();
 
     const minute = 60 * 1000;

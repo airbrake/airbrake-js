@@ -39,6 +39,10 @@ export class QueuesStats {
       return;
     }
 
+    if (!this._opt.performanceStats) {
+      return;
+    }
+
     let ms = q._duration();
     if (ms === 0) {
       ms = 0.00001;

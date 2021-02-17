@@ -18,11 +18,15 @@ export interface IOptions {
   projectKey: string;
   environment?: string;
   host?: string;
+  apmHost?: string;
+  remoteConfigHost?: string;
+  remoteConfig?: boolean;
   timeout?: number;
   keysBlocklist?: any[];
   processor?: Processor;
   reporter?: Reporter;
   instrumentation?: IInstrumentationOptions;
+  errorNotifications?: boolean;
   performanceStats?: boolean;
 
   request?: request.RequestAPI<

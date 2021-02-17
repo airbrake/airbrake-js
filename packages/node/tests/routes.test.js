@@ -4,6 +4,7 @@ describe('Routes', () => {
   const opt = {
     projectId: 1,
     projectKey: 'test',
+    remoteConfig: false,
   };
   let notifier;
   let routes;

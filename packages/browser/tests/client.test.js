@@ -16,6 +16,7 @@ describe('Notifier config', () => {
       projectId: 1,
       projectKey: 'abc',
       reporter,
+      remoteConfig: false,
     });
     client.notify(err);
 
@@ -28,6 +29,7 @@ describe('Notifier config', () => {
       projectKey: 'abc',
       reporter,
       environment: 'production',
+      remoteConfig: false,
     });
 
     client.notify(err);
@@ -44,6 +46,7 @@ describe('Notifier config', () => {
         projectKey: 'abc',
         reporter,
         keysBlocklist,
+        remoteConfig: false,
       });
 
       client.notify({
@@ -87,6 +90,7 @@ describe('Notifier', () => {
       projectId: 1,
       projectKey: 'abc',
       reporter,
+      remoteConfig: false,
     });
   });
 
@@ -153,7 +157,7 @@ describe('Notifier', () => {
       let err = notice.errors[0];
       expect(err.type).toBe('SecurityError');
       expect(err.message).toBe(
-        'Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.',
+        'Blocked a frame with origin "https://airbrake.io" from accessing a cross-origin frame.'
       );
     });
   });
@@ -170,7 +174,7 @@ describe('Notifier', () => {
       let err = notice.errors[0];
       expect(err.type).toBe('$injector:undef');
       expect(err.message).toBe(
-        `Provider '$exceptionHandler' must return a value from $get factory method.\nhttp://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`,
+        `Provider '$exceptionHandler' must return a value from $get factory method.\nhttp://errors.angularjs.org/1.4.3/$injector/undef?p0=%24exceptionHandler`
       );
     });
   });
@@ -202,6 +206,34 @@ describe('Notifier', () => {
       expect(reporter.mock.calls.length).toBe(1);
     });
 
+    describe('when errorNotifications is disabled', () => {
+      beforeEach(() => {
+        client = new Notifier({
+          projectId: 1,
+          projectKey: 'abc',
+          reporter,
+          environment: 'production',
+          errorNotifications: false,
+          remoteConfig: false,
+        });
+      });
+
+      it('does not call reporter', () => {
+        client.notify(theErr);
+        expect(reporter.mock.calls.length).toBe(0);
+      });
+
+      it('returns promise and resolves it', (done) => {
+        let promise = client.notify(theErr);
+        let onResolved = jest.fn();
+        promise.then(onResolved);
+        setTimeout(() => {
+          expect(onResolved.mock.calls.length).toBe(1);
+          done();
+        }, 0);
+      });
+    });
+
     it('returns promise and resolves it', (done) => {
       let promise = client.notify(theErr);
       let onResolved = jest.fn();
@@ -219,7 +251,7 @@ describe('Notifier', () => {
       let promise = client.notify(theErr);
       promise.then((notice) => {
         expect(notice.error.toString()).toBe(
-          'Error: airbrake: error is filtered',
+          'Error: airbrake: error is filtered'
         );
         done();
       });
@@ -231,7 +263,7 @@ describe('Notifier', () => {
 
       promise.then((notice) => {
         expect(notice.error.toString()).toBe(
-          'Error: airbrake: got err="", wanted an Error',
+          'Error: airbrake: got err="", wanted an Error'
         );
         done();
       });
@@ -338,7 +370,7 @@ describe('Notifier', () => {
 
         promise.then((notice) => {
           expect(notice.error.toString()).toBe(
-            'Error: airbrake: got err=null, wanted an Error',
+            'Error: airbrake: got err=null, wanted an Error'
           );
           done();
         });
@@ -571,6 +603,28 @@ describe('Notifier', () => {
           done();
         }, 0);
       });
+    });
+  });
+
+  describe('errorNotifications', () => {
+    it('is set to true by default when it is not specified', () => {
+      client = new Notifier({
+        projectId: 1,
+        projectKey: 'abc',
+        remoteConfig: false,
+      });
+      expect(client._opt.errorNotifications).toBe(true);
+    });
+  });
+
+  describe('performanceStats', () => {
+    it('is set to true by default when it is not specified', () => {
+      client = new Notifier({
+        projectId: 1,
+        projectKey: 'abc',
+        remoteConfig: false,
+      });
+      expect(client._opt.performanceStats).toBe(true);
     });
   });
 });
