@@ -1,11 +1,25 @@
 # Changelog
 
-## [Unreleased]
+## [2.0.0] - 2020-02-18
 
 - [browser/node] Removed deprecated `ignoreWindowError` option
   ([#929](https://github.com/airbrake/airbrake-js/pull/929))
 - [browser/node] Removed deprecated `keysBlacklist` option
   ([#930](https://github.com/airbrake/airbrake-js/pull/930))
+- [browser/node] Introduced the `remoteConfigHost` option. This option
+  configures the host that the notifier fetch remote configuration from.
+  ([#940](https://github.com/airbrake/airbrake-js/pull/940))
+- [browser/node] Introduced the `apmHost` option. This option configures the
+  host that the notifier should send APM events to.
+  ([#940](https://github.com/airbrake/airbrake-js/pull/940))
+- [browser/node] Introduced the `errorNotifications` option. This options
+  configures ability to send errors
+  ([#940](https://github.com/airbrake/airbrake-js/pull/940))
+- [browser/node] Introduced the `remoteConfig` option. This option configures
+  the remote configuration feature
+  ([#940](https://github.com/airbrake/airbrake-js/pull/940))
+- [browser/node] Added support for the remote configuration feature
+  ([#940](https://github.com/airbrake/airbrake-js/pull/940))
 
 ## [1.4.2] - 2020-12-22
 ### Changed
@@ -83,7 +97,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v1.4.2...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.0.0...master
+[1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
 [1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
 [1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
 [1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
