@@ -98,7 +98,7 @@
 ## [1.0.0] - 2019-10-21
 
 [Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.0.0...master
-[1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
+[2.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
 [1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
 [1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
 [1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
