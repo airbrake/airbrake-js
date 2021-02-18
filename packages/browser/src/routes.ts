@@ -54,6 +54,10 @@ export class RoutesStats {
       return;
     }
 
+    if (!this._opt.performanceStats) {
+      return;
+    }
+
     let ms = req._duration();
 
     const minute = 60 * 1000;
@@ -141,6 +145,10 @@ export class RoutesBreakdowns {
 
   notify(req: RouteMetric): void {
     if (!hasTdigest) {
+      return;
+    }
+
+    if (!this._opt.performanceStats) {
       return;
     }
 

@@ -31,6 +31,7 @@ describe('instrumentation', () => {
       projectKey: 'abc',
       processor,
       reporter,
+      remoteConfig: false,
     });
   });
 

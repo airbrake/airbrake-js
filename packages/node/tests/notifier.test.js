@@ -7,6 +7,7 @@ describe('Notifier', () => {
         const notifier = new Notifier({
           projectId: 1,
           projectKey: 'key',
+          remoteConfig: false,
         });
         expect(notifier._opt.performanceStats).toEqual(true);
       });
@@ -16,6 +17,7 @@ describe('Notifier', () => {
         const notifier = new Notifier({
           projectId: 1,
           projectKey: 'key',
+          remoteConfig: false,
         });
         expect(notifier._instrument.mock.calls.length).toEqual(1);
       });
@@ -25,6 +27,7 @@ describe('Notifier', () => {
           projectId: 1,
           projectKey: 'key',
           performanceStats: false,
+          remoteConfig: false,
         });
         expect(notifier._opt.performanceStats).toEqual(false);
       });
@@ -35,6 +38,7 @@ describe('Notifier', () => {
           projectId: 1,
           projectKey: 'key',
           performanceStats: false,
+          remoteConfig: false,
         });
         expect(notifier._instrument.mock.calls.length).toEqual(0);
       });

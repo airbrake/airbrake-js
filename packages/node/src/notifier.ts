@@ -1,4 +1,5 @@
-import { BaseNotifier, INotice, IOptions } from '@airbrake/browser';
+// import { BaseNotifier, INotice, IOptions } from '@airbrake/browser';
+import { BaseNotifier, INotice, IOptions } from '../../browser';
 import { nodeFilter } from './filter/node';
 import { Scope, ScopeManager } from './scope';
 
@@ -12,7 +13,6 @@ export class Notifier extends BaseNotifier {
     if (!opt.environment && process.env.NODE_ENV) {
       opt.environment = process.env.NODE_ENV;
     }
-    opt.performanceStats = opt.performanceStats !== false;
     super(opt);
 
     this.addFilter(nodeFilter);

@@ -13,6 +13,7 @@ export function request(req: IHttpRequest): Promise<IHttpResponse> {
   let opt = {
     method: req.method,
     body: req.body,
+    headers: req.headers,
   };
   return fetch(req.url, opt).then((resp: Response) => {
     if (resp.status === 401) {
