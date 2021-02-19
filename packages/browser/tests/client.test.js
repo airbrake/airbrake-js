@@ -627,4 +627,26 @@ describe('Notifier', () => {
       expect(client._opt.performanceStats).toBe(true);
     });
   });
+
+  describe('queryStats', () => {
+    it('is set to true by default when it is not specified', () => {
+      client = new Notifier({
+        projectId: 1,
+        projectKey: 'abc',
+        remoteConfig: false,
+      });
+      expect(client._opt.queryStats).toBe(true);
+    });
+  });
+
+  describe('queueStats', () => {
+    it('is set to true by default when it is not specified', () => {
+      client = new Notifier({
+        projectId: 1,
+        projectKey: 'abc',
+        remoteConfig: false,
+      });
+      expect(client._opt.queueStats).toBe(true);
+    });
+  });
 });

@@ -62,6 +62,9 @@ export class QueriesStats {
     if (!this._opt.performanceStats) {
       return;
     }
+    if (!this._opt.queryStats) {
+      return;
+    }
 
     let ms = q._duration();
 
