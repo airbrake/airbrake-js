@@ -56,6 +56,10 @@ export class BaseNotifier {
 
     this._opt.errorNotifications = this._opt.errorNotifications !== false;
     this._opt.performanceStats = this._opt.performanceStats !== false;
+
+    this._opt.queryStats = this._opt.queryStats !== false;
+    this._opt.queueStats = this._opt.queueStats !== false;
+
     this._opt.remoteConfig = this._opt.remoteConfig !== false;
 
     this._processor = this._opt.processor || espProcessor;

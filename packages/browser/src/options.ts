@@ -28,6 +28,8 @@ export interface IOptions {
   instrumentation?: IInstrumentationOptions;
   errorNotifications?: boolean;
   performanceStats?: boolean;
+  queryStats?: boolean;
+  queueStats?: boolean;
 
   request?: request.RequestAPI<
     request.Request,

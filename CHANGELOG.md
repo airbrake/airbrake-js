@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+- [browser/node] Added the `queryStats` and the `queueStats` option. They
+  allow/forbid reporting of queries or queues, respectively
+  ([#945](https://github.com/airbrake/airbrake-js/pull/945))
+
 ## [2.0.0] - 2020-02-18
 
 - [browser/node] Removed deprecated `ignoreWindowError` option
