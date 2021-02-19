@@ -111,8 +111,8 @@ export class Notifier extends BaseNotifier {
     const mods = ['pg', 'mysql', 'mysql2', 'redis', 'http', 'https'];
     for (let modName of mods) {
       try {
-        const mod = require(modName);
-        const airbrakeMod = require(`@airbrake/node/dist/instrumentation/${modName}`);
+        const mod = require(`${modName}.js`);
+        const airbrakeMod = require(`@airbrake/node/dist/instrumentation/${modName}.js`);
         airbrakeMod.patch(mod, this);
       } catch (_) {}
     }
