@@ -205,7 +205,7 @@ export class BaseNotifier {
         return fn.apply(this, wrappedArgs);
       } catch (err) {
         client.notify({ error: err, params: { arguments: fnArgs } });
-        this._ignoreNextWindowError();
+        client._ignoreNextWindowError();
         throw err;
       }
     } as IFuncWrapper;
