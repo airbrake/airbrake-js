@@ -1,6 +1,6 @@
 {
   "name": "airbrake-example",
   "dependencies": {
-    "@airbrake/node": "^2.1.0"
+    "@airbrake/node": "^2.1.1"
   }
 }

@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [2.2.1] - 2020-02-20
+
+- [browser] Removed unwanted `debugger` statement in `base_notifier.js` in the
+  distribution package
+  ([#948](https://github.com/airbrake/airbrake-js/pull/948))
+
 ## [2.1.0] - 2020-02-19
 
 - [browser/node] Added the `queryStats` and the `queueStats` option. They
@@ -109,7 +115,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.0...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.1...master
+[2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
 [2.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.0
 [2.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
 [1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
