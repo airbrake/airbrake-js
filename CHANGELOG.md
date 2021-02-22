@@ -2,16 +2,18 @@
 
 ## [Unreleased]
 
+## [2.1.2] - 2021-02-22
+
 - [browser] Started catching errors in promises that occur in `RemoteSettings`
   ([#950](https://github.com/airbrake/airbrake-js/pull/950))
 
-## [2.1.1] - 2020-02-20
+## [2.1.1] - 2021-02-20
 
 - [browser] Removed unwanted `debugger` statement in `base_notifier.js` in the
   distribution package
   ([#948](https://github.com/airbrake/airbrake-js/pull/948))
 
-## [2.1.0] - 2020-02-19
+## [2.1.0] - 2021-02-19
 
 - [browser/node] Added the `queryStats` and the `queueStats` option. They
   allow/forbid reporting of queries or queues, respectively
@@ -21,7 +23,7 @@
 - [node] Fixed warnings on loading of `notifier.js` when using Webpack
   ([#936](https://github.com/airbrake/airbrake-js/pull/936))
 
-## [2.0.0] - 2020-02-18
+## [2.0.0] - 2021-02-18
 
 - [browser/node] Removed deprecated `ignoreWindowError` option
   ([#929](https://github.com/airbrake/airbrake-js/pull/929))
@@ -118,7 +120,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.1...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.2...master
+[2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
 [2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
 [2.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.0
 [2.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
