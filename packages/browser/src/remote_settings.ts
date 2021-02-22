@@ -74,15 +74,19 @@ export class RemoteSettings {
   }
 
   _doRequest(): void {
-    this._requester(this._requestParams(this._opt)).then((resp) => {
-      this._data.merge(resp.json);
+    this._requester(this._requestParams(this._opt))
+      .then((resp) => {
+        this._data.merge(resp.json);
 
-      this._opt.host = this._data.errorHost();
-      this._opt.apmHost = this._data.apmHost();
+        this._opt.host = this._data.errorHost();
+        this._opt.apmHost = this._data.apmHost();
 
-      this._processErrorNotifications(this._data);
-      this._processPerformanceStats(this._data);
-    });
+        this._processErrorNotifications(this._data);
+        this._processPerformanceStats(this._data);
+      })
+      .catch((_) => {
+        return;
+      });
   }
 
   _requestParams(opt: IOptions): any {

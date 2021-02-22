@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
-## [2.2.1] - 2020-02-20
+- [browser] Started catching errors in promises that occur in `RemoteSettings`
+  ([#950](https://github.com/airbrake/airbrake-js/pull/950))
+
+## [2.1.1] - 2020-02-20
 
 - [browser] Removed unwanted `debugger` statement in `base_notifier.js` in the
   distribution package
