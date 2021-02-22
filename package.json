@@ -2,7 +2,7 @@
   "name": "airbrake",
   "private": true,
   "devDependencies": {
-    "concurrently": "^5.2.0",
+    "concurrently": "^6.0.0",
     "lerna": "^3.16.4",
     "prettier": "^2.0.2",
     "tslint": "^6.1.0",
