@@ -2,10 +2,14 @@
 
 ## [Unreleased]
 
+## [2.1.3] - 2021-02-22
+
+- [browser/node] Fixed missing library files in v2.1.2
+
 ## [2.1.2] - 2021-02-22
 
 - [browser] Started catching errors in promises that occur in `RemoteSettings`
-  ([#950](https://github.com/airbrake/airbrake-js/pull/950))
+  ([#949](https://github.com/airbrake/airbrake-js/pull/949))
 
 ## [2.1.1] - 2021-02-20
 
@@ -120,7 +124,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.2...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.3...master
+[2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.3
 [2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
 [2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
 [2.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.0
