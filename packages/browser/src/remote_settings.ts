@@ -105,13 +105,14 @@ export class RemoteSettings {
   }
 
   _pollUrl(opt: IOptions): string {
-    const url = new URL(this._data.configRoute(opt.remoteConfigHost));
+    const url = this._data.configRoute(opt.remoteConfigHost);
+    let queryParams = '?';
 
     for (const [key, value] of this._entries(NOTIFIER_INFO)) {
-      url.searchParams.append(key, value);
+      queryParams += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
     }
 
-    return url.toString();
+    return url + queryParams;
   }
 
   _processErrorNotifications(data: SettingsData): void {

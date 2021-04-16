@@ -5,7 +5,8 @@
 - [browser] Fixed `TypeError: undefined is not an object (evaluating
   'e.searchParams.append')` occurring in old browsers that don't support
   `Object.entries` (such as Internet Explorer)
-  ([#1001](https://github.com/airbrake/airbrake-js/pull/1001))
+  ([#1001](https://github.com/airbrake/airbrake-js/pull/1001),
+  [#1002](https://github.com/airbrake/airbrake-js/pull/1002))
 
 ## [2.1.3] - 2021-02-22
 
