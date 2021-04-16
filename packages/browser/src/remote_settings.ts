@@ -38,6 +38,10 @@ interface IRemoteConfigSetting {
   endpoint: string;
 }
 
+type Entries<T> = {
+  [K in keyof T]: [K, T[K]];
+}[keyof T][];
+
 export class RemoteSettings {
   _opt: IOptions;
   _requester: Requester;
@@ -103,7 +107,7 @@ export class RemoteSettings {
   _pollUrl(opt: IOptions): string {
     const url = new URL(this._data.configRoute(opt.remoteConfigHost));
 
-    for (const [key, value] of Object.entries(NOTIFIER_INFO)) {
+    for (const [key, value] of this._entries(NOTIFIER_INFO)) {
       url.searchParams.append(key, value);
     }
 
@@ -122,6 +126,18 @@ export class RemoteSettings {
       return;
     }
     this._opt.performanceStats = data.performanceStats();
+  }
+
+  // Polyfill from:
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries#polyfill
+  _entries<T>(obj: T): Entries<T> {
+    const ownProps = Object.keys(obj);
+    let i = ownProps.length;
+    const resArray = new Array(i);
+
+    while (i--) resArray[i] = [ownProps[i], obj[ownProps[i]]];
+
+    return resArray;
   }
 }
 
