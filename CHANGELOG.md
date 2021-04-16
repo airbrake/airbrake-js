@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [2.1.4] - 2021-04-16
+
 - [browser] Fixed `TypeError: undefined is not an object (evaluating
   'e.searchParams.append')` occurring in old browsers that don't support
   `Object.entries` (such as Internet Explorer)
@@ -130,7 +132,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.3...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.4...master
+[2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
 [2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.3
 [2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
 [2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
