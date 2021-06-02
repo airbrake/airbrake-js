@@ -16,6 +16,9 @@
     "airbrake",
     "notifier"
   ],
+  "engines": {
+    "node": ">=10"
+  },
   "dependencies": {
     "@airbrake/browser": "^2.1.4",
     "cross-fetch": "^3.0.4",
