@@ -2,8 +2,11 @@
 
 ## [Unreleased]
 
-## [2.1.4] - 2021-04-16
+## [2.1.5] - 2021-06-02
+- [node] Specify which versions of node are supported
+  ([#1038](https://github.com/airbrake/airbrake-js/pull/1038))
 
+## [2.1.4] - 2021-04-16
 - [browser] Fixed `TypeError: undefined is not an object (evaluating
   'e.searchParams.append')` occurring in old browsers that don't support
   `Object.entries` (such as Internet Explorer)
@@ -11,22 +14,18 @@
   [#1002](https://github.com/airbrake/airbrake-js/pull/1002))
 
 ## [2.1.3] - 2021-02-22
-
 - [browser/node] Fixed missing library files in v2.1.2
 
 ## [2.1.2] - 2021-02-22
-
 - [browser] Started catching errors in promises that occur in `RemoteSettings`
   ([#949](https://github.com/airbrake/airbrake-js/pull/949))
 
 ## [2.1.1] - 2021-02-20
-
 - [browser] Removed unwanted `debugger` statement in `base_notifier.js` in the
   distribution package
   ([#948](https://github.com/airbrake/airbrake-js/pull/948))
 
 ## [2.1.0] - 2021-02-19
-
 - [browser/node] Added the `queryStats` and the `queueStats` option. They
   allow/forbid reporting of queries or queues, respectively
   ([#945](https://github.com/airbrake/airbrake-js/pull/945))
@@ -36,7 +35,6 @@
   ([#936](https://github.com/airbrake/airbrake-js/pull/936))
 
 ## [2.0.0] - 2021-02-18
-
 - [browser/node] Removed deprecated `ignoreWindowError` option
   ([#929](https://github.com/airbrake/airbrake-js/pull/929))
 - [browser/node] Removed deprecated `keysBlacklist` option
@@ -132,8 +130,9 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.4...master
-[2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.5...master
+[2.1.5]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.5
+[2.1.4]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
 [2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.3
 [2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
 [2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
