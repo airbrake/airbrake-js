@@ -2161,10 +2161,10 @@
   resolved "https://registry.yarnpkg.com/@types/promise-polyfill/-/promise-polyfill-6.0.4.tgz#c56670c70c601264c67191a85875fe2cf98a4cfd"
   integrity sha512-GSCjjH6mDS8jgpT22rEOkZVqZcYj7i9AHJu4ntpvoohEpa0mLAKP/Kz3POMKqABaFsS4TyNHOeoyWpzycddcoQ==
 
-"@types/request@2.48.5":
-  version "2.48.5"
-  resolved "https://registry.yarnpkg.com/@types/request/-/request-2.48.5.tgz#019b8536b402069f6d11bee1b2c03e7f232937a0"
-  integrity sha512-/LO7xRVnL3DxJ1WkPGDQrp4VTV1reX9RkC85mJ+Qzykj2Bdw+mG15aAfDahc76HtknjzE16SX/Yddn6MxVbmGQ==
+"@types/request@2.48.6":
+  version "2.48.6"
+  resolved "https://registry.yarnpkg.com/@types/request/-/request-2.48.6.tgz#2300e7fc443108f79efa90e3bdf34c6d60fa89d8"
+  integrity sha512-vrZaV3Ij7j/l/3hz6OttZFtpRCu7zlq7XgkYHJP6FwVEAZkGQ095WqyJV08/GlW9eyXKVcp/xmtruHm8eHpw1g==
   dependencies:
     "@types/caseless" "*"
     "@types/node" "*"
