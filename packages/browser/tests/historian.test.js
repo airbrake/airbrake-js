@@ -80,10 +80,11 @@ describe('instrumentation', () => {
   });
 
   describe('XHR', () => {
+    // TODO: use a mock instead of actually sending http requests
     beforeEach(() => {
       let promise = new Promise((resolve, reject) => {
         var req = new XMLHttpRequest();
-        req.open('GET', 'http://ip2c.org/self');
+        req.open('GET', 'https://httpbin.org/get');
         req.onreadystatechange = () => {
           if (req.readyState != 4) return;
           if (req.status == 200) {
@@ -109,16 +110,17 @@ describe('instrumentation', () => {
       let state = history[history.length - 1];
       expect(state.type).toBe('xhr');
       expect(state.method).toBe('GET');
-      expect(state.url).toBe('http://ip2c.org/self');
+      expect(state.url).toBe('https://httpbin.org/get');
       expect(state.statusCode).toBe(200);
       expect(state.duration).toEqual(expect.any(Number));
     });
   });
 
   describe('fetch', () => {
+    // TODO: use a mock instead of actually sending http requests
     describe('simple fetch', () => {
       beforeEach(() => {
-        let promise = window.fetch('http://ip2c.org/4.4.4.4');
+        let promise = window.fetch('https://httpbin.org/get');
         promise.then(() => {
           client.notify(new Error('test'));
         });
@@ -133,7 +135,7 @@ describe('instrumentation', () => {
         let state = history[history.length - 1];
         expect(state.type).toBe('xhr');
         expect(state.method).toBe('GET');
-        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.url).toBe('https://httpbin.org/get');
         expect(state.statusCode).toBe(200);
         expect(state.duration).toEqual(expect.any(Number));
       });
@@ -141,7 +143,7 @@ describe('instrumentation', () => {
 
     describe('fetch with options', () => {
       beforeEach(() => {
-        let promise = window.fetch('http://ip2c.org/4.4.4.4', {
+        let promise = window.fetch('https://httpbin.org/post', {
           method: 'POST',
         });
         promise.then(() => {
@@ -158,7 +160,7 @@ describe('instrumentation', () => {
         let state = history[history.length - 1];
         expect(state.type).toBe('xhr');
         expect(state.method).toBe('POST');
-        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.url).toBe('https://httpbin.org/post');
         expect(state.statusCode).toBe(200);
         expect(state.duration).toEqual(expect.any(Number));
       });
@@ -166,7 +168,7 @@ describe('instrumentation', () => {
 
     describe('fetch with Request object', () => {
       beforeEach(() => {
-        const req = new Request('http://ip2c.org/4.4.4.4', {
+        const req = new Request('https://httpbin.org/post', {
           method: 'POST',
           body: '{"foo": "bar"}',
         });
@@ -185,7 +187,7 @@ describe('instrumentation', () => {
         let state = history[history.length - 1];
         expect(state.type).toBe('xhr');
         expect(state.method).toBe('POST');
-        expect(state.url).toBe('http://ip2c.org/4.4.4.4');
+        expect(state.url).toBe('https://httpbin.org/post');
         expect(state.statusCode).toBe(200);
         expect(state.duration).toEqual(expect.any(Number));
       });
