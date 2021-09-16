@@ -8,18 +8,18 @@ You can start reporting errors from your Vue 2 app by configuring an
 initialized with your `projectId` and `projectKey`.
 
 ```js
-import { Notifier } from '@airbrake/browser';
+import { Notifier } from '@airbrake/browser'
 
 var airbrake = new Notifier({
   projectId: 1,
   projectKey: 'FIXME'
-});
+})
 
-Vue.config.errorHandler = function (err, _vm, info) {
+Vue.config.errorHandler = function(err, _vm, info) {
   airbrake.notify({
     error: err,
     params: {info: info}
-  });
+  })
 }
 ```
 
@@ -30,23 +30,23 @@ You can start reporting errors from your Vue 3 app by configuring an
 that uses a `Notifier` initialized with your `projectId` and `projectKey`.
 
 ```js
-import { createApp } from "vue";
-import App from "./App.vue";
-import { Notifier } from '@airbrake/browser';
+import { createApp } from "vue"
+import App from "./App.vue"
+import { Notifier } from '@airbrake/browser'
 
 var airbrake = new Notifier({
   projectId: 1,
   projectKey: 'FIXME'
-});
+})
 
-let app = createApp(App);
+let app = createApp(App)
 
-app.config.errorHandler = function (err, _vm, info) {
+app.config.errorHandler = function(err, _vm, info) {
   airbrake.notify({
     error: err,
     params: {info: info}
-  });
+  })
 }
 
-app.mount("#app");
+app.mount("#app")
 ```
