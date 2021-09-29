@@ -244,6 +244,7 @@ export class RoutesBreakdowns {
     if (!req.contentType) {
       return '';
     }
-    return req.contentType.split(';')[0].split('/')[-1];
+    const s = req.contentType.split(';')[0].split('/');
+    return s[s.length - 1];
   }
 }
