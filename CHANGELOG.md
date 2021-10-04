@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [2.1.7] - 2021-10-04
+- [browser/node] Fixed incorrect `yarn.lock` references
+  ([#1132](https://github.com/airbrake/airbrake-js/pull/1132))
+
 ## [2.1.6] - 2021-10-04
 - [browser] Fixed not being able to attach a response type when sending a
   performance breakdown
@@ -135,7 +139,8 @@
 
 ## [1.0.0] - 2019-10-21
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.6...master
+[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.7...master
+[2.1.7]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.7
 [2.1.6]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.6
 [2.1.5]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.5
 [2.1.4]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
