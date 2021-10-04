@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- [browser] Fixed not being able to attach a response type when sending a
+  performance breakdown
+  ([#1128](https://github.com/airbrake/airbrake-js/pull/1128))
+
 ## [2.1.5] - 2021-06-02
 - [node] Specify which versions of node are supported
   ([#1038](https://github.com/airbrake/airbrake-js/pull/1038))
