@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+- [browser] Fixed relative import issues with Yarn's Plug'n'Play feature
+  ([#1135](https://github.com/airbrake/airbrake-js/pull/1135))
+
 ## [2.1.7] - 2021-10-04
 - [browser/node] Fixed incorrect `yarn.lock` references
   ([#1132](https://github.com/airbrake/airbrake-js/pull/1132))
