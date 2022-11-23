@@ -1,43 +1,50 @@
-# Changelog
+# Airbrake JS Changelog
 
-## [Unreleased]
+### master
 
 - [browser] Fixed relative import issues with Yarn's Plug'n'Play feature
   ([#1135](https://github.com/airbrake/airbrake-js/pull/1135))
 
-## [2.1.7] - 2021-10-04
+### [2.1.7] (October 4, 2021)
+
 - [browser/node] Fixed incorrect `yarn.lock` references
   ([#1132](https://github.com/airbrake/airbrake-js/pull/1132))
 
-## [2.1.6] - 2021-10-04
+### [2.1.6] (October 4, 2021)
+
 - [browser] Fixed not being able to attach a response type when sending a
   performance breakdown
   ([#1128](https://github.com/airbrake/airbrake-js/pull/1128))
 
-## [2.1.5] - 2021-06-02
+### [2.1.5] (June 2, 2021)
+
 - [node] Specify which versions of node are supported
   ([#1038](https://github.com/airbrake/airbrake-js/pull/1038))
 
-## [2.1.4] - 2021-04-16
-- [browser] Fixed `TypeError: undefined is not an object (evaluating
-  'e.searchParams.append')` occurring in old browsers that don't support
+### [2.1.4] (April 16, 2021)
+
+- [browser] Fixed `TypeError: undefined is not an object (evaluating 'e.searchParams.append')` occurring in old browsers that don't support
   `Object.entries` (such as Internet Explorer)
   ([#1001](https://github.com/airbrake/airbrake-js/pull/1001),
   [#1002](https://github.com/airbrake/airbrake-js/pull/1002))
 
-## [2.1.3] - 2021-02-22
+### [2.1.3] (February 22, 2021)
+
 - [browser/node] Fixed missing library files in v2.1.2
 
-## [2.1.2] - 2021-02-22
+### [2.1.2] (February 22, 2021)
+
 - [browser] Started catching errors in promises that occur in `RemoteSettings`
   ([#949](https://github.com/airbrake/airbrake-js/pull/949))
 
-## [2.1.1] - 2021-02-20
+### [2.1.1] (February 20, 2021)
+
 - [browser] Removed unwanted `debugger` statement in `base_notifier.js` in the
   distribution package
   ([#948](https://github.com/airbrake/airbrake-js/pull/948))
 
-## [2.1.0] - 2021-02-19
+### [2.1.0] (February 19, 2021)
+
 - [browser/node] Added the `queryStats` and the `queueStats` option. They
   allow/forbid reporting of queries or queues, respectively
   ([#945](https://github.com/airbrake/airbrake-js/pull/945))
@@ -46,7 +53,8 @@
 - [node] Fixed warnings on loading of `notifier.js` when using Webpack
   ([#936](https://github.com/airbrake/airbrake-js/pull/936))
 
-## [2.0.0] - 2021-02-18
+### [2.0.0] (February 18, 2021)
+
 - [browser/node] Removed deprecated `ignoreWindowError` option
   ([#929](https://github.com/airbrake/airbrake-js/pull/929))
 - [browser/node] Removed deprecated `keysBlacklist` option
@@ -66,105 +74,126 @@
 - [browser/node] Added support for the remote configuration feature
   ([#940](https://github.com/airbrake/airbrake-js/pull/940))
 
-## [1.4.2] - 2020-12-22
-### Changed
+### [1.4.2] (December 22, 2020)
+
+#### Changed
+
 - [node] Conditionally initialize ScopeManager
-         ([#894](https://github.com/airbrake/airbrake-js/pull/894))
+  ([#894](https://github.com/airbrake/airbrake-js/pull/894))
 - [browser] Add the ability to disable console tracking via instrumentation
-            ([#860](https://github.com/airbrake/airbrake-js/pull/860))
+  ([#860](https://github.com/airbrake/airbrake-js/pull/860))
 
-## [1.4.1] - 2020-08-10
-### Changed
+### [1.4.1] (August 10, 2020)
+
+#### Changed
+
 - [browser] Unhandled rejection errors now include `unhandledRejection: true`
-            as part of their `context`
-            ([#795](https://github.com/airbrake/airbrake-js/pull/795))
+  as part of their `context`
+  ([#795](https://github.com/airbrake/airbrake-js/pull/795))
 
-## [1.4.0] - 2020-07-22
-### Changed
+### [1.4.0] (July 22, 2020)
+
+#### Changed
+
 - [browser/node] `notify` now includes the `url` property on the returned
-                 `INotice` object
-                 ([#780](https://github.com/airbrake/airbrake-js/pull/780))
+  `INotice` object
+  ([#780](https://github.com/airbrake/airbrake-js/pull/780))
 
-## [1.3.0] - 2020-06-19
-### Changed
+### [1.3.0] (June 19, 2020)
+
+#### Changed
+
 - [browser/node] Deprecate `keysBlacklist` in favor of `keysBlocklist`
 
-## [1.2.0] - 2020-05-29
-### Added
-- [node] New method to filter performance metrics
-         ([#726](https://github.com/airbrake/airbrake-js/pull/726))
+### [1.2.0] (May 29, 2020)
 
-## [1.1.3] - 2020-05-26
-### Changed
+#### Added
+
+- [node] New method to filter performance metrics
+  ([#726](https://github.com/airbrake/airbrake-js/pull/726))
+
+### [1.1.3] (May 26, 2020)
+
+#### Changed
+
 - [browser/node] Remove onUnhandledrejection parameter type
 
-## [1.1.2] - 2020-05-05
-### Fixed
+### [1.1.2] (May 5, 2020)
+
+#### Fixed
+
 - [browser] Add guard for window being undefined
-            ([#684](https://github.com/airbrake/airbrake-js/pull/684))
+  ([#684](https://github.com/airbrake/airbrake-js/pull/684))
 - [node] Report URL using `req.originalUrl` instead of `req.path` in Express
-         apps ([#691](https://github.com/airbrake/airbrake-js/pull/691))
+  apps ([#691](https://github.com/airbrake/airbrake-js/pull/691))
 
-## [1.1.1] - 2020-04-28
-### Fixed
+### [1.1.1] (April 28, 2020)
+
+#### Fixed
+
 - [node] Express route stat reporting
-         ([#671](https://github.com/airbrake/airbrake-js/pull/671))
+  ([#671](https://github.com/airbrake/airbrake-js/pull/671))
 
-## [1.1.0] - 2020-04-22
-### Changed
+### [1.1.0] (April 22, 2020)
+
+#### Changed
+
 - [browser/node] Build process updates. Bumping minor version for this. See
-                 [#646](https://github.com/airbrake/airbrake-js/pull/646)
+  [#646](https://github.com/airbrake/airbrake-js/pull/646)
 - [browser/node] Documentation updates
 
-## [1.0.7] - 2020-04-08
-### Added
+### [1.0.7] (April 8, 2020)
+
+#### Added
+
 - [node] New config option to disable performance stats
 
-### Changed
+#### Changed
+
 - [browser/node] Build config updates
 - [browser/node] Update dependencies
 - [browser/node] Documentation updates
 - [browser/node] Update linting config
 
-### Fixed
+#### Fixed
+
 - [browser] Fix stacktrace test for node v10
 - [browser/node] Fix linting errors
 
-## [1.0.6] - 2019-11-18
+### [1.0.6] (November 18, 2019)
 
-## [1.0.4] - 2019-11-12
+### [1.0.4] (November 12, 2019)
 
-## [1.0.3] - 2019-11-07
+### [1.0.3] (November 7, 2019)
 
-## [1.0.2] - 2019-10-28
+### [1.0.2] (October 28, 2019)
 
-## [1.0.1] - 2019-10-28
+### [1.0.1] (October 28, 2019)
 
-## [1.0.0] - 2019-10-21
+### [1.0.0] (October 21, 2019)
 
-[Unreleased]: https://github.com/airbrake/airbrake-js/compare/v2.1.7...master
-[2.1.7]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.7
-[2.1.6]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.6
-[2.1.5]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.5
-[2.1.4]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
-[2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.3
-[2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
-[2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
-[2.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.0
-[2.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
-[1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
-[1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
-[1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
-[1.3.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.3.0
-[1.2.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.2.0
-[1.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.3
-[1.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.2
-[1.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.1
-[1.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.0
-[1.0.7]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.7
-[1.0.6]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.6
-[1.0.4]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.4
-[1.0.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.3
-[1.0.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.2
-[1.0.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.1
 [1.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.0
+[1.0.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.1
+[1.0.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.2
+[1.0.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.3
+[1.0.4]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.4
+[1.0.6]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.6
+[1.0.7]: https://github.com/airbrake/airbrake-js/releases/tag/v1.0.7
+[1.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.0
+[1.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.1
+[1.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.2
+[1.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v1.1.3
+[1.2.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.2.0
+[1.3.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.3.0
+[1.4.0]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.0
+[1.4.1]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.1
+[1.4.2]: https://github.com/airbrake/airbrake-js/releases/tag/v1.4.2
+[2.0.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.0.0
+[2.1.0]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.0
+[2.1.1]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.1
+[2.1.2]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.2
+[2.1.3]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.3
+[2.1.4]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.4
+[2.1.5]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.5
+[2.1.6]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.6
+[2.1.7]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.7
