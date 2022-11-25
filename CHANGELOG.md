@@ -2,8 +2,13 @@
 
 ### master
 
-- [browser] Fixed relative import issues with Yarn's Plug'n'Play feature
+#### browser
+
+- Fixed relative import issues with Yarn's Plug'n'Play feature
   ([#1135](https://github.com/airbrake/airbrake-js/pull/1135))
+- Stop filtering the `context` field in the notice payload. This payload
+  contains service information and it should never be modified
+  ([#1325](https://github.com/airbrake/airbrake-js/pull/1325))
 
 ### [2.1.7] (October 4, 2021)
 

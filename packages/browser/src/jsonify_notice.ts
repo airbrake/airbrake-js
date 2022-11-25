@@ -17,7 +17,7 @@ export function jsonifyNotice(
   }
 
   let s = '';
-  let keys = ['context', 'params', 'environment', 'session'];
+  let keys = ['params', 'environment', 'session'];
   for (let level = 0; level < 8; level++) {
     let opts = { level, keysBlocklist };
     for (let key of keys) {

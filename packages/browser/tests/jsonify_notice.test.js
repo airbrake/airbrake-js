@@ -87,4 +87,25 @@ describe('jsonify_notice', () => {
       expect(json.length).toBeLessThan(maxLength);
     });
   });
+
+  describe('when called with a blocklisted key', () => {
+    const notice = {
+      params: { name: 'I will be filtered' },
+      session: { session1: 'value1' },
+      context: { notifier: { name: 'airbrake-js' } },
+    };
+    let json;
+
+    beforeEach(() => {
+      json = jsonifyNotice(notice, { keysBlocklist: ['name'] });
+    });
+
+    it('filters out blocklisted keys', () => {
+      expect(JSON.parse(json)).toStrictEqual({
+        params: { name: '[Filtered]' },
+        session: { session1: 'value1' },
+        context: { notifier: { name: 'airbrake-js' } },
+      });
+    });
+  });
 });
