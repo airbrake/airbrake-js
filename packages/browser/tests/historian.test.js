@@ -26,6 +26,11 @@ describe('instrumentation', () => {
     reporter = jest.fn(() => {
       return Promise.resolve({ id: 1 });
     });
+
+    jest
+      .spyOn(global.console, 'log')
+      .mockImplementation((args) => Promise.resolve(args));
+
     client = new Notifier({
       projectId: 1,
       projectKey: 'abc',
