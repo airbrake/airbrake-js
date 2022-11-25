@@ -63,6 +63,6 @@
     "build:umd": "rollup --config",
     "clean": "rm -rf dist esm umd",
     "lint": "tslint -p .",
-    "test": "jest --clearCache"
+    "test": "jest"
   }
 }
