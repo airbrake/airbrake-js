@@ -75,7 +75,7 @@ or report errors directly:
 ```js
 try {
   throw new Error('Hello from Airbrake!');
-} catch(err) {
+} catch (err) {
   airbrake.notify(err);
 }
 ```
@@ -105,13 +105,13 @@ airbrake.call(startApp);
 
 ## Example configurations
 
-* [AngularJS](examples/angularjs)
-* [Angular](examples/angular)
-* [Legacy](examples/legacy)
-* [Rails](examples/rails)
-* [React](examples/react)
-* [Redux](examples/redux)
-* [Vue.js](examples/vuejs)
+- [AngularJS](examples/angularjs)
+- [Angular](examples/angular)
+- [Legacy](examples/legacy)
+- [Rails](examples/rails)
+- [React](examples/react)
+- [Redux](examples/redux)
+- [Vue.js](examples/vuejs)
 
 ## Advanced Usage
 
@@ -123,7 +123,7 @@ the time they're captured by supplying it in the object being reported.
 ```js
 try {
   startApp();
-} catch(err) {
+} catch (err) {
   airbrake.notify({
     error: err,
     context: { component: 'bootstrap' },
@@ -143,7 +143,7 @@ redefine severity, simply overwrite `context/severity` of a notice object:
 ```js
 airbrake.notify({
   error: err,
-  context: { severity: 'warning' }
+  context: { severity: 'warning' },
 });
 ```
 
@@ -161,12 +161,13 @@ functions to `addFilter`.
 [error notice](https://airbrake.io/docs/api/#create-notice-v3) to be sent to
 Airbrake and provides access to the `context`, `environment`, `params`,
 and `session` properties. It also includes the single-element `errors` array
-with  its `backtrace` property and associated backtrace lines.
+with its `backtrace` property and associated backtrace lines.
 
 The return value of the filter function determines whether or not the error
 notice will be submitted.
-  * If `null` is returned, the notice is ignored.
-  * Otherwise, the returned notice will be submitted.
+
+- If `null` is returned, the notice is ignored.
+- Otherwise, the returned notice will be submitted.
 
 An error notice must pass all provided filters to be submitted.
 
@@ -200,11 +201,11 @@ sensitive information that must be filtered out:
 
 ```js
 const airbrake = new Notifier({
-    // ...
-    keysBlocklist: [
-      'password', // exact match
-      /secret/, // regexp match
-    ],
+  // ...
+  keysBlocklist: [
+    'password', // exact match
+    /secret/, // regexp match
+  ],
 });
 ```
 
@@ -212,9 +213,9 @@ const airbrake = new Notifier({
 
 Airbrake supports using private and public source maps. Check out our docs for
 more info:
+
 - [Private source maps](https://airbrake.io/docs/features/private-sourcemaps/)
 - [Public source maps](https://airbrake.io/docs/features/public-sourcemaps/)
-
 
 ### Instrumentation
 
@@ -229,6 +230,64 @@ const airbrake = new Notifier({
     console: false,
   },
 });
+```
+
+### APM
+
+#### Routes
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const routeMetric = this.airbrake.routes.start(
+  'GET', // HTTP method name
+  '/abc', // Route name
+  200, // Status code
+  'application/json' // Content-Type header
+);
+this.airbrake.routes.notify(routeMetric);
+```
+
+#### Queries
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const queryInfo = this.airbrake.queries.start('SELECT * FROM things;');
+queryInfo.file = 'file.js';
+queryInfo.func = 'callerFunc';
+queryInfo.line = 21;
+queryInfo.method = 'GET';
+queryInfo.route = '/abc';
+
+this.airbrake.queries.notify(queryInfo);
+```
+
+#### Queues
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const queueInfo = this.airbrake.queues.start('FooWorker');
+this.airbrake.queues.notify(queueInfo);
 ```
 
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-js/project-id-key.png
