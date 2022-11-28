@@ -232,4 +232,62 @@ const airbrake = new Notifier({
 });
 ```
 
+### APM
+
+#### Routes
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const routeMetric = this.airbrake.routes.start(
+  'GET', // HTTP method name
+  '/abc', // Route name
+  200, // Status code
+  'application/json' // Content-Type header
+);
+this.airbrake.routes.notify(routeMetric);
+```
+
+#### Queries
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const queryInfo = this.airbrake.queries.start('SELECT * FROM things;');
+queryInfo.file = 'file.js';
+queryInfo.func = 'callerFunc';
+queryInfo.line = 21;
+queryInfo.method = 'GET';
+queryInfo.route = '/abc';
+
+this.airbrake.queries.notify(queryInfo);
+```
+
+#### Queues
+
+```js
+import { Notifier } from '@airbrake/browser';
+
+const airbrake = new Notifier({
+  projectId: 1,
+  projectKey: 'REPLACE_ME',
+  environment: 'production',
+});
+
+const queueInfo = this.airbrake.queues.start('FooWorker');
+this.airbrake.queues.notify(queueInfo);
+```
+
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-js/project-id-key.png
