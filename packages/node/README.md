@@ -6,6 +6,8 @@
 
 [![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
 [![npm version](https://img.shields.io/npm/v/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
+[![npm dm](https://img.shields.io/npm/dm/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
+[![npm dt](https://img.shields.io/npm/dt/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
 
 The official Airbrake notifier for capturing JavaScript errors in Node.js and
 reporting them to [Airbrake](http://airbrake.io). If you're looking for
@@ -63,7 +65,7 @@ or report errors directly:
 ```js
 try {
   throw new Error('Hello from Airbrake!');
-} catch(err) {
+} catch (err) {
   airbrake.notify(err);
 }
 ```
@@ -93,8 +95,8 @@ airbrake.call(startApp);
 
 ## Example configurations
 
-* [Express](examples/express)
-* [Node.js](examples/nodejs)
+- [Express](examples/express)
+- [Node.js](examples/nodejs)
 
 ## Advanced Usage
 
@@ -106,7 +108,7 @@ the time they're captured by supplying it in the object being reported.
 ```js
 try {
   startApp();
-} catch(err) {
+} catch (err) {
   airbrake.notify({
     error: err,
     context: { component: 'bootstrap' },
@@ -126,7 +128,7 @@ redefine severity, simply overwrite `context/severity` of a notice object:
 ```js
 airbrake.notify({
   error: err,
-  context: { severity: 'warning' }
+  context: { severity: 'warning' },
 });
 ```
 
@@ -143,12 +145,13 @@ functions to `addFilter`.
 [error notice](https://airbrake.io/docs/api/#create-notice-v3) to be sent to
 Airbrake and provides access to the `context`, `environment`, `params`,
 and `session` properties. It also includes the single-element `errors` array
-with  its `backtrace` property and associated backtrace lines.
+with its `backtrace` property and associated backtrace lines.
 
 The return value of the filter function determines whether or not the error
 notice will be submitted.
-  * If `null` is returned, the notice is ignored.
-  * Otherwise, the returned notice will be submitted.
+
+- If `null` is returned, the notice is ignored.
+- Otherwise, the returned notice will be submitted.
 
 An error notice must pass all provided filters to be submitted.
 
@@ -182,11 +185,11 @@ sensitive information that must be filtered out:
 
 ```js
 const airbrake = new Notifier({
-    // ...
-    keysBlocklist: [
-      'password', // exact match
-      /secret/, // regexp match
-    ],
+  // ...
+  keysBlocklist: [
+    'password', // exact match
+    /secret/, // regexp match
+  ],
 });
 ```
 
@@ -198,7 +201,7 @@ the `request` option which accepts a request wrapper:
 ```js
 const airbrake = new Notifier({
   // ...
-  request: request.defaults({'proxy':'http://localproxy.com'})
+  request: request.defaults({ proxy: 'http://localproxy.com' }),
 });
 ```
 
@@ -210,11 +213,12 @@ metrics. You can disable that behavior using the `performanceStats` option:
 ```js
 const airbrake = new Notifier({
   // ...
-  performanceStats: false
+  performanceStats: false,
 });
 ```
 
 ### Filtering performance data
+
 `addPerformanceFilter` allows for filtering performance data. Return `null` in
 the filter to prevent that metric from being reported to Airbrake.
 
