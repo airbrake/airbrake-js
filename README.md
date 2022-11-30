@@ -5,6 +5,7 @@
 # Official Airbrake Notifiers for JavaScript
 
 [![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
+[![npm version](https://img.shields.io/npm/v/@airbrake/browser.svg)](https://www.npmjs.com/package/@airbrake/browser)
 
 Please choose one of the following packages:
 
