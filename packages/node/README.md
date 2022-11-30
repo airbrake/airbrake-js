@@ -6,6 +6,8 @@
 
 [![Build Status](https://github.com/airbrake/airbrake-js/workflows/CI/badge.svg?branch=master)](https://github.com/airbrake/airbrake-js/actions?query=branch%3Amaster)
 [![npm version](https://img.shields.io/npm/v/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
+[![npm dm](https://img.shields.io/npm/dm/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
+[![npm dt](https://img.shields.io/npm/dt/@airbrake/node.svg)](https://www.npmjs.com/package/@airbrake/node)
 
 The official Airbrake notifier for capturing JavaScript errors in Node.js and
 reporting them to [Airbrake](http://airbrake.io). If you're looking for
