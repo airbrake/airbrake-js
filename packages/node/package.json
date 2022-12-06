@@ -1,6 +1,6 @@
 {
   "name": "@airbrake/node",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "description": "Official Airbrake notifier for Node.js",
   "author": "Airbrake",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "node": ">=10"
   },
   "dependencies": {
-    "@airbrake/browser": "^2.1.7",
+    "@airbrake/browser": "^2.1.8",
     "cross-fetch": "^3.1.5",
     "error-stack-parser": "^2.0.4",
     "tdigest": "^0.1.1"

@@ -2,6 +2,8 @@
 
 ### master
 
+### [2.1.8] (December 6, 2022)
+
 #### browser
 
 - Fixed relative import issues with Yarn's Plug'n'Play feature
@@ -9,6 +11,8 @@
 - Stop filtering the `context` field in the notice payload. This payload
   contains service information and it should never be modified
   ([#1325](https://github.com/airbrake/airbrake-js/pull/1325))
+- Bumped `cross-fetch` dependency to `^3.1.5` (fixes a Dependabot security
+  alert) ([#1322](https://github.com/airbrake/airbrake-js/issues/1322))
 
 ### [2.1.7] (October 4, 2021)
 
@@ -202,3 +206,4 @@
 [2.1.5]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.5
 [2.1.6]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.6
 [2.1.7]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.7
+[2.1.8]: https://github.com/airbrake/airbrake-js/releases/tag/v2.1.8
