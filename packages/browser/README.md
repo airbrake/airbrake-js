@@ -221,6 +221,8 @@ more info:
 
 ### Instrumentation
 
+#### console
+
 `@airbrake/browser` automatically instruments `console.log` function calls in
 order to collect logs and send them with the first error. You can disable that
 behavior using the `instrumentation` option:
@@ -230,6 +232,62 @@ const airbrake = new Notifier({
   // ...
   instrumentation: {
     console: false,
+  },
+});
+```
+
+#### fetch
+
+Instruments [`fetch`][fetch] calls and sends performance statistics to Airbrake.
+You can disable that behavior using the `instrumentation` option:
+
+```js
+const airbrake = new Notifier({
+  // ...
+  instrumentation: {
+    fetch: false,
+  },
+});
+```
+
+#### onerror
+
+Reports the errors occurring in the Window's [error event][onerror]. You can
+disable that behavior using the `instrumentation` option:
+
+```js
+const airbrake = new Notifier({
+  // ...
+  instrumentation: {
+    onerror: false,
+  },
+});
+```
+
+#### history
+
+Records the history of events that led to the error and sends it to Airbrake.
+You can disable that behavior using the `instrumentation` option:
+
+```js
+const airbrake = new Notifier({
+  // ...
+  instrumentation: {
+    history: false,
+  },
+});
+```
+
+#### xhr
+
+Instruments [XMLHttpRequest][xhr] requests and sends performance statistics to
+Airbrake. You can disable that behavior using the `instrumentation` option:
+
+```js
+const airbrake = new Notifier({
+  // ...
+  instrumentation: {
+    xhr: false,
   },
 });
 ```
@@ -293,3 +351,6 @@ this.airbrake.queues.notify(queueInfo);
 ```
 
 [project-idkey]: https://s3.amazonaws.com/airbrake-github-assets/airbrake-js/project-id-key.png
+[fetch]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
+[onerror]: https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event
+[xhr]: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
