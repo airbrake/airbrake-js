@@ -108,4 +108,72 @@ describe('jsonify_notice', () => {
       });
     });
   });
+
+  describe('keysAllowlist', () => {
+    describe('when the allowlist key is a string', () => {
+      const notice = {
+        params: { name: 'I am allowlisted', email: 'I will be filtered' },
+        session: { session1: 'I will be filtered, too' },
+        context: { notifier: { name: 'I am allowlisted' } },
+      };
+      let json;
+
+      beforeEach(() => {
+        json = jsonifyNotice(notice, { keysAllowlist: ['name'] });
+      });
+
+      it('filters out everything but allowlisted keys', () => {
+        expect(JSON.parse(json)).toStrictEqual({
+          params: { name: 'I am allowlisted', email: '[Filtered]' },
+          session: { session1: '[Filtered]' },
+          context: { notifier: { name: 'I am allowlisted' } },
+        });
+      });
+    });
+
+    describe('when the allowlist key is a regexp', () => {
+      const notice = {
+        params: { name: 'I am allowlisted', email: 'I will be filtered' },
+        session: { session1: 'I will be filtered, too' },
+        context: { notifier: { name: 'I am allowlisted' } },
+      };
+      let json;
+
+      beforeEach(() => {
+        json = jsonifyNotice(notice, { keysAllowlist: [/nam/] });
+      });
+
+      it('filters out everything but allowlisted keys', () => {
+        expect(JSON.parse(json)).toStrictEqual({
+          params: { name: 'I am allowlisted', email: '[Filtered]' },
+          session: { session1: '[Filtered]' },
+          context: { notifier: { name: 'I am allowlisted' } },
+        });
+      });
+    });
+  });
+
+  describe('when called both with a blocklist and an allowlist', () => {
+    const notice = {
+      params: { name: 'Name' },
+      session: { session1: 'value1' },
+      context: { notifier: { name: 'airbrake-js' } },
+    };
+    let json;
+
+    beforeEach(() => {
+      json = jsonifyNotice(notice, {
+        keysBlocklist: ['name'],
+        keysAllowlist: ['name'],
+      });
+    });
+
+    it('ignores the blocklist and uses the allowlist', () => {
+      expect(JSON.parse(json)).toStrictEqual({
+        params: { name: 'Name' },
+        session: { session1: '[Filtered]' },
+        context: { notifier: { name: 'airbrake-js' } },
+      });
+    });
+  });
 });

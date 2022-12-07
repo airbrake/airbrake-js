@@ -2,6 +2,13 @@
 
 ### master
 
+#### browser
+
+- Added the `keysAllowlist` option, which is a counter-part to the
+  `keysBlocklist` option. It filters out all the data from the notice except the
+  specified keys
+  ([#1335](https://github.com/airbrake/airbrake-js/pull/1335))
+
 ### [2.1.8] (December 6, 2022)
 
 #### browser
