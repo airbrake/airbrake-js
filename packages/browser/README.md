@@ -198,6 +198,8 @@ airbrake.addFilter((notice) => {
 
 ### Filtering keys
 
+#### keysBlocklist
+
 With the `keysBlocklist` option, you can specify a list of keys containing
 sensitive information that must be filtered out:
 
@@ -207,6 +209,22 @@ const airbrake = new Notifier({
   keysBlocklist: [
     'password', // exact match
     /secret/, // regexp match
+  ],
+});
+```
+
+#### keysAllowlist
+
+With the `keysAllowlist` option, you can specify a list of keys that that should
+_not_ be filtered. All other keys will be substituted with the `[Filtered]`
+label.
+
+```js
+const airbrake = new Notifier({
+  // ...
+  keysAllowlist: [
+    'email', // exact match
+    /name/, // regexp match
   ],
 });
 ```
