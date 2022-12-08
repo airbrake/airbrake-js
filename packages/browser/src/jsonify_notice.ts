@@ -195,13 +195,8 @@ class Truncator {
       if (!Object.prototype.hasOwnProperty.call(obj, key)) {
         continue;
       }
-      if (
-        (this.keysAllowlist.length > 0 && !isInList(key, this.keysAllowlist)) ||
-        (this.keysAllowlist.length === 0 && isInList(key, this.keysBlocklist))
-      ) {
-        dst[key] = FILTERED;
-        continue;
-      }
+
+      if (this.filterKey(key, dst)) continue;
 
       let value = getAttr(obj, key);
 
@@ -216,6 +211,18 @@ class Truncator {
       }
     }
     return dst;
+  }
+
+  private filterKey(key: string, obj: any): boolean {
+    if (
+      (this.keysAllowlist.length > 0 && !isInList(key, this.keysAllowlist)) ||
+      (this.keysAllowlist.length === 0 && isInList(key, this.keysBlocklist))
+    ) {
+      obj[key] = FILTERED;
+      return true;
+    }
+
+    return false;
   }
 }
 
