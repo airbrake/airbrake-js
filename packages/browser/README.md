@@ -215,7 +215,7 @@ const airbrake = new Notifier({
 
 #### keysAllowlist
 
-With the `keysAllowlist` option, you can specify a list of keys that that should
+With the `keysAllowlist` option, you can specify a list of keys that should
 _not_ be filtered. All other keys will be substituted with the `[Filtered]`
 label.
 
