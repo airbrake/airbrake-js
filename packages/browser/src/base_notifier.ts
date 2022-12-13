@@ -115,6 +115,10 @@ export class BaseNotifier {
   }
 
   notify(err: any): Promise<INotice> {
+    if (typeof err !== 'object' || err.error === undefined) {
+      err = { error: err };
+    }
+
     let notice: INotice = {
       errors: [],
       context: {
@@ -126,10 +130,6 @@ export class BaseNotifier {
       environment: err.environment || {},
       session: err.session || {},
     };
-
-    if (typeof err !== 'object' || err.error === undefined) {
-      err = { error: err };
-    }
 
     if (!this._opt.errorNotifications) {
       notice.error = new Error(
