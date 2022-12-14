@@ -130,13 +130,6 @@ export class BaseNotifier {
       return Promise.resolve(notice);
     }
 
-    if (!err.error) {
-      notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
-      );
-      return Promise.resolve(notice);
-    }
-
     let error = this._processor(err.error);
     notice.errors.push(error);
 

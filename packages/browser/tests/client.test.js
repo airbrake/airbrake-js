@@ -257,18 +257,6 @@ describe('Notifier', () => {
       });
     });
 
-    it('ignores falsey error', (done) => {
-      let promise = client.notify('');
-      expect(reporter.mock.calls.length).toBe(0);
-
-      promise.then((notice) => {
-        expect(notice.error.toString()).toBe(
-          'Error: airbrake: got err="", wanted an Error'
-        );
-        done();
-      });
-    });
-
     it('reports severity', () => {
       client.notify({ error: theErr, context: { severity: 'warning' } });
 
@@ -361,19 +349,6 @@ describe('Notifier', () => {
       it('unwraps and processes error', () => {
         client.notify({ error: theErr });
         expect(reporter.mock.calls.length).toBe(1);
-      });
-
-      it('ignores falsey error', (done) => {
-        let promise = client.notify({ error: null, params: { foo: 'bar' } });
-
-        expect(reporter.mock.calls.length).toBe(0);
-
-        promise.then((notice) => {
-          expect(notice.error.toString()).toBe(
-            'Error: airbrake: got err=null, wanted an Error'
-          );
-          done();
-        });
       });
 
       it('reports custom context', () => {
