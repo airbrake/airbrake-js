@@ -119,17 +119,7 @@ export class BaseNotifier {
       err = { error: err };
     }
 
-    let notice: INotice = {
-      errors: [],
-      context: {
-        severity: 'error',
-        ...this.scope().context(),
-        ...err.context,
-      },
-      params: err.params || {},
-      environment: err.environment || {},
-      session: err.session || {},
-    };
+    let notice = this.newNotice(err);
 
     if (!this._opt.errorNotifications) {
       notice.error = new Error(
@@ -164,6 +154,20 @@ export class BaseNotifier {
     }
     notice.context.language = 'JavaScript';
     return this._sendNotice(notice);
+  }
+
+  private newNotice(err: any): INotice {
+    return {
+      errors: [],
+      context: {
+        severity: 'error',
+        ...this.scope().context(),
+        ...err.context,
+      },
+      params: err.params || {},
+      environment: err.environment || {},
+      session: err.session || {},
+    };
   }
 
   _sendNotice(notice: INotice): Promise<INotice> {
