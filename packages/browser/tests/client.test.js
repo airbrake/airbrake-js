@@ -257,16 +257,44 @@ describe('Notifier', () => {
       });
     });
 
-    it('ignores falsey error', (done) => {
-      let promise = client.notify('');
-      expect(reporter.mock.calls.length).toBe(0);
+    it('reports NaN errors', () => {
+      client.notify(NaN);
+      expect(reporter.mock.calls.length).toEqual(1);
 
-      promise.then((notice) => {
-        expect(notice.error.toString()).toBe(
-          'Error: airbrake: got err="", wanted an Error'
-        );
-        done();
-      });
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('NaN');
+    });
+
+    it('reports undefined errors', () => {
+      client.notify(undefined);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('undefined');
+    });
+
+    it('reports empty string errors', () => {
+      client.notify('');
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('<empty string>');
+    });
+
+    it('reports "false"', () => {
+      client.notify(false);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('false');
+    });
+
+    it('reports "null"', () => {
+      client.notify(null);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('null');
     });
 
     it('reports severity', () => {
@@ -363,17 +391,44 @@ describe('Notifier', () => {
         expect(reporter.mock.calls.length).toBe(1);
       });
 
-      it('ignores falsey error', (done) => {
-        let promise = client.notify({ error: null, params: { foo: 'bar' } });
+      it('reports NaN errors', () => {
+        client.notify({ error: NaN });
+        expect(reporter.mock.calls.length).toEqual(1);
 
-        expect(reporter.mock.calls.length).toBe(0);
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('NaN');
+      });
 
-        promise.then((notice) => {
-          expect(notice.error.toString()).toBe(
-            'Error: airbrake: got err=null, wanted an Error'
-          );
-          done();
-        });
+      it('reports undefined errors', () => {
+        client.notify({ error: undefined });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('undefined');
+      });
+
+      it('reports empty string errors', () => {
+        client.notify({ error: '' });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('<empty string>');
+      });
+
+      it('reports "false"', () => {
+        client.notify({ error: false });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('false');
+      });
+
+      it('reports "null"', () => {
+        client.notify({ error: null });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('null');
       });
 
       it('reports custom context', () => {

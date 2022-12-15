@@ -115,34 +115,18 @@ export class BaseNotifier {
   }
 
   notify(err: any): Promise<INotice> {
-    if (typeof err !== 'object' || !('error' in err)) {
+    if (typeof err !== 'object' || err === null || !('error' in err)) {
       err = { error: err };
     }
+    this.handleFalseyError(err);
 
-    let notice: INotice = {
-      errors: [],
-      context: {
-        severity: 'error',
-        ...this.scope().context(),
-        ...err.context,
-      },
-      params: err.params || {},
-      environment: err.environment || {},
-      session: err.session || {},
-    };
+    let notice = this.newNotice(err);
 
     if (!this._opt.errorNotifications) {
       notice.error = new Error(
         `airbrake: not sending this error, errorNotifications is disabled err=${JSON.stringify(
           err.error
         )}`
-      );
-      return Promise.resolve(notice);
-    }
-
-    if (!err.error) {
-      notice.error = new Error(
-        `airbrake: got err=${JSON.stringify(err.error)}, wanted an Error`
       );
       return Promise.resolve(notice);
     }
@@ -164,6 +148,32 @@ export class BaseNotifier {
     }
     notice.context.language = 'JavaScript';
     return this._sendNotice(notice);
+  }
+
+  private handleFalseyError(err: any) {
+    if (Number.isNaN(err.error)) {
+      err.error = new Error('NaN');
+    } else if (err.error === undefined) {
+      err.error = new Error('undefined');
+    } else if (err.error === '') {
+      err.error = new Error('<empty string>');
+    } else if (err.error === null) {
+      err.error = new Error('null');
+    }
+  }
+
+  private newNotice(err: any): INotice {
+    return {
+      errors: [],
+      context: {
+        severity: 'error',
+        ...this.scope().context(),
+        ...err.context,
+      },
+      params: err.params || {},
+      environment: err.environment || {},
+      session: err.session || {},
+    };
   }
 
   _sendNotice(notice: INotice): Promise<INotice> {
