@@ -257,6 +257,46 @@ describe('Notifier', () => {
       });
     });
 
+    it('reports NaN errors', () => {
+      client.notify(NaN);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('NaN');
+    });
+
+    it('reports undefined errors', () => {
+      client.notify(undefined);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('undefined');
+    });
+
+    it('reports empty string errors', () => {
+      client.notify('');
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('<empty string>');
+    });
+
+    it('reports "false"', () => {
+      client.notify(false);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('false');
+    });
+
+    it('reports "null"', () => {
+      client.notify(null);
+      expect(reporter.mock.calls.length).toEqual(1);
+
+      let notice = reporter.mock.calls[0][0];
+      expect(notice.errors[0].message).toEqual('null');
+    });
+
     it('reports severity', () => {
       client.notify({ error: theErr, context: { severity: 'warning' } });
 
@@ -349,6 +389,46 @@ describe('Notifier', () => {
       it('unwraps and processes error', () => {
         client.notify({ error: theErr });
         expect(reporter.mock.calls.length).toBe(1);
+      });
+
+      it('reports NaN errors', () => {
+        client.notify({ error: NaN });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('NaN');
+      });
+
+      it('reports undefined errors', () => {
+        client.notify({ error: undefined });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('undefined');
+      });
+
+      it('reports empty string errors', () => {
+        client.notify({ error: '' });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('<empty string>');
+      });
+
+      it('reports "false"', () => {
+        client.notify({ error: false });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('false');
+      });
+
+      it('reports "null"', () => {
+        client.notify({ error: null });
+        expect(reporter.mock.calls.length).toEqual(1);
+
+        let notice = reporter.mock.calls[0][0];
+        expect(notice.errors[0].message).toEqual('null');
       });
 
       it('reports custom context', () => {

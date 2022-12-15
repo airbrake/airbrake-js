@@ -8,6 +8,9 @@
   `keysBlocklist` option. It filters out all the data from the notice except the
   specified keys
   ([#1335](https://github.com/airbrake/airbrake-js/pull/1335))
+- Added support for error reporting of "falsey" errors such as `null`, `NaN`,
+  `undefined`, `false`, `""`
+  ([#1345](https://github.com/airbrake/airbrake-js/pull/1345))
 
 ### [2.1.8] (December 6, 2022)
 

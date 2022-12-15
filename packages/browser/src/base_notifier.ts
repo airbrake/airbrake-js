@@ -115,9 +115,10 @@ export class BaseNotifier {
   }
 
   notify(err: any): Promise<INotice> {
-    if (typeof err !== 'object' || !('error' in err)) {
+    if (typeof err !== 'object' || err === null || !('error' in err)) {
       err = { error: err };
     }
+    this.handleFalseyError(err);
 
     let notice = this.newNotice(err);
 
@@ -147,6 +148,18 @@ export class BaseNotifier {
     }
     notice.context.language = 'JavaScript';
     return this._sendNotice(notice);
+  }
+
+  private handleFalseyError(err: any) {
+    if (Number.isNaN(err.error)) {
+      err.error = new Error('NaN');
+    } else if (err.error === undefined) {
+      err.error = new Error('undefined');
+    } else if (err.error === '') {
+      err.error = new Error('<empty string>');
+    } else if (err.error === null) {
+      err.error = new Error('null');
+    }
   }
 
   private newNotice(err: any): INotice {
