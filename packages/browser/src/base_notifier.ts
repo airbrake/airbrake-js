@@ -115,7 +115,7 @@ export class BaseNotifier {
   }
 
   notify(err: any): Promise<INotice> {
-    if (typeof err !== 'object' || err.error === undefined) {
+    if (typeof err !== 'object' || !('error' in err)) {
       err = { error: err };
     }
 
