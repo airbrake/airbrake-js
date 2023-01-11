@@ -11,6 +11,7 @@ export interface IInstrumentationOptions {
   history?: boolean;
   console?: boolean;
   xhr?: boolean;
+  unhandledrejection?: boolean;
 }
 
 export interface IOptions {

@@ -310,6 +310,21 @@ const airbrake = new Notifier({
 });
 ```
 
+#### unhandledrejection
+
+Instruments the [unhandledrejection][unhandledrejection] event and sends
+performance statistics to Airbrake. You can disable that behavior using the
+`instrumentation` option:
+
+```js
+const airbrake = new Notifier({
+  // ...
+  instrumentation: {
+    unhandledrejection: false,
+  },
+});
+```
+
 ### APM
 
 #### Routes
@@ -372,3 +387,4 @@ this.airbrake.queues.notify(queueInfo);
 [fetch]: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch
 [onerror]: https://developer.mozilla.org/en-US/docs/Web/API/Window/error_event
 [xhr]: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest
+[unhandledrejection]: https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event

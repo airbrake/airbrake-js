@@ -11,6 +11,9 @@
 - Added support for error reporting of "falsey" errors such as `null`, `NaN`,
   `undefined`, `false`, `""`
   ([#1345](https://github.com/airbrake/airbrake-js/pull/1345))
+- Added the `instrumentation.unhandledrejection` option, which enables/disables
+  the Airbrake handler for the `unhandledrejection` event
+  ([#1356](https://github.com/airbrake/airbrake-js/pull/1356))
 
 ### [2.1.8] (December 6, 2022)
 
