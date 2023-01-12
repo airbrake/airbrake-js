@@ -6,6 +6,7 @@ import { instrumentDOM } from './instrumentation/dom';
 import { instrumentFetch } from './instrumentation/fetch';
 import { instrumentLocation } from './instrumentation/location';
 import { instrumentXHR } from './instrumentation/xhr';
+import { instrumentUnhandledrejection } from './instrumentation/unhandledrejection';
 import { INotice } from './notice';
 import { IInstrumentationOptions, IOptions } from './options';
 
@@ -37,16 +38,9 @@ export class Notifier extends BaseNotifier {
       this.onOffline = this.onOffline.bind(this);
       window.addEventListener('offline', this.onOffline);
 
-      this.onUnhandledrejection = this.onUnhandledrejection.bind(this);
-      window.addEventListener('unhandledrejection', this.onUnhandledrejection);
-
       this._onClose.push(() => {
         window.removeEventListener('online', this.onOnline);
         window.removeEventListener('offline', this.onOffline);
-        window.removeEventListener(
-          'unhandledrejection',
-          this.onUnhandledrejection
-        );
       });
     }
 
@@ -82,6 +76,12 @@ export class Notifier extends BaseNotifier {
     }
     if (enabled(opt.xhr) && typeof XMLHttpRequest !== 'undefined') {
       instrumentXHR(this);
+    }
+    if (
+      enabled(opt.unhandledrejection) &&
+      typeof addEventListener === 'function'
+    ) {
+      instrumentUnhandledrejection(this);
     }
   }
 
@@ -121,35 +121,6 @@ export class Notifier extends BaseNotifier {
 
   protected onOffline(): void {
     this.offline = true;
-  }
-
-  protected onUnhandledrejection(e: any): void {
-    // Handle native or bluebird Promise rejections
-    // https://developer.mozilla.org/en-US/docs/Web/Events/unhandledrejection
-    // http://bluebirdjs.com/docs/api/error-management-configuration.html
-    let reason = e.reason || (e.detail && e.detail.reason);
-    if (!reason) {
-      return;
-    }
-    let msg = reason.message || String(reason);
-    if (msg.indexOf && msg.indexOf('airbrake: ') === 0) {
-      return;
-    }
-    if (typeof reason !== 'object' || reason.error === undefined) {
-      this.notify({
-        error: reason,
-        context: {
-          unhandledRejection: true,
-        },
-      });
-      return;
-    }
-    this.notify({
-      ...reason,
-      context: {
-        unhandledRejection: true,
-      },
-    });
   }
 
   onerror(
