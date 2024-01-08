@@ -17,8 +17,6 @@
     "notifier"
   ],
   "dependencies": {
-    "@types/promise-polyfill": "^6.0.3",
-    "@types/request": "2.48.8",
     "cross-fetch": "^3.1.5",
     "error-stack-parser": "^2.0.4",
     "promise-polyfill": "^8.1.3",
@@ -30,6 +28,8 @@
     "@rollup/plugin-commonjs": "^24.0.0",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^11.0.0",
+    "@types/promise-polyfill": "^6.0.3",
+    "@types/request": "2.48.8",
     "babel-jest": "^29.3.1",
     "jest": "^27.3.1",
     "prettier": "^2.0.2",
