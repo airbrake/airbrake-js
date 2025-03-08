@@ -2,6 +2,8 @@
 
 ### master
 
+### [2.1.9] (March 6, 2025)
+
 #### browser
 
 - Added the `keysAllowlist` option, which is a counter-part to the
