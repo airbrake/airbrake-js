@@ -1,6 +1,6 @@
 {
   "name": "@airbrake/browser",
-  "version": "2.1.8",
+  "version": "2.1.9",
   "description": "Official Airbrake notifier for browsers",
   "author": "Airbrake",
   "license": "MIT",
