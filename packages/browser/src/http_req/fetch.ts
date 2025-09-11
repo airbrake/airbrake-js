@@ -1,5 +1,4 @@
 import fetch from 'cross-fetch';
-import Promise from 'promise-polyfill';
 import { errors, IHttpRequest, IHttpResponse } from './api';
 
 let rateLimitReset = 0;
