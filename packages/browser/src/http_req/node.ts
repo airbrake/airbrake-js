@@ -1,5 +1,4 @@
 import * as request_lib from 'request';
-import Promise from 'promise-polyfill';
 
 import { errors, IHttpRequest, IHttpResponse, Requester } from './api';
 
