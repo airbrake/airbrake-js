@@ -2447,9 +2447,9 @@
   integrity sha512-Fo79ojj3vdEZOHg3wR9ksAMRz4P3S5fDB5e/YWZiFnyFQI1WY2Vftu9XoXVVtJfxB7Bpce/QTqWSSntkz2Znrw==
 
 "@types/promise-polyfill@^6.0.3":
-  version "6.0.4"
-  resolved "https://registry.yarnpkg.com/@types/promise-polyfill/-/promise-polyfill-6.0.4.tgz#c56670c70c601264c67191a85875fe2cf98a4cfd"
-  integrity sha512-GSCjjH6mDS8jgpT22rEOkZVqZcYj7i9AHJu4ntpvoohEpa0mLAKP/Kz3POMKqABaFsS4TyNHOeoyWpzycddcoQ==
+  version "6.0.6"
+  resolved "https://registry.yarnpkg.com/@types/promise-polyfill/-/promise-polyfill-6.0.6.tgz#5503ff1a9cbf6feaa624de557a8ecf405624019d"
+  integrity sha512-nKg0HIgdKRKfi5S3IlrpiNWqxiJOqYOV70jAtalqhvb5zJt5IoQMgy1QS3y5wsbUQPOCZHQxaPg+btBUVbA+hA==
 
 "@types/request@2.48.8":
   version "2.48.8"
