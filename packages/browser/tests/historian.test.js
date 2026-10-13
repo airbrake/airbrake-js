@@ -1,6 +1,11 @@
-let { fetch, Request } = require('cross-fetch');
+class Request {
+  constructor(url, opts = {}) {
+    this.url = url;
+    this.method = opts.method || 'GET';
+  }
+}
 
-window.fetch = fetch;
+window.fetch = () => Promise.resolve({ status: 200 });
 
 import { Notifier } from '../src/notifier';
 
@@ -122,7 +127,6 @@ describe('instrumentation', () => {
   });
 
   describe('fetch', () => {
-    // TODO: use a mock instead of actually sending http requests
     describe('simple fetch', () => {
       beforeEach(() => {
         let promise = window.fetch('https://httpbin.org/get');
